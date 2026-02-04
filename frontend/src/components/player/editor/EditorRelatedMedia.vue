@@ -10,13 +10,9 @@
         <div class="editor-related-media-list">
             <div v-for="(item, i) in relatedMedia" :key="item.id" class="editor-related-media-item">
                 <div class="album-body-item-thumbnail" :title="item.title || $t('Untitled')">
-                    <div v-if="!item.thumbnail" class="no-thumb">
-                        <i v-if="item.type === 1" class="fas fa-image"></i>
-                        <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                        <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                        <i v-else class="fas fa-ban"></i>
-                    </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
+                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
+
                     <DurationIndicator
                         v-if="item.type === 2 || item.type === 3"
                         :type="item.type"
@@ -109,6 +105,7 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
+import MediaNoThumbnail from "@/components/utils/MediaNoThumbnail.vue";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import DurationIndicator from "@/components/utils/DurationIndicator.vue";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
@@ -124,6 +121,7 @@ export default defineComponent({
     name: "EditorRelatedMedia",
     components: {
         LoadingIcon,
+        MediaNoThumbnail,
         ThumbImage,
         DurationIndicator,
         AddRelatedMediaModal,

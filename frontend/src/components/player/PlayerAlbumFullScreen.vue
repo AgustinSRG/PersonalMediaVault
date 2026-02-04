@@ -34,13 +34,9 @@
                 @keydown="clickOnEnter"
             >
                 <div class="album-body-item-thumbnail">
-                    <div v-if="!item.thumbnail" class="no-thumb">
-                        <i v-if="item.type === 1" class="fas fa-image"></i>
-                        <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                        <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                        <i v-else class="fas fa-ban"></i>
-                    </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
+                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
+
                     <div v-if="item.type === 2 || item.type === 3" class="album-body-item-thumb-tag">
                         {{ renderTime(item.duration) }}
                     </div>
@@ -73,6 +69,7 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
+import MediaNoThumbnail from "../utils/MediaNoThumbnail.vue";
 import ThumbImage from "../utils/ThumbImage.vue";
 import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
 import {
@@ -87,6 +84,7 @@ export default defineComponent({
     name: "PlayerAlbumFullScreen",
     components: {
         ThumbImage,
+        MediaNoThumbnail,
     },
     emits: ["close"],
     setup() {

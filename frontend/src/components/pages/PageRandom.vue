@@ -1,81 +1,40 @@
 <template>
     <div class="page-inner scrollbar-stable" :class="{ hidden: !display }">
         <div class="search-results auto-focus" tabindex="-1">
-            <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
-                    <div class="search-result-thumb">
-                        <div class="search-result-thumb-inner">
-                            <div class="search-result-loader">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
-                </div>
-            </div>
+            <PageLoaderFiller v-if="loading" :page-size="pageSize" :display-titles="displayTitles"></PageLoaderFiller>
 
-            <div v-if="!loading && total <= 0 && !search && firstLoaded" class="search-results-msg-display">
+            <div v-else-if="total <= 0 && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
-                    <i class="fas fa-box-open"></i>
+                    <i v-if="search" class="fas fa-search"></i>
+                    <i v-else class="fas fa-box-open"></i>
                 </div>
                 <div class="search-results-msg-text">
-                    {{ $t("The vault is empty") }}
+                    {{ search ? $t("Could not find any result") : $t("The vault is empty") }}
                 </div>
                 <div class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
                 </div>
-            </div>
-
-            <div v-if="!loading && total <= 0 && search && firstLoaded" class="search-results-msg-display">
-                <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
-                <div class="search-results-msg-text">
-                    {{ $t("Could not find any result") }}
-                </div>
-                <div class="search-results-msg-btn">
-                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
-                </div>
-                <div class="search-results-msg-btn">
+                <div v-if="search" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="clearSearch">
                         <i class="fas fa-times"></i> {{ $t("Clear search") }}
                     </button>
                 </div>
-                <div class="search-results-msg-btn">
+                <div v-if="search" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="goAdvancedSearch">
                         <i class="fas fa-search"></i> {{ $t("Advanced search") }}
                     </button>
                 </div>
             </div>
 
-            <div v-if="!loading && total > 0" class="search-results-final-display">
-                <div v-for="(item, i) in pageItems" :key="i" class="search-result-item" :class="{ current: currentMedia == item.id }">
-                    <a
-                        class="clickable"
-                        :href="getMediaURL(item.id)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        @click="goToMedia(item.id, $event)"
-                    >
-                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                            <div class="search-result-thumb-inner">
-                                <div v-if="!item.thumbnail" class="no-thumb">
-                                    <i v-if="item.type === 1" class="fas fa-image"></i>
-                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                    <i v-else class="fas fa-ban"></i>
-                                </div>
-                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <DurationIndicator
-                                    v-if="item.type === 2 || item.type === 3"
-                                    :type="item.type"
-                                    :duration="item.duration"
-                                ></DurationIndicator>
-                            </div>
-                        </div>
-                        <div v-if="displayTitles" class="search-result-title">
-                            {{ item.title || $t("Untitled") }}
-                        </div>
-                    </a>
-                </div>
+            <div v-else-if="total > 0" class="search-results-final-display">
+                <MediaItem
+                    v-for="(item, i) in pageItems"
+                    :key="i"
+                    :item="item"
+                    :current="currentMedia == item.id"
+                    :display-titles="displayTitles"
+                    @go="goToMedia(item.id)"
+                ></MediaItem>
 
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
@@ -94,13 +53,11 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
-    EVENT_NAME_TAGS_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { TagsController } from "@/control/tags";
-import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -109,14 +66,14 @@ import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
-import ThumbImage from "../utils/ThumbImage.vue";
-import DurationIndicator from "../utils/DurationIndicator.vue";
+import MediaItem from "../utils/MediaItem.vue";
+import PageLoaderFiller from "../utils/PageLoaderFiller.vue";
 
 export default defineComponent({
     name: "PageRandom",
     components: {
-        ThumbImage,
-        DurationIndicator,
+        MediaItem,
+        PageLoaderFiller,
     },
     props: {
         display: Boolean,
@@ -202,12 +159,9 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
         this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.refreshSeed.bind(this));
 
         this.updateSearchParams();
-        this.updateTagData();
         this.load();
 
         if (this.display) {
@@ -368,17 +322,8 @@ export default defineComponent({
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
-        goToMedia: function (mid: number, e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
+        goToMedia: function (mid: number) {
             AppStatus.ClickOnMedia(mid, true);
-        },
-
-        getMediaURL: function (mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-            });
         },
 
         updateSearchParams: function () {
@@ -396,10 +341,6 @@ export default defineComponent({
             }
 
             this.loadingFiller = filler;
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
         },
 
         clearSearch: function () {
@@ -483,26 +424,6 @@ export default defineComponent({
             }
 
             return false;
-        },
-
-        renderHintTitle(item: MediaListItem, tagVersion: number): string {
-            const parts = [item.title || this.$t("Untitled")];
-
-            if (item.tags.length > 0) {
-                const tagNames = [];
-
-                for (const tag of item.tags) {
-                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
-                }
-
-                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
-            }
-
-            return parts.join("\n");
-        },
-
-        updateTagData: function () {
-            this.tagVersion = TagsController.TagsVersion;
         },
 
         updateWindowWidth: function () {

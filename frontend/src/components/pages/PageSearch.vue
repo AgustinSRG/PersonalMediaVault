@@ -208,46 +208,23 @@
                     </div>
                     <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
-                <div
-                    v-for="item in pageItems"
-                    :key="item.id"
-                    class="search-result-item"
-                    :class="{ current: currentMedia === item.id, 'last-current': lastCurrentMedia === item.id }"
-                >
-                    <a
-                        class="clickable"
-                        :href="getMediaURL(item.id)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        @click="goToMedia(item, $event)"
-                    >
-                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                            <div class="search-result-thumb-inner">
-                                <div v-if="!item.thumbnail" class="no-thumb">
-                                    <i v-if="item.type === 1" class="fas fa-image"></i>
-                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                    <i v-else class="fas fa-ban"></i>
-                                </div>
-                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <DurationIndicator
-                                    v-if="item.type === 2 || item.type === 3"
-                                    :type="item.type"
-                                    :duration="item.duration"
-                                ></DurationIndicator>
-                            </div>
-                        </div>
-                        <div v-if="displayTitles" class="search-result-title">
-                            {{ item.title || $t("Untitled") }}
-                        </div>
-                    </a>
-                </div>
+
+                <MediaItem
+                    v-for="(item, i) in pageItems"
+                    :key="i"
+                    :item="item"
+                    :current="currentMedia == item.id"
+                    :last-current="lastCurrentMedia === item.id"
+                    :display-titles="displayTitles"
+                    @go="goToMedia(item)"
+                ></MediaItem>
+
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <div v-if="!finished" class="search-continue-mark">
                 <button type="button" class="btn btn-primary btn-mr" disabled>
-                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ Math.round(progress) + "%" }})
                 </button>
             </div>
         </div>
@@ -276,7 +253,6 @@ import { AuthController } from "@/control/auth";
 import type { MatchingTag } from "@/control/tags";
 import { TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
@@ -288,9 +264,8 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiAdvancedSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
-import ThumbImage from "../utils/ThumbImage.vue";
 import AlbumSelect from "../utils/AlbumSelect.vue";
-import DurationIndicator from "../utils/DurationIndicator.vue";
+import MediaItem from "../utils/MediaItem.vue";
 import type { SearchMode } from "@/control/app-preferences";
 import {
     getPreferredSearchMode,
@@ -310,9 +285,8 @@ type PageSearchParameters = {
 export default defineComponent({
     name: "PageSearch",
     components: {
-        ThumbImage,
         AlbumSelect,
-        DurationIndicator,
+        MediaItem,
     },
     props: {
         display: Boolean,
@@ -608,24 +582,25 @@ export default defineComponent({
             return true;
         },
 
-        scrollToLastCurrentMedia: function (): boolean {
-            if (!this.mediaIndexMap.has(this.lastCurrentMedia)) {
-                return false;
-            }
-            const index = this.mediaIndexMap.get(this.lastCurrentMedia);
-
-            if (index < this.listScroller.windowPosition || index >= this.listScroller.windowPosition + this.listScroller.windowSize) {
-                this.listScroller.moveWindowToElement(this.mediaIndexMap.get(this.lastCurrentMedia));
-            }
-
+        scrollToLastCurrentMedia: function () {
             nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.last-current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
+                if (!this.mediaIndexMap.has(this.lastCurrentMedia)) {
+                    return;
                 }
-            });
 
-            return true;
+                const index = this.mediaIndexMap.get(this.lastCurrentMedia);
+
+                if (index < this.listScroller.windowPosition || index >= this.listScroller.windowPosition + this.listScroller.windowSize) {
+                    this.listScroller.moveWindowToElement(this.mediaIndexMap.get(this.lastCurrentMedia));
+                }
+
+                nextTick(() => {
+                    const currentElem = this.$el.querySelector(".search-result-item.last-current");
+                    if (currentElem) {
+                        currentElem.scrollIntoView();
+                    }
+                });
+            });
         },
 
         load: function () {
@@ -1223,10 +1198,7 @@ export default defineComponent({
             this.resetSearch();
         },
 
-        goToMedia: function (m: MediaListItem, e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
+        goToMedia: function (m: MediaListItem) {
             if (this.inModal) {
                 this.$emit("select-media", m, () => {
                     const fullList = this.listScroller.list;
@@ -1248,20 +1220,6 @@ export default defineComponent({
             } else {
                 AppStatus.ClickOnMedia(m.id, true);
             }
-        },
-
-        getMediaURL: function (mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-            });
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        cssProgress: function (p: number) {
-            return Math.round(p) + "%";
         },
 
         updateTagData: function () {
@@ -1545,22 +1503,6 @@ export default defineComponent({
             }
 
             return false;
-        },
-
-        renderHintTitle(item: MediaListItem, tagVersion: number): string {
-            const parts = [item.title || this.$t("Untitled")];
-
-            if (item.tags.length > 0) {
-                const tagNames = [];
-
-                for (const tag of item.tags) {
-                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
-                }
-
-                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
-            }
-
-            return parts.join("\n");
         },
 
         checkContinueSearch: function () {

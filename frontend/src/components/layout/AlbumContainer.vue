@@ -71,13 +71,9 @@
                 @dragstart="onDrag(item, $event)"
             >
                 <div class="album-body-item-thumbnail">
-                    <div v-if="!item.thumbnail" class="no-thumb">
-                        <i v-if="item.type === 1" class="fas fa-image"></i>
-                        <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                        <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                        <i v-else class="fas fa-ban"></i>
-                    </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
+                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
+
                     <DurationIndicator
                         v-if="item.type === 2 || item.type === 3"
                         :type="item.type"
@@ -125,13 +121,9 @@
                 :title="draggingItem.title || $t('Untitled')"
             >
                 <div class="album-body-item-thumbnail">
-                    <div v-if="!draggingItem.thumbnail" class="no-thumb">
-                        <i v-if="draggingItem.type === 1" class="fas fa-image"></i>
-                        <i v-else-if="draggingItem.type === 2" class="fas fa-video"></i>
-                        <i v-else-if="draggingItem.type === 3" class="fas fa-headphones"></i>
-                        <i v-else class="fas fa-ban"></i>
-                    </div>
                     <ThumbImage v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)"></ThumbImage>
+                    <MediaNoThumbnail v-else :type="draggingItem.type"></MediaNoThumbnail>
+
                     <DurationIndicator
                         v-if="draggingItem.type === 2 || draggingItem.type === 3"
                         :type="draggingItem.type"
@@ -205,8 +197,10 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import MediaNoThumbnail from "../utils/MediaNoThumbnail.vue";
 import ThumbImage from "../utils/ThumbImage.vue";
 import DurationIndicator from "../utils/DurationIndicator.vue";
+import type { MediaType } from "@/api/models";
 
 const INITIAL_WINDOW_SIZE = 100;
 
@@ -240,10 +234,10 @@ const AlbumAddMediaModal = defineAsyncComponent({
     delay: 1000,
 });
 
-interface AlbumListItem {
+interface AlbumMediaItem {
     pos: number;
     id: number;
-    type: number;
+    type: MediaType;
     title: string;
     thumbnail: string;
     duration: number;
@@ -260,6 +254,7 @@ export default defineComponent({
         AlbumAddMediaModal,
         AlbumGoToPosModal,
         AlbumChangeThumbnailModal,
+        MediaNoThumbnail,
         ThumbImage,
         DurationIndicator,
     },
@@ -282,7 +277,7 @@ export default defineComponent({
             albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
             loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: [] as AlbumListItem[],
+            albumList: [] as AlbumMediaItem[],
 
             isFav: albumIsFavorite(AlbumsController.CurrentAlbum),
 
@@ -311,7 +306,7 @@ export default defineComponent({
 
             dragging: false,
             draggingPosition: -1,
-            draggingItem: null as AlbumListItem,
+            draggingItem: null as AlbumMediaItem,
             mouseX: 0,
             mouseY: 0,
             draggingOverPosition: -1,
@@ -552,14 +547,14 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        clickMedia: function (item: AlbumListItem, e?: MouseEvent) {
+        clickMedia: function (item: AlbumMediaItem, e?: MouseEvent) {
             if (e) {
                 e.preventDefault();
             }
             AppStatus.ClickOnMedia(item.id, false);
         },
 
-        getMediaURL: function (item: AlbumListItem) {
+        getMediaURL: function (item: AlbumMediaItem) {
             return getFrontendUrl({
                 media: item.id,
                 album: this.albumId,
@@ -749,7 +744,7 @@ export default defineComponent({
             }
         },
 
-        onDrag: function (item: AlbumListItem, e: DragEvent) {
+        onDrag: function (item: AlbumMediaItem, e: DragEvent) {
             e.preventDefault();
 
             if (isTouchDevice()) {

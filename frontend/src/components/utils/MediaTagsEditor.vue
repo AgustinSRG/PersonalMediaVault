@@ -60,7 +60,7 @@ import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
-import { useTags } from "@/composables/use-tags";
+import { useTagNames } from "@/composables/use-tags-names";
 import { useTimeout } from "@/composables/use-timeout";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import {
@@ -68,6 +68,7 @@ import {
     EVENT_NAME_GO_NEXT,
     EVENT_NAME_GO_PREV,
     EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_TAGS_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
@@ -105,8 +106,8 @@ const findTagTimeout = useTimeout();
 // User permissions
 const { canWrite } = useUserPermissions();
 
-// Tags
-const { getTags, getTagName, onTagsUpdated } = useTags();
+// Tag names
+const { getTagName } = useTagNames();
 
 // List of media tags
 const mediaTags = ref<number[]>([]);
@@ -147,7 +148,7 @@ const findTags = () => {
         }
 
         if (lastUsedTags.length < TAGS_SUGGESTION_LIMIT) {
-            Array.from(getTags().entries())
+            Array.from(TagsController.Tags.entries())
                 .filter((t) => {
                     return !mediaTags.value.includes(t[0]) && !addedTagIds.includes(t[0]);
                 })
@@ -172,7 +173,7 @@ const findTags = () => {
         return;
     }
 
-    matchingTags.value = Array.from(getTags().entries())
+    matchingTags.value = Array.from(TagsController.Tags.entries())
         .map((a) => {
             const i = a[1].indexOf(tagFilter);
             const lastUsedIndex = lastUsedTagsIds.indexOf(a[0]);
@@ -208,7 +209,7 @@ const findTags = () => {
         .slice(0, TAGS_SUGGESTION_LIMIT);
 };
 
-onTagsUpdated(findTags);
+onApplicationEvent(EVENT_NAME_TAGS_UPDATE, findTags);
 
 /**
  * Loads the tag list for the current media
