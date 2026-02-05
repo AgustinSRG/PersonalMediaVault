@@ -70,20 +70,7 @@
                 @click="clickMedia(item, $event)"
                 @dragstart="onDrag(item, $event)"
             >
-                <div class="album-body-item-thumbnail">
-                    <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
-
-                    <DurationIndicator
-                        v-if="item.type === 2 || item.type === 3"
-                        :type="item.type"
-                        :duration="item.duration"
-                        :small="true"
-                    ></DurationIndicator>
-                    <div class="album-body-item-thumb-pos">
-                        {{ renderPos(item.pos) }}
-                    </div>
-                </div>
+                <MediaItemAlbumThumbnail :item="item" :display-position="true"></MediaItemAlbumThumbnail>
 
                 <div class="album-body-item-title">
                     {{ item.title || $t("Untitled") }}
@@ -120,19 +107,7 @@
                 :class="{ current: draggingItem.pos === currentPos }"
                 :title="draggingItem.title || $t('Untitled')"
             >
-                <div class="album-body-item-thumbnail">
-                    <ThumbImage v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)"></ThumbImage>
-                    <MediaNoThumbnail v-else :type="draggingItem.type"></MediaNoThumbnail>
-
-                    <DurationIndicator
-                        v-if="draggingItem.type === 2 || draggingItem.type === 3"
-                        :type="draggingItem.type"
-                        :duration="draggingItem.duration"
-                    ></DurationIndicator>
-                    <div class="album-body-item-thumb-pos">
-                        {{ renderPos(draggingItem.pos) }}
-                    </div>
-                </div>
+                <MediaItemAlbumThumbnail :item="draggingItem" :display-position="true"></MediaItemAlbumThumbnail>
 
                 <div class="album-body-item-title">
                     {{ draggingItem.title || $t("Untitled") }}
@@ -197,10 +172,8 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
-import MediaNoThumbnail from "../utils/MediaNoThumbnail.vue";
-import ThumbImage from "../utils/ThumbImage.vue";
-import DurationIndicator from "../utils/DurationIndicator.vue";
-import type { MediaType } from "@/api/models";
+import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
+import type { PositionedMediaListItem } from "@/api/models";
 
 const INITIAL_WINDOW_SIZE = 100;
 
@@ -234,15 +207,6 @@ const AlbumAddMediaModal = defineAsyncComponent({
     delay: 1000,
 });
 
-interface AlbumMediaItem {
-    pos: number;
-    id: number;
-    type: MediaType;
-    title: string;
-    thumbnail: string;
-    duration: number;
-}
-
 export default defineComponent({
     name: "AlbumContainer",
     components: {
@@ -254,9 +218,7 @@ export default defineComponent({
         AlbumAddMediaModal,
         AlbumGoToPosModal,
         AlbumChangeThumbnailModal,
-        MediaNoThumbnail,
-        ThumbImage,
-        DurationIndicator,
+        MediaItemAlbumThumbnail,
     },
     props: {
         displayUpload: Boolean,
@@ -277,7 +239,7 @@ export default defineComponent({
             albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
             loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: [] as AlbumMediaItem[],
+            albumList: [] as PositionedMediaListItem[],
 
             isFav: albumIsFavorite(AlbumsController.CurrentAlbum),
 
@@ -306,7 +268,7 @@ export default defineComponent({
 
             dragging: false,
             draggingPosition: -1,
-            draggingItem: null as AlbumMediaItem,
+            draggingItem: null as PositionedMediaListItem,
             mouseX: 0,
             mouseY: 0,
             draggingOverPosition: -1,
@@ -547,14 +509,14 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        clickMedia: function (item: AlbumMediaItem, e?: MouseEvent) {
+        clickMedia: function (item: PositionedMediaListItem, e?: MouseEvent) {
             if (e) {
                 e.preventDefault();
             }
             AppStatus.ClickOnMedia(item.id, false);
         },
 
-        getMediaURL: function (item: AlbumMediaItem) {
+        getMediaURL: function (item: PositionedMediaListItem) {
             return getFrontendUrl({
                 media: item.id,
                 album: this.albumId,
@@ -744,7 +706,7 @@ export default defineComponent({
             }
         },
 
-        onDrag: function (item: AlbumMediaItem, e: DragEvent) {
+        onDrag: function (item: PositionedMediaListItem, e: DragEvent) {
             e.preventDefault();
 
             if (isTouchDevice()) {

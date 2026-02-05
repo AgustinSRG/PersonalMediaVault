@@ -29,51 +29,35 @@
                 @goto="changePage"
             ></PageMenu>
 
-            <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in pageSize" :key="f" class="search-result-item">
-                    <div class="search-result-thumb">
-                        <div class="search-result-thumb-inner">
-                            <div class="search-result-loader">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
-                </div>
-            </div>
+            <PageLoaderFiller v-if="loading" :page-size="pageSize" :display-titles="displayTitles"></PageLoaderFiller>
 
-            <div v-if="!loading && total <= 0 && !filter && firstLoaded" class="search-results-msg-display">
+            <div v-else-if="total <= 0 && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
+                    <i v-if="filter" class="fas fa-search"></i>
                     <i class="fas fa-box-open"></i>
                 </div>
-                <div v-if="inModal" class="search-results-msg-text">
-                    {{ $t("Could not find any album") }}
+                <div class="search-results-msg-text">
+                    {{
+                        filter
+                            ? $t("Could not find any albums matching your filter")
+                            : inModal
+                              ? $t("Could not find any album")
+                              : $t("This vault does not have any albums yet")
+                    }}
                 </div>
-                <div v-else class="search-results-msg-text">
-                    {{ $t("This vault does not have any albums yet") }}
-                </div>
-                <div v-if="!inModal" class="search-results-msg-btn">
+                <div class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="refreshAlbums">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>
                 </div>
-            </div>
-
-            <div v-if="!loading && total <= 0 && filter && firstLoaded" class="search-results-msg-display">
-                <div class="search-results-msg-icon">
-                    <i class="fas fa-box-open"></i>
-                </div>
-                <div class="search-results-msg-text">
-                    {{ $t("Could not find any albums matching your filter") }}
-                </div>
-                <div class="search-results-msg-btn">
+                <div v-if="filter" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="clearFilter">
                         <i class="fas fa-times"></i> {{ $t("Clear filter") }}
                     </button>
                 </div>
             </div>
 
-            <div v-if="!loading && total > 0" class="search-results-final-display">
+            <div v-else-if="total > 0" class="search-results-final-display">
                 <div v-for="item in pageItems" :key="item.id" class="search-result-item">
                     <a
                         class="clickable"
@@ -81,33 +65,8 @@
                         target="_blank"
                         rel="noopener noreferrer"
                         @click="goToAlbum(item, $event)"
-                        ><div
-                            class="search-result-thumb"
-                            :title="
-                                (item.name || $t('Untitled album')) +
-                                (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
-                            "
-                        >
-                            <div class="search-result-thumb-inner">
-                                <div v-if="!item.thumbnail" class="no-thumb">
-                                    <i class="fas fa-list-ol"></i>
-                                </div>
-                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div v-if="item.size == 0" class="thumb-bottom-right-tag" :title="$t('Album') + ' - ' + $t('Empty')">
-                                    <i class="fas fa-list-ol"></i> {{ $t("Empty") }}
-                                </div>
-                                <div v-else-if="item.size == 1" class="thumb-bottom-right-tag" :title="$t('Album') + ' - 1 ' + $t('item')">
-                                    <i class="fas fa-list-ol"></i> 1 {{ $t("item") }}
-                                </div>
-                                <div
-                                    v-else-if="item.size > 1"
-                                    class="thumb-bottom-right-tag"
-                                    :title="$t('Album') + ' - ' + item.size + ' ' + $t('items')"
-                                >
-                                    <i class="fas fa-list-ol"></i> {{ item.size }} {{ $t("items") }}
-                                </div>
-                            </div>
-                        </div>
+                    >
+                        <AlbumItemThumbnail :item="item"></AlbumItemThumbnail>
                         <div v-if="displayTitles" class="search-result-title">
                             {{ item.name || $t("Untitled") }}
                         </div></a
@@ -159,14 +118,16 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
 import { shuffleArray } from "@/utils/shuffle";
-import ThumbImage from "../utils/ThumbImage.vue";
+import PageLoaderFiller from "../utils/PageLoaderFiller.vue";
+import AlbumItemThumbnail from "../utils/AlbumItemThumbnail.vue";
 
 export default defineComponent({
     name: "PageAlbums",
     components: {
         PageMenu,
         AlbumCreateModal,
-        ThumbImage,
+        AlbumItemThumbnail,
+        PageLoaderFiller,
     },
     props: {
         display: Boolean,

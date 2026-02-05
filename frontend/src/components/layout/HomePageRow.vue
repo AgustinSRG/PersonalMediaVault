@@ -122,64 +122,13 @@
                         @contextmenu="showContextMenu(i, $event)"
                         @dragstart="onDragStart(i, $event)"
                     >
-                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                            <div v-if="item.media" class="search-result-thumb-inner">
-                                <div v-if="!item.media.thumbnail" class="no-thumb">
-                                    <i v-if="item.media.type === 1" class="fas fa-image"></i>
-                                    <i v-else-if="item.media.type === 2" class="fas fa-video"></i>
-                                    <i v-else-if="item.media.type === 3" class="fas fa-headphones"></i>
-                                    <i v-else class="fas fa-ban"></i>
-                                </div>
-                                <ThumbImage v-if="item.media.thumbnail" :src="getThumbnail(item.media.thumbnail)"></ThumbImage>
-                                <DurationIndicator
-                                    v-if="item.media.type === 2 || item.media.type === 3"
-                                    :type="item.media.type"
-                                    :duration="item.media.duration"
-                                ></DurationIndicator>
-                            </div>
-                            <div v-else-if="item.album" class="search-result-thumb-inner">
-                                <div v-if="!item.album.thumbnail" class="no-thumb">
-                                    <i class="fas fa-list-ol"></i>
-                                </div>
-                                <ThumbImage v-if="item.album.thumbnail" :src="getThumbnail(item.album.thumbnail)"></ThumbImage>
-                                <div v-if="item.album.size == 0" class="thumb-bottom-right-tag" :title="$t('Album') + ' - ' + $t('Empty')">
-                                    <i class="fas fa-list-ol"></i> {{ $t("Empty") }}
-                                </div>
-                                <div
-                                    v-else-if="item.album.size == 1"
-                                    class="thumb-bottom-right-tag"
-                                    :title="$t('Album') + ' - 1 ' + $t('item')"
-                                >
-                                    <i class="fas fa-list-ol"></i> 1 {{ $t("item") }}
-                                </div>
-                                <div
-                                    v-else-if="item.album.size > 1"
-                                    class="thumb-bottom-right-tag"
-                                    :title="$t('Album') + ' - ' + item.album.size + ' ' + $t('items')"
-                                >
-                                    <i class="fas fa-list-ol"></i> {{ item.album.size }} {{ $t("items") }}
-                                </div>
-                            </div>
-                            <div v-else class="search-result-thumb-inner">
-                                <div class="no-thumb">
-                                    <i class="fas fa-ban"></i>
-                                </div>
-                            </div>
+                        <HomePageItemThumbnail
+                            :item="item"
+                            :editing="editing"
+                            :position="i"
+                            @open-options="showContextMenu"
+                        ></HomePageItemThumbnail>
 
-                            <div v-if="editing" class="home-page-element-thumb-pos">
-                                {{ i + 1 }}
-                            </div>
-
-                            <button
-                                v-if="editing"
-                                type="button"
-                                class="home-page-row-context-btn"
-                                :title="$t('Options to modify element')"
-                                @click="showContextMenu(i, $event)"
-                            >
-                                <i class="fas fa-bars"></i>
-                            </button>
-                        </div>
                         <div v-if="displayTitles" class="search-result-title">
                             {{ getTitle(item) }}
                         </div>
@@ -255,66 +204,11 @@
             }"
         >
             <a class="clickable" :href="getElementURL(draggingElement)" target="_blank" rel="noopener noreferrer">
-                <div class="search-result-thumb" :title="renderHintTitle(draggingElement, tagVersion)">
-                    <div v-if="draggingElement.media" class="search-result-thumb-inner">
-                        <div v-if="!draggingElement.media.thumbnail" class="no-thumb">
-                            <i v-if="draggingElement.media.type === 1" class="fas fa-image"></i>
-                            <i v-else-if="draggingElement.media.type === 2" class="fas fa-video"></i>
-                            <i v-else-if="draggingElement.media.type === 3" class="fas fa-headphones"></i>
-                            <i v-else class="fas fa-ban"></i>
-                        </div>
-                        <ThumbImage
-                            v-if="draggingElement.media.thumbnail"
-                            :src="getThumbnail(draggingElement.media.thumbnail)"
-                        ></ThumbImage>
-                        <DurationIndicator
-                            v-if="draggingElement.media.type === 2 || draggingElement.media.type === 3"
-                            :type="draggingElement.media.type"
-                            :duration="draggingElement.media.duration"
-                        ></DurationIndicator>
-                    </div>
-                    <div v-else-if="draggingElement.album" class="search-result-thumb-inner">
-                        <div v-if="!draggingElement.album.thumbnail" class="no-thumb">
-                            <i class="fas fa-list-ol"></i>
-                        </div>
-                        <ThumbImage
-                            v-if="draggingElement.album.thumbnail"
-                            :src="getThumbnail(draggingElement.album.thumbnail)"
-                        ></ThumbImage>
-                        <div
-                            v-if="draggingElement.album.size == 0"
-                            class="thumb-bottom-right-tag"
-                            :title="$t('Album') + ' - ' + $t('Empty')"
-                        >
-                            <i class="fas fa-list-ol"></i> {{ $t("Empty") }}
-                        </div>
-                        <div
-                            v-else-if="draggingElement.album.size == 1"
-                            class="thumb-bottom-right-tag"
-                            :title="$t('Album') + ' - 1 ' + $t('item')"
-                        >
-                            <i class="fas fa-list-ol"></i> 1 {{ $t("item") }}
-                        </div>
-                        <div
-                            v-else-if="draggingElement.album.size > 1"
-                            class="thumb-bottom-right-tag"
-                            :title="$t('Album') + ' - ' + draggingElement.album.size + ' ' + $t('items')"
-                        >
-                            <i class="fas fa-list-ol"></i> {{ draggingElement.album.size }} {{ $t("items") }}
-                        </div>
-                    </div>
-                    <div v-else class="search-result-thumb-inner">
-                        <div class="no-thumb">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                    </div>
-                    <div v-if="editing" class="home-page-element-thumb-pos">
-                        {{ draggingData.startPosition + 1 }}
-                    </div>
-                    <button v-if="editing" type="button" class="home-page-row-context-btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
+                <HomePageItemThumbnail
+                    :item="draggingElement"
+                    :editing="editing"
+                    :position="draggingData.startPosition"
+                ></HomePageItemThumbnail>
                 <div v-if="displayTitles" class="search-result-title">
                     {{ getTitle(draggingElement) }}
                 </div>
@@ -371,8 +265,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import DurationIndicator from "@/components/utils/DurationIndicator.vue";
-import ThumbImage from "@/components/utils/ThumbImage.vue";
+import HomePageItemThumbnail from "../utils/HomePageItemThumbnail.vue";
 import { AuthController } from "@/control/auth";
 import { apiSearch } from "@/api/api-search";
 import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
@@ -393,8 +286,7 @@ const HomePageMoveElementModal = defineAsyncComponent({
 export default defineComponent({
     name: "HomePageRow",
     components: {
-        DurationIndicator,
-        ThumbImage,
+        HomePageItemThumbnail,
         HomePageRowAddElementModal,
         HomePageElementContextMenu,
         HomePageMoveElementModal,

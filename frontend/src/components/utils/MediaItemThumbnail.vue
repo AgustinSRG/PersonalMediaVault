@@ -4,13 +4,19 @@
             <ThumbImage v-if="item.thumbnail" :src="getAssetURL(item.thumbnail)"></ThumbImage>
             <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
 
-            <DurationIndicator v-if="item.type === 2 || item.type === 3" :type="item.type" :duration="item.duration"></DurationIndicator>
+            <DurationIndicator
+                v-if="item.type === MEDIA_TYPE_AUDIO || item.type === MEDIA_TYPE_VIDEO"
+                :type="item.type"
+                :duration="item.duration"
+            ></DurationIndicator>
+
+            <slot></slot>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { MediaListItem } from "@/api/models";
+import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO, type MediaListItem } from "@/api/models";
 import type { PropType } from "vue";
 import { computed } from "vue";
 import MediaNoThumbnail from "./MediaNoThumbnail.vue";

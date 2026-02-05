@@ -9,17 +9,7 @@
         </div>
         <div class="editor-related-media-list">
             <div v-for="(item, i) in relatedMedia" :key="item.id" class="editor-related-media-item">
-                <div class="album-body-item-thumbnail" :title="item.title || $t('Untitled')">
-                    <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
-
-                    <DurationIndicator
-                        v-if="item.type === 2 || item.type === 3"
-                        :type="item.type"
-                        :duration="item.duration"
-                        :small="true"
-                    ></DurationIndicator>
-                </div>
+                <MediaItemAlbumThumbnail :item="item"></MediaItemAlbumThumbnail>
                 <div class="editor-related-media-right">
                     <div class="editor-related-media-title">
                         <a :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">{{ item.title || $t("Untitled") }}</a>
@@ -105,10 +95,8 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
-import MediaNoThumbnail from "@/components/utils/MediaNoThumbnail.vue";
-import ThumbImage from "@/components/utils/ThumbImage.vue";
-import DurationIndicator from "@/components/utils/DurationIndicator.vue";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
+import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 
 import type { MediaListItem } from "@/api/models";
 import { ExitPreventer } from "@/control/exit-prevent";
@@ -121,11 +109,9 @@ export default defineComponent({
     name: "EditorRelatedMedia",
     components: {
         LoadingIcon,
-        MediaNoThumbnail,
-        ThumbImage,
-        DurationIndicator,
         AddRelatedMediaModal,
         SaveChangesAskModal,
+        MediaItemAlbumThumbnail,
     },
     emits: ["changed"],
     setup() {

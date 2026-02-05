@@ -33,17 +33,7 @@
                 @click="clickMedia(item)"
                 @keydown="clickOnEnter"
             >
-                <div class="album-body-item-thumbnail">
-                    <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <MediaNoThumbnail v-else :type="item.type"></MediaNoThumbnail>
-
-                    <div v-if="item.type === 2 || item.type === 3" class="album-body-item-thumb-tag">
-                        {{ renderTime(item.duration) }}
-                    </div>
-                    <div class="album-body-item-thumb-pos">
-                        {{ renderPos(item.pos) }}
-                    </div>
-                </div>
+                <MediaItemAlbumThumbnail :item="item" :display-position="true"></MediaItemAlbumThumbnail>
 
                 <div class="album-body-item-title no-btn">
                     {{ item.title || $t("Untitled") }}
@@ -69,8 +59,7 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
-import MediaNoThumbnail from "../utils/MediaNoThumbnail.vue";
-import ThumbImage from "../utils/ThumbImage.vue";
+import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
 import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
 import {
     EVENT_NAME_CURRENT_ALBUM_LOADING,
@@ -83,8 +72,7 @@ const INITIAL_WINDOW_SIZE = 100;
 export default defineComponent({
     name: "PlayerAlbumFullScreen",
     components: {
-        ThumbImage,
-        MediaNoThumbnail,
+        MediaItemAlbumThumbnail,
     },
     emits: ["close"],
     setup() {

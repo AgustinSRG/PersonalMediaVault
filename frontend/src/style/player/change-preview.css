@@ -10,20 +10,6 @@
     font-size: small;
 }
 
-.player-media-change-preview-thumbnail {
-    position: relative;
-    width: 114px;
-    height: 114px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.player-media-change-preview-thumbnail img {
-    width: 100%;
-    height: 100%;
-}
-
 .player-media-change-preview-details {
     height: 114px;
     width: calc(100% - 114px);
@@ -32,15 +18,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     line-break: anywhere;
-}
-
-.player-media-change-preview-no-thumbnail {
-    font-size: 24px;
-    color: var(--placeholder-no-thumbnail-color);
-}
-
-.player-min .player-media-change-preview-no-thumbnail {
-    font-size: 16px;
 }
 
 .player-media-change-preview-title {

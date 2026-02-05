@@ -25,21 +25,7 @@
             @click="clickOnRelatedMedia"
             @keydown="clickOnEnter"
         >
-            <div class="album-body-item-thumbnail" :title="media.title || $t('Untitled')">
-                <div v-if="!media.thumbnail" class="no-thumb">
-                    <i v-if="media.type === 1" class="fas fa-image"></i>
-                    <i v-else-if="media.type === 2" class="fas fa-video"></i>
-                    <i v-else-if="media.type === 3" class="fas fa-headphones"></i>
-                    <i v-else class="fas fa-ban"></i>
-                </div>
-                <ThumbImage v-if="media.thumbnail" :src="getThumbnail(media.thumbnail)"></ThumbImage>
-                <DurationIndicator
-                    v-if="media.type === 2 || media.type === 3"
-                    :type="media.type"
-                    :duration="media.duration"
-                    :small="true"
-                ></DurationIndicator>
-            </div>
+            <MediaItemAlbumThumbnail :item="media"></MediaItemAlbumThumbnail>
             <div class="related-media-item-title">{{ media.title || $t("Untitled") }}</div>
         </a>
     </div>
@@ -52,14 +38,12 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import type { MediaListItem } from "@/api/models";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
-import ThumbImage from "../utils/ThumbImage.vue";
-import DurationIndicator from "../utils/DurationIndicator.vue";
+import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
 
 export default defineComponent({
     name: "PlayerRelatedMediaList",
     components: {
-        ThumbImage,
-        DurationIndicator,
+        MediaItemAlbumThumbnail,
     },
     props: {
         shown: Boolean,
