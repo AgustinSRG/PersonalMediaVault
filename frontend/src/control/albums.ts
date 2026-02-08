@@ -129,6 +129,17 @@ export class AlbumsController {
     }
 
     /**
+     * Refreshes albums list
+     */
+    public static Refresh() {
+        if (AlbumsController.Loading) {
+            return;
+        }
+
+        AlbumsController.Load();
+    }
+
+    /**
      * Loads albums list
      */
     public static Load() {

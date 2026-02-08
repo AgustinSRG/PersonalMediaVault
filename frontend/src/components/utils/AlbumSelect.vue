@@ -250,7 +250,7 @@ const expand = () => {
 
     focusTrap?.activate();
 
-    AlbumsController.Load();
+    AlbumsController.Refresh();
 
     nextTick(() => {
         nameFilterInput.value?.focus();

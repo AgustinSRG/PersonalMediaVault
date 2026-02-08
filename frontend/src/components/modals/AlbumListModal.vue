@@ -203,7 +203,7 @@ export default defineComponent({
                 nextTick(() => {
                     this.$el.focus();
                 });
-                AlbumsController.Load();
+                AlbumsController.Refresh();
                 this.load();
             } else {
                 clearNamedTimeout(this.loadRequestId);
@@ -232,7 +232,7 @@ export default defineComponent({
             nextTick(() => {
                 this.$el.focus();
             });
-            AlbumsController.Load();
+            AlbumsController.Refresh();
         }
     },
     beforeUnmount: function () {

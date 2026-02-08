@@ -252,7 +252,7 @@ export default defineComponent({
             if (this.focusTrap) {
                 this.focusTrap.activate();
             }
-            AlbumsController.Load();
+            AlbumsController.Refresh();
             TagsController.Refresh();
         },
 
