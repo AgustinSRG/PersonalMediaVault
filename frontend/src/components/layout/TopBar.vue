@@ -253,7 +253,7 @@ export default defineComponent({
                 this.focusTrap.activate();
             }
             AlbumsController.Load();
-            TagsController.Load();
+            TagsController.Refresh();
         },
 
         blurSearchInstantly: function () {

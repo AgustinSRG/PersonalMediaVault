@@ -21,26 +21,26 @@
                 <div class="media-tags-finder">
                     <input
                         ref="tagToAddInput"
-                        v-model="tagToAdd"
+                        v-model="tagFilter"
                         type="text"
                         autocomplete="off"
                         maxlength="255"
                         :disabled="busy"
                         class="form-control tag-to-add"
                         :placeholder="$t('Add tags') + '...'"
-                        @input="onTagAddChanged"
+                        @input="onTagFilterChanged"
                         @keydown="onTagAddKeyDown"
                     />
                 </div>
                 <div class="media-tags-adder">
-                    <button type="button" :disabled="!tagToAdd" class="btn btn-primary btn-xs" @click="onAddTagButtonClicked">
+                    <button type="button" :disabled="!tagFilter" class="btn btn-primary btn-xs" @click="onAddTagButtonClicked">
                         <i class="fas fa-plus"></i> {{ $t("Add tag") }}
                     </button>
                 </div>
             </div>
-            <div v-if="matchingTags.length > 0" class="form-group">
+            <div v-if="tagSuggestions.length > 0" class="form-group">
                 <button
-                    v-for="mt in matchingTags"
+                    v-for="mt in tagSuggestions"
                     :key="mt.id"
                     type="button"
                     class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
@@ -60,31 +60,25 @@ import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
+import { useTagSuggestions } from "@/composables/use-tag-suggestions";
 import { useTagNames } from "@/composables/use-tags-names";
-import { useTimeout } from "@/composables/use-timeout";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import {
     emitAppEvent,
     EVENT_NAME_GO_NEXT,
     EVENT_NAME_GO_PREV,
     EVENT_NAME_MEDIA_UPDATE,
-    EVENT_NAME_TAGS_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
-import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
+import { setLastUsedTag } from "@/control/app-preferences";
 import { MediaController } from "@/control/media";
 import { PagesController } from "@/control/pages";
-import type { MatchingTag } from "@/control/tags";
 import { TagsController } from "@/control/tags";
-import { parseTagName } from "@/utils/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 
 // Translation function
 const { $t } = useI18n();
-
-// Max number of tag suggestions
-const TAGS_SUGGESTION_LIMIT = 10;
 
 const emit = defineEmits<{
     /**
@@ -100,9 +94,6 @@ const props = defineProps({
     allowNavigation: Boolean,
 });
 
-// Timeout to update the found tags
-const findTagTimeout = useTimeout();
-
 // User permissions
 const { canWrite } = useUserPermissions();
 
@@ -112,104 +103,8 @@ const { getTagName } = useTagNames();
 // List of media tags
 const mediaTags = ref<number[]>([]);
 
-// Name of the tag being added
-const tagToAdd = ref("");
-
-// Matching tags based on 'tagToAdd'
-const matchingTags = ref<MatchingTag[]>([]);
-
-/**
- * Updates matching tags
- */
-const findTags = () => {
-    findTagTimeout.clear();
-
-    const tagFilter = parseTagName(tagToAdd.value);
-
-    const lastUsedTagsIds = getLastUsedTags();
-
-    if (!tagFilter) {
-        const lastUsedTags: MatchingTag[] = [];
-        const addedTagIds: number[] = [];
-
-        for (const tid of lastUsedTagsIds) {
-            if (TagsController.Tags.has(tid) && !mediaTags.value.includes(tid) && !addedTagIds.includes(tid)) {
-                lastUsedTags.push({
-                    id: tid,
-                    name: TagsController.Tags.get(tid),
-                });
-
-                addedTagIds.push(tid);
-
-                if (lastUsedTags.length >= TAGS_SUGGESTION_LIMIT) {
-                    break;
-                }
-            }
-        }
-
-        if (lastUsedTags.length < TAGS_SUGGESTION_LIMIT) {
-            Array.from(TagsController.Tags.entries())
-                .filter((t) => {
-                    return !mediaTags.value.includes(t[0]) && !addedTagIds.includes(t[0]);
-                })
-                .sort((a, b) => {
-                    if (a[1] < b[1]) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                })
-                .slice(0, TAGS_SUGGESTION_LIMIT - lastUsedTags.length)
-                .forEach((t) => {
-                    lastUsedTags.push({
-                        id: t[0],
-                        name: t[1],
-                    });
-                });
-        }
-
-        matchingTags.value = lastUsedTags;
-
-        return;
-    }
-
-    matchingTags.value = Array.from(TagsController.Tags.entries())
-        .map((a) => {
-            const i = a[1].indexOf(tagFilter);
-            const lastUsedIndex = lastUsedTagsIds.indexOf(a[0]);
-            return {
-                id: a[0],
-                name: a[1],
-                starts: i === 0,
-                contains: i >= 0,
-                lastUsed: lastUsedIndex === -1 ? lastUsedTagsIds.length : lastUsedIndex,
-            };
-        })
-        .filter((a) => {
-            if (mediaTags.value.includes(a.id)) {
-                return false;
-            }
-            return a.starts || a.contains;
-        })
-        .sort((a, b) => {
-            if (a.starts && !b.starts) {
-                return -1;
-            } else if (b.starts && !a.starts) {
-                return 1;
-            } else if (a.lastUsed < b.lastUsed) {
-                return -1;
-            } else if (a.lastUsed > b.lastUsed) {
-                return 1;
-            } else if (a.name < b.name) {
-                return -1;
-            } else {
-                return 1;
-            }
-        })
-        .slice(0, TAGS_SUGGESTION_LIMIT);
-};
-
-onApplicationEvent(EVENT_NAME_TAGS_UPDATE, findTags);
+// Tag suggestions
+const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions((id) => !mediaTags.value.includes(id));
 
 /**
  * Loads the tag list for the current media
@@ -219,16 +114,11 @@ const load = () => {
         return;
     }
     mediaTags.value = (MediaController.MediaData.tags || []).slice();
-    onTagAddChanged();
+    updateTagSuggestions();
     focusInput();
 };
 
-onMounted(() => {
-    load();
-
-    // Update the tag list from the server
-    TagsController.Load();
-});
+onMounted(load);
 
 onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, load);
 
@@ -247,21 +137,6 @@ const focusInput = (select?: boolean) => {
             tagToAddInput.value?.select();
         }
     });
-};
-
-// Delay to update the matching tags (milliseconds)
-const TAGS_UPDATE_DELAY = 200;
-
-/**
- * Called whenever the input tag changes
- * in order to schedule updating the matching tags.
- */
-const onTagAddChanged = () => {
-    if (findTagTimeout.isSet()) {
-        return;
-    }
-
-    findTagTimeout.set(findTags, TAGS_UPDATE_DELAY);
 };
 
 // True if a tag is being added or removed
@@ -297,14 +172,14 @@ const addTag = (tag: string, resetTagInput: boolean) => {
             PagesController.ShowSnackBar($t("Added tag") + ": " + res.name);
 
             if (resetTagInput) {
-                tagToAdd.value = "";
+                tagFilter.value = "";
             }
 
             if (mediaTags.value.indexOf(res.id) === -1) {
                 mediaTags.value.push(res.id);
             }
 
-            findTags();
+            updateTagSuggestions();
 
             TagsController.AddTag(res.id, res.name);
 
@@ -387,7 +262,7 @@ const removeTag = (tag: number) => {
             if (removed) {
                 TagsController.RemoveTag(tag);
             } else {
-                findTags();
+                updateTagSuggestions();
             }
 
             if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
@@ -438,7 +313,7 @@ const removeTag = (tag: number) => {
 const onAddTagButtonClicked = (e: Event) => {
     e.preventDefault();
 
-    addTag(tagToAdd.value, true);
+    addTag(tagFilter.value, true);
 };
 
 /**
@@ -479,19 +354,19 @@ const container = useTemplateRef("container");
 const onTagAddKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
         e.preventDefault();
-        addTag(tagToAdd.value, true);
+        addTag(tagFilter.value, true);
     } else if (e.key === "Tab" && !e.shiftKey) {
-        findTags();
+        updateTagSuggestions();
 
-        if (matchingTags.value.length > 0) {
-            if (matchingTags.value[0].name !== tagToAdd.value) {
+        if (tagSuggestions.value.length > 0) {
+            if (tagSuggestions.value[0].name !== tagFilter.value) {
                 e.preventDefault();
-                tagToAdd.value = matchingTags.value[0].name;
+                tagFilter.value = tagSuggestions.value[0].name;
             }
         }
     } else if (e.key === "ArrowRight") {
         if (props.allowNavigation) {
-            if (!tagToAdd.value) {
+            if (!tagFilter.value) {
                 emitAppEvent(EVENT_NAME_GO_NEXT);
             }
         }
@@ -500,7 +375,7 @@ const onTagAddKeyDown = (e: KeyboardEvent) => {
             emitAppEvent(EVENT_NAME_GO_NEXT);
         }
     } else if (e.key === "ArrowLeft") {
-        if (!tagToAdd.value) {
+        if (!tagFilter.value) {
             if (props.allowNavigation) {
                 emitAppEvent(EVENT_NAME_GO_PREV);
             }

@@ -65,6 +65,17 @@ export class TagsController {
     }
 
     /**
+     * Refreshes the tags from the server
+     */
+    public static Refresh() {
+        if (TagsController.Loading) {
+            return;
+        }
+
+        TagsController.Load();
+    }
+
+    /**
      * Loads tags
      */
     public static Load() {
@@ -202,6 +213,11 @@ export interface MatchingTag {
      * Tag name
      */
     name: string;
+
+    /**
+     * True of the tag name is equal to the filter
+     */
+    equals?: boolean;
 
     /**
      * True if the tag name starts with the matching filter

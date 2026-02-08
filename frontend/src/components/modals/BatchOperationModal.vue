@@ -53,38 +53,11 @@
                             </option>
                         </select>
                     </div>
-                    <div v-if="tagModeSearch !== 'untagged'" class="form-group media-tags">
-                        <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
-                            <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
-                            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="media-tags-finder">
-                            <input
-                                v-model="tagToAddSearch"
-                                type="text"
-                                autocomplete="off"
-                                maxlength="255"
-                                class="form-control tags-input-search"
-                                :placeholder="$t('Search for tags') + '...'"
-                                @input="onTagSearchChanged(false)"
-                                @keydown="onTagSearchKeyDown"
-                            />
-                        </div>
-                    </div>
-                    <div v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0" class="form-group">
-                        <button
-                            v-for="mt in matchingTagsSearch"
-                            :key="mt.id"
-                            type="button"
-                            class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
-                            @click="addMatchingTagSearch(mt)"
-                            @keydown="onSuggestionKeydown"
-                        >
-                            <i class="fas fa-plus"></i> {{ mt.name }}
-                        </button>
-                    </div>
+                    <TagIdList
+                        v-if="tagModeSearch !== 'untagged'"
+                        v-model:tags="tagsSearch"
+                        @tab-focus-skip="skipTagSuggestionsSearch"
+                    ></TagIdList>
                 </div>
 
                 <hr />
@@ -120,49 +93,7 @@
                     </div>
 
                     <div v-if="action === 'tag-add' || action === 'tag-remove'">
-                        <div class="form-group media-tags">
-                            <div v-for="tag in tagsAction" :key="tag" class="media-tag">
-                                <div class="media-tag-name">{{ tag }}</div>
-                                <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagAction(tag)">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="media-tags-finder">
-                                <input
-                                    v-model="tagToAddAction"
-                                    type="text"
-                                    autocomplete="off"
-                                    maxlength="255"
-                                    class="form-control tags-adder tags-input-search-action"
-                                    :placeholder="$t('Add tags') + '...'"
-                                    @input="onTagActionChanged(false)"
-                                    @keydown="onTagActionKeyDown"
-                                />
-                            </div>
-                            <div class="media-tags-adder">
-                                <button
-                                    type="button"
-                                    :disabled="!tagToAddAction"
-                                    class="btn btn-primary btn-xs"
-                                    @click="addTagAction"
-                                    @keydown="onAddTagActionKeyDown"
-                                >
-                                    <i class="fas fa-plus"></i> {{ $t("Add tag") }}
-                                </button>
-                            </div>
-                        </div>
-                        <div v-if="matchingTagsAction.length > 0" class="form-group">
-                            <button
-                                v-for="mt in matchingTagsAction"
-                                :key="mt.id"
-                                type="button"
-                                class="btn btn-primary btn-sm btn-tag-mini btn-add-tag-action"
-                                @click="addMatchingTagAction(mt)"
-                                @keydown="onSuggestionActionKeydown"
-                            >
-                                <i class="fas fa-plus"></i> {{ mt.name }}
-                            </button>
-                        </div>
+                        <TagNameList v-model:tags="tagsAction" @tab-focus-skip="skipTagSuggestionsActions"></TagNameList>
                     </div>
 
                     <div v-if="action === 'album-add' || action === 'album-remove'">
@@ -212,17 +143,13 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import type { MatchingTag } from "@/control/tags";
 import { TagsController } from "@/control/tags";
-import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_TAGS_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import type { AlbumListItemMinExt } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
-
 import type { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
@@ -232,6 +159,8 @@ import { apiAdvancedSearch } from "@/api/api-search";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import TagIdList from "../utils/TagIdList.vue";
+import TagNameList from "../utils/TagNameList.vue";
 
 const PAGE_SIZE = 50;
 
@@ -241,6 +170,8 @@ export default defineComponent({
         BatchOperationProgressModal,
         AlbumSelect,
         AuthConfirmationModal,
+        TagIdList,
+        TagNameList,
     },
     props: {
         display: Boolean,
@@ -257,15 +188,6 @@ export default defineComponent({
     data: function () {
         return {
             busy: false,
-
-            tagVersion: TagsController.TagsVersion,
-            albums: [] as AlbumListItemMinExt[],
-
-            matchingTagsSearch: [] as MatchingTag[],
-            tagToAddSearch: "",
-
-            matchingTagsAction: [] as MatchingTag[],
-            tagToAddAction: "",
 
             textSearch: "",
             typeSearch: 0,
@@ -303,25 +225,13 @@ export default defineComponent({
             if (this.display) {
                 this.error = "";
                 this.autoFocus();
-                TagsController.Load();
-                AlbumsController.Load();
             }
         },
     },
     mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.updateTagData();
-
-        this.updateAlbums();
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
         if (this.display) {
             this.error = "";
             this.autoFocus();
-            TagsController.Load();
-            AlbumsController.Load();
         }
     },
     beforeUnmount: function () {
@@ -358,180 +268,6 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
-        },
-
-        getTagName: function (tag: number, v: number) {
-            return TagsController.GetTagName(tag, v);
-        },
-
-        onTagSearchChanged: function (forced?: boolean) {
-            if (forced) {
-                if (this.findTagSearchTimeout) {
-                    clearTimeout(this.findTagSearchTimeout);
-                    this.findTagSearchTimeout = null;
-                }
-                this.findTagsSearch();
-            } else {
-                if (this.findTagSearchTimeout) {
-                    return;
-                }
-                this.findTagSearchTimeout = setTimeout(() => {
-                    this.findTagSearchTimeout = null;
-                    this.findTagsSearch();
-                }, 200);
-            }
-        },
-
-        findTagsSearch: function () {
-            const tagFilter = this.tagToAddSearch
-                .replace(/[\n\r]/g, " ")
-                .trim()
-                .replace(/[\s]/g, "_")
-                .toLowerCase();
-            this.matchingTagsSearch = Array.from(TagsController.Tags.entries())
-                .map((a) => {
-                    if (!tagFilter) {
-                        return {
-                            id: a[0],
-                            name: a[1],
-                            starts: true,
-                            contains: true,
-                        };
-                    }
-                    const i = a[1].indexOf(tagFilter);
-                    return {
-                        id: a[0],
-                        name: a[1],
-                        starts: i === 0,
-                        contains: i >= 0,
-                    };
-                })
-                .filter((a) => {
-                    if (this.tagsSearch.indexOf(a.id) >= 0) {
-                        return false;
-                    }
-                    return a.starts || a.contains;
-                })
-                .sort((a, b) => {
-                    if (a.starts && !b.starts) {
-                        return -1;
-                    } else if (b.starts && !a.starts) {
-                        return 1;
-                    } else if (a.name < b.name) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                })
-                .slice(0, 10);
-        },
-
-        onTagActionChanged: function (forced?: boolean) {
-            if (forced) {
-                if (this.findTagActionTimeout) {
-                    clearTimeout(this.findTagActionTimeout);
-                    this.findTagActionTimeout = null;
-                }
-                this.findTagsAction();
-            } else {
-                if (this.findTagActionTimeout) {
-                    return;
-                }
-                this.findTagActionTimeout = setTimeout(() => {
-                    this.findTagActionTimeout = null;
-                    this.findTagsAction();
-                }, 200);
-            }
-        },
-
-        findTagsAction: function () {
-            const tagFilter = this.tagToAddAction
-                .replace(/[\n\r]/g, " ")
-                .trim()
-                .replace(/[\s]/g, "_")
-                .toLowerCase();
-            this.matchingTagsAction = Array.from(TagsController.Tags.entries())
-                .map((a) => {
-                    if (!tagFilter) {
-                        return {
-                            id: a[0],
-                            name: a[1],
-                            starts: true,
-                            contains: true,
-                        };
-                    }
-                    const i = a[1].indexOf(tagFilter);
-                    return {
-                        id: a[0],
-                        name: a[1],
-                        starts: i === 0,
-                        contains: i >= 0,
-                    };
-                })
-                .filter((a) => {
-                    if (this.tagsAction.indexOf(a.name) >= 0) {
-                        return false;
-                    }
-                    return a.starts || a.contains;
-                })
-                .sort((a, b) => {
-                    if (a.starts && !b.starts) {
-                        return -1;
-                    } else if (b.starts && !a.starts) {
-                        return 1;
-                    } else if (a.name < b.name) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                })
-                .slice(0, 10);
-        },
-
-        removeTagSearch: function (tag: number) {
-            this.tagsSearch = this.tagsSearch.filter((t) => {
-                return tag !== t;
-            });
-            this.onTagSearchChanged(true);
-            const inputElem = this.$el.querySelector(".tags-input-search");
-            if (inputElem) {
-                inputElem.focus();
-            }
-        },
-
-        addMatchingTagSearch: function (tag) {
-            if (this.tagsSearch.indexOf(tag.id) >= 0) {
-                return;
-            }
-            this.tagsSearch.push(tag.id);
-            this.onTagSearchChanged(true);
-            const inputElem = this.$el.querySelector(".tags-input-search");
-            if (inputElem) {
-                inputElem.focus();
-            }
-        },
-
-        removeTagAction: function (tag: string) {
-            this.tagsAction = this.tagsAction.filter((t) => {
-                return tag !== t;
-            });
-            this.onTagActionChanged(true);
-            const inputElem = this.$el.querySelector(".tags-input-search-action");
-            if (inputElem) {
-                inputElem.focus();
-            }
-        },
-
-        addMatchingTagAction: function (tag) {
-            if (this.tagsAction.indexOf(tag.name) >= 0) {
-                return;
-            }
-            this.tagsAction.push(tag.name);
-            this.onTagActionChanged(true);
-            const inputElem = this.$el.querySelector(".tags-input-search-action");
-            if (inputElem) {
-                inputElem.focus();
-            }
         },
 
         onTagsSkipKeyDown: function (event: KeyboardEvent) {
@@ -620,95 +356,18 @@ export default defineComponent({
             }
         },
 
-        onTagSearchKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-
-                this.onTagSearchChanged(true);
-
-                if (this.matchingTagsSearch.length > 0) {
-                    this.addMatchingTagSearch(this.matchingTagsSearch[0]);
-                    this.tagToAddSearch = "";
-                    this.onTagSearchChanged(true);
-                }
-            } else if (event.key === "Tab" && this.tagToAddSearch && !event.shiftKey) {
-                if (this.matchingTagsSearch.length > 0) {
-                    if (this.matchingTagsSearch[0].name !== this.tagToAddSearch) {
-                        event.preventDefault();
-                        this.tagToAddSearch = this.matchingTagsSearch[0].name;
-                        this.onTagSearchChanged(true);
-                    }
-                }
-            } else if (event.key === "Tab" && !event.shiftKey) {
-                const toFocus = this.$el.querySelector(".tags-focus-skip");
-                if (toFocus) {
-                    event.preventDefault();
-                    toFocus.focus();
-                }
-            } else if (event.key === "ArrowDown") {
-                const suggestionElem = this.$el.querySelector(".btn-add-tag");
-                if (suggestionElem) {
-                    event.preventDefault();
-                    suggestionElem.focus();
-                }
-            }
-
-            event.stopPropagation();
-        },
-
-        addTagAction: function () {
-            if (!this.tagToAddAction) {
-                return;
-            }
-            this.addMatchingTagAction({ name: this.tagToAddAction, id: -1 });
-            this.tagToAddAction = "";
-            this.onTagActionChanged(true);
-        },
-
-        onTagActionKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-
-                this.addTagAction();
-            } else if (event.key === "Tab" && this.tagToAddSearch && !event.shiftKey) {
-                this.onTagActionChanged(true);
-
-                if (this.matchingTagsAction.length > 0) {
-                    if (this.tagToAddAction !== this.matchingTagsAction[0].name) {
-                        event.preventDefault();
-                        this.tagToAddAction = this.matchingTagsAction[0].name;
-                        this.onTagActionChanged(true);
-                    }
-                }
-            } else if (event.key === "Tab" && !this.tagToAddAction && !event.shiftKey) {
-                const toFocus = this.$el.querySelector(".tags-focus-skip-action");
-                if (toFocus) {
-                    event.preventDefault();
-                    toFocus.focus();
-                }
-            } else if (event.key === "ArrowDown") {
-                const suggestionElem = this.$el.querySelector(".btn-add-tag-action");
-                if (suggestionElem) {
-                    event.preventDefault();
-                    suggestionElem.focus();
-                }
+        skipTagSuggestionsSearch: function () {
+            const elem = this.$el.querySelector(".tags-focus-skip");
+            if (elem) {
+                elem.focus();
             }
         },
 
-        updateTagData: function () {
-            this.tagVersion = TagsController.TagsVersion;
-            this.onTagSearchChanged(false);
-            this.onTagActionChanged(false);
-        },
-
-        updateAlbums: function () {
-            this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
-                if (a.nameLowerCase < b.nameLowerCase) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
+        skipTagSuggestionsActions: function () {
+            const toFocus = this.$el.querySelector(".tags-focus-skip-action");
+            if (toFocus) {
+                toFocus.focus();
+            }
         },
 
         start: function () {
@@ -802,7 +461,7 @@ export default defineComponent({
             }
             return this.tagsSearch
                 .map((tag) => {
-                    return this.getTagName(tag, this.tagVersion);
+                    return TagsController.GetTagName(tag, TagsController.TagsVersion);
                 })
                 .slice(0, 16);
         },
