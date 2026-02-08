@@ -156,7 +156,7 @@
             </div>
         </form>
 
-        <div class="search-results tags-focus-skip" tabindex="-1">
+        <div class="search-results tags-focus-skip" tabindex="-1" @keydown="onTagsSkipKeyDown">
             <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">

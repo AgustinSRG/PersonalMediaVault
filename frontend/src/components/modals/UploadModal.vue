@@ -35,7 +35,9 @@
             </div>
 
             <div class="modal-footer no-padding">
-                <button type="button" class="modal-footer-btn" @click="doUpload"><i class="fas fa-upload"></i> {{ $t("Upload") }}</button>
+                <button type="button" class="modal-footer-btn" @click="doUpload" @keydown="onTagsSkipKeyDown">
+                    <i class="fas fa-upload"></i> {{ $t("Upload") }}
+                </button>
             </div>
         </div>
 
@@ -180,6 +182,16 @@ export default defineComponent({
             const el = this.$el.querySelector(".modal-footer-btn");
             if (el) {
                 el.focus();
+            }
+        },
+
+        onTagsSkipKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab" && event.shiftKey) {
+                const inputElem = this.$el.querySelector(".tags-input-search");
+                if (inputElem) {
+                    event.preventDefault();
+                    inputElem.focus();
+                }
             }
         },
     },
