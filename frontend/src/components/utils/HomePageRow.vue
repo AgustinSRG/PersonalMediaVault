@@ -276,7 +276,7 @@ const HomePageRowAddElementModal = defineAsyncComponent({
 });
 
 const HomePageElementContextMenu = defineAsyncComponent({
-    loader: () => import("@/components/layout/HomePageElementContextMenu.vue"),
+    loader: () => import("@/components/utils/HomePageElementContextMenu.vue"),
 });
 
 const HomePageMoveElementModal = defineAsyncComponent({

@@ -32,6 +32,20 @@
             <div class="no-thumb">
                 <i class="fas fa-ban"></i>
             </div>
+
+            <div v-if="editing" class="home-page-element-thumb-pos">
+                {{ position + 1 }}
+            </div>
+
+            <button
+                v-if="editing"
+                type="button"
+                class="home-page-row-context-btn"
+                :title="$t('Options to modify element')"
+                @click="showContextMenu"
+            >
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </div>
 </template>

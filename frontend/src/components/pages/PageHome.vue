@@ -150,7 +150,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
-import HomePageRow from "../layout/HomePageRow.vue";
+import HomePageRow from "../utils/HomePageRow.vue";
 import { doHomePageSilentSaveAction, getHomePageBackStatePage, HomePageGroupTypes, type HomePageGroupStartMovingData } from "@/utils/home";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";

@@ -164,7 +164,7 @@ import { AuthController } from "@/control/auth";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import AlbumContextMenu from "./AlbumContextMenu.vue";
+import AlbumContextMenu from "../utils/AlbumContextMenu.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
 import { useVModel } from "@/utils/v-model";
