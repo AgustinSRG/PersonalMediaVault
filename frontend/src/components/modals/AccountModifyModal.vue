@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Modify account") }}
@@ -25,6 +20,8 @@
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
                     />
+
+                    <div v-if="accountUsernameError" class="form-error form-error-pt">{{ accountUsernameError }}</div>
                 </div>
 
                 <div class="form-group">
@@ -49,182 +46,186 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="submitInternal"
+            @confirm="performRequest"
         ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { apiAdminUpdateAccount } from "@/api/api-admin";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AccountModifyModal",
-    components: {
-        LoadingIcon,
-        AuthConfirmationModal,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Username
+     */
+    username: {
+        type: String,
+        required: true,
     },
-    props: {
-        display: Boolean,
-        username: String,
-        write: Boolean,
-    },
-    emits: ["update:display", "done"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            name: "",
 
-            busy: false,
-            error: "",
-
-            accountUsername: this.username || "",
-            accountWrite: this.write || false,
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
-        },
-        username: function () {
-            this.accountUsername = this.username || "";
-        },
-        write: function () {
-            this.accountWrite = this.write || false;
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            this.submitInternal({});
-        },
-
-        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            makeApiRequest(apiAdminUpdateAccount(this.username, this.accountUsername, this.accountWrite, confirmation))
-                .onSuccess(() => {
-                    this.busy = false;
-                    PagesController.ShowSnackBar(this.$t("Account updated") + ": " + this.accountUsername);
-                    this.$emit("done");
-                    this.close();
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidUsername: () => {
-                            this.error = this.$t("Invalid username provided");
-                        },
-                        usernameInUse: () => {
-                            this.error = this.$t("The username is already in use");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        accountNotFound: () => {
-                            this.error = this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
+    /**
+     * Write permission of the user
+     */
+    write: {
+        type: Boolean,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the request is done successfully.
+     */
+    (e: "done"): void;
+}>();
+
+// Username
+const accountUsername = ref(props.username);
+
+watch(
+    () => props.username,
+    () => {
+        accountUsername.value = props.username;
+    },
+);
+
+// Write permission
+const accountWrite = ref(props.write);
+
+watch(
+    () => props.write,
+    () => {
+        accountWrite.value = props.write;
+    },
+);
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Other errors
+const accountUsernameError = ref("");
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+
+    accountUsernameError.value = "";
+};
+
+// Reset error when modal opens
+watch(display, () => {
+    if (display.value) {
+        resetErrors();
+    }
+});
+
+/**
+ * Performs the request
+ * @param confirmation The auth confirmation
+ */
+const performRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    makeApiRequest(apiAdminUpdateAccount(props.username, accountUsername.value, accountWrite.value, confirmation))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Account updated") + ": " + accountUsername.value);
+
+            emit("done");
+
+            forceClose();
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidUsername: () => {
+                    accountUsernameError.value = $t("Invalid username provided");
+                },
+                usernameInUse: () => {
+                    accountUsernameError.value = $t("The username is already in use");
+                },
+                badRequest,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                accountNotFound: () => {
+                    error.value = $t("Not found");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest({});
+};
 </script>
