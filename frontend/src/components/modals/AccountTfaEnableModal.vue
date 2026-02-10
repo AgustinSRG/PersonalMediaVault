@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-lg" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form ref="form" class="modal-dialog modal-lg" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Enable two factor authentication") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -92,269 +87,301 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
-import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
 import { apiAccountTimeOtpEnable, apiAccountTimeOtpSettings } from "@/api/api-account";
-import AccountTfaSettingsModal from "./AccountTfaSettingsModal.vue";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useRequestId } from "@/composables/use-request-id";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AccountTfaEnableModal",
-    components: {
-        LoadingIcon,
-        PasswordInput,
-        SixDigitCodeInput,
-        AccountTfaSettingsModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "done"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            loadRequestId: getUniqueStringId(),
-            saveRequestId: getUniqueStringId(),
-        };
-    },
-    data: function () {
-        return {
-            issuer: "PMV",
-            account: AuthController.Username,
-            originalAccount: AuthController.Username,
-
-            algorithm: "sha1" as TimeOtpAlgorithm,
-
-            period: "30" as TimeOtpPeriod,
-
-            skew: true,
-
-            loadingSettings: false,
-
-            displayCustomSettings: false,
-
-            secret: "",
-            method: "",
-            url: "",
-            qr: "",
-
-            password: "",
-            code: "",
-
-            errorInvalidSettings: false,
-
-            busy: false,
-
-            error: "",
-            errorPassword: "",
-            errorCode: "",
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.loadSettings();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
-            this.account = AuthController.Username;
-            this.originalAccount = AuthController.Username;
-            this.loadSettings();
-        });
-
-        if (this.display) {
-            this.loadSettings();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-
-        abortNamedApiRequest(this.saveRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display || this.displayCustomSettings) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        customizeSettings: function () {
-            this.displayCustomSettings = true;
-        },
-
-        copyUrl: function () {
-            navigator.clipboard.writeText(this.url);
-            PagesController.ShowSnackBar(this.$t("Copied URL to clipboard"));
-        },
-
-        passwordTabSkip: function (e: KeyboardEvent) {
-            const nextElement = this.$el.querySelector(".form-control.code-char-0");
-
-            if (nextElement) {
-                e.preventDefault();
-                nextElement.focus();
-            }
-        },
-
-        loadSettings: function () {
-            if (!this.display) {
-                return;
-            }
-
-            this.loadingSettings = true;
-            this.errorInvalidSettings = false;
-
-            clearNamedTimeout(this.loadRequestId);
-
-            makeNamedApiRequest(
-                this.loadRequestId,
-                apiAccountTimeOtpSettings({
-                    issuer: this.issuer,
-                    account: this.account,
-                    algorithm: this.algorithm,
-                    period: this.period,
-                    skew: this.skew ? "allow" : "disallow",
-                }),
-            )
-                .onSuccess((response) => {
-                    this.secret = response.secret;
-                    this.method = response.method;
-                    this.url = response.url;
-                    this.qr = response.qr;
-
-                    this.code = "";
-
-                    this.loadingSettings = false;
-                    this.errorInvalidSettings = false;
-
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidSettings: () => {
-                            this.loadingSettings = false;
-                            this.error = this.$t("Invalid two factor authentication settings. Try with another configuration.");
-                            this.errorInvalidSettings = true;
-                        },
-                        accessDenied: () => {
-                            this.close();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.loadSettings.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.loadSettings.bind(this));
-                });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            makeApiRequest(
-                apiAccountTimeOtpEnable({
-                    secret: this.secret,
-                    method: this.method,
-                    password: this.password,
-                    code: this.code,
-                }),
-            )
-                .onSuccess(() => {
-                    this.busy = false;
-
-                    this.error = "";
-                    this.errorCode = "";
-                    this.errorPassword = "";
-
-                    PagesController.ShowSnackBar(this.$t("Two factor authentication enabled"));
-                    this.$emit("done");
-                    this.forceCloseSignal++;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-
-                    this.error = "";
-                    this.errorCode = "";
-                    this.errorPassword = "";
-
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidCode: () => {
-                            this.errorCode = this.$t("Invalid one-time code");
-                        },
-                        invalidPassword: () => {
-                            this.errorPassword = this.$t("Invalid password");
-                        },
-                        tfaAlreadyEnabled: () => {
-                            PagesController.ShowSnackBar(this.$t("Two factor authentication is already enabled"));
-                            this.$emit("done");
-                            this.forceCloseSignal++;
-                        },
-                        invalidSecretOrMethod: () => {
-                            this.error = this.$t("Invalid two factor authentication settings. Try with another configuration.");
-                            this.errorInvalidSettings = true;
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                    this.error = err.message;
-                });
-        },
-    },
+const AccountTfaSettingsModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountTfaSettingsModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
+
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose, focus } = useModal(display, container);
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the request is done successfully.
+     */
+    (e: "done"): void;
+}>();
+
+// TFA TOTP issuer name
+const issuer = ref("PMV");
+
+// TFA account name
+const account = ref(AuthController.Username);
+
+// TFA original account name
+const originalAccount = ref(AuthController.Username);
+
+// TOTP algorithm
+const algorithm = ref<TimeOtpAlgorithm>("sha1");
+
+// TOTP period
+const period = ref<TimeOtpPeriod>("30");
+
+// Allow clock skew?
+const skew = ref(true);
+
+// TOTP secret
+const secret = ref("");
+
+// TFA method
+const method = ref("");
+
+// TFA URL
+const url = ref("");
+
+// QR code
+const qr = ref("");
+
+// Loading settings status
+const loadingSettings = ref(true);
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the TFA settings
+ */
+const loadSettings = () => {
+    loadingSettings.value = true;
+
+    resetErrors();
+
+    clearNamedTimeout(loadRequestId);
+
+    makeNamedApiRequest(
+        loadRequestId,
+        apiAccountTimeOtpSettings({
+            issuer: issuer.value,
+            account: account.value,
+            algorithm: algorithm.value,
+            period: period.value,
+            skew: skew.value ? "allow" : "disallow",
+        }),
+    )
+        .onSuccess((response) => {
+            secret.value = response.secret;
+            method.value = response.method;
+            url.value = response.url;
+            qr.value = response.qr;
+
+            code.value = "";
+
+            loadingSettings.value = false;
+            errorInvalidSettings.value = false;
+
+            focus();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                invalidSettings: () => {
+                    loadingSettings.value = false;
+                    error.value = $t("Invalid two factor authentication settings. Try with another configuration.");
+                    errorInvalidSettings.value = true;
+                },
+                accessDenied: () => {
+                    close();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSettings);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSettings);
+        });
+};
+
+onMounted(() => {
+    if (display.value) {
+        loadSettings();
+    }
+});
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
+    account.value = AuthController.Username;
+    originalAccount.value = AuthController.Username;
+});
+
+// Display custom settings modal
+const displayCustomSettings = ref(false);
+
+watch(display, () => {
+    if (display.value) {
+        displayCustomSettings.value = false;
+
+        loadSettings();
+    }
+});
+
+/**
+ * Opens the modal to customize the settings
+ */
+const customizeSettings = () => {
+    displayCustomSettings.value = true;
+};
+
+// Account password (confirmation)
+const password = ref("");
+
+// TFA code (confirmation)
+const code = ref("");
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Other errors
+const errorInvalidSettings = ref(false);
+const errorPassword = ref("");
+const errorCode = ref("");
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+
+    errorInvalidSettings.value = false;
+    errorPassword.value = "";
+    errorCode.value = "";
+};
+
+/**
+ * Performs the request
+ */
+const performRequest = () => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    makeApiRequest(
+        apiAccountTimeOtpEnable({
+            secret: secret.value,
+            method: method.value,
+            password: password.value,
+            code: code.value,
+        }),
+    )
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Two factor authentication enabled"));
+
+            emit("done");
+
+            forceClose();
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidCode: () => {
+                    errorCode.value = $t("Invalid one-time code");
+                },
+                invalidPassword: () => {
+                    errorPassword.value = $t("Invalid password");
+                },
+                tfaAlreadyEnabled: () => {
+                    PagesController.ShowSnackBar($t("Two factor authentication is already enabled"));
+
+                    emit("done");
+
+                    forceClose();
+                },
+                invalidSecretOrMethod: () => {
+                    error.value = $t("Invalid two factor authentication settings. Try with another configuration.");
+                    errorInvalidSettings.value = true;
+                },
+                accessDenied,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest();
+};
+
+/**
+ * Copies TFA URL to clipboard
+ */
+const copyUrl = () => {
+    navigator.clipboard.writeText(url.value);
+    PagesController.ShowSnackBar($t("Copied URL to clipboard"));
+};
+
+// Form container
+const form = useTemplateRef("form");
+
+/**
+ * Handler for tab focus skip on password input
+ * @param e The keyboard event
+ */
+const passwordTabSkip = (e: KeyboardEvent) => {
+    const nextElement = form.value?.querySelector(".form-control.code-char-0") as HTMLElement;
+
+    if (nextElement) {
+        e.preventDefault();
+
+        nextElement.focus();
+    }
+};
 </script>

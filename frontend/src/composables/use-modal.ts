@@ -9,6 +9,7 @@ import { nextTick, onMounted, watch } from "vue";
 interface IModalDialogContainer {
     close(forced?: boolean): void;
     focus(): void;
+    scrollToTop(): void;
 }
 
 /**
@@ -30,6 +31,11 @@ export type ModalComposable = {
      * or the modal container
      */
     focus: () => void;
+
+    /**
+     * Scrolls the container to the top
+     */
+    scrollToTop: () => void;
 };
 
 /**
@@ -53,6 +59,12 @@ export function useModal(display: ModelRef<boolean>, container: Readonly<Shallow
         });
     };
 
+    const scrollToTop = () => {
+        nextTick(() => {
+            container.value?.scrollToTop();
+        });
+    };
+
     onMounted(() => {
         if (display.value) {
             focus();
@@ -65,5 +77,5 @@ export function useModal(display: ModelRef<boolean>, container: Readonly<Shallow
         }
     });
 
-    return { close, forceClose, focus };
+    return { close, forceClose, focus, scrollToTop };
 }

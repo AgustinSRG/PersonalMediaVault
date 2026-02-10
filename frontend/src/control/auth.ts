@@ -24,7 +24,7 @@ const REQUEST_KEY_SILENT = "auth-control-check-silent";
 const LS_KEY_AUTH_TOKEN = "x-session-token";
 const LS_KEY_VAULT_FINGERPRINT = "x-vault-fingerprint";
 
-const SESSION_TOKEN_HEADER_NAME = "x-session-token";
+export const SESSION_TOKEN_HEADER_NAME = "x-session-token";
 
 /**
  * Authentication status management object

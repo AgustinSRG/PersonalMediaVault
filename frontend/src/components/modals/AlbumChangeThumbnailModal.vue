@@ -1,10 +1,5 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busyThumbnail"
-    >
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
         <div v-if="display" class="modal-dialog modal-md" role="document" @drop="onDrop">
             <div class="modal-header">
                 <div class="modal-title">
@@ -17,15 +12,15 @@
             <div class="modal-body">
                 <div class="form-group flex-center">
                     <label v-if="!thumbnail">{{ $t("No thumbnail set for this album") }}</label>
-                    <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" class-name="form-group-thumbnail"></ThumbImage>
+                    <ThumbImage v-if="thumbnail" :src="getAssetURL(thumbnail)" class-name="form-group-thumbnail"></ThumbImage>
                 </div>
                 <div class="form-group">
-                    <input type="file" class="file-hidden" name="thumbnail-upload" @change="inputFileChanged" />
+                    <input ref="fileSelector" type="file" class="file-hidden" name="thumbnail-upload" @change="inputFileChanged" />
                     <div class="text-center">
-                        <button v-if="!busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" @click="uploadThumbnail">
+                        <button v-if="!busy" type="button" class="btn btn-primary image-thumbnail-button" @click="uploadThumbnail">
                             <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
                         </button>
-                        <button v-if="busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" disabled>
+                        <button v-if="busy" type="button" class="btn btn-primary image-thumbnail-button" disabled>
                             <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading thumbnail") }}...
                         </button>
                     </div>
@@ -34,17 +29,17 @@
                             type="button"
                             class="btn btn-primary btn-sm image-thumbnail-button"
                             :title="$t('Set current media thumbnail')"
-                            :disabled="busyThumbnail"
+                            :disabled="busy"
                             @click="setCurrentMediaThumbnail"
                         >
                             <i class="fas fa-image"></i> {{ $t("Set current media thumbnail") }}
                         </button>
                     </div>
-                    <div v-if="errorThumbnail" class="form-error form-error-pt text-center">{{ errorThumbnail }}</div>
+                    <div v-if="error" class="form-error form-error-pt text-center">{{ $t("Error") + ": " + error }}</div>
                 </div>
             </div>
             <div class="modal-footer no-padding">
-                <button :disabled="busyThumbnail" type="button" class="modal-footer-btn" @click="close">
+                <button :disabled="busy" type="button" class="modal-footer-btn" @click="close">
                     <i class="fas fa-check"></i> {{ $t("Done") }}
                 </button>
             </div>
@@ -60,292 +55,290 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { emitAppEvent, EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { AuthController } from "@/control/auth";
+import { EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
+import { AuthController, SESSION_TOKEN_HEADER_NAME } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { MediaController } from "@/control/media";
 import ThumbImage from "../utils/ThumbImage.vue";
 import ThumbnailCropModal from "./ThumbnailCropModal.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AlbumChangeThumbnailModal",
-    components: {
-        ThumbImage,
-        ThumbnailCropModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            requestIdThumbnail: getUniqueStringId(),
-            fetchMediaThumbnailAbortController: null as AbortController | null,
-            tempImage: null as HTMLImageElement,
-        };
-    },
-    data: function () {
-        return {
-            currentAlbum: -1,
+// Translation function
+const { $t } = useI18n();
 
-            thumbnail: "",
+// Display model
+const display = defineModel<boolean>("display");
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
+// Modal container
+const container = useTemplateRef("container");
 
-            busyThumbnail: false,
-            errorThumbnail: "",
+// Modal composable
+const { close } = useModal(display, container);
 
-            currentMediaThumbnail: "",
+// Current album ID
+const currentAlbum = ref(AlbumsController.CurrentAlbum);
 
-            displayThumbnailModal: false,
-            thumbnailModalUrl: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.errorThumbnail = "";
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+// Current album thumbnail
+const thumbnail = ref(AlbumsController.CurrentAlbumData?.thumbnail || "");
 
-        this.onAlbumUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
-
-        this.onMediaUpdate();
-
-        if (this.display) {
-            this.errorThumbnail = "";
-            this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdThumbnail);
-
-        if (this.fetchMediaThumbnailAbortController) {
-            this.fetchMediaThumbnailAbortController.abort();
-        }
-
-        if (this.tempImage) {
-            delete this.tempImage.onload;
-            delete this.tempImage.onerror;
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        onAlbumUpdate: function () {
-            this.currentAlbum = AlbumsController.CurrentAlbum;
-            if (AlbumsController.CurrentAlbumData) {
-                this.thumbnail = AlbumsController.CurrentAlbumData.thumbnail || "";
-            }
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        uploadThumbnail: function () {
-            const fileElem = this.$el.querySelector(".file-hidden");
-            if (fileElem) {
-                fileElem.value = null;
-                fileElem.click();
-            }
-        },
-
-        inputFileChanged: function (e: InputEvent) {
-            const data = (e.target as HTMLInputElement).files;
-            if (data && data.length > 0) {
-                const file = data[0];
-                this.prepareChangeThumbnail(file);
-            }
-        },
-
-        onDrop: function (e: DragEvent) {
-            e.preventDefault();
-            const data = e.dataTransfer.files;
-            if (data && data.length > 0) {
-                const file = data[0];
-                this.prepareChangeThumbnail(file);
-            }
-        },
-
-        prepareChangeThumbnail: function (file: File) {
-            if (this.tempImage) {
-                delete this.tempImage.onload;
-                delete this.tempImage.onerror;
-                this.tempImage = null;
-            }
-
-            const url = URL.createObjectURL(file);
-
-            const img = new Image();
-            this.tempImage = img;
-
-            img.onload = () => {
-                this.tempImage = null;
-
-                if (img.width === img.height) {
-                    this.changeThumbnail(file);
-                    return;
-                }
-
-                this.thumbnailModalUrl = url;
-                this.errorThumbnail = "";
-                this.displayThumbnailModal = true;
-            };
-
-            img.onerror = (err) => {
-                this.tempImage = null;
-                console.error(err);
-                this.onThumbnailModalError();
-            };
-
-            img.src = url;
-        },
-
-        onThumbnailModalError: function () {
-            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");
-        },
-
-        changeThumbnail: function (file: File) {
-            if (this.busyThumbnail) {
-                return;
-            }
-
-            this.busyThumbnail = true;
-            this.errorThumbnail = "";
-
-            const albumId = this.currentAlbum;
-
-            makeNamedApiRequest(this.requestIdThumbnail, apiAlbumsChangeAlbumThumbnail(albumId, file))
-                .onSuccess((res) => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed thumbnail"));
-                    this.busyThumbnail = false;
-                    this.thumbnail = res.url;
-                    AlbumsController.OnChangedAlbum(albumId);
-                })
-                .onCancel(() => {
-                    this.busyThumbnail = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyThumbnail = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidThumbnail: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");
-                        },
-                        badRequest: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorThumbnail = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyThumbnail = false;
-                });
-        },
-
-        onMediaUpdate: function () {
-            if (MediaController.MediaData) {
-                this.currentMediaThumbnail = MediaController.MediaData.thumbnail || "";
-            } else {
-                this.currentMediaThumbnail = "";
-            }
-        },
-
-        setCurrentMediaThumbnail: function () {
-            if (this.busyThumbnail) {
-                return;
-            }
-
-            if (!this.currentMediaThumbnail) {
-                return;
-            }
-
-            const thumbnailUrl = getAssetURL(this.currentMediaThumbnail);
-
-            this.busyThumbnail = true;
-
-            const abortController = new AbortController();
-            this.fetchMediaThumbnailAbortController = abortController;
-
-            fetch(thumbnailUrl, {
-                signal: abortController.signal,
-                headers: {
-                    "x-session-token": AuthController.Session,
-                },
-            })
-                .then((response) => {
-                    this.fetchMediaThumbnailAbortController = null;
-                    if (response.status === 200) {
-                        response
-                            .blob()
-                            .then((blob) => {
-                                this.busyThumbnail = false;
-                                this.changeThumbnail(new File([blob], "thumbnail.jpg"));
-                            })
-                            .catch((err) => {
-                                console.error(err);
-                                this.errorThumbnail = this.$t("Error") + ": " + err.message;
-                                this.busyThumbnail = false;
-                            });
-                    } else {
-                        this.errorThumbnail = this.$t("Error") + ": " + this.$t("Could not fetch media thumbnail");
-                        this.busyThumbnail = false;
-                    }
-                })
-                .catch((err) => {
-                    this.fetchMediaThumbnailAbortController = null;
-                    console.error(err);
-                    this.errorThumbnail = this.$t("Error") + ": " + err.message;
-                    this.busyThumbnail = false;
-                });
-        },
-    },
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
+    currentAlbum.value = AlbumsController.CurrentAlbum;
+    thumbnail.value = AlbumsController.CurrentAlbumData?.thumbnail || "";
 });
+
+// Current media thumbnail
+const currentMediaThumbnail = ref(MediaController.MediaData?.thumbnail || "");
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    currentMediaThumbnail.value = MediaController.MediaData?.thumbnail || "";
+});
+
+// Temporal image
+let tempImage: HTMLImageElement | null = null;
+
+// Abort controller for thumbnail image request
+let fetchMediaThumbnailAbortController: AbortController | null = null;
+
+onBeforeUnmount(() => {
+    if (fetchMediaThumbnailAbortController) {
+        fetchMediaThumbnailAbortController.abort();
+    }
+
+    if (tempImage) {
+        delete tempImage.onload;
+        delete tempImage.onerror;
+    }
+});
+
+// Busy state
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+watch(display, () => {
+    if (display.value) {
+        resetErrors();
+    }
+});
+
+/**
+ * Called when the thumbnail crop modal results in
+ * an error. This means the thumbnail image is invalid.
+ */
+const onThumbnailModalError = () => {
+    error.value = $t("Invalid thumbnail provided");
+};
+
+// Request ID
+const changeThumbnailRequestId = useRequestId();
+
+/**
+ * Changes the album thumbnail
+ * @param file The thumbnail file
+ */
+const changeThumbnail = (file: File) => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    const albumId = currentAlbum.value;
+
+    makeNamedApiRequest(changeThumbnailRequestId, apiAlbumsChangeAlbumThumbnail(albumId, file))
+        .onSuccess((res) => {
+            PagesController.ShowSnackBarRight($t("Successfully changed thumbnail"));
+
+            busy.value = false;
+
+            thumbnail.value = res.url;
+
+            AlbumsController.OnChangedAlbum(albumId);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidThumbnail: () => {
+                    error.value = $t("Invalid thumbnail provided");
+                },
+                badRequest,
+                accessDenied,
+                notFound: () => {
+                    error.value = $t("Not found");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+// True to display the thumbnail crop modal
+const displayThumbnailModal = ref(false);
+
+// Thumbnail URL to be loaded in the crop modal
+const thumbnailModalUrl = ref("");
+
+// Reference to the file selector element
+const fileSelector = useTemplateRef("fileSelector");
+
+/**
+ * Opens the file selector in order to select a thumbnail
+ * to be uploaded
+ */
+const uploadThumbnail = () => {
+    if (fileSelector.value) {
+        fileSelector.value.value = null;
+        fileSelector.value.click();
+    }
+};
+
+/**
+ * Event handler for 'change' on the file selector element
+ * @param e The event
+ */
+const inputFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        const file = data[0];
+        prepareChangeThumbnail(file);
+    }
+};
+
+/**
+ * Event handler for 'drop' on the component
+ * @param e The event
+ */
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+
+    const data = e.dataTransfer.files;
+    if (data && data.length > 0) {
+        const file = data[0];
+        prepareChangeThumbnail(file);
+    }
+};
+
+/**
+ * Prepares a file to be uploaded as a thumbnail
+ * @param file The file
+ */
+const prepareChangeThumbnail = (file: File) => {
+    if (tempImage) {
+        delete tempImage.onload;
+        delete tempImage.onerror;
+        tempImage = null;
+    }
+
+    const url = URL.createObjectURL(file);
+
+    const img = new Image();
+    tempImage = img;
+
+    img.onload = () => {
+        tempImage = null;
+
+        if (img.width === img.height) {
+            changeThumbnail(file);
+            return;
+        }
+
+        thumbnailModalUrl.value = url;
+        error.value = "";
+        displayThumbnailModal.value = true;
+    };
+
+    img.onerror = (err) => {
+        tempImage = null;
+        console.error(err);
+        onThumbnailModalError();
+    };
+
+    img.src = url;
+};
+
+/**
+ * Uses the thumbnail of the current media
+ * as the thumbnail for the album
+ */
+const setCurrentMediaThumbnail = () => {
+    if (busy.value) {
+        return;
+    }
+
+    if (!currentMediaThumbnail.value) {
+        return;
+    }
+
+    resetErrors();
+
+    const thumbnailUrl = getAssetURL(currentMediaThumbnail.value);
+
+    busy.value = true;
+
+    const abortController = new AbortController();
+    fetchMediaThumbnailAbortController = abortController;
+
+    fetch(thumbnailUrl, {
+        signal: abortController.signal,
+        headers: {
+            [SESSION_TOKEN_HEADER_NAME]: AuthController.Session,
+        },
+    })
+        .then((response) => {
+            fetchMediaThumbnailAbortController = null;
+
+            if (response.status === 200) {
+                response
+                    .blob()
+                    .then((blob) => {
+                        busy.value = false;
+                        changeThumbnail(new File([blob], "thumbnail.jpg"));
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        error.value = err.message;
+                        busy.value = false;
+                    });
+            } else {
+                error.value = $t("Could not fetch media thumbnail");
+                busy.value = false;
+            }
+        })
+        .catch((err) => {
+            fetchMediaThumbnailAbortController = null;
+            console.error(err);
+            error.value = err.message;
+            busy.value = false;
+        });
+};
 </script>

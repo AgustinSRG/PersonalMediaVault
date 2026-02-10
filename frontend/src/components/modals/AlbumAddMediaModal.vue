@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" :static="true" @scroll.passive="onPageScroll">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -69,10 +69,8 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+<script setup lang="ts">
+import { ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
@@ -80,178 +78,147 @@ import {
     emitAppEvent,
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
     EVENT_NAME_ADVANCED_SEARCH_SCROLL,
-    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { AuthController } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
-import { getPagePreferences } from "@/control/app-preferences";
 import type { MediaListItem } from "@/api/models";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { usePagePreferences } from "@/composables/use-page-preferences";
 
-export default defineComponent({
-    name: "AlbumAddMediaModal",
-    components: {
-        PageSearch,
-        PageUpload,
-    },
-    props: {
-        display: Boolean,
-        aid: Number,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        const pagePreferences = getPagePreferences("search");
-        return {
-            busy: false,
+// Translation function
+const { $t } = useI18n();
 
-            isUpload: true,
+// Display model
+const display = defineModel<boolean>("display");
 
-            pageSize: pagePreferences.pageSize,
+// Modal container
+const container = useTemplateRef("container");
 
-            rowSize: pagePreferences.rowSize,
-            rowSizeMin: pagePreferences.rowSizeMin,
+// Modal composable
+const { close, scrollToTop } = useModal(display, container);
 
-            minItemSize: pagePreferences.minItemSize,
-            maxItemSize: pagePreferences.maxItemSize,
-
-            padding: pagePreferences.padding,
-
-            displayTitles: pagePreferences.displayTitles,
-            roundedCorners: pagePreferences.roundedCorners,
-
-            pageScroll: 0,
-
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
-
-        changeToUpload: function () {
-            this.isUpload = true;
-        },
-
-        changeToSearch: function () {
-            this.isUpload = false;
-        },
-
-        selectMedia: function (m: MediaListItem, callback: () => void) {
-            if (this.busy) {
-                return;
-            }
-            const albumId = this.aid;
-            this.busy = true;
-            // Add
-            makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, m.id))
-                .onSuccess(() => {
-                    this.busy = false;
-                    PagesController.ShowSnackBar(this.$t("Successfully added to album"));
-                    AlbumsController.OnChangedAlbum(albumId, true);
-                    callback();
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        maxSizeReached: () => {
-                            PagesController.ShowSnackBar(
-                                this.$t("Error") +
-                                    ": " +
-                                    this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
-                            );
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AuthController.CheckAuthStatusSilent();
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                            AlbumsController.Load();
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                });
-        },
-
-        updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences("search");
-
-            this.pageSize = pagePreferences.pageSize;
-
-            this.rowSize = pagePreferences.rowSize;
-            this.rowSizeMin = pagePreferences.rowSizeMin;
-
-            this.minItemSize = pagePreferences.minItemSize;
-            this.maxItemSize = pagePreferences.maxItemSize;
-
-            this.padding = pagePreferences.padding;
-
-            this.displayTitles = pagePreferences.displayTitles;
-            this.roundedCorners = pagePreferences.roundedCorners;
-        },
-
-        onPageScroll: function (e: Event) {
-            this.pageScroll = (e.target as HTMLElement).scrollTop;
-
-            if (!this.isUpload) {
-                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
-            }
-        },
-
-        goTop: function () {
-            if (!this.isUpload) {
-                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
-
-                nextTick(() => {
-                    this.$el.scrollTop = 0;
-                    this.$el.focus();
-                });
-            } else {
-                this.$el.scrollTop = 0;
-                this.$el.focus();
-            }
-        },
+// Props
+const props = defineProps({
+    /**
+     * Album ID
+     */
+    aid: {
+        type: Number,
+        required: true,
     },
 });
+
+// Upload or search?
+const isUpload = ref(true);
+
+/**
+ * Changes to upload mode
+ */
+const changeToUpload = () => {
+    isUpload.value = true;
+};
+
+/**
+ * Changes to search mode
+ */
+const changeToSearch = () => {
+    isUpload.value = false;
+};
+
+// Busy status
+const busy = ref(false);
+
+/**
+ * Called when the user selects a media element
+ * @param m The media element
+ * @param callback The callback
+ */
+const selectMedia = (m: MediaListItem, callback: () => void) => {
+    if (busy.value) {
+        return;
+    }
+
+    const albumId = props.aid;
+
+    busy.value = true;
+
+    makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, m.id))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Successfully added to album"));
+
+            AlbumsController.OnChangedAlbum(albumId, true);
+
+            callback();
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                maxSizeReached: () => {
+                    PagesController.ShowSnackBar(
+                        $t("Error") + ": " + $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
+                    );
+                },
+                badRequest: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    AuthController.CheckAuthStatusSilent();
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    AlbumsController.Load();
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            console.error(err);
+        });
+};
+
+// Page preferences
+const { pageSize, rowSize, rowSizeMin, minItemSize, maxItemSize, padding, displayTitles, roundedCorners } = usePagePreferences("search");
+
+// Page scroll
+const pageScroll = ref(0);
+
+/**
+ * Event handler for 'scroll'
+ * @param e The event
+ */
+const onPageScroll = (e: Event) => {
+    pageScroll.value = (e.target as HTMLElement).scrollTop;
+
+    if (!isUpload.value) {
+        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+    }
+};
+
+/**
+ * Scrolls to the top
+ */
+const goTop = () => {
+    if (!isUpload.value) {
+        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+    }
+
+    scrollToTop();
+};
 </script>

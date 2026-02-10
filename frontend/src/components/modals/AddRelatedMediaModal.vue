@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" :static="true" @scroll.passive="onPageScroll">
+    <ModalDialogContainer ref="container" v-model:display="display" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -47,126 +47,91 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { computed, ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
-import {
-    emitAppEvent,
-    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
-    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
-    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
-} from "@/control/app-events";
-import { getPagePreferences } from "@/control/app-preferences";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
 import type { MediaListItem } from "@/api/models";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { usePagePreferences } from "@/composables/use-page-preferences";
 
-export default defineComponent({
-    name: "AddRelatedMediaModal",
-    components: {
-        PageSearch,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, scrollToTop } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
-        mid: Number,
-        relatedMedia: Array as PropType<MediaListItem[]>,
-    },
-    emits: ["update:display", "add-media"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        const pagePreferences = getPagePreferences("search");
-        return {
-            busy: false,
 
-            pageSize: pagePreferences.pageSize,
-
-            rowSize: pagePreferences.rowSize,
-            rowSizeMin: pagePreferences.rowSizeMin,
-
-            minItemSize: pagePreferences.minItemSize,
-            maxItemSize: pagePreferences.maxItemSize,
-
-            padding: pagePreferences.padding,
-
-            displayTitles: pagePreferences.displayTitles,
-            roundedCorners: pagePreferences.roundedCorners,
-
-            pageScroll: 0,
-
-            closeSignal: 0,
-
-            mediaElements: new Set<number>((this.relatedMedia || []).map((e) => e.id).concat(this.mid)),
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
-        },
-        mid: function () {
-            this.mediaElements = new Set<number>((this.relatedMedia || []).map((e) => e.id).concat(this.mid));
-        },
-        groupElements: function () {
-            this.mediaElements = new Set<number>((this.relatedMedia || []).map((e) => e.id).concat(this.mid));
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
-
-        selectMedia: function (m: MediaListItem, callback: () => void) {
-            this.$emit("add-media", m, callback);
-        },
-
-        updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences("search");
-
-            this.pageSize = pagePreferences.pageSize;
-
-            this.rowSize = pagePreferences.rowSize;
-            this.rowSizeMin = pagePreferences.rowSizeMin;
-
-            this.minItemSize = pagePreferences.minItemSize;
-            this.maxItemSize = pagePreferences.maxItemSize;
-
-            this.padding = pagePreferences.padding;
-
-            this.displayTitles = pagePreferences.displayTitles;
-            this.roundedCorners = pagePreferences.roundedCorners;
-        },
-
-        onPageScroll: function (e: Event) {
-            this.pageScroll = (e.target as HTMLElement).scrollTop;
-
-            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
-        },
-
-        goTop: function () {
-            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
-
-            nextTick(() => {
-                this.$el.scrollTop = 0;
-                this.$el.focus();
-            });
-        },
+    /**
+     * Related media array
+     */
+    relatedMedia: {
+        type: Array as PropType<MediaListItem[]>,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when media is added
+     * @param media The media element
+     * @param callback The callback to call in order to indicate the media was added
+     */
+    (e: "add-media", media: MediaListItem, callback: () => void): void;
+}>();
+
+/**
+ * Call when the user selects a media element
+ * @param m Media element
+ * @param callback Callback
+ */
+const selectMedia = (m: MediaListItem, callback: () => void) => {
+    emit("add-media", m, callback);
+};
+
+// Set of media elements not to show
+const mediaElements = computed(() => new Set<number>((props.relatedMedia || []).map((e) => e.id).concat(props.mid)));
+
+// Page preferences
+const { pageSize, rowSize, rowSizeMin, minItemSize, maxItemSize, padding, displayTitles, roundedCorners } = usePagePreferences("search");
+
+// Page scroll
+const pageScroll = ref(0);
+
+/**
+ * Event handler for 'scroll'
+ * @param e The event
+ */
+const onPageScroll = (e: Event) => {
+    pageScroll.value = (e.target as HTMLElement).scrollTop;
+
+    emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+};
+
+/**
+ * Scrolls to the top
+ */
+const goTop = () => {
+    emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+
+    scrollToTop();
+};
 </script>

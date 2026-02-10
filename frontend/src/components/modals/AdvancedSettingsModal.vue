@@ -1,11 +1,5 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :static="true"
-        :close-callback="askClose"
-    >
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy" :static="true" :close-callback="askClose">
         <form v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Advanced settings") }}</div>
@@ -56,7 +50,7 @@
                                 maxlength="100"
                                 :placeholder="$t('Personal Media Vault')"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -70,7 +64,7 @@
                                 maxlength="20"
                                 placeholder="PMV"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -83,7 +77,7 @@
                                 :disabled="busy"
                                 min="0"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -96,7 +90,7 @@
                                 :disabled="busy"
                                 min="0"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -109,7 +103,7 @@
                                 :disabled="busy"
                                 min="0"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -122,7 +116,7 @@
                                 :disabled="busy"
                                 min="0"
                                 class="form-control form-control-full-width"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             />
                         </div>
 
@@ -131,7 +125,7 @@
                                 <tbody>
                                     <tr>
                                         <td class="text-right td-shrink no-padding">
-                                            <ToggleSwitch v-model:val="preserveOriginals" @update:val="onChangesMade"></ToggleSwitch>
+                                            <ToggleSwitch v-model:val="preserveOriginals" @update:val="markDirty"></ToggleSwitch>
                                         </td>
                                         <td>
                                             {{ $t("Preserve original media files, before encoding, as attachments?") }}
@@ -163,7 +157,7 @@
                                             <td class="bold">{{ res.name }}</td>
                                             <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
                                             <td class="text-right">
-                                                <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                                                <ToggleSwitch v-model:val="res.enabled" @update:val="markDirty"></ToggleSwitch>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -190,7 +184,7 @@
                                             <td class="bold">{{ res.name }}</td>
                                             <td>{{ res.width }}x{{ res.height }}</td>
                                             <td class="text-right">
-                                                <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                                                <ToggleSwitch v-model:val="res.enabled" @update:val="markDirty"></ToggleSwitch>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -208,7 +202,7 @@
                                 rows="12"
                                 class="form-control form-control-full-width form-textarea"
                                 :placeholder="'.main-layout.dark-theme {\n\tbackground: blue;\n}'"
-                                @change="onChangesMade"
+                                @change="markDirty"
                             ></textarea>
                         </div>
                         <div>
@@ -233,25 +227,23 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="submitInternal"
+            @confirm="performRequest"
         ></AuthConfirmationModal>
 
-        <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>
+        <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="forceClose"></SaveChangesAskModal>
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { onMounted, ref, useTemplateRef, watch } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { AuthController } from "@/control/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 import type { ImageResolutionStandardToggleable, VideoResolutionStandardToggleable } from "@/utils/resolutions";
@@ -259,325 +251,337 @@ import { STANDARD_IMAGE_RESOLUTIONS, STANDARD_VIDEO_RESOLUTIONS } from "@/utils/
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AdvancedSettingsModal",
-    components: {
-        ToggleSwitch,
-        LoadingIcon,
-        SaveChangesAskModal,
-        LoadingOverlay,
-        AuthConfirmationModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            loadRequestId: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-            standardResolutions: STANDARD_VIDEO_RESOLUTIONS,
-            standardImageResolutions: STANDARD_IMAGE_RESOLUTIONS,
-        };
-    },
-    data: function () {
-        return {
-            page: "general",
+// Translation function
+const { $t } = useI18n();
 
-            dirty: false,
-            displayAskSave: false,
+// Display model
+const display = defineModel<boolean>("display");
 
-            title: "",
-            logo: "",
-            css: "",
-            maxTasks: 0,
-            encodingThreads: 0,
-            videoPreviewsInterval: 0,
-            inviteLimit: 0,
-            preserveOriginals: false,
-            resolutions: [] as VideoResolutionStandardToggleable[],
-            imageResolutions: [] as ImageResolutionStandardToggleable[],
+// Modal container
+const container = useTemplateRef("container");
 
-            loading: true,
-            busy: false,
-            error: "",
+// Modal composable
+const { close, forceClose, focus } = useModal(display, container);
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
+// Changes made?
+const dirty = ref(false);
 
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.dirty = false;
-                this.displayAskSave = false;
-                this.load();
+/**
+ * Indicates changes were made
+ * by the user
+ */
+const markDirty = () => {
+    dirty.value = true;
+};
+
+// Ask for unsaved changes to be saved
+const displayAskSave = ref(false);
+
+/**
+ * Asks before closing the modal
+ * @param callback The callback
+ */
+const askClose = (callback: () => void) => {
+    if (dirty.value) {
+        displayAskSave.value = true;
+    } else {
+        callback();
+    }
+};
+
+// Title
+const title = ref("");
+
+// Logo
+const logo = ref("");
+
+// Custom CSS
+const css = ref("");
+
+// Max parallel tasks
+const maxTasks = ref(0);
+
+// Max encoding threads
+const encodingThreads = ref(0);
+
+// Video previews interval
+const videoPreviewsInterval = ref(0);
+
+// Max number of invites
+const inviteLimit = ref(0);
+
+// Preserve original assets?
+const preserveOriginals = ref(false);
+
+// Video resolutions
+const resolutions = ref<VideoResolutionStandardToggleable[]>([]);
+
+// Image resolutions
+const imageResolutions = ref<ImageResolutionStandardToggleable[]>([]);
+
+/**
+ * Updates resolution arrays
+ * @param newResolutions New resolutions
+ * @param newImageResolutions New image resolutions
+ */
+const updateResolutions = (newResolutions: VideoResolution[], newImageResolutions: ImageResolution[]) => {
+    resolutions.value = STANDARD_VIDEO_RESOLUTIONS.map((r) => {
+        let enabled = false;
+        for (const res of newResolutions) {
+            if (res.width === r.width && res.height === r.height && res.fps === r.fps) {
+                enabled = true;
+                break;
             }
-        },
-    },
-    mounted: function () {
-        this.load();
-        if (this.display) {
-            this.error = "";
-            nextTick(() => {
-                this.$el.focus();
-            });
         }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
+        return {
+            enabled: enabled,
+            name: r.name,
+            width: r.width,
+            height: r.height,
+            fps: r.fps,
+        };
+    });
+
+    imageResolutions.value = STANDARD_IMAGE_RESOLUTIONS.map((r) => {
+        let enabled = false;
+        for (const res of newImageResolutions) {
+            if (res.width === r.width && res.height === r.height) {
+                enabled = true;
+                break;
             }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+        }
+        return {
+            enabled: enabled,
+            name: r.name,
+            width: r.width,
+            height: r.height,
+        };
+    });
+};
 
-        askClose: function (callback: () => void) {
-            if (this.dirty) {
-                this.displayAskSave = true;
-            } else {
-                callback();
-            }
-        },
+// Loading status
+const loading = ref(true);
 
-        changePage: function (page: string) {
-            this.page = page;
-        },
+// Load request ID
+const loadRequestId = useRequestId();
 
-        onChangesMade: function () {
-            this.dirty = true;
-        },
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
 
-        updateResolutions: function (resolutions: VideoResolution[], imageResolutions: ImageResolution[]) {
-            this.resolutions = this.standardResolutions.map((r) => {
-                let enabled = false;
-                for (const res of resolutions) {
-                    if (res.width === r.width && res.height === r.height && res.fps === r.fps) {
-                        enabled = true;
-                        break;
-                    }
-                }
-                return {
-                    enabled: enabled,
-                    name: r.name,
-                    width: r.width,
-                    height: r.height,
-                    fps: r.fps,
-                };
-            });
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
 
-            this.imageResolutions = this.standardImageResolutions.map((r) => {
-                let enabled = false;
-                for (const res of imageResolutions) {
-                    if (res.width === r.width && res.height === r.height) {
-                        enabled = true;
-                        break;
-                    }
-                }
-                return {
-                    enabled: enabled,
-                    name: r.name,
-                    width: r.width,
-                    height: r.height,
-                };
-            });
-        },
+    loading.value = true;
 
-        getResolutions: function () {
-            return this.resolutions
-                .filter((r) => {
-                    return r.enabled;
-                })
-                .map((r) => {
-                    return {
-                        width: r.width,
-                        height: r.height,
-                        fps: r.fps,
-                    };
-                });
-        },
+    makeNamedApiRequest(loadRequestId, apiConfigGetConfig())
+        .onSuccess((response: VaultUserConfig) => {
+            title.value = response.title || "";
+            logo.value = response.logo || "";
+            css.value = response.css || "";
+            maxTasks.value = response.max_tasks;
+            encodingThreads.value = response.encoding_threads;
+            videoPreviewsInterval.value = response.video_previews_interval;
+            inviteLimit.value = response.invite_limit;
+            preserveOriginals.value = response.preserve_originals || false;
 
-        getImageResolutions: function () {
-            return this.imageResolutions
-                .filter((r) => {
-                    return r.enabled;
-                })
-                .map((r) => {
-                    return {
-                        width: r.width,
-                        height: r.height,
-                    };
-                });
-        },
+            updateResolutions(response.resolutions, response.image_resolutions);
 
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
+            loading.value = false;
 
-            if (!this.display) {
-                return;
-            }
-
-            this.loading = true;
-
-            makeNamedApiRequest(this.loadRequestId, apiConfigGetConfig())
-                .onSuccess((response: VaultUserConfig) => {
-                    this.title = response.title || "";
-                    this.logo = response.logo || "";
-                    this.css = response.css || "";
-                    this.maxTasks = response.max_tasks;
-                    this.encodingThreads = response.encoding_threads;
-                    this.videoPreviewsInterval = response.video_previews_interval;
-                    this.inviteLimit = response.invite_limit;
-                    this.preserveOriginals = response.preserve_originals || false;
-                    this.updateResolutions(response.resolutions, response.image_resolutions);
-                    this.loading = false;
-
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
+            focus();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
 
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            this.submitInternal({});
-        },
-
-        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            makeApiRequest(
-                apiConfigSetConfig(
-                    {
-                        title: this.title,
-                        logo: this.logo,
-                        css: this.css,
-                        max_tasks: this.maxTasks,
-                        encoding_threads: this.encodingThreads,
-                        resolutions: this.getResolutions(),
-                        image_resolutions: this.getImageResolutions(),
-                        video_previews_interval: this.videoPreviewsInterval,
-                        invite_limit: this.inviteLimit,
-                        preserve_originals: this.preserveOriginals,
-                    },
-                    confirmation,
-                ),
-            )
-                .onSuccess(() => {
-                    this.busy = false;
-                    this.dirty = false;
-                    PagesController.ShowSnackBar(this.$t("Vault configuration updated!"));
-                    AuthController.CheckAuthStatus();
-                    this.close();
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Invalid configuration provided");
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        closeForced: function () {
-            this.forceCloseSignal++;
-        },
-    },
+onMounted(() => {
+    if (display.value) {
+        load();
+    }
 });
+
+watch(display, () => {
+    if (display.value) {
+        displayAskSave.value = false;
+
+        load();
+    }
+});
+
+// Page names
+type LocalPageName = "general" | "resolutions" | "css";
+
+// Current page
+const page = ref<LocalPageName>("general");
+
+/**
+ * Changes the current page
+ * @param p The page name
+ */
+const changePage = (p: LocalPageName) => {
+    page.value = p;
+};
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+/**
+ * Performs the request
+ * @param confirmation The auth confirmation
+ */
+const performRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    makeApiRequest(
+        apiConfigSetConfig(
+            {
+                title: title.value,
+                logo: logo.value,
+                css: css.value,
+                max_tasks: maxTasks.value,
+                encoding_threads: encodingThreads.value,
+                resolutions: getResolutions(),
+                image_resolutions: getImageResolutions(),
+                video_previews_interval: videoPreviewsInterval.value,
+                invite_limit: inviteLimit.value,
+                preserve_originals: preserveOriginals.value,
+            },
+            confirmation,
+        ),
+    )
+        .onSuccess(() => {
+            busy.value = false;
+            dirty.value = false;
+
+            PagesController.ShowSnackBar($t("Vault configuration updated!"));
+
+            AuthController.CheckAuthStatus();
+
+            forceClose();
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                badRequest: () => {
+                    error.value = $t("Invalid configuration provided");
+                },
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest({});
+};
+
+/**
+ * Gets the list of resolutions for the API
+ */
+const getResolutions = () => {
+    return resolutions.value
+        .filter((r) => {
+            return r.enabled;
+        })
+        .map((r) => {
+            return {
+                width: r.width,
+                height: r.height,
+                fps: r.fps,
+            };
+        });
+};
+
+/**
+ * Gets the list of image resolutions for the API
+ */
+const getImageResolutions = () => {
+    return imageResolutions.value
+        .filter((r) => {
+            return r.enabled;
+        })
+        .map((r) => {
+            return {
+                width: r.width,
+                height: r.height,
+            };
+        });
+};
 </script>

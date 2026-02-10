@@ -246,9 +246,20 @@ const focus = () => {
     }
 };
 
+/**
+ * Scrolls the container to the top
+ */
+const scrollToTop = () => {
+    if (container.value) {
+        container.value.scrollTop = 0;
+        container.value.focus();
+    }
+};
+
 // Expose methods
 defineExpose({
     close,
     focus,
+    scrollToTop,
 });
 </script>

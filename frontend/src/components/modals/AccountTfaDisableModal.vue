@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Disable two factor authentication") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -38,155 +33,144 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-
-import { abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { makeApiRequest } from "@asanrom/request-browser";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import { apiAccountTfaDisable } from "@/api/api-account";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useInterval } from "@/composables/use-interval";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AccountTfaDisableModal",
-    components: {
-        LoadingIcon,
-        SixDigitCodeInput,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "done"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            timer: null as ReturnType<typeof setInterval> | null,
-            saveRequestId: getUniqueStringId(),
-        };
-    },
-    data: function () {
-        return {
-            code: "",
+// Translation function
+const { $t } = useI18n();
 
-            busy: false,
+// Display model
+const display = defineModel<boolean>("display");
 
-            error: "",
+// Modal container
+const container = useTemplateRef("container");
 
-            cooldown: 0,
-            mustWait: 0,
-            now: Date.now(),
+// Modal composable
+const { close, forceClose, focus } = useModal(display, container);
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.timer = setInterval(this.updateNow.bind(this), 200);
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the request is done successfully.
+     */
+    (e: "done"): void;
+}>();
 
-        if (this.display) {
-            this.autoFocus();
+// The current timestamp
+const now = ref(Date.now());
+
+// Cooldown if the request fails
+const cooldown = ref(0);
+
+// Number of seconds the user must wait
+const mustWait = ref(0);
+
+// A timer to update the 'now' ref
+const timer = useInterval();
+
+// Interval delay (milliseconds)
+const TIMER_INTERVAL_DELAY = 200;
+
+onMounted(() => {
+    timer.set(() => {
+        now.value = Date.now();
+        if (now.value < cooldown.value) {
+            mustWait.value = Math.max(1, Math.round((cooldown.value - now.value) / 1000));
+        } else {
+            mustWait.value = 0;
         }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.saveRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        updateNow: function () {
-            this.now = Date.now();
-            if (this.now < this.cooldown) {
-                this.mustWait = Math.max(1, Math.round((this.cooldown - this.now) / 1000));
-            } else {
-                this.mustWait = 0;
-            }
-        },
-
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            makeApiRequest(apiAccountTfaDisable(this.code))
-                .onSuccess(() => {
-                    this.busy = false;
-                    this.error = "";
-                    PagesController.ShowSnackBar(this.$t("Two factor authentication disabled"));
-                    this.$emit("done");
-                    this.forceCloseSignal++;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    this.error = "";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        tfaNotEnabled: () => {
-                            PagesController.ShowSnackBar(this.$t("Two factor authentication is not enabled"));
-                            this.$emit("done");
-                            this.forceCloseSignal++;
-                        },
-                        invalidCode: () => {
-                            this.error = this.$t("Invalid one-time code");
-                            this.code = "";
-                            this.cooldown = Date.now() + 5000;
-                            this.autoFocus();
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        cooldown: () => {
-                            this.error = this.$t("You must wait 5 seconds to try again");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                    this.error = err.message;
-                });
-        },
-
-        stringMultiReplace,
-    },
+    }, TIMER_INTERVAL_DELAY);
 });
+
+// TFA code required to disable TFA
+const code = ref("");
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+/**
+ * Performs the request
+ */
+const performRequest = () => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    makeApiRequest(apiAccountTfaDisable(code.value))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Two factor authentication disabled"));
+
+            emit("done");
+
+            forceClose();
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                tfaNotEnabled: () => {
+                    PagesController.ShowSnackBar($t("Two factor authentication is not enabled"));
+
+                    emit("done");
+
+                    forceClose();
+                },
+                invalidCode: () => {
+                    error.value = $t("Invalid one-time code");
+                    code.value = "";
+                    cooldown.value = Date.now() + 5000;
+
+                    focus();
+                },
+                accessDenied,
+                cooldown: () => {
+                    error.value = $t("You must wait 5 seconds to try again");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest();
+};
 </script>

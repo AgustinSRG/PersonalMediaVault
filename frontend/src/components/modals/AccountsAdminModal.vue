@@ -80,15 +80,31 @@
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { onMounted, ref, useTemplateRef, watch } from "vue";
-import AccountModifyModal from "../modals/AccountModifyModal.vue";
-import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
-import AccountCreateModal from "../modals/AccountCreateModal.vue";
+import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { VaultAccount } from "@/api/api-admin";
 import { apiAdminListAccounts } from "@/api/api-admin";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
+
+const AccountCreateModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountCreateModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
+const AccountModifyModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountModifyModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
+const AccountDeleteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountDeleteModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
 
 // Translation function
 const { $t } = useI18n();

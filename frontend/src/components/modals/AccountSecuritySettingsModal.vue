@@ -1,10 +1,5 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
         <form v-if="display" class="modal-dialog modal-lg" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Account security settings") }}</div>
@@ -39,7 +34,7 @@
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
-                                    <ToggleSwitch v-model:val="authConfirmation" @update:val="onChangesMade"></ToggleSwitch>
+                                    <ToggleSwitch v-model:val="authConfirmation" @update:val="markDirty"></ToggleSwitch>
                                 </td>
                                 <td>
                                     {{
@@ -58,7 +53,7 @@
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
-                                    <ToggleSwitch v-model:val="authConfirmationPreferTfa" @update:val="onChangesMade"></ToggleSwitch>
+                                    <ToggleSwitch v-model:val="authConfirmationPreferTfa" @update:val="markDirty"></ToggleSwitch>
                                 </td>
                                 <td>
                                     {{ $t("Prefer two factor authentication (if enabled) for auth confirmation.") }}
@@ -84,7 +79,7 @@
                         min="0"
                         max="2147483647"
                         class="form-control form-control-full-width"
-                        @change="onChangesMade"
+                        @change="markDirty"
                     />
                 </div>
 
@@ -111,18 +106,16 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="submitInternal"
+            @confirm="performRequest"
         ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -130,6 +123,11 @@ import { apiAccountGetSecuritySettings, apiAccountSetSecuritySettings } from "@/
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { useModal } from "@/composables/use-modal";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 
 const AccountTfaEnableModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaEnableModal.vue"),
@@ -143,233 +141,222 @@ const AccountTfaDisableModal = defineAsyncComponent({
     delay: 1000,
 });
 
-export default defineComponent({
-    name: "AccountSecuritySettingsModal",
-    components: {
-        LoadingIcon,
-        ToggleSwitch,
-        AccountTfaEnableModal,
-        AccountTfaDisableModal,
-        AuthConfirmationModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            loadRequestId: getUniqueStringId(),
-            saveRequestId: getUniqueStringId(),
-        };
-    },
-    data: function () {
-        return {
-            loading: true,
+// Translation function
+const { $t } = useI18n();
 
-            tfa: false,
-            tfaMethod: "TOTP",
+// Display model
+const display = defineModel<boolean>("display");
 
-            authConfirmation: false,
-            authConfirmationPreferTfa: true,
-            authConfirmationPeriodSeconds: 120,
+// Modal container
+const container = useTemplateRef("container");
 
-            busy: false,
+// Modal composable
+const { close, forceClose, focus } = useModal(display, container);
 
-            error: "",
+// User has TFA enabled?
+const tfa = ref(false);
 
-            dirty: false,
+// TFA method
+const tfaMethod = ref("TOTP");
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
+// User has auth confirmation enabled?
+const authConfirmation = ref(false);
 
-            displayTfaEnableModal: false,
-            displayTfaDisableModal: false,
+// Does the user prefer TFA over password for auth confirmation?
+const authConfirmationPreferTfa = ref(true);
 
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.load();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+// Auth confirmation period (seconds)
+const authConfirmationPeriodSeconds = ref(120);
 
-        if (this.display) {
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
+// Loading status
+const loading = ref(true);
 
-        abortNamedApiRequest(this.saveRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// True if changes were made
+const dirty = ref(false);
 
-        enableTfa: function () {
-            this.displayTfaEnableModal = true;
-        },
+/**
+ * Indicates changes were made
+ * by the user
+ */
+const markDirty = () => {
+    dirty.value = true;
+};
 
-        disableTfa: function () {
-            this.displayTfaDisableModal = true;
-        },
+// Load request ID
+const loadRequestId = useRequestId();
 
-        onChangesMade: function () {
-            this.dirty = true;
-        },
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
 
-        load: function () {
-            if (!this.display) {
-                return;
-            }
+/**
+ * Loads the data
+ */
+const load = () => {
+    loading.value = true;
 
-            this.loading = true;
+    clearNamedTimeout(loadRequestId);
 
-            clearNamedTimeout(this.loadRequestId);
+    makeNamedApiRequest(loadRequestId, apiAccountGetSecuritySettings())
+        .onSuccess((response) => {
+            tfa.value = response.tfa;
+            tfaMethod.value = ((response.tfaMethod || "").split(":")[0] || "").toUpperCase();
 
-            makeNamedApiRequest(this.loadRequestId, apiAccountGetSecuritySettings())
-                .onSuccess((response) => {
-                    this.tfa = response.tfa;
-                    this.tfaMethod = ((response.tfaMethod || "").split(":")[0] || "").toUpperCase();
+            authConfirmation.value = response.authConfirmation;
+            authConfirmationPreferTfa.value = response.authConfirmationMethod !== "pw";
+            authConfirmationPeriodSeconds.value = response.authConfirmationPeriodSeconds || 0;
 
-                    this.authConfirmation = response.authConfirmation;
-                    this.authConfirmationPreferTfa = response.authConfirmationMethod !== "pw";
-                    this.authConfirmationPeriodSeconds = response.authConfirmationPeriodSeconds || 0;
+            loading.value = false;
 
-                    this.loading = false;
-                    this.dirty = false;
-                    this.error = "";
+            dirty.value = false;
 
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.close();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
+            error.value = "";
+
+            focus();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    close();
+                },
+                temporalError: () => {
                     // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
 
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            this.submitInternal({});
-        },
-
-        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            makeApiRequest(
-                apiAccountSetSecuritySettings(
-                    this.authConfirmation,
-                    this.authConfirmationPreferTfa ? "tfa" : "pw",
-                    this.authConfirmationPeriodSeconds,
-                    confirmation,
-                ),
-            )
-                .onSuccess(() => {
-                    this.busy = false;
-                    this.error = "";
-                    this.dirty = false;
-                    PagesController.ShowSnackBar(this.$t("Saved security settings"));
-                    this.forceCloseSignal++;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    this.error = "";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidSettings: () => {
-                            this.error = this.$t("Invalid security settings");
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                    this.error = err.message;
-                });
-        },
-    },
+onMounted(() => {
+    if (display.value) {
+        load();
+    }
 });
+
+// Display the TFA enable modal
+const displayTfaEnableModal = ref(false);
+
+// Display the TFA disable modal
+const displayTfaDisableModal = ref(false);
+
+watch(display, () => {
+    if (display.value) {
+        displayTfaEnableModal.value = false;
+        displayTfaDisableModal.value = false;
+
+        load();
+    }
+});
+
+/**
+ * Displays the modal to enable TFA
+ */
+const enableTfa = () => {
+    displayTfaEnableModal.value = true;
+};
+
+/**
+ * Displays the modal to disable tfa
+ */
+const disableTfa = () => {
+    displayTfaDisableModal.value = true;
+};
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+/**
+ * Performs the request
+ * @param confirmation The auth confirmation
+ */
+const performRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    makeApiRequest(
+        apiAccountSetSecuritySettings(
+            authConfirmation.value,
+            authConfirmationPreferTfa.value ? "tfa" : "pw",
+            authConfirmationPeriodSeconds.value,
+            confirmation,
+        ),
+    )
+        .onSuccess(() => {
+            busy.value = false;
+
+            dirty.value = false;
+
+            PagesController.ShowSnackBar($t("Saved security settings"));
+
+            forceClose();
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidSettings: () => {
+                    error.value = $t("Invalid security settings");
+                },
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest({});
+};
 </script>

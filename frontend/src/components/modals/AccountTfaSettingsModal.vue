@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" @close="onClose">
+    <ModalDialogContainer ref="container" v-model:display="display" @close="onClose">
         <form v-if="display" class="modal-dialog modal-lg" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Account security settings") }}</div>
@@ -11,7 +11,7 @@
                 <div class="form-group">
                     <label>{{ $t("Issuer") }}:</label>
                     <input
-                        v-model="issuerStatus"
+                        v-model="issuer"
                         type="text"
                         maxlength="100"
                         class="form-control form-control-full-width auto-focus"
@@ -21,18 +21,12 @@
 
                 <div class="form-group">
                     <label>{{ $t("Account name") }}:</label>
-                    <input
-                        v-model="accountStatus"
-                        type="text"
-                        maxlength="100"
-                        class="form-control form-control-full-width"
-                        @input="markDirty"
-                    />
+                    <input v-model="account" type="text" maxlength="100" class="form-control form-control-full-width" @input="markDirty" />
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Hashing algorithm") }}:</label>
-                    <select v-model="algorithmStatus" class="form-control form-control-full-width form-select" @change="markDirty">
+                    <select v-model="algorithm" class="form-control form-control-full-width form-select" @change="markDirty">
                         <option :value="'sha1'">SHA-1</option>
                         <option :value="'sha256'">SHA-256</option>
                         <option :value="'sha512'">SHA-512</option>
@@ -41,7 +35,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("One-time password period") }}:</label>
-                    <select v-model="periodStatus" class="form-control form-control-full-width form-select" @change="markDirty">
+                    <select v-model="period" class="form-control form-control-full-width form-select" @change="markDirty">
                         <option :value="'30'">{{ $t("30 seconds") }}</option>
                         <option :value="'60'">{{ $t("60 seconds") }}</option>
                         <option :value="'120'">{{ $t("120 seconds") }}</option>
@@ -53,7 +47,7 @@
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
-                                    <ToggleSwitch v-model:val="skewStatus" @update:val="markDirty"></ToggleSwitch>
+                                    <ToggleSwitch v-model:val="skew" @update:val="markDirty"></ToggleSwitch>
                                 </td>
                                 <td>
                                     {{ $t("Allow clock skew of one period") }}
@@ -71,96 +65,82 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
+import { useModal } from "@/composables/use-modal";
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "AccountTfaSettingsModal",
-    components: {
-        ToggleSwitch,
-    },
-    props: {
-        display: Boolean,
+// Translation function
+const { $t } = useI18n();
 
-        issuer: String,
-        account: String,
-        algorithm: String as PropType<TimeOtpAlgorithm>,
-        period: String as PropType<TimeOtpPeriod>,
-        skew: Boolean,
-    },
-    emits: ["update:display", "update:issuer", "update:account", "update:algorithm", "update:period", "update:skew", "done"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
+// Display model
+const display = defineModel<boolean>("display");
 
-            issuerStatus: useVModel(props, "issuer"),
-            accountStatus: useVModel(props, "account"),
-            algorithmStatus: useVModel(props, "algorithm"),
-            periodStatus: useVModel(props, "period"),
-            skewStatus: useVModel(props, "skew"),
-        };
-    },
-    data: function () {
-        return {
-            dirty: false,
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        onClose: function () {
-            if (this.dirty) {
-                this.dirty = false;
-                this.$emit("done");
-            }
-        },
+// Modal composable
+const { close } = useModal(display, container);
 
-        markDirty: function () {
-            this.dirty = true;
-        },
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the request is done successfully.
+     */
+    (e: "done"): void;
+}>();
 
-        close: function () {
-            this.closeSignal++;
-        },
+// TFA issuer name
+const issuer = defineModel<string>("issuer");
 
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
+// TFA account name
+const account = defineModel<string>("account");
 
-            this.dirty = false;
+// TFA algorithm
+const algorithm = defineModel<TimeOtpAlgorithm>("algorithm");
 
-            this.$emit("done");
+// TOTP period
+const period = defineModel<TimeOtpPeriod>("period");
 
-            this.close();
-        },
-    },
-});
+// Allow clock skew?
+const skew = defineModel<boolean>("skew");
+
+// Changed made?
+const dirty = ref(false);
+
+/**
+ * Indicates changes were made to the settings
+ */
+const markDirty = () => {
+    dirty.value = true;
+};
+
+/**
+ * Handles for the modal 'close' event
+ */
+const onClose = () => {
+    if (!dirty.value) {
+        return;
+    }
+
+    dirty.value = false;
+
+    emit("done");
+};
+
+/**
+ * Handler for the form 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    dirty.value = false;
+
+    emit("done");
+
+    close();
+};
 </script>

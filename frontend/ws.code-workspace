@@ -23,6 +23,6 @@
         "[vue]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode",
         },
-        "cSpell.words": ["asanrom", "totp", "TOTP"],
+        "cSpell.words": ["asanrom", "Toggleable", "totp", "TOTP"],
     },
 }
