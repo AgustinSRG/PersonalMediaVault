@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Change position") }}
@@ -19,7 +19,8 @@
                         autocomplete="off"
                         step="1"
                         min="1"
-                        class="form-control form-control-full-width auto-focus"
+                        :max="albumListLength"
+                        class="form-control form-control-full-width auto-focus auto-select"
                     />
                 </div>
             </div>
@@ -33,80 +34,84 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { ref, useTemplateRef, watch } from "vue";
 import { AlbumsController } from "@/control/albums";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "AlbumMovePosModal",
-    props: {
-        display: Boolean,
-        positionToMove: Number,
-        albumListLength: Number,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Original position to be moved
+     */
+    positionToMove: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            currentPos: 0,
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.currentPos = this.positionToMove + 1;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                    elem.select();
-                }
-            });
-        },
 
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            let newPos = this.currentPos - 1;
-
-            if (isNaN(newPos) || !isFinite(newPos)) {
-                this.close();
-                return;
-            }
-            newPos = Math.floor(newPos);
-            newPos = Math.min(newPos, this.albumListLength - 1);
-            newPos = Math.max(0, newPos);
-
-            if (newPos === this.positionToMove) {
-                this.close();
-                return;
-            }
-
-            AlbumsController.MoveCurrentAlbumOrder(this.positionToMove, newPos, this.$t);
-
-            this.close();
-        },
+    /**
+     * Length of the album
+     */
+    albumListLength: {
+        type: Number,
+        required: true,
     },
 });
+
+// Position to be moved to
+const currentPos = ref(props.positionToMove + 1);
+
+watch(
+    () => props.positionToMove,
+    () => {
+        currentPos.value = props.positionToMove + 1;
+    },
+);
+
+watch(display, () => {
+    if (display.value) {
+        currentPos.value = props.positionToMove + 1;
+    }
+});
+
+/**
+ * Handler for the 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    let newPos = currentPos.value - 1;
+
+    if (isNaN(newPos) || !isFinite(newPos)) {
+        close();
+        return;
+    }
+
+    newPos = Math.floor(newPos);
+    newPos = Math.min(newPos, props.albumListLength - 1);
+    newPos = Math.max(0, newPos);
+
+    if (newPos === props.positionToMove) {
+        close();
+        return;
+    }
+
+    AlbumsController.MoveCurrentAlbumOrder(props.positionToMove, newPos, $t);
+
+    close();
+};
 </script>

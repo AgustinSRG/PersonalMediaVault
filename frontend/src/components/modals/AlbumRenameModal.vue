@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Rename album") }}
@@ -24,7 +19,7 @@
                         autocomplete="off"
                         :disabled="busy"
                         maxlength="255"
-                        class="form-control form-control-full-width auto-focus"
+                        class="form-control form-control-full-width auto-focus auto-select"
                     />
                 </div>
                 <div class="form-error">{{ error }}</div>
@@ -38,155 +33,122 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { emitAppEvent, EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsRenameAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AlbumRenameModal",
-    components: {
-        LoadingIcon,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            currentAlbum: -1,
-            name: "",
-            oldName: "",
+// Translation function
+const { $t } = useI18n();
 
-            busy: false,
-            error: "",
+// Display model
+const display = defineModel<boolean>("display");
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.name = this.oldName;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+// Modal container
+const container = useTemplateRef("container");
 
-        this.onAlbumUpdate();
+// Modal composable
+const { close, forceClose } = useModal(display, container);
 
-        if (this.display) {
-            this.error = "";
-            this.name = this.oldName;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                elem.focus();
-                elem.select();
-            });
-        },
+// Current album ID
+const currentAlbum = ref(AlbumsController.CurrentAlbum);
 
-        onAlbumUpdate: function () {
-            this.currentAlbum = AlbumsController.CurrentAlbum;
-            if (AlbumsController.CurrentAlbumData) {
-                this.oldName = AlbumsController.CurrentAlbumData.name;
-                this.name = this.oldName;
-            }
-        },
+// Old name
+const oldName = ref(AlbumsController.CurrentAlbumData?.name || "");
 
-        close: function () {
-            this.closeSignal++;
-        },
+// New name
+const name = ref(oldName.value);
 
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            if (this.busy) {
-                return;
-            }
-
-            if (!this.name) {
-                this.error = this.$t("Invalid album name provided");
-                return;
-            }
-
-            if (this.name === this.oldName) {
-                this.forceCloseSignal++;
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const albumId = this.currentAlbum;
-
-            makeApiRequest(apiAlbumsRenameAlbum(albumId, this.name))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
-                    this.busy = false;
-                    this.name = "";
-                    this.forceCloseSignal++;
-                    AlbumsController.OnChangedAlbum(albumId);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidName: () => {
-                            this.error = this.$t("Invalid album name provided");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.forceCloseSignal++;
-                            AlbumsController.OnChangedAlbum(albumId);
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-    },
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
+    currentAlbum.value = AlbumsController.CurrentAlbum;
+    oldName.value = AlbumsController.CurrentAlbumData?.name || "";
+    name.value = oldName.value;
 });
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+watch(display, () => {
+    if (display.value) {
+        name.value = oldName.value;
+        error.value = "";
+    }
+});
+
+/**
+ * Handler for the 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (busy.value) {
+        return;
+    }
+
+    if (!name.value) {
+        error.value = $t("Invalid album name provided");
+        return;
+    }
+
+    if (name.value === oldName.value) {
+        forceClose();
+        return;
+    }
+
+    busy.value = true;
+    error.value = "";
+
+    const albumId = currentAlbum.value;
+
+    makeApiRequest(apiAlbumsRenameAlbum(albumId, name.value))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Album renamed") + ": " + name.value);
+
+            forceClose();
+
+            AlbumsController.OnChangedAlbum(albumId);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidName: () => {
+                    error.value = $t("Invalid album name provided");
+                },
+                badRequest,
+                accessDenied,
+                notFound: () => {
+                    forceClose();
+                    AlbumsController.OnChangedAlbum(albumId);
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
 </script>

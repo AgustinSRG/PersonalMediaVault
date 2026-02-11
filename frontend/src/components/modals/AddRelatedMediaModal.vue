@@ -1,7 +1,6 @@
 <template>
     <ModalDialogContainer ref="container" v-model:display="display" :static="true" @scroll.passive="onPageScroll">
         <div
-            v-if="display"
             class="modal-dialog modal-xl modal-height-100"
             role="document"
             :class="{ 'rounded-corners-cells': roundedCorners }"

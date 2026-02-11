@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Create new album") }}
@@ -38,138 +33,110 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsCreateAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AlbumCreateModal",
-    components: {
-        LoadingIcon,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "new-album"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            name: "",
+// Translation function
+const { $t } = useI18n();
 
-            busy: false,
-            error: "",
+// Display model
+const display = defineModel<boolean>("display");
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the album is created and the modal closed.
+     */
+    (e: "new-album", id: number, name: string): void;
+}>();
+
+// New album name
+const name = ref("");
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+/**
+ * Submits the form
+ * @param e The 'submit' event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (busy.value) {
+        return;
+    }
+
+    if (!name.value) {
+        error.value = $t("Invalid album name provided");
+        return;
+    }
+
+    if (AlbumsController.FindDuplicatedName(name.value)) {
+        error.value = $t("There is already another album with the same name");
+        return;
+    }
+
+    busy.value = true;
+    error.value = "";
+
+    const albumName = name.value;
+
+    makeApiRequest(apiAlbumsCreateAlbum(albumName))
+        .onSuccess((response) => {
+            PagesController.ShowSnackBar($t("Album created") + ": " + albumName);
+
+            busy.value = false;
+            name.value = "";
+
+            forceClose();
+
+            emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
+
+            AlbumsController.Load();
+
+            emit("new-album", response.album_id, albumName);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+            handleErr(err, {
+                unauthorized,
+                invalidName: () => {
+                    error.value = $t("Invalid album name provided");
+                },
+                badRequest,
+                accessDenied,
+                serverError,
+                networkError,
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
 
-        close: function () {
-            this.closeSignal++;
-        },
+            error.value = err.message;
 
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            if (this.busy) {
-                return;
-            }
-
-            if (!this.name) {
-                this.error = this.$t("Invalid album name provided");
-                return;
-            }
-
-            if (AlbumsController.FindDuplicatedName(this.name)) {
-                this.error = this.$t("There is already another album with the same name");
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const albumName = this.name;
-
-            makeApiRequest(apiAlbumsCreateAlbum(albumName))
-                .onSuccess((response) => {
-                    PagesController.ShowSnackBar(this.$t("Album created") + ": " + albumName);
-                    this.busy = false;
-                    this.name = "";
-                    this.forceCloseSignal++;
-                    emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
-                    AlbumsController.Load();
-                    this.$emit("new-album", response.album_id, albumName);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidName: () => {
-                            this.error = this.$t("Invalid album name provided");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-    },
-});
+            console.error(err);
+        });
+};
 </script>

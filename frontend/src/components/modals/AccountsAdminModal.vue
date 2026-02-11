@@ -1,6 +1,6 @@
 <template>
     <ModalDialogContainer ref="container" v-model:display="display">
-        <div v-if="display" class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Administrate accounts") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">

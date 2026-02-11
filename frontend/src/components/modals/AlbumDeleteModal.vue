@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete album") }}
@@ -19,7 +14,7 @@
                     <tbody>
                         <tr>
                             <td class="text-right td-shrink no-padding">
-                                <ToggleSwitch v-model:val="confirmation"></ToggleSwitch>
+                                <ToggleSwitch v-model:val="deleteConfirmation"></ToggleSwitch>
                             </td>
                             <td>
                                 {{ $t("Remember. If you delete the album by accident you would have to recreate it.") }}
@@ -32,7 +27,7 @@
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button :disabled="busy || !confirmation" type="submit" class="modal-footer-btn">
+                <button :disabled="busy || !deleteConfirmation" type="submit" class="modal-footer-btn">
                     <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete album") }}
                 </button>
             </div>
@@ -44,184 +39,143 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="submitInternal"
+            @confirm="performRequest"
         ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { emitAppEvent, EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { useModal } from "@/composables/use-modal";
+import { useI18n } from "@/composables/use-i18n";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "AlbumDeleteModal",
-    components: {
-        LoadingIcon,
-        ToggleSwitch,
-        AuthConfirmationModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            currentAlbum: -1,
-            oldName: "",
+// Translation function
+const { $t } = useI18n();
 
-            confirmation: false,
+// Display model
+const display = defineModel<boolean>("display");
 
-            busy: false,
-            error: "",
+// Modal container
+const container = useTemplateRef("container");
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
+// Modal composable
+const { close, forceClose } = useModal(display, container);
 
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.confirmation = false;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+// Current album ID
+const currentAlbum = ref(AlbumsController.CurrentAlbum);
 
-        this.onAlbumUpdate();
-        if (this.display) {
-            this.error = "";
-            this.confirmation = false;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Current album name
+const currentAlbumName = ref(AlbumsController.CurrentAlbumData?.name || "");
 
-        onAlbumUpdate: function () {
-            this.currentAlbum = AlbumsController.CurrentAlbum;
-            if (AlbumsController.CurrentAlbumData) {
-                this.oldName = AlbumsController.CurrentAlbumData.name;
-            }
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            this.submitInternal({});
-        },
-
-        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const albumId = this.currentAlbum;
-
-            makeApiRequest(apiAlbumsDeleteAlbum(albumId, confirmation))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
-                    this.busy = false;
-                    this.confirmation = false;
-                    this.forceCloseSignal++;
-                    AlbumsController.OnChangedAlbum(albumId);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.error = this.$t("Not found");
-                            AlbumsController.OnChangedAlbum(albumId);
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-    },
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
+    currentAlbum.value = AlbumsController.CurrentAlbum;
+    currentAlbumName.value = AlbumsController.CurrentAlbumData?.name || "";
 });
+
+// Deletion confirmation
+const deleteConfirmation = ref(false);
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+/**
+ * Performs the request
+ * @param confirmation The auth confirmation
+ */
+const performRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    error.value = "";
+
+    const albumId = currentAlbum.value;
+    const albumName = currentAlbumName.value;
+
+    makeApiRequest(apiAlbumsDeleteAlbum(albumId, confirmation))
+        .onSuccess(() => {
+            PagesController.ShowSnackBar($t("Album deleted") + ": " + albumName);
+
+            busy.value = false;
+            deleteConfirmation.value = false;
+
+            forceClose();
+
+            AlbumsController.OnChangedAlbum(albumId);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                notFound: () => {
+                    // Already deleted
+                    PagesController.ShowSnackBar($t("Album deleted") + ": " + albumName);
+
+                    deleteConfirmation.value = false;
+
+                    forceClose();
+
+                    AlbumsController.OnChangedAlbum(albumId);
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest({});
+};
 </script>

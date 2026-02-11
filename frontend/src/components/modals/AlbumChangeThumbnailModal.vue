@@ -1,6 +1,6 @@
 <template>
     <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
-        <div v-if="display" class="modal-dialog modal-md" role="document" @drop="onDrop">
+        <div class="modal-dialog modal-md" role="document" @drop="onDrop">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Change album thumbnail") }}

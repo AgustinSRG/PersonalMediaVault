@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Go to position") }}
@@ -38,76 +38,58 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { ref, useTemplateRef, watch } from "vue";
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "AlbumGoToPosModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            currentPos: 0,
-            albumLength: 0,
+// Translation function
+const { $t } = useI18n();
 
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.reset();
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.reset();
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                    elem.select();
-                }
-            });
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        reset: function () {
-            this.currentPos = AlbumsController.CurrentAlbumPos + 1;
-            this.albumLength = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Modal composable
+const { close } = useModal(display, container);
 
-        submit: function (e: Event) {
-            e.preventDefault();
+// Current album position
+const currentPos = ref(AlbumsController.CurrentAlbumPos + 1);
 
-            if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {
-                const pos = Math.min(Math.max(0, Math.floor(this.currentPos - 1)), AlbumsController.CurrentAlbumData.list.length - 1);
+// Current album length
+const albumLength = ref(AlbumsController.CurrentAlbumData?.list.length || 0);
 
-                AppStatus.ClickOnMedia(AlbumsController.CurrentAlbumData.list[pos].id, false);
-            }
+/**
+ * Resets the form
+ */
+const reset = () => {
+    currentPos.value = AlbumsController.CurrentAlbumPos + 1;
+    albumLength.value = AlbumsController.CurrentAlbumData?.list.length || 0;
+};
 
-            this.close();
-        },
-    },
+watch(display, () => {
+    if (display.value) {
+        reset();
+    }
 });
+
+/**
+ * Handler for the 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {
+        const pos = Math.min(Math.max(0, Math.floor(currentPos.value - 1)), AlbumsController.CurrentAlbumData.list.length - 1);
+
+        AppStatus.ClickOnMedia(AlbumsController.CurrentAlbumData.list[pos].id, false);
+    }
+
+    close();
+};
 </script>

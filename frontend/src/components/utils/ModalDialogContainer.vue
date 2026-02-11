@@ -241,6 +241,10 @@ const focus = () => {
     const focusElement = container.value?.querySelector(`.${AUTO_FOCUS_CLASS_NAME}`) as HTMLElement;
     if (focusElement) {
         focusElement.focus();
+
+        if (focusElement.classList.contains("auto-select") && typeof (focusElement as HTMLInputElement).select === "function") {
+            (focusElement as HTMLInputElement).select();
+        }
     } else {
         container.value?.focus();
     }

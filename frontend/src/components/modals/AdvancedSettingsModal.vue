@@ -1,6 +1,6 @@
 <template>
     <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy" :static="true" :close-callback="askClose">
-        <form v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document" @submit="submit">
+        <form class="modal-dialog modal-xl modal-height-100-wf" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Advanced settings") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" :disabled="busy" @click="close">

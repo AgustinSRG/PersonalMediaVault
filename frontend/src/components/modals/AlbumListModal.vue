@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <div v-if="display" class="modal-dialog modal-sm" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <div class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Albums") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -128,17 +123,14 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
-import { getUniqueStringId } from "@/utils/unique-id";
+import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
@@ -146,390 +138,472 @@ import { getFrontendUrl } from "@/utils/api";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useRequestId } from "@/composables/use-request-id";
 
-interface AlbumModalListItem {
+const AlbumCreateModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AlbumCreateModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
+/**
+ * Album metadata to use for the list
+ */
+type AlbumModalListItem = {
     id: number;
     name: string;
     nameLowerCase: string;
     added: boolean;
     starts: boolean;
     contains: boolean;
-}
+};
 
-export default defineComponent({
-    name: "AlbumListModal",
-    components: {
-        AlbumCreateModal,
-        LoadingIcon,
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose, focus } = useModal(display, container);
+
+// Edit mode
+const editMode = ref(canWrite.value);
+
+// True if the edit mode was changed by the user
+const editModeChanged = ref(false);
+
+/**
+ * Changes edit mode
+ */
+const changeEditMode = () => {
+    editMode.value = !editMode.value;
+    editModeChanged.value = true;
+    updateAlbums();
+    focus();
+};
+
+// Display modal to create a new album?
+const displayAlbumCreate = ref(false);
+
+const createAlbum = () => {
+    displayAlbumCreate.value = true;
+};
+
+/**
+ * Handler for display change events
+ * on the album creation modal.
+ * After the modal closes, the parent modal should be refocused.
+ * @param modalDisplay The new display status
+ */
+const afterModalCreateClosed = (modalDisplay: boolean) => {
+    if (!modalDisplay && display.value) {
+        focus();
+    }
+};
+
+// List of albums to display in the list
+const albums = ref<AlbumModalListItem[]>([]);
+
+// Albums filter
+const filter = ref("");
+
+// Current media ID
+const mid = ref(AppStatus.CurrentMedia);
+
+// List of albums the media is in
+const mediaAlbums = ref<number[]>([]);
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    const changed = mid.value !== AppStatus.CurrentMedia;
+    mid.value = AppStatus.CurrentMedia;
+    if (changed) {
+        updateAlbums();
+    }
+});
+
+/**
+ * Called when a new album is created by the user
+ * @param _albumId The album ID
+ * @param albumName The album name
+ */
+const onNewAlbum = (_albumId: number, albumName: string) => {
+    filter.value = albumName;
+    updateAlbums();
+};
+
+// Max number of items that will fit in the visible section of the scroller
+const LIST_SCROLLER_ITEMS_FIT = 6;
+
+// Big list scroller
+const bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(LIST_SCROLLER_ITEMS_FIT), {
+    get: () => {
+        return albums.value;
     },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            loadRequestId: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-
-            bigListScroller: null as BigListScroller<AlbumModalListItem>,
-        };
-    },
-    data: function () {
-        return {
-            albums: [] as AlbumModalListItem[],
-            filter: "",
-
-            mid: AppStatus.CurrentMedia,
-            mediaAlbums: [] as number[],
-
-            loading: true,
-            busy: false,
-            busyTarget: -1,
-
-            displayAlbumCreate: false,
-
-            editMode: AuthController.CanWrite,
-            canWrite: AuthController.CanWrite,
-            editModeChanged: false,
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            this.displayAlbumCreate = false;
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                AlbumsController.Refresh();
-                this.load();
-            } else {
-                clearNamedTimeout(this.loadRequestId);
-                abortNamedApiRequest(this.loadRequestId);
-            }
-        },
-    },
-    mounted: function () {
-        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(6), {
-            get: () => {
-                return this.albums;
-            },
-            set: (list) => {
-                this.albums = list;
-            },
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onUpdateStatus.bind(this));
-
-        this.updateAlbums();
-        this.load();
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-            AlbumsController.Refresh();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const el = this.$el.querySelector(".auto-focus");
-
-                if (el) {
-                    el.focus();
-                }
-            });
-        },
-
-        afterModalCreateClosed: function (display: boolean) {
-            if (!display && this.display) {
-                this.autoFocus();
-            }
-        },
-
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
-
-            if (!this.display) {
-                return;
-            }
-
-            this.loading = true;
-
-            if (AuthController.Locked) {
-                return; // Vault is locked
-            }
-
-            makeNamedApiRequest(this.loadRequestId, apiMediaGetMediaAlbums(this.mid))
-                .onSuccess((result) => {
-                    this.mediaAlbums = result;
-                    this.loading = false;
-                    this.canWrite = AuthController.CanWrite;
-                    if (!this.canWrite) {
-                        this.editMode = false;
-                    } else if (!this.editModeChanged) {
-                        this.editMode = result.length === 0;
-                    }
-                    this.updateAlbums();
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        notFound: () => {
-                            this.forceCloseSignal++;
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        createAlbum: function () {
-            this.displayAlbumCreate = true;
-        },
-
-        onNewAlbum: function (albumId: number, albumName: string) {
-            this.filter = albumName;
-            this.updateAlbums();
-        },
-
-        goToAlbum: function (album: AlbumModalListItem, event?: Event) {
-            if (event) {
-                event.preventDefault();
-            }
-
-            this.forceCloseSignal++;
-            AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
-        },
-
-        changeEditMode: function () {
-            this.editMode = !this.editMode;
-            this.editModeChanged = true;
-            this.updateAlbums();
-            this.autoFocus();
-        },
-
-        clickOnAlbum: function (album: AlbumModalListItem, backToText?: boolean, event?: Event) {
-            if (event) {
-                event.preventDefault();
-            }
-
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.busyTarget = album.id;
-
-            if (album.added) {
-                // Remove
-                makeApiRequest(apiAlbumsRemoveMediaFromAlbum(album.id, this.mid))
-                    .onSuccess(() => {
-                        this.busy = false;
-                        album.added = false;
-                        PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
-                        if (this.mediaAlbums.indexOf(album.id) >= 0) {
-                            this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
-                        }
-                        this.updateAlbums();
-                        AlbumsController.OnChangedAlbum(album.id, true);
-                        if (backToText && this.editMode) {
-                            this.autoFocus();
-                        }
-                    })
-                    .onRequestError((err, handleErr) => {
-                        this.busy = false;
-                        handleErr(err, {
-                            unauthorized: () => {
-                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            },
-                            accessDenied: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                AuthController.CheckAuthStatusSilent();
-                            },
-                            notFound: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                                AlbumsController.Load();
-                            },
-                            serverError: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                            },
-                            networkError: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                            },
-                        });
-                    })
-                    .onUnexpectedError((err) => {
-                        this.busy = false;
-                        console.error(err);
-                    });
-            } else {
-                // Add
-                makeApiRequest(apiAlbumsAddMediaToAlbum(album.id, this.mid))
-                    .onSuccess(() => {
-                        this.busy = false;
-                        album.added = true;
-                        PagesController.ShowSnackBar(this.$t("Successfully added to album"));
-                        if (this.mediaAlbums.indexOf(album.id) === -1) {
-                            this.mediaAlbums.push(album.id);
-                        }
-                        this.updateAlbums();
-                        AlbumsController.OnChangedAlbum(album.id, true);
-                        if (backToText && this.editMode) {
-                            this.changeEditMode();
-                        }
-                    })
-                    .onRequestError((err, handleErr) => {
-                        this.busy = false;
-                        handleErr(err, {
-                            unauthorized: () => {
-                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            },
-                            maxSizeReached: () => {
-                                PagesController.ShowSnackBar(
-                                    this.$t("Error") +
-                                        ": " +
-                                        this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
-                                );
-                            },
-                            badRequest: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
-                            },
-                            accessDenied: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                AuthController.CheckAuthStatusSilent();
-                            },
-                            notFound: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                                AlbumsController.Load();
-                            },
-                            serverError: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                            },
-                            networkError: () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                            },
-                        });
-                    })
-                    .onUnexpectedError((err) => {
-                        this.busy = false;
-                        console.error(err);
-                    });
-            }
-        },
-
-        onUpdateStatus: function () {
-            const changed = this.mid !== AppStatus.CurrentMedia;
-            this.mid = AppStatus.CurrentMedia;
-            if (changed) {
-                this.updateAlbums();
-            }
-        },
-
-        updateAlbums: function () {
-            const mid = AppStatus.CurrentMedia;
-
-            const albumFilter = normalizeString(this.filter).trim().toLowerCase();
-            const albumFilterWords = filterToWords(albumFilter);
-
-            const albums = AlbumsController.GetAlbumsListMin()
-                .map((a) => {
-                    const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
-                    return {
-                        ...a,
-                        added: mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0,
-                        starts: i === 0,
-                        contains: i >= 0,
-                    };
-                })
-                .filter((a) => {
-                    return (a.starts || a.contains) && (this.editMode || a.added);
-                })
-                .sort((a, b) => {
-                    if (a.starts && !b.starts) {
-                        return -1;
-                    } else if (b.starts && !a.starts) {
-                        return 1;
-                    } else if (a.nameLowerCase < b.nameLowerCase) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-
-            this.bigListScroller.reset();
-            this.bigListScroller.addElements(albums);
-        },
-
-        onFilterKeyDown: function (e: KeyboardEvent) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-
-                if (!this.filter) {
-                    return;
-                }
-
-                if (this.albums.length === 0) {
-                    return;
-                }
-
-                if (this.editMode) {
-                    this.clickOnAlbum(this.albums[0], true);
-                } else {
-                    this.goToAlbum(this.albums[0]);
-                }
-            } else if (e.key === "Tab") {
-                if (this.albums.length === 0) {
-                    if (this.filter) {
-                        e.preventDefault();
-                    }
-                    return;
-                }
-
-                if (this.filter === this.albums[0].name || !this.filter) {
-                    return;
-                }
-
-                e.preventDefault();
-
-                this.filter = this.albums[0].name;
-            }
-        },
-
-        getAlbumURL: function (albumId: number, mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-                album: albumId,
-            });
-        },
-
-        onScroll: function (e: Event) {
-            this.bigListScroller.checkElementScroll(e.target as HTMLElement);
-        },
+    set: (list) => {
+        albums.value = list;
     },
 });
+
+/**
+ * Updates the albums list
+ */
+const updateAlbums = () => {
+    const mid = AppStatus.CurrentMedia;
+
+    const albumFilter = normalizeString(filter.value).trim().toLowerCase();
+    const albumFilterWords = filterToWords(albumFilter);
+
+    const albums = AlbumsController.GetAlbumsListMin()
+        .map((a) => {
+            const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
+            return {
+                ...a,
+                added: mid >= 0 && mediaAlbums.value.indexOf(a.id) >= 0,
+                starts: i === 0,
+                contains: i >= 0,
+            };
+        })
+        .filter((a) => {
+            return (a.starts || a.contains) && (editMode.value || a.added);
+        })
+        .sort((a, b) => {
+            if (a.starts && !b.starts) {
+                return -1;
+            } else if (b.starts && !a.starts) {
+                return 1;
+            } else if (a.nameLowerCase < b.nameLowerCase) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+    bigListScroller.reset();
+    bigListScroller.addElements(albums);
+};
+
+onApplicationEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, updateAlbums);
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Loading status
+const loading = ref(true);
+
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the list of media albums
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    loading.value = true;
+
+    if (AuthController.Locked) {
+        return; // Vault is locked
+    }
+
+    makeNamedApiRequest(loadRequestId, apiMediaGetMediaAlbums(mid.value))
+        .onSuccess((result) => {
+            mediaAlbums.value = result;
+
+            loading.value = false;
+
+            if (!canWrite.value) {
+                editMode.value = false;
+            } else if (!editModeChanged.value) {
+                editMode.value = result.length === 0;
+            }
+
+            updateAlbums();
+            focus();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                notFound: () => {
+                    forceClose();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+onMounted(() => {
+    if (display.value) {
+        AlbumsController.Refresh();
+
+        updateAlbums();
+        load();
+    }
+});
+
+watch(display, () => {
+    displayAlbumCreate.value = false;
+
+    if (display.value) {
+        AlbumsController.Refresh();
+
+        updateAlbums();
+        load();
+    }
+});
+
+/**
+ * Handler for scroll events
+ * @param e The event
+ */
+const onScroll = (e: Event) => {
+    bigListScroller.checkElementScroll(e.target as HTMLElement);
+};
+
+/**
+ * Navigates to an album the media is into.
+ * @param album The album
+ * @param event The click event
+ */
+const goToAlbum = (album: AlbumModalListItem, event?: Event) => {
+    if (event) {
+        event.preventDefault();
+    }
+
+    forceClose();
+    AppStatus.ClickOnAlbumByMedia(album.id, mid.value);
+};
+
+/**
+ * Resolves the URL of an album
+ * @param albumId The album ID
+ * @param mid The current media ID
+ */
+const getAlbumURL = (albumId: number, mid: number): string => {
+    return getFrontendUrl({
+        media: mid,
+        album: albumId,
+    });
+};
+
+// Busy status
+const busy = ref(false);
+
+// ID of the album being targeted
+const busyTarget = ref(-1);
+
+/**
+ * Performs a request to
+ * remove the media from the album
+ */
+const removeFromAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    busyTarget.value = album.id;
+
+    makeApiRequest(apiAlbumsRemoveMediaFromAlbum(album.id, mid.value))
+        .onSuccess(() => {
+            busy.value = false;
+
+            album.added = false;
+
+            PagesController.ShowSnackBar($t("Successfully removed from album"));
+
+            if (mediaAlbums.value.indexOf(album.id) >= 0) {
+                mediaAlbums.value.splice(mediaAlbums.value.indexOf(album.id), 1);
+            }
+
+            updateAlbums();
+
+            AlbumsController.OnChangedAlbum(album.id, true);
+
+            if (backToText && editMode.value) {
+                focus();
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    AuthController.CheckAuthStatusSilent();
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    AlbumsController.Load();
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            console.error(err);
+        });
+};
+
+/**
+ * Performs a request to
+ * add the media into the album
+ */
+const addIntoAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    busyTarget.value = album.id;
+
+    makeApiRequest(apiAlbumsAddMediaToAlbum(album.id, mid.value))
+        .onSuccess(() => {
+            busy.value = false;
+
+            album.added = true;
+
+            PagesController.ShowSnackBar($t("Successfully added to album"));
+
+            if (mediaAlbums.value.indexOf(album.id) === -1) {
+                mediaAlbums.value.push(album.id);
+            }
+
+            updateAlbums();
+
+            AlbumsController.OnChangedAlbum(album.id, true);
+
+            if (backToText && editMode.value) {
+                changeEditMode();
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                maxSizeReached: () => {
+                    PagesController.ShowSnackBar(
+                        $t("Error") + ": " + $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
+                    );
+                },
+                badRequest: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    AuthController.CheckAuthStatusSilent();
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    AlbumsController.Load();
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            console.error(err);
+        });
+};
+
+/**
+ * Call when the user clicks in an album checkbox
+ * @param album The album element
+ * @param backToText True to go back to text input after adding
+ * @param event The click event
+ */
+const clickOnAlbum = (album: AlbumModalListItem, backToText?: boolean, event?: Event) => {
+    if (event) {
+        event.preventDefault();
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    if (album.added) {
+        // Remove
+        removeFromAlbum(album, backToText);
+    } else {
+        // Add
+        addIntoAlbum(album, backToText);
+    }
+};
+
+/**
+ * Handler for 'keydown' in the filter input element
+ * @param e The keyboard event
+ */
+const onFilterKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+
+        if (!filter.value) {
+            return;
+        }
+
+        if (albums.value.length === 0) {
+            return;
+        }
+
+        if (editMode.value) {
+            clickOnAlbum(albums.value[0], true);
+        } else {
+            goToAlbum(albums.value[0]);
+        }
+    } else if (e.key === "Tab") {
+        if (albums.value.length === 0) {
+            if (filter.value) {
+                e.preventDefault();
+            }
+            return;
+        }
+
+        if (filter.value === albums.value[0].name || !filter.value) {
+            return;
+        }
+
+        e.preventDefault();
+
+        filter.value = albums.value[0].name;
+    }
+};
 </script>

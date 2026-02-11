@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete attachment") }}
@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ attachmentToDelete ? attachmentToDelete.name : "" }}</label>
+                    <label>{{ attachmentToDelete?.name || "" }}</label>
                 </div>
 
                 <table class="table no-margin no-border">
@@ -42,73 +42,53 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { ref, useTemplateRef } from "vue";
 import type { MediaAttachment } from "@/api/models";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "AttachmentDeleteModal",
-    components: {
-        ToggleSwitch,
-    },
-    props: {
-        attachmentToDelete: Object as PropType<MediaAttachment>,
-        display: Boolean,
-    },
-    emits: ["update:display", "confirm"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            name: "",
+// Translation function
+const { $t } = useI18n();
 
-            confirmation: false,
+// Display model
+const display = defineModel<boolean>("display");
 
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Modal composable
+const { close } = useModal(display, container);
 
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            this.$emit("confirm");
-
-            this.close();
-        },
-    },
+defineProps({
+    /**
+     * Attachment to be deleted
+     */
+    attachmentToDelete: Object as PropType<MediaAttachment>,
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted on confirmation
+     */
+    (e: "confirm"): void;
+}>();
+
+// Confirmation flag
+const confirmation = ref(false);
+
+/**
+ * Handler for the 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    emit("confirm");
+
+    close();
+};
 </script>

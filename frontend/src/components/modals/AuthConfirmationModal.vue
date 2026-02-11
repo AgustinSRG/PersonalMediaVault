@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form ref="form" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Authentication confirmation") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -38,116 +38,125 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { onMounted, ref, useTemplateRef } from "vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { AuthController } from "@/control/auth";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
 import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useInterval } from "@/composables/use-interval";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
-export default defineComponent({
-    name: "AuthConfirmationModal",
-    components: {
-        SixDigitCodeInput,
-        PasswordInput,
-    },
-    props: {
-        display: Boolean,
-        error: String,
-        tfa: Boolean,
-        cooldown: Number,
-    },
-    emits: ["update:display", "confirm"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            timer: null as ReturnType<typeof setInterval> | null,
-        };
-    },
-    data: function () {
-        return {
-            code: "",
-            password: "",
+// Translation function
+const { $t } = useI18n();
 
-            mustWait: 0,
-            now: Date.now(),
+// Display model
+const display = defineModel<boolean>("display");
 
-            username: AuthController.Username,
+// Modal container
+const container = useTemplateRef("container");
 
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
-            this.username = AuthController.Username;
-        });
+// Modal composable
+const { close } = useModal(display, container);
 
-        this.timer = setInterval(this.updateNow.bind(this), 200);
+// Props
+const props = defineProps({
+    /**
+     * Error message to display
+     */
+    error: String,
 
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+    /**
+     * True if TFA is required
+     */
+    tfa: Boolean,
 
-        close: function () {
-            this.closeSignal++;
-        },
-
-        passwordTabSkip: function (e: KeyboardEvent) {
-            const nextElement = this.$el.querySelector(".modal-footer-btn");
-
-            if (nextElement) {
-                e.preventDefault();
-                nextElement.focus();
-            }
-        },
-
-        updateNow: function () {
-            this.now = Date.now();
-            if (this.now < this.cooldown) {
-                this.mustWait = Math.max(1, Math.round((this.cooldown - this.now) / 1000));
-            } else {
-                this.mustWait = 0;
-            }
-        },
-
-        submit: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            const providedAuthConfirmation: ProvidedAuthConfirmation = {
-                password: this.password,
-                tfaCode: this.code,
-            };
-
-            this.$emit("confirm", providedAuthConfirmation);
-            this.displayStatus = false;
-        },
-
-        stringMultiReplace,
-    },
+    /**
+     * Cooldown (milliseconds)
+     */
+    cooldown: Number,
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Confirmation event
+     */
+    (e: "confirm", confirmation: ProvidedAuthConfirmation): void;
+}>();
+
+// The current timestamp
+const now = ref(Date.now());
+
+// Number of seconds the user must wait
+const mustWait = ref(0);
+
+// A timer to update the 'now' ref
+const timer = useInterval();
+
+// Interval delay (milliseconds)
+const TIMER_INTERVAL_DELAY = 200;
+
+onMounted(() => {
+    timer.set(() => {
+        now.value = Date.now();
+        if (now.value < props.cooldown) {
+            mustWait.value = Math.max(1, Math.round((props.cooldown - now.value) / 1000));
+        } else {
+            mustWait.value = 0;
+        }
+    }, TIMER_INTERVAL_DELAY);
+});
+
+// Username
+const username = ref(AuthController.Username);
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
+    username.value = AuthController.Username;
+});
+
+// TFA code
+const code = ref("");
+
+// Password
+const password = ref("");
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    if (e) {
+        e.preventDefault();
+    }
+
+    const providedAuthConfirmation: ProvidedAuthConfirmation = {
+        password: password.value,
+        tfaCode: code.value,
+    };
+
+    emit("confirm", providedAuthConfirmation);
+
+    display.value = false;
+};
+
+// Form container
+const form = useTemplateRef("form");
+
+/**
+ * Handler for tab focus skip on password input
+ * @param e The keyboard event
+ */
+const passwordTabSkip = (e: KeyboardEvent) => {
+    const nextElement = form.value?.querySelector(".modal-footer-btn") as HTMLElement;
+
+    if (nextElement) {
+        e.preventDefault();
+        nextElement.focus();
+    }
+};
 </script>

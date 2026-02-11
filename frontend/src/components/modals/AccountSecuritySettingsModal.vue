@@ -1,6 +1,6 @@
 <template>
     <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
-        <form v-if="display" class="modal-dialog modal-lg" role="document" @submit="submit">
+        <form class="modal-dialog modal-lg" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Account security settings") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
