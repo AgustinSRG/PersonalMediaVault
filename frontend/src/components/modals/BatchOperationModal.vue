@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-xl" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div ref="dialog" class="modal-dialog modal-xl" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Batch operation") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -25,9 +25,9 @@
                         <label>{{ $t("Media type") }}:</label>
                         <select v-model="typeSearch" class="form-control form-select form-control-full-width">
                             <option :value="0">{{ $t("Any media") }}</option>
-                            <option :value="1">{{ $t("Images") }}</option>
-                            <option :value="2">{{ $t("Videos") }}</option>
-                            <option :value="3">{{ $t("Audios") }}</option>
+                            <option :value="MEDIA_TYPE_IMAGE">{{ $t("Images") }}</option>
+                            <option :value="MEDIA_TYPE_VIDEO">{{ $t("Videos") }}</option>
+                            <option :value="MEDIA_TYPE_AUDIO">{{ $t("Audios") }}</option>
                         </select>
                     </div>
 
@@ -140,9 +140,8 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { ref, useTemplateRef, watch } from "vue";
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { TagsController } from "@/control/tags";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
@@ -150,8 +149,8 @@ import { AlbumsController } from "@/control/albums";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
-import type { MediaListItem } from "@/api/models";
-import { getUniqueStringId } from "@/utils/unique-id";
+import type { MediaType } from "@/api/models";
+import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaListItem } from "@/api/models";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
@@ -161,711 +160,720 @@ import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import TagIdList from "../utils/TagIdList.vue";
 import TagNameList from "../utils/TagNameList.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 
+// Page size for requests
 const PAGE_SIZE = 50;
 
-export default defineComponent({
-    name: "BatchOperationModal",
-    components: {
-        BatchOperationProgressModal,
-        AlbumSelect,
-        AuthConfirmationModal,
-        TagIdList,
-        TagNameList,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            findTagSearchTimeout: null as ReturnType<typeof setTimeout> | null,
-            findTagActionTimeout: null as ReturnType<typeof setTimeout> | null,
-            batchRequestId: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            busy: false,
+// Translation function
+const { $t } = useI18n();
 
-            textSearch: "",
-            typeSearch: 0,
-            albumSearch: -1,
-            tagsSearch: [] as number[],
+// Display model
+const display = defineModel<boolean>("display");
 
-            tagModeSearch: "all",
+// Modal container
+const container = useTemplateRef("container");
 
-            action: "",
+// Modal composable
+const { close } = useModal(display, container);
 
-            tagsAction: [] as string[],
+// Text search filter
+const textSearch = ref("");
 
-            albumToAdd: -1,
+// Media type filter
+const typeSearch = ref<MediaType>(0);
 
-            displayProgress: false,
+// Album filter
+const albumSearch = ref<number>(-1);
 
-            progress: 0,
-            status: "",
-            actionCount: 0,
-            actionItems: [] as number[],
-            error: "",
-            closeSignal: 0,
+// List of tags for filtering
+const tagsSearch = ref<number[]>([]);
 
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
+// Tag modes
+type TagSearchMode = "all" | "any" | "none" | "untagged";
 
-            authConfirmationDeleteId: -1,
-            authConfirmationDeleteNext: -1,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.batchRequestId);
+// Tag filter mode
+const tagModeSearch = ref<TagSearchMode>("all");
 
-        if (this.findTagSearchTimeout) {
-            clearTimeout(this.findTagSearchTimeout);
-            this.findTagSearchTimeout = null;
-        }
+// Batch operation actions
+type BatchOperationAction = "" | "tag-add" | "tag-remove" | "album-add" | "album-remove" | "delete";
 
-        if (this.findTagActionTimeout) {
-            clearTimeout(this.findTagActionTimeout);
-            this.findTagActionTimeout = null;
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Action to perform
+const action = ref<BatchOperationAction>("");
 
-        afterSubModalClosed: function (display: boolean) {
-            if (!display && this.display) {
-                this.autoFocus();
-            }
-        },
+// List of tags for the action
+const tagsAction = ref<string[]>([]);
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Ifd of the album for the action
+const albumToAdd = ref(-1);
 
-        onTagsSkipKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab" && event.shiftKey) {
-                const inputElem = this.$el.querySelector(".tags-input-search");
-                if (inputElem) {
-                    event.preventDefault();
-                    inputElem.focus();
-                }
-            }
-        },
+// True to display the progress modal
+const displayProgress = ref(false);
 
-        onTagsSkipActionKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab" && event.shiftKey) {
-                const inputElem = this.$el.querySelector(".tags-input-search-action");
-                if (inputElem) {
-                    event.preventDefault();
-                    inputElem.focus();
-                }
-            }
-        },
+// Progress of the batch operation (%)
+const progress = ref(0);
 
-        onAddTagActionKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab") {
-                const inputElem = this.$el.querySelector(".tags-focus-skip-action");
-                if (inputElem) {
-                    event.preventDefault();
-                    inputElem.focus();
-                }
-            }
-        },
+// Statuses of the batch operation
+type BatchOperationStatus = "" | "search" | "confirmation" | "confirmation-delete" | "action" | "success" | "error";
 
-        onSuggestionKeydown: function (e: KeyboardEvent) {
-            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                e.preventDefault();
-                e.stopPropagation();
+// Batch operation status
+const status = ref<BatchOperationStatus>("");
 
-                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+// Number of media items to apply the action
+const actionCount = ref(0);
 
-                if (nextElem && nextElem.focus) {
-                    nextElem.focus();
-                }
-            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                e.preventDefault();
-                e.stopPropagation();
+// List of IDs of media elements to apply the action
+const actionItems = ref<number[]>([]);
 
-                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+// Batch request ID
+const batchRequestId = useRequestId();
 
-                if (prevElem && prevElem.focus) {
-                    prevElem.focus();
-                } else {
-                    const inputElem = this.$el.querySelector(".tags-input-search");
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
 
-                    if (inputElem) {
-                        inputElem.focus();
-                    }
-                }
-            }
-        },
+// Media Id being deleted
+const authConfirmationDeleteId = ref(-1);
 
-        onSuggestionActionKeydown: function (e: KeyboardEvent) {
-            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                e.preventDefault();
-                e.stopPropagation();
+// Media Id to delete next
+const authConfirmationDeleteNext = ref(-1);
 
-                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+// Request error
+const error = ref("");
 
-                if (nextElem && nextElem.focus) {
-                    nextElem.focus();
-                }
-            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
-
-                if (prevElem && prevElem.focus) {
-                    prevElem.focus();
-                } else {
-                    const inputElem = this.$el.querySelector(".tags-input-search-action");
-
-                    if (inputElem) {
-                        inputElem.focus();
-                    }
-                }
-            }
-        },
-
-        skipTagSuggestionsSearch: function () {
-            const elem = this.$el.querySelector(".tags-focus-skip");
-            if (elem) {
-                elem.focus();
-            }
-        },
-
-        skipTagSuggestionsActions: function () {
-            const toFocus = this.$el.querySelector(".tags-focus-skip-action");
-            if (toFocus) {
-                toFocus.focus();
-            }
-        },
-
-        start: function () {
-            if (!this.action) {
-                return;
-            }
-
-            switch (this.action) {
-                case "tag-add":
-                case "tag-remove":
-                    if (this.tagsAction.length === 0) {
-                        return;
-                    }
-                    break;
-                case "album-add":
-                case "album-remove":
-                    if (this.albumToAdd < 0) {
-                        return;
-                    }
-                    break;
-            }
-
-            this.displayProgress = true;
-            this.status = "search";
-            this.progress = 0;
-            this.actionItems = [];
-
-            if (this.albumSearch >= 0) {
-                this.loadAlbumSearch();
-            } else {
-                this.searchNext(null);
-            }
-        },
-
-        loadAlbumSearch: function () {
-            abortNamedApiRequest(this.batchRequestId);
-
-            makeNamedApiRequest(this.batchRequestId, apiAlbumsGetAlbum(this.albumSearch))
-                .onSuccess((result) => {
-                    this.filterElements(result.list);
-                    this.finishSearch();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.status = "error";
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        notFound: () => {
-                            this.status = "error";
-                            this.error = this.$t("The selected album was not found");
-                        },
-                        serverError: () => {
-                            this.status = "error";
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.status = "error";
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    this.status = "error";
-                    this.error = err.message;
-                });
-        },
-
-        getTagMode: function (): "allof" | "anyof" | "noneof" {
-            switch (this.tagModeSearch) {
-                case "any":
-                    if (this.tagsSearch.length > 16) {
-                        return "allof";
-                    }
-                    return "anyof";
-                case "none":
-                    return "noneof";
-                default:
-                    return "allof";
-            }
-        },
-
-        getTagList: function (): string[] {
-            if (this.tagModeSearch === "untagged") {
-                return [];
-            }
-            if (this.tagModeSearch === "any" && this.tagsSearch.length > 16) {
-                return [];
-            }
-            return this.tagsSearch
-                .map((tag) => {
-                    return TagsController.GetTagName(tag, TagsController.TagsVersion);
-                })
-                .slice(0, 16);
-        },
-
-        searchNext: function (continueRef: number | null) {
-            abortNamedApiRequest(this.batchRequestId);
-
-            makeNamedApiRequest(this.batchRequestId, apiAdvancedSearch(this.getTagMode(), this.getTagList(), "asc", continueRef, PAGE_SIZE))
-                .onSuccess((result) => {
-                    this.filterElements(result.items);
-
-                    this.progress = (Math.max(0, result.scanned) / Math.max(1, result.total_count)) * 100;
-
-                    if (result.scanned >= result.total_count) {
-                        // Finished
-                        this.finishSearch();
-                    } else {
-                        this.searchNext(result.continue);
-                    }
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.status = "error";
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        serverError: () => {
-                            this.status = "error";
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.status = "error";
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    this.status = "error";
-                    this.error = err.message;
-                });
-        },
-
-        finishSearch: function () {
-            if (this.actionItems.length > 0) {
-                this.status = this.action === "delete" ? "confirmation-delete" : "confirmation";
-                this.actionCount = this.actionItems.length;
-            } else {
-                this.status = "error";
-                this.error = this.$t("No items found matching the specified criteria");
-            }
-        },
-
-        filterElements: function (results: MediaListItem[]) {
-            const filterText = normalizeString(this.textSearch).trim().toLowerCase();
-            const filterTextWords = filterToWords(filterText);
-            const filterType = this.typeSearch;
-            const filterTags = this.tagsSearch.slice();
-            const filterTagMode = this.tagModeSearch;
-
-            for (const e of results) {
-                if (filterText) {
-                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0) {
-                        continue;
-                    }
-                }
-
-                if (filterType) {
-                    if (e.type !== filterType) {
-                        continue;
-                    }
-                }
-
-                if (filterTagMode === "all") {
-                    if (filterTags.length > 0) {
-                        let passesTags = true;
-                        for (const tag of filterTags) {
-                            if (!e.tags || !e.tags.includes(tag)) {
-                                passesTags = false;
-                                break;
-                            }
-                        }
-
-                        if (!passesTags) {
-                            continue;
-                        }
-                    }
-                } else if (filterTagMode === "none") {
-                    if (filterTags.length > 0) {
-                        let passesTags = true;
-                        for (const tag of filterTags) {
-                            if (e.tags && e.tags.includes(tag)) {
-                                passesTags = false;
-                                break;
-                            }
-                        }
-
-                        if (!passesTags) {
-                            continue;
-                        }
-                    }
-                } else if (filterTagMode === "any") {
-                    if (filterTags.length > 0) {
-                        let passesTags = false;
-                        for (const tag of filterTags) {
-                            if (!e.tags || e.tags.includes(tag)) {
-                                passesTags = true;
-                                break;
-                            }
-                        }
-
-                        if (!passesTags) {
-                            continue;
-                        }
-                    }
-                } else if (filterTagMode === "untagged") {
-                    if (e.tags && e.tags.length > 0) {
-                        continue;
-                    }
-                }
-
-                this.actionItems.push(e.id);
-            }
-        },
-
-        cancel: function () {
-            abortNamedApiRequest(this.batchRequestId);
-        },
-
-        confirm: function () {
-            this.status = "action";
-            this.progress = 0;
-            this.actionNext(0);
-        },
-
-        actionNext: function (i: number) {
-            abortNamedApiRequest(this.batchRequestId);
-
-            if (i >= this.actionItems.length) {
-                // Finish
-                this.status = "success";
-
-                AlbumsController.LoadCurrentAlbum();
-                MediaController.Load();
-                TagsController.Load();
-                return;
-            }
-
-            const mediaId = this.actionItems[i];
-
-            switch (this.action) {
-                case "tag-add":
-                    this.actionAddTag(mediaId, this.tagsAction.slice(), i + 1);
-                    break;
-                case "tag-remove":
-                    this.actionRemoveTag(mediaId, this.tagsAction.slice(), i + 1);
-                    break;
-                case "album-add":
-                    this.actionAddAlbum(mediaId, i + 1);
-                    break;
-                case "album-remove":
-                    this.actionRemoveAlbum(mediaId, i + 1);
-                    break;
-                case "delete":
-                    this.actionDelete(mediaId, i + 1);
-                    break;
-            }
-
-            this.progress = ((i + 1) * 100) / (this.actionItems.length || 1);
-        },
-
-        actionDeleteInternal: function (confirmation: ProvidedAuthConfirmation) {
-            this.status = "action";
-            this.displayProgress = true;
-            makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(this.authConfirmationDeleteId, confirmation))
-                .onSuccess(() => {
-                    this.actionNext(this.authConfirmationDeleteNext);
-                })
-                .onRequestError((err, handleErr) => {
-                    this.status = "error";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.status = "";
-                            this.displayProgress = false;
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.status = "";
-                            this.displayProgress = false;
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.status = "";
-                            this.displayProgress = false;
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.status = "";
-                            this.displayProgress = false;
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.status = "";
-                            this.displayProgress = false;
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.error = this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.status = "error";
-                });
-        },
-
-        actionDelete: function (mid: number, next: number) {
-            this.authConfirmationDeleteId = mid;
-            this.authConfirmationDeleteNext = next;
-            this.actionDeleteInternal({});
-        },
-
-        actionAddAlbum: function (mid: number, next: number) {
-            makeNamedApiRequest(this.batchRequestId, apiAlbumsAddMediaToAlbum(this.albumToAdd, mid))
-                .onSuccess(() => {
-                    this.actionNext(next);
-                })
-                .onRequestError((err, handleErr) => {
-                    this.status = "error";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        maxSizeReached: () => {
-                            this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.error = this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.status = "error";
-                });
-        },
-
-        actionRemoveAlbum: function (mid: number, next: number) {
-            makeNamedApiRequest(this.batchRequestId, apiAlbumsRemoveMediaFromAlbum(this.albumToAdd, mid))
-                .onSuccess(() => {
-                    this.actionNext(next);
-                })
-                .onRequestError((err, handleErr) => {
-                    this.status = "error";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.error = this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.status = "error";
-                });
-        },
-
-        actionAddTag: function (mid: number, tags: string[], next: number) {
-            if (tags.length === 0) {
-                this.actionNext(next);
-                return;
-            }
-
-            makeNamedApiRequest(this.batchRequestId, apiTagsTagMedia(mid, tags[0]))
-                .onSuccess(() => {
-                    this.actionAddTag(mid, tags.slice(1), next);
-                })
-                .onRequestError((err, handleErr) => {
-                    this.status = "error";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidTagName: () => {
-                            this.error = this.$t("Invalid tag name");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.status = "error";
-                });
-        },
-
-        actionRemoveTag: function (mid: number, tags: string[], next: number) {
-            if (tags.length === 0) {
-                this.actionNext(next);
-                return;
-            }
-
-            const tagId = TagsController.FindTag(tags[0]);
-
-            if (tagId < 0) {
-                // Tag not found
-                this.actionRemoveTag(mid, tags.slice(1), next);
-                return;
-            }
-
-            makeNamedApiRequest(this.batchRequestId, apiTagsUntagMedia(mid, tagId))
-                .onSuccess(() => {
-                    this.actionRemoveTag(mid, tags.slice(1), next);
-                })
-                .onRequestError((err, handleErr) => {
-                    this.status = "error";
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.status = "error";
-                });
-        },
-    },
+watch(display, () => {
+    if (display.value) {
+        error.value = "";
+    }
 });
+
+/**
+ * Starts the batch operation
+ */
+const start = () => {
+    if (!action.value) {
+        return;
+    }
+
+    switch (action.value) {
+        case "tag-add":
+        case "tag-remove":
+            if (tagsAction.value.length === 0) {
+                return;
+            }
+            break;
+        case "album-add":
+        case "album-remove":
+            if (albumToAdd.value < 0) {
+                return;
+            }
+            break;
+    }
+
+    displayProgress.value = true;
+    status.value = "search";
+    progress.value = 0;
+    actionItems.value = [];
+
+    if (albumSearch.value >= 0) {
+        loadAlbumSearch();
+    } else {
+        searchNext(null);
+    }
+};
+
+/**
+ * Cancels the batch operation
+ */
+const cancel = () => {
+    abortNamedApiRequest(batchRequestId);
+};
+
+const loadAlbumSearch = () => {
+    abortNamedApiRequest(batchRequestId);
+
+    makeNamedApiRequest(batchRequestId, apiAlbumsGetAlbum(albumSearch.value))
+        .onSuccess((result) => {
+            filterElements(result.list);
+            finishSearch();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    status.value = "error";
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                notFound: () => {
+                    status.value = "error";
+                    error.value = $t("The selected album was not found");
+                },
+                serverError: () => {
+                    status.value = "error";
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    status.value = "error";
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            status.value = "error";
+            error.value = err.message;
+        });
+};
+
+/**
+ * Searches media elements
+ * @param continueRef The continuation token reference
+ */
+const searchNext = (continueRef: number | null) => {
+    abortNamedApiRequest(batchRequestId);
+
+    makeNamedApiRequest(batchRequestId, apiAdvancedSearch(getTagMode(), getTagList(), "asc", continueRef, PAGE_SIZE))
+        .onSuccess((result) => {
+            filterElements(result.items);
+
+            progress.value = (Math.max(0, result.scanned) / Math.max(1, result.total_count)) * 100;
+
+            if (result.scanned >= result.total_count) {
+                // Finished
+                finishSearch();
+            } else {
+                searchNext(result.continue);
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    status.value = "error";
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                serverError: () => {
+                    status.value = "error";
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    status.value = "error";
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            status.value = "error";
+            error.value = err.message;
+        });
+};
+
+/**
+ * Gets the tag mode for the API
+ */
+const getTagMode = (): "allof" | "anyof" | "noneof" => {
+    switch (tagModeSearch.value) {
+        case "any":
+            if (tagsSearch.value.length > 16) {
+                return "allof";
+            }
+            return "anyof";
+        case "none":
+            return "noneof";
+        default:
+            return "allof";
+    }
+};
+
+/**
+ * Gets the tag list for the search API
+ */
+const getTagList = (): string[] => {
+    if (tagModeSearch.value === "untagged") {
+        return [];
+    }
+    if (tagModeSearch.value === "any" && tagsSearch.value.length > 16) {
+        return [];
+    }
+    return tagsSearch.value
+        .map((tag) => {
+            return TagsController.GetTagName(tag, TagsController.TagsVersion);
+        })
+        .slice(0, 16);
+};
+
+/**
+ * Filters media elements and adds them to the list
+ * @param elements The elements to add
+ */
+const filterElements = (elements: MediaListItem[]) => {
+    const filterText = normalizeString(textSearch.value).trim().toLowerCase();
+    const filterTextWords = filterToWords(filterText);
+    const filterType = typeSearch.value;
+    const filterTags = tagsSearch.value.slice();
+    const filterTagMode = tagModeSearch.value;
+
+    for (const e of elements) {
+        if (filterText) {
+            if (matchSearchFilter(e.title, filterText, filterTextWords) < 0) {
+                continue;
+            }
+        }
+
+        if (filterType) {
+            if (e.type !== filterType) {
+                continue;
+            }
+        }
+
+        if (filterTagMode === "all") {
+            if (filterTags.length > 0) {
+                let passesTags = true;
+                for (const tag of filterTags) {
+                    if (!e.tags || !e.tags.includes(tag)) {
+                        passesTags = false;
+                        break;
+                    }
+                }
+
+                if (!passesTags) {
+                    continue;
+                }
+            }
+        } else if (filterTagMode === "none") {
+            if (filterTags.length > 0) {
+                let passesTags = true;
+                for (const tag of filterTags) {
+                    if (e.tags && e.tags.includes(tag)) {
+                        passesTags = false;
+                        break;
+                    }
+                }
+
+                if (!passesTags) {
+                    continue;
+                }
+            }
+        } else if (filterTagMode === "any") {
+            if (filterTags.length > 0) {
+                let passesTags = false;
+                for (const tag of filterTags) {
+                    if (!e.tags || e.tags.includes(tag)) {
+                        passesTags = true;
+                        break;
+                    }
+                }
+
+                if (!passesTags) {
+                    continue;
+                }
+            }
+        } else if (filterTagMode === "untagged") {
+            if (e.tags && e.tags.length > 0) {
+                continue;
+            }
+        }
+
+        actionItems.value.push(e.id);
+    }
+};
+
+/**
+ * Indicates the media element search finished
+ */
+const finishSearch = () => {
+    if (actionItems.value.length > 0) {
+        status.value = action.value === "delete" ? "confirmation-delete" : "confirmation";
+        actionCount.value = actionItems.value.length;
+    } else {
+        status.value = "error";
+        error.value = $t("No items found matching the specified criteria");
+    }
+};
+
+/**
+ * Call when the user confirms the action
+ */
+const confirm = () => {
+    status.value = "action";
+    progress.value = 0;
+    actionNext(0);
+};
+
+/**
+ * Performs the next action
+ * @param i Index of the element to perform the action
+ */
+const actionNext = (i: number) => {
+    abortNamedApiRequest(batchRequestId);
+
+    if (i >= actionItems.value.length) {
+        // Finish
+        status.value = "success";
+
+        AlbumsController.LoadCurrentAlbum();
+        MediaController.Load();
+        TagsController.Load();
+        return;
+    }
+
+    const mediaId = actionItems.value[i];
+
+    switch (action.value) {
+        case "tag-add":
+            actionAddTag(mediaId, tagsAction.value.slice(), i + 1);
+            break;
+        case "tag-remove":
+            actionRemoveTag(mediaId, tagsAction.value.slice(), i + 1);
+            break;
+        case "album-add":
+            actionAddAlbum(mediaId, i + 1);
+            break;
+        case "album-remove":
+            actionRemoveAlbum(mediaId, i + 1);
+            break;
+        case "delete":
+            actionDelete(mediaId, i + 1);
+            break;
+    }
+
+    progress.value = ((i + 1) * 100) / (actionItems.value.length || 1);
+};
+
+/**
+ * Performs the action to add tags to a media element
+ * @param mid The media ID
+ * @param tags The tags to add
+ * @param next The next element for when the action is done
+ */
+const actionAddTag = (mid: number, tags: string[], next: number) => {
+    if (tags.length === 0) {
+        actionNext(next);
+        return;
+    }
+
+    makeNamedApiRequest(batchRequestId, apiTagsTagMedia(mid, tags[0]))
+        .onSuccess(() => {
+            actionAddTag(mid, tags.slice(1), next);
+        })
+        .onRequestError((err, handleErr) => {
+            status.value = "error";
+
+            handleErr(err, {
+                unauthorized: () => {
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                invalidTagName: () => {
+                    error.value = $t("Invalid tag name");
+                },
+                badRequest: () => {
+                    error.value = $t("Bad request");
+                },
+                accessDenied: () => {
+                    error.value = $t("Access denied");
+                },
+                serverError: () => {
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            error.value = err.message;
+            console.error(err);
+            status.value = "error";
+        });
+};
+
+/**
+ * Performs the action to remove tags to a media element
+ * @param mid The media ID
+ * @param tags The tags to remove
+ * @param next The next element for when the action is done
+ */
+const actionRemoveTag = (mid: number, tags: string[], next: number) => {
+    if (tags.length === 0) {
+        actionNext(next);
+        return;
+    }
+
+    const tagId = TagsController.FindTag(tags[0]);
+
+    if (tagId < 0) {
+        // Tag not found
+        actionRemoveTag(mid, tags.slice(1), next);
+        return;
+    }
+
+    makeNamedApiRequest(batchRequestId, apiTagsUntagMedia(mid, tagId))
+        .onSuccess(() => {
+            actionRemoveTag(mid, tags.slice(1), next);
+        })
+        .onRequestError((err, handleErr) => {
+            status.value = "error";
+            handleErr(err, {
+                unauthorized: () => {
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    error.value = $t("Access denied");
+                },
+                serverError: () => {
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            error.value = err.message;
+            console.error(err);
+            status.value = "error";
+        });
+};
+
+/**
+ * Performs an action to add the media into an album
+ * @param mid The media ID
+ * @param next The next element for when the action is done
+ */
+const actionAddAlbum = (mid: number, next: number) => {
+    makeNamedApiRequest(batchRequestId, apiAlbumsAddMediaToAlbum(albumToAdd.value, mid))
+        .onSuccess(() => {
+            actionNext(next);
+        })
+        .onRequestError((err, handleErr) => {
+            status.value = "error";
+            handleErr(err, {
+                unauthorized: () => {
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                maxSizeReached: () => {
+                    error.value = $t("The album reached the limit of 1024 elements. Please, consider creating another album.");
+                },
+                badRequest: () => {
+                    error.value = $t("Bad request");
+                },
+                accessDenied: () => {
+                    error.value = $t("Access denied");
+                },
+                notFound: () => {
+                    error.value = $t("Not found");
+                },
+                serverError: () => {
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            error.value = err.message;
+            console.error(err);
+            status.value = "error";
+        });
+};
+
+/**
+ * Performs an action to remove the media from an album
+ * @param mid The media ID
+ * @param next The next element for when the action is done
+ */
+const actionRemoveAlbum = (mid: number, next: number) => {
+    makeNamedApiRequest(batchRequestId, apiAlbumsRemoveMediaFromAlbum(albumToAdd.value, mid))
+        .onSuccess(() => {
+            actionNext(next);
+        })
+        .onRequestError((err, handleErr) => {
+            status.value = "error";
+            handleErr(err, {
+                unauthorized: () => {
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    error.value = $t("Access denied");
+                },
+                notFound: () => {
+                    error.value = $t("Not found");
+                },
+                serverError: () => {
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            error.value = err.message;
+            console.error(err);
+            status.value = "error";
+        });
+};
+
+/**
+ * Performs the deletion of a media element
+ * (with auth confirmation)
+ * @param mid The media ID
+ * @param next The next element for when the action is done
+ */
+const actionDelete = (mid: number, next: number) => {
+    authConfirmationDeleteId.value = mid;
+    authConfirmationDeleteNext.value = next;
+    actionDeleteInternal({});
+};
+
+/**
+ * Performs the deletion of a media element
+ * @param confirmation Auth confirmation parameters
+ */
+const actionDeleteInternal = (confirmation: ProvidedAuthConfirmation) => {
+    status.value = "action";
+    displayProgress.value = true;
+
+    makeNamedApiRequest(batchRequestId, apiMediaDeleteMedia(authConfirmationDeleteId.value, confirmation))
+        .onSuccess(() => {
+            actionNext(authConfirmationDeleteNext.value);
+        })
+        .onRequestError((err, handleErr) => {
+            status.value = "error";
+
+            handleErr(err, {
+                unauthorized: () => {
+                    error.value = $t("Access denied");
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                requiredAuthConfirmationPassword: () => {
+                    status.value = "";
+                    displayProgress.value = false;
+
+                    requiredAuthConfirmationPassword();
+                },
+                invalidPassword: () => {
+                    status.value = "";
+                    displayProgress.value = false;
+
+                    invalidPassword();
+                },
+                requiredAuthConfirmationTfa: () => {
+                    status.value = "";
+                    displayProgress.value = false;
+
+                    requiredAuthConfirmationTfa();
+                },
+                invalidTfaCode: () => {
+                    status.value = "";
+                    displayProgress.value = false;
+
+                    invalidTfaCode();
+                },
+                cooldown: () => {
+                    status.value = "";
+                    displayProgress.value = false;
+
+                    cooldown();
+                },
+                accessDenied: () => {
+                    error.value = $t("Access denied");
+                },
+                notFound: () => {
+                    error.value = $t("Not found");
+                },
+                serverError: () => {
+                    error.value = $t("Internal server error");
+                },
+                networkError: () => {
+                    error.value = $t("Could not connect to the server");
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            error.value = err.message;
+            console.error(err);
+            status.value = "error";
+        });
+};
+
+/**
+ * Called when a sub-modal display status changes
+ * @param subModalDisplay Sub-modal display status
+ */
+const afterSubModalClosed = function (subModalDisplay: boolean) {
+    if (!subModalDisplay && display.value) {
+        focus();
+    }
+};
+
+// Reference to the dialog element
+const dialog = useTemplateRef("dialog");
+
+/**
+ * Event handler for 'keydown' on the element to skip from the tags suggestions
+ * @param event The keyboard event
+ */
+const onTagsSkipKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Tab" && event.shiftKey) {
+        const inputElem = dialog.value?.querySelector(".tags-input-search") as HTMLElement;
+        if (inputElem) {
+            event.preventDefault();
+            inputElem.focus();
+        }
+    }
+};
+
+/**
+ * Event handler for 'keydown' on the element to skip from the tags suggestions
+ * for the action part of the dialog
+ * @param event The keyboard event
+ */
+const onTagsSkipActionKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Tab" && event.shiftKey) {
+        const inputElem = dialog.value?.querySelector(".tags-input-search-action") as HTMLElement;
+        if (inputElem) {
+            event.preventDefault();
+            inputElem.focus();
+        }
+    }
+};
+
+/**
+ * Skips to the next element from tag suggestions
+ */
+const skipTagSuggestionsSearch = () => {
+    const elem = dialog.value?.querySelector(".tags-focus-skip") as HTMLElement;
+    if (elem) {
+        elem.focus();
+    }
+};
+
+/**
+ * Skips to the next element from tag suggestions (action)
+ */
+const skipTagSuggestionsActions = () => {
+    const toFocus = dialog.value?.querySelector(".tags-focus-skip-action") as HTMLElement;
+    if (toFocus) {
+        toFocus.focus();
+    }
+};
 </script>

@@ -1,12 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :static="true"
-        :lock-close="status === 'search' || status === 'action'"
-    >
-        <div v-if="display" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display" :static="true" :lock-close="status === 'search' || status === 'action'">
+        <div class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div v-if="status === 'search'" class="modal-title">{{ $t("Searching") }}...</div>
                 <div v-if="status === 'action'" class="modal-title">{{ $t("Applying batch action") }}...</div>
@@ -40,8 +34,8 @@
             </div>
             <div v-if="status === 'search' || status === 'action'" class="modal-body">
                 <div class="batch-progress-bar">
-                    <div class="batch-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
-                    <div class="batch-progress-bar-text">{{ renderStatus(status, progress) }}</div>
+                    <div class="batch-progress-bar-current" :style="{ width: progressBarWidth }"></div>
+                    <div class="batch-progress-bar-text">{{ statusDisplayString }}</div>
                 </div>
             </div>
             <div v-if="status === 'confirmation'" class="modal-body">
@@ -103,89 +97,111 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import type { PropType } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "BatchOperationProgressModal",
-    components: {
-        ToggleSwitch,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Statuses of the batch operation
+type BatchOperationStatus = "" | "search" | "confirmation" | "confirmation-delete" | "action" | "success" | "error";
+
+// Props
+const props = defineProps({
+    /**
+     * Status of the operation
+     */
+    status: {
+        type: String as PropType<BatchOperationStatus>,
+        required: true,
     },
-    props: {
-        display: Boolean,
 
-        status: String,
-        progress: Number,
-
-        actionCount: Number,
-
-        error: String,
+    /**
+     * Progress (%)
+     */
+    progress: {
+        type: Number,
+        default: 0,
     },
-    emits: ["update:display", "confirm", "cancel"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            confirmationDelete: false,
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
+    /**
+     * Number of elements to apply the action
+     */
+    actionCount: Number,
+
+    /**
+     * Error message
+     */
+    error: String,
+});
+
+// Progress bar width
+const progressBarWidth = computed(() => Math.round(props.progress) + "%");
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Confirmation event
+     */
+    (e: "confirm"): void;
+
+    /**
+     * Cancellation event
+     */
+    (e: "cancel"): void;
+}>();
+
+/**
+ * Confirms the operation
+ */
+const confirm = () => {
+    emit("confirm");
+};
+
+/**
+ * Cancels the operation
+ */
+const cancel = () => {
+    emit("cancel");
+    forceClose();
+};
+
+// Deletion confirmation
+const confirmationDelete = ref(false);
+
+// String to display the progress to the user
+const statusDisplayString = computed(() => {
+    const p = props.progress;
+    const renderP = Math.round(p * 100) / 100;
+    switch (props.status) {
+        case "search":
+            if (p > 0) {
+                return $t("Searching") + "... (" + renderP + "%)";
+            } else {
+                return $t("Searching") + "...";
             }
-        },
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
-
-        cancel: function () {
-            this.$emit("cancel");
-            this.forceCloseSignal++;
-        },
-
-        confirm: function () {
-            this.$emit("confirm");
-        },
-
-        cssProgress: function (p: number) {
-            return Math.round(p) + "%";
-        },
-
-        renderStatus(status: string, p: number) {
-            const renderP = Math.round(p * 100) / 100;
-            switch (status) {
-                case "search":
-                    if (p > 0) {
-                        return this.$t("Searching") + "... (" + renderP + "%)";
-                    } else {
-                        return this.$t("Searching") + "...";
-                    }
-                case "action":
-                    if (p > 0) {
-                        return this.$t("Applying") + "... (" + renderP + "%)";
-                    } else {
-                        return this.$t("Applying") + "...";
-                    }
-                default:
-                    return "-";
+        case "action":
+            if (p > 0) {
+                return $t("Applying") + "... (" + renderP + "%)";
+            } else {
+                return $t("Applying") + "...";
             }
-        },
-
-        stringMultiReplace,
-    },
+        default:
+            return "-";
+    }
 });
 </script>
