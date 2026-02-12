@@ -75,7 +75,7 @@
 
         <LoadingOverlay v-if="locked || loadingAuth" :fixed="true" :issues="loadingAuthError"></LoadingOverlay>
 
-        <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
+        <LoginModal v-if="locked && !loadingAuth"></LoginModal>
 
         <SnackBar></SnackBar>
 
@@ -140,7 +140,7 @@ const PageContent = defineAsyncComponent({
 });
 
 const LoginModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/LoginModal.vue"),
+    loader: () => import("@/components/layout/LoginModal.vue"),
     loadingComponent: LoadingOverlay,
     delay: 200,
 });
