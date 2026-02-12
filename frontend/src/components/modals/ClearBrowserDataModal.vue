@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Clear browser data") }}</div>
                 <button class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -64,7 +64,7 @@
 
                         <tr>
                             <td class="td-shrink">
-                                <ToggleSwitch v-model:val="clearPlayerPreferences"></ToggleSwitch>
+                                <ToggleSwitch v-model:val="clearPlayerPreferencesOpt"></ToggleSwitch>
                             </td>
 
                             <td>
@@ -74,7 +74,7 @@
 
                         <tr>
                             <td class="td-shrink">
-                                <ToggleSwitch v-model:val="clearPagePreferences"></ToggleSwitch>
+                                <ToggleSwitch v-model:val="clearPagePreferencesOpt"></ToggleSwitch>
                             </td>
 
                             <td>
@@ -114,9 +114,8 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { clearCachedAlbumPositions, clearCachedTimes, clearPlayerPreferences } from "@/control/player-preferences";
 import {
@@ -132,103 +131,73 @@ import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
 import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "ClearBrowserDataModal",
-    components: { ToggleSwitch },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
+// Translation function
+const { $t } = useI18n();
 
-            clearSavedTimestamps: false,
-            clearSavedAlbumPositions: false,
-            clearFavorites: false,
-            clearRecentlyAccessedAlbums: false,
-            clearRecentlyUsedTags: false,
-            clearPlayerPreferences: false,
-            clearPagePreferences: false,
-            clearResizableWidgets: false,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        submit: function () {
-            if (this.clearSavedTimestamps) {
-                clearCachedTimes();
-            }
+// Modal composable
+const { close } = useModal(display, container);
 
-            if (this.clearSavedAlbumPositions) {
-                clearCachedAlbumPositions();
-            }
+// Options to clear data
+const clearSavedTimestamps = ref(false);
+const clearSavedAlbumPositions = ref(false);
+const clearFavorites = ref(false);
+const clearRecentlyAccessedAlbums = ref(false);
+const clearRecentlyUsedTags = ref(false);
+const clearPlayerPreferencesOpt = ref(false);
+const clearPagePreferencesOpt = ref(false);
+const clearResizableWidgets = ref(false);
 
-            if (this.clearFavorites) {
-                clearFavAlbums();
-            }
+/**
+ * Submits the form
+ */
+const submit = () => {
+    if (clearSavedTimestamps.value) {
+        clearCachedTimes();
+    }
 
-            if (this.clearRecentlyAccessedAlbums) {
-                clearAlbumsOrderMap();
-                emitAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
-            }
+    if (clearSavedAlbumPositions.value) {
+        clearCachedAlbumPositions();
+    }
 
-            if (this.clearRecentlyUsedTags) {
-                clearLastUsedTags();
-            }
+    if (clearFavorites.value) {
+        clearFavAlbums();
+    }
 
-            if (this.clearPlayerPreferences) {
-                clearPlayerPreferences();
-            }
+    if (clearRecentlyAccessedAlbums.value) {
+        clearAlbumsOrderMap();
+        emitAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
+    }
 
-            if (this.clearPagePreferences) {
-                clearPagePreferences();
-                clearLanguageSetting();
-                clearUploadPreferences();
-                clearSearchPreferences();
-            }
+    if (clearRecentlyUsedTags.value) {
+        clearLastUsedTags();
+    }
 
-            if (this.clearResizableWidgets) {
-                ["desc-widget-pos", "tags-edit-helper-pos", "time-slices-helper-pos"].forEach(clearLocalStorage);
-            }
+    if (clearPlayerPreferencesOpt.value) {
+        clearPlayerPreferences();
+    }
 
-            this.close();
+    if (clearPagePreferencesOpt.value) {
+        clearPagePreferences();
+        clearLanguageSetting();
+        clearUploadPreferences();
+        clearSearchPreferences();
+    }
 
-            PagesController.ShowSnackBar(this.$t("Successfully cleared browser data!"));
-        },
-    },
-});
+    if (clearResizableWidgets.value) {
+        ["desc-widget-pos", "tags-edit-helper-pos", "time-slices-helper-pos"].forEach(clearLocalStorage);
+    }
+
+    close();
+
+    PagesController.ShowSnackBar($t("Successfully cleared browser data!"));
+};
 </script>
