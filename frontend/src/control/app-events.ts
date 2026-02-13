@@ -4,7 +4,7 @@
 
 import type { Album, MediaData } from "@/api/models";
 import { type AlbumListItemMin } from "@/api/models";
-import { type SnackBatPosition } from "./pages";
+import { type SnackBarPosition } from "./pages";
 import type { ColorThemeName } from "./app-preferences";
 import type { ImageNote } from "@/utils/notes-format";
 import type { ImageNodesChangeType } from "./img-notes";
@@ -359,7 +359,7 @@ export type AppEventsMap = {
      * @param message The message
      * @param position The position
      */
-    [EVENT_NAME_SNACK_BAR]: (message: string, position?: SnackBatPosition) => void;
+    [EVENT_NAME_SNACK_BAR]: (message: string, position?: SnackBarPosition) => void;
 
     /**
      * Event triggered when the albums list is updated

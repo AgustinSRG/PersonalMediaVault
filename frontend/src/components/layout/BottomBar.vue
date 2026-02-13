@@ -39,7 +39,9 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useI18n } from "@/composables/use-i18n";
 import { AlbumsController } from "@/control/albums";
 import {
     emitAppEvent,
@@ -51,58 +53,62 @@ import {
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { PagesController } from "@/control/pages";
-import { defineComponent } from "vue";
+import { clickOnEnter } from "@/utils/events";
+import { ref } from "vue";
 
-export default defineComponent({
-    name: "BottomBar",
-    data: function () {
-        return {
-            focus: AppStatus.CurrentFocus,
+// Translation function
+const { $t } = useI18n();
 
-            prev: AlbumsController.CurrentPrev,
-            next: AlbumsController.CurrentNext,
+// Current focus
+const focus = ref(AppStatus.CurrentFocus);
 
-            hasPagePrev: PagesController.HasPagePrev,
-            hasPageNext: PagesController.HasPageNext,
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onStatusUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
-    },
-    methods: {
-        onStatusUpdate: function () {
-            this.focus = AppStatus.CurrentFocus;
-        },
-
-        onAlbumPosUpdate: function () {
-            this.prev = AlbumsController.CurrentPrev;
-            this.next = AlbumsController.CurrentNext;
-        },
-
-        onPagePosUpdate: function (prev: boolean, next: boolean) {
-            this.hasPagePrev = prev;
-            this.hasPageNext = next;
-        },
-
-        clickLeft: function () {
-            AppStatus.FocusLeft();
-        },
-
-        clickRight: function () {
-            AppStatus.FocusRight();
-        },
-
-        goNext: function () {
-            emitAppEvent(EVENT_NAME_GO_NEXT);
-        },
-
-        goPrev: function () {
-            emitAppEvent(EVENT_NAME_GO_PREV);
-        },
-    },
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    focus.value = AppStatus.CurrentFocus;
 });
+
+// Previous and next element in album
+const prev = ref(AlbumsController.CurrentPrev);
+const next = ref(AlbumsController.CurrentNext);
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, () => {
+    prev.value = AlbumsController.CurrentPrev;
+    next.value = AlbumsController.CurrentNext;
+});
+
+// Previous and next element in page
+const hasPagePrev = ref(PagesController.HasPagePrev);
+const hasPageNext = ref(PagesController.HasPageNext);
+
+onApplicationEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, (p, n) => {
+    hasPagePrev.value = p;
+    hasPageNext.value = n;
+});
+
+/**
+ * Called when the user clicked on the 'left' button
+ */
+const clickLeft = () => {
+    AppStatus.FocusLeft();
+};
+
+/**
+ * Called when the user clicked on the 'right' button
+ */
+const clickRight = () => {
+    AppStatus.FocusRight();
+};
+
+/**
+ * Called when the user clicked on the 'next' button
+ */
+const goNext = () => {
+    emitAppEvent(EVENT_NAME_GO_NEXT);
+};
+
+/**
+ * Called when the user clicked on the 'previous' button
+ */
+const goPrev = () => {
+    emitAppEvent(EVENT_NAME_GO_PREV);
+};
 </script>

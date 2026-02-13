@@ -4,56 +4,53 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useTimeout } from "@/composables/use-timeout";
 import { EVENT_NAME_SNACK_BAR } from "@/control/app-events";
-import { defineComponent } from "vue";
+import type { SnackBarPosition } from "@/control/pages";
+import { ref } from "vue";
 
-export default defineComponent({
-    name: "SnackBar",
-    setup() {
-        return {
-            timeout: null as ReturnType<typeof setTimeout> | null,
-        };
-    },
-    data: function () {
-        return {
-            shown: false,
-            message: "",
-            position: "left",
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_SNACK_BAR, this.show.bind(this));
-    },
-    beforeUnmount: function () {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        }
-    },
-    methods: {
-        show: function (msg: string, position?: string) {
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-                this.timeout = null;
-            }
+// Timeout to hide
+const timeout = useTimeout();
 
-            this.shown = true;
-            this.message = msg;
-            this.position = position;
+// Snackbar shown?
+const shown = ref(false);
 
-            this.timeout = setTimeout(() => {
-                this.shown = false;
-            }, 3000);
-        },
+// Message
+const message = ref("");
 
-        hide: function () {
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-                this.timeout = null;
-            }
-            this.shown = false;
-        },
-    },
-});
+// Delay to hide the snackbar (milliseconds)
+const HIDE_DELAY = 3000;
+
+// Position
+const position = ref<SnackBarPosition>("left");
+
+/**
+ * Shows the snackbar
+ * @param msg The message
+ * @param pos The position
+ */
+const show = (msg: string, pos?: SnackBarPosition) => {
+    timeout.clear();
+
+    shown.value = true;
+    message.value = msg;
+    position.value = pos || "left";
+
+    timeout.set(() => {
+        shown.value = false;
+    }, HIDE_DELAY);
+};
+
+onApplicationEvent(EVENT_NAME_SNACK_BAR, show);
+
+/**
+ * Hides the snackbar
+ */
+const hide = () => {
+    timeout.clear();
+
+    shown.value = false;
+};
 </script>

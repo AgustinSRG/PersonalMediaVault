@@ -4,16 +4,6 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-
+<script setup lang="ts">
 import LoadingOverlay from "./LoadingOverlay.vue";
-
-export default defineComponent({
-    name: "PlayerContainerLoader",
-    components: {
-        LoadingOverlay,
-    },
-    props: {},
-});
 </script>

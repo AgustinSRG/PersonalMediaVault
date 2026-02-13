@@ -7,7 +7,7 @@ import { emitAppEvent, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, EVENT_NAME_SNACK_BAR } 
 /**
  * Snackbar position
  */
-export type SnackBatPosition = "left" | "right" | "center";
+export type SnackBarPosition = "left" | "right" | "center";
 
 /**
  * Management object for pages
@@ -71,7 +71,7 @@ export class PagesController {
      * @param message The message to show
      * @param position The position of the snackbar
      */
-    public static ShowSnackBar(message: string, position?: SnackBatPosition) {
+    public static ShowSnackBar(message: string, position?: SnackBarPosition) {
         emitAppEvent(EVENT_NAME_SNACK_BAR, message, position);
     }
 
