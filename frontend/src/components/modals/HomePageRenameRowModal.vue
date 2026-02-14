@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Rename row") }}
@@ -25,7 +20,7 @@
                         :disabled="busy"
                         :placeholder="getDefaultGroupName(selectedRowType, $t)"
                         maxlength="255"
-                        class="form-control form-control-full-width auto-focus"
+                        class="form-control form-control-full-width auto-focus auto-select"
                     />
                 </div>
                 <div class="form-error">{{ error }}</div>
@@ -39,142 +34,159 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { getDefaultGroupName } from "@/utils/home";
 import { apiHomeGroupRename } from "@/api/api-home";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "HomePageRenameRowModal",
-    components: {
-        LoadingIcon,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Id of the selected row
+     */
+    selectedRow: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
 
-        selectedRowType: Number,
-        selectedRow: Number,
-        selectedRowName: String,
+    /**
+     * Type of the selected row
+     */
+    selectedRowType: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:display", "renamed", "must-reload"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            name: "",
 
-            busy: false,
-            error: "",
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.name = this.selectedRowName;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.name = this.selectedRowName;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        getDefaultGroupName: getDefaultGroupName,
-
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                elem.focus();
-                elem.select();
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            if (this.busy) {
-                return;
-            }
-
-            if (this.name === this.selectedRowName) {
-                this.forceCloseSignal++;
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const rowId = this.selectedRow;
-            const newName = this.name;
-
-            makeApiRequest(apiHomeGroupRename(rowId, newName))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBar(
-                        this.$t("Row renamed") + ": " + (newName || this.getDefaultGroupName(this.selectedRowType, this.$t)),
-                    );
-                    this.busy = false;
-                    this.name = "";
-                    this.forceCloseSignal++;
-                    this.$emit("renamed", rowId, newName);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidName: () => {
-                            this.error = this.$t("Invalid album name provided");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.forceCloseSignal++;
-                            this.$emit("must-reload");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
+    /**
+     * Name of the selected row
+     */
+    selectedRowName: {
+        type: String,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the row is renamed
+     */
+    (e: "renamed", id: number, newName: string): void;
+
+    /**
+     * Emitted to indicate the home page should be reloaded
+     */
+    (e: "must-reload"): void;
+}>();
+
+// New name
+const name = ref(props.selectedRowName);
+
+/**
+ * Resets the form
+ */
+const reset = () => {
+    name.value = props.selectedRowName;
+};
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+// Reset when modal opens
+watch(display, () => {
+    if (display.value) {
+        reset();
+        resetErrors();
+    }
+});
+
+/**
+ * Submits the form
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    if (name.value === props.selectedRowName) {
+        forceClose();
+        return;
+    }
+
+    busy.value = true;
+
+    const rowId = props.selectedRow;
+    const newName = name.value;
+
+    makeApiRequest(apiHomeGroupRename(rowId, newName))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Row renamed") + ": " + (newName || getDefaultGroupName(props.selectedRowType, $t)));
+
+            name.value = "";
+
+            forceClose();
+
+            emit("renamed", rowId, newName);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidName: () => {
+                    error.value = $t("Invalid album name provided");
+                },
+                accessDenied,
+                notFound: () => {
+                    forceClose();
+                    emit("must-reload");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
 </script>

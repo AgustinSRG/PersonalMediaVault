@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div v-if="deleting" class="modal-title">
                     {{ $t("Delete extra resolution") }}
@@ -22,8 +22,8 @@
                 </div>
 
                 <div v-if="resolution" class="form-group">
-                    <label v-if="type === 1">{{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}</label>
-                    <label v-if="type === 2">
+                    <label v-if="type === MEDIA_TYPE_IMAGE">{{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}</label>
+                    <label v-if="type === MEDIA_TYPE_VIDEO">
                         {{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}, {{ resolution.fps }} fps
                     </label>
                 </div>
@@ -40,67 +40,58 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
 import type { PropType } from "vue";
-import type { NamedResolution } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaType, type NamedResolution } from "@/api/models";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "ResolutionConfirmationModal",
-    props: {
-        display: Boolean,
-        resolution: Object as PropType<NamedResolution>,
-        type: Number,
-        deleting: Boolean,
-    },
-    emits: ["update:display", "confirm"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Translation function
+const { $t } = useI18n();
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        submit: function (e: Event) {
-            e.preventDefault();
+// Modal container
+const container = useTemplateRef("container");
 
-            this.$emit("confirm");
+// Modal composable
+const { close } = useModal(display, container);
 
-            this.close();
-        },
-    },
+// Props
+defineProps({
+    /**
+     * The resolution
+     */
+    resolution: Object as PropType<NamedResolution>,
+
+    /**
+     * Media type
+     */
+    type: Number as PropType<MediaType>,
+
+    /**
+     * True if deleting
+     */
+    deleting: Boolean,
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Confirmation event
+     */
+    (e: "confirm"): void;
+}>();
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+    close();
+    emit("confirm");
+};
 </script>

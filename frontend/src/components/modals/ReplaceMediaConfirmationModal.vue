@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Replace media") }}
@@ -29,80 +29,52 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { renderSize } from "@/utils/size";
 
-export default defineComponent({
-    name: "ReplaceMediaConfirmationModal",
-    props: {
-        display: Boolean,
-        fileName: String,
-        fileSize: Number,
-    },
-    emits: ["update:display", "confirm"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Translation function
+const { $t } = useI18n();
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        submit: function (e: Event) {
-            e.preventDefault();
-            this.close();
-            this.$emit("confirm");
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        renderSize: function (bytes: number): string {
-            if (bytes > 1024 * 1024 * 1024) {
-                let gb = bytes / (1024 * 1024 * 1024);
-                gb = Math.floor(gb * 100) / 100;
-                return gb + " GB";
-            } else if (bytes > 1024 * 1024) {
-                let mb = bytes / (1024 * 1024);
-                mb = Math.floor(mb * 100) / 100;
-                return mb + " MB";
-            } else if (bytes > 1024) {
-                let kb = bytes / 1024;
-                kb = Math.floor(kb * 100) / 100;
-                return kb + " KB";
-            } else {
-                return bytes + " Bytes";
-            }
-        },
-    },
+// Modal composable
+const { close } = useModal(display, container);
+
+// Props
+defineProps({
+    /**
+     * Name of the file
+     */
+    fileName: String,
+
+    /**
+     * Size of the file
+     */
+    fileSize: Number,
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Confirmation event
+     */
+    (e: "confirm"): void;
+}>();
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+    close();
+    emit("confirm");
+};
 </script>

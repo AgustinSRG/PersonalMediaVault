@@ -5,7 +5,7 @@
 import { getPagePreferences } from "@/control/app-preferences";
 import type { AppStatusPage } from "@/control/app-status";
 import type { Ref } from "vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { onApplicationEvent } from "./on-app-event";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED } from "@/control/app-events";
 
@@ -59,9 +59,9 @@ export type PagePreferencesComposable = {
  * @param page The page name
  * @returns The page preferences composable
  */
-export function usePagePreferences(page: AppStatusPage): PagePreferencesComposable {
+export function usePagePreferences(page: AppStatusPage | Ref<AppStatusPage>): PagePreferencesComposable {
     // Initial preferences
-    const initialPagePreferences = getPagePreferences(page);
+    const initialPagePreferences = getPagePreferences(typeof page === "string" ? page : page.value);
 
     // Max elements per page
     const pageSize = ref(initialPagePreferences.pageSize);
@@ -87,8 +87,11 @@ export function usePagePreferences(page: AppStatusPage): PagePreferencesComposab
     // True to use rounded corners
     const roundedCorners = ref(initialPagePreferences.roundedCorners);
 
-    onApplicationEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, () => {
-        const pagePreferences = getPagePreferences(page);
+    /**
+     * Updates the preferences
+     */
+    const updatePreferences = () => {
+        const pagePreferences = getPagePreferences(typeof page === "string" ? page : page.value);
 
         pageSize.value = pagePreferences.pageSize;
 
@@ -105,7 +108,13 @@ export function usePagePreferences(page: AppStatusPage): PagePreferencesComposab
         displayTitles.value = pagePreferences.displayTitles;
 
         roundedCorners.value = pagePreferences.roundedCorners;
-    });
+    };
+
+    onApplicationEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, updatePreferences);
+
+    if (typeof page === "object") {
+        watch(page, updatePreferences);
+    }
 
     return {
         pageSize,

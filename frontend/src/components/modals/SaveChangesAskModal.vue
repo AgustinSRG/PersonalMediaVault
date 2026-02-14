@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Save changes") }}</div>
                 <button class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -20,64 +20,49 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "SaveChangesAskModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "yes", "no"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
+// Translation function
+const { $t } = useI18n();
 
-        clickNo: function () {
-            this.$emit("no");
-            this.close();
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        clickYes: function () {
-            this.$emit("yes");
-            this.close();
-        },
+// Modal container
+const container = useTemplateRef("container");
 
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-    },
-});
+// Modal composable
+const { close } = useModal(display, container);
+
+// Events
+const emit = defineEmits<{
+    /**
+     * The user chose yes
+     */
+    (e: "yes"): void;
+
+    /**
+     * The user chose no
+     */
+    (e: "no"): void;
+}>();
+
+/**
+ * Call when the user selects 'Yes'
+ */
+const clickYes = () => {
+    emit("yes");
+    close();
+};
+
+/**
+ * Call when the user selects 'No'
+ */
+const clickNo = () => {
+    emit("no");
+    close();
+};
 </script>

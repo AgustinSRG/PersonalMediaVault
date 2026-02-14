@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <div v-if="display" class="modal-dialog modal-lg" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Invite") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -26,11 +21,11 @@
                         {{ $t("Use this code to log into the vault in read-only mode") }}
                     </div>
                     <div class="invite-code-info">
-                        <label>{{ $t("Session duration") }}:</label> {{ renderDuration(duration) }}
+                        <label>{{ $t("Session duration") }}:</label> {{ renderedDurationDays }}
                     </div>
                     <div v-if="expirationRemaining > 0" class="invite-code-warning">
                         {{ $t("Remaining time until expiration") }}:
-                        {{ renderTime(getExpirationRemaining(expirationRemaining, lasReceivedTimestamp, now)) }}
+                        {{ renderedExpirationRemaining }}
                     </div>
                     <div v-if="expirationRemaining <= 0" class="invite-code-error">
                         {{ $t("The invite code has expired") }}
@@ -81,8 +76,8 @@
                             </tr>
                             <tr v-for="s in sessions" :key="s.index">
                                 <td>
-                                    <b>{{ $t("Created") }}:</b> {{ renderTimestamp(s.timestamp) }}, <b>{{ $t("Expires") }}:</b>
-                                    {{ renderTimestamp(s.expiration) }}
+                                    <b>{{ $t("Created") }}:</b> {{ renderDateAndTime(s.timestamp, locale) }}, <b>{{ $t("Expires") }}:</b>
+                                    {{ renderDateAndTime(s.expiration, locale) }}
                                 </td>
                                 <td class="text-right td-shrink">
                                     <button
@@ -113,11 +108,10 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import type { InviteSession } from "@/api/api-invites";
 import {
@@ -127,372 +121,403 @@ import {
     apiInvitesGetSessions,
     apiInvitesGetStatus,
 } from "@/api/api-invites";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime, renderTimeSeconds } from "@/utils/time";
 import InviteCloseSessionConfirmationModal from "@/components/modals/InviteCloseSessionConfirmationModal.vue";
 import type { SessionDuration } from "@/api/api-auth";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { useInterval } from "@/composables/use-interval";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
-export default defineComponent({
-    name: "InviteModal",
-    components: {
-        LoadingIcon,
-        InviteCloseSessionConfirmationModal,
-    },
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            loadStatusRequestId: getUniqueStringId(),
-            loadSessionsRequestId: getUniqueStringId(),
-            updateStatusTimer: null as ReturnType<typeof setInterval> | null,
-            updateNowTimer: null as ReturnType<typeof setInterval> | null,
-        };
-    },
-    data: function () {
-        return {
-            loading: true,
-            loadingSilent: true,
-            hasCode: false,
-            code: "",
-            duration: 0,
-            expirationRemaining: 0,
-            lasReceivedTimestamp: 0,
-            now: Date.now(),
+// Translation function
+const { $t, locale } = useI18n();
 
-            durationGenerate: "day" as SessionDuration,
+// Display model
+const display = defineModel<boolean>("display");
 
-            busy: false,
-            busyClosing: false,
+// Modal container
+const container = useTemplateRef("container");
 
-            loadingSessions: true,
-            loadingSessionsSilent: true,
-            sessions: [] as InviteSession[],
+// Modal composable
+const { close, forceClose } = useModal(display, container);
 
-            sessionToClose: 0,
-            displayCloseConfirmationModal: false,
+// True if a code exists
+const hasCode = ref(false);
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.load();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+// The code
+const code = ref("");
 
-        this.updateStatusTimer = setInterval(this.checkForLoad.bind(this), 2000);
-        this.updateNowTimer = setInterval(this.updateNow.bind(this), 500);
+// Session duration (milliseconds)
+const duration = ref(0);
 
-        if (this.display) {
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        clearInterval(this.updateStatusTimer);
-        clearInterval(this.updateNowTimer);
+// Rendered session duration (days)
+const renderedDurationDays = computed(() => {
+    const days = Math.max(1, Math.round(duration.value / (24 * 60 * 60 * 1000)));
 
-        clearNamedTimeout(this.loadStatusRequestId);
-        abortNamedApiRequest(this.loadStatusRequestId);
-
-        clearNamedTimeout(this.loadSessionsRequestId);
-        abortNamedApiRequest(this.loadSessionsRequestId);
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        load: function () {
-            if (!this.display) {
-                return;
-            }
-
-            this.loading = true;
-            this.loadingSessions = true;
-
-            this.loadStatus();
-            this.loadSessions();
-        },
-
-        loadStatus: function () {
-            clearNamedTimeout(this.loadStatusRequestId);
-
-            this.loadingSilent = true;
-
-            makeNamedApiRequest(this.loadStatusRequestId, apiInvitesGetStatus())
-                .onSuccess((response) => {
-                    this.hasCode = response.has_code;
-                    this.code = response.code;
-                    this.expirationRemaining = response.expiration_remaining;
-                    this.lasReceivedTimestamp = Date.now();
-                    this.now = Date.now();
-                    this.duration = response.duration;
-
-                    this.loading = false;
-                    this.loadingSilent = false;
-
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.close();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadStatusRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadStatusRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        loadSessions: function () {
-            clearNamedTimeout(this.loadSessionsRequestId);
-
-            this.loadingSessionsSilent = true;
-
-            makeNamedApiRequest(this.loadSessionsRequestId, apiInvitesGetSessions())
-                .onSuccess((response) => {
-                    this.sessions = response;
-
-                    this.loadingSessions = false;
-                    this.loadingSessionsSilent = false;
-
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.close();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadSessionsRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadSessionsRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        checkForLoad: function () {
-            if (!this.display) {
-                return;
-            }
-
-            if (!this.loadingSilent) {
-                this.loadStatus();
-            }
-
-            if (!this.loadingSessionsSilent) {
-                this.loadSessions();
-            }
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        renderTimestamp: function (t: number): string {
-            return renderDateAndTime(t, this.$locale.value);
-        },
-
-        askCloseSession: function (s: number) {
-            this.sessionToClose = s;
-            this.displayCloseConfirmationModal = true;
-        },
-
-        closeSession: function () {
-            if (this.busyClosing) {
-                return;
-            }
-
-            const sessionIndex = this.sessionToClose;
-
-            this.busyClosing = true;
-
-            makeApiRequest(apiInvitesDeleteSession(sessionIndex))
-                .onSuccess(() => {
-                    this.busyClosing = false;
-                    PagesController.ShowSnackBar(this.$t("Session closed"));
-                    for (let i = 0; i < this.sessions.length; i++) {
-                        if (this.sessions[i].index === sessionIndex) {
-                            this.sessions.splice(i, 1);
-                            break;
-                        }
-                    }
-                    this.loadSessions();
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyClosing = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busyClosing = false;
-                    console.error(err);
-                    PagesController.ShowSnackBar(this.$t("Error") + ": " + err.message);
-                });
-        },
-
-        generateCode: function () {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            makeApiRequest(apiInvitesGenerateCode(this.durationGenerate))
-                .onSuccess((response) => {
-                    this.busy = false;
-                    this.hasCode = response.has_code;
-                    this.code = response.code;
-                    this.expirationRemaining = response.expiration_remaining;
-                    this.lasReceivedTimestamp = Date.now();
-                    this.now = Date.now();
-                    this.duration = response.duration;
-
-                    clearNamedTimeout(this.loadStatusRequestId);
-                    abortNamedApiRequest(this.loadStatusRequestId);
-                    this.loadingSilent = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        limitReached: () => {
-                            PagesController.ShowSnackBar(
-                                this.$t("Error") + ": " + this.$t("You reached the limit of invited sessions you can have"),
-                            );
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                    PagesController.ShowSnackBar(this.$t("Error") + ": " + err.message);
-                });
-        },
-
-        clearCode: function () {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            makeApiRequest(apiInvitesClearCode())
-                .onSuccess(() => {
-                    this.busy = false;
-                    this.hasCode = false;
-
-                    clearNamedTimeout(this.loadStatusRequestId);
-                    abortNamedApiRequest(this.loadStatusRequestId);
-                    this.loadingSilent = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    console.error(err);
-                    PagesController.ShowSnackBar(this.$t("Error") + ": " + err.message);
-                });
-        },
-
-        getExpirationRemaining: function (expirationRemaining: number, lasReceivedTimestamp: number, now: number): number {
-            return Math.max(0, expirationRemaining - (now - lasReceivedTimestamp));
-        },
-
-        renderTime: function (t: number): string {
-            return renderTimeSeconds(Math.round(t / 1000));
-        },
-
-        updateNow: function () {
-            this.now = Date.now();
-        },
-
-        renderDuration: function (t: number) {
-            const days = Math.max(1, Math.round(t / (24 * 60 * 60 * 1000)));
-
-            if (days === 1) {
-                return "1" + " " + this.$t("day");
-            } else {
-                return days + " " + this.$t("days");
-            }
-        },
-    },
+    if (days === 1) {
+        return "1" + " " + $t("day");
+    } else {
+        return days + " " + $t("days");
+    }
 });
+
+// Remaining time until expiration (milliseconds)
+const expirationRemaining = ref(0);
+
+// Last time the status was updated
+const lastReceivedTimestamp = ref(0);
+
+// Current timestamp
+const now = ref(Date.now());
+
+// Interval to update the current timestamp (milliseconds)
+const NOW_UPDATE_INTERVAL = 500;
+
+// Timer to update the current time
+const updateNowTimer = useInterval();
+
+updateNowTimer.set(() => {
+    now.value = Date.now();
+}, NOW_UPDATE_INTERVAL);
+
+// Rendered remaining time until expiration, updated based on the current timestamp
+const renderedExpirationRemaining = computed(() =>
+    renderTimeSeconds(Math.round(Math.max(0, expirationRemaining.value - (now.value - lastReceivedTimestamp.value)) / 1000)),
+);
+
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    if (!display.value) {
+        return;
+    }
+
+    loading.value = true;
+    loadingSessions.value = true;
+
+    loadStatus();
+    loadSessions();
+};
+
+onMounted(load);
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
+watch(display, load);
+
+// Loading status
+const loading = ref(true);
+
+// Loading status after the first time the status is loaded
+// Silent: No loader
+const loadingSilent = ref(true);
+
+// Request ID for load request
+const loadStatusRequestId = useRequestId();
+
+/**
+ * Loads the invite code status
+ */
+const loadStatus = () => {
+    clearNamedTimeout(loadStatusRequestId);
+
+    loadingSilent.value = true;
+
+    const firstTime = loading.value;
+
+    makeNamedApiRequest(loadStatusRequestId, apiInvitesGetStatus())
+        .onSuccess((response) => {
+            hasCode.value = response.has_code;
+            code.value = response.code;
+            expirationRemaining.value = response.expiration_remaining;
+            lastReceivedTimestamp.value = Date.now();
+            now.value = Date.now();
+            duration.value = response.duration;
+
+            loading.value = false;
+            loadingSilent.value = false;
+
+            if (firstTime) {
+                focus();
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    forceClose();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadStatusRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadStatusRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+// Loading status for sessions
+const loadingSessions = ref(true);
+
+// Loading status for sessions (after first time)
+// Silent: No loader
+const loadingSessionsSilent = ref(true);
+
+// List of active invited sessions
+const sessions = ref<InviteSession[]>([]);
+
+// Request ID for session loading
+const loadSessionsRequestId = useRequestId();
+
+/**
+ * Loads the list of active sessions
+ */
+const loadSessions = () => {
+    clearNamedTimeout(loadSessionsRequestId);
+
+    loadingSessionsSilent.value = true;
+
+    makeNamedApiRequest(loadSessionsRequestId, apiInvitesGetSessions())
+        .onSuccess((response) => {
+            sessions.value = response;
+
+            loadingSessions.value = false;
+            loadingSessionsSilent.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    forceClose();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadSessionsRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadSessionsRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+// Interval to periodically update the status
+const STATUS_UPDATE_INTERVAL = 2000;
+
+// Timer to update the status
+const updateStatusTimer = useInterval();
+
+updateStatusTimer.set(() => {
+    if (!display.value) {
+        return;
+    }
+
+    if (!loadingSilent.value) {
+        loadStatus();
+    }
+
+    if (!loadingSessionsSilent.value) {
+        loadSessions();
+    }
+}, STATUS_UPDATE_INTERVAL);
+
+// The duration for the next generated code
+const durationGenerate = ref<SessionDuration>("day");
+
+// Busy status
+const busy = ref(false);
+
+/**
+ * Generates invite code
+ */
+const generateCode = () => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    makeApiRequest(apiInvitesGenerateCode(durationGenerate.value))
+        .onSuccess((response) => {
+            busy.value = false;
+
+            hasCode.value = response.has_code;
+            code.value = response.code;
+            expirationRemaining.value = response.expiration_remaining;
+            lastReceivedTimestamp.value = Date.now();
+            now.value = Date.now();
+            duration.value = response.duration;
+
+            // Abort the load status request to avoid
+            // an old request re-updating with old data
+            clearNamedTimeout(loadStatusRequestId);
+            abortNamedApiRequest(loadStatusRequestId);
+            loadingSilent.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                limitReached: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("You reached the limit of invited sessions you can have"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            console.error(err);
+
+            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+        });
+};
+
+/**
+ * Clears the current invite code
+ */
+const clearCode = () => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    makeApiRequest(apiInvitesClearCode())
+        .onSuccess(() => {
+            busy.value = false;
+            hasCode.value = false;
+
+            // Abort the load status request to avoid
+            // an old request re-updating with old data
+            clearNamedTimeout(loadStatusRequestId);
+            abortNamedApiRequest(loadStatusRequestId);
+            loadingSilent.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            console.error(err);
+
+            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+        });
+};
+
+// Index of the session being closed
+const sessionToClose = ref(0);
+
+// True to display the confirmation modal to close a session
+const displayCloseConfirmationModal = ref(false);
+
+/**
+ * Asks the user to close a session
+ * @param s The session to close
+ */
+const askCloseSession = (s: number) => {
+    sessionToClose.value = s;
+    displayCloseConfirmationModal.value = true;
+};
+
+// Busy status for session being closed
+const busyClosing = ref(false);
+
+/**
+ * Closes the selected session
+ */
+const closeSession = () => {
+    if (busyClosing.value) {
+        return;
+    }
+
+    const sessionIndex = sessionToClose.value;
+    busyClosing.value = true;
+
+    makeApiRequest(apiInvitesDeleteSession(sessionIndex))
+        .onSuccess(() => {
+            busyClosing.value = false;
+
+            PagesController.ShowSnackBar($t("Session closed"));
+
+            for (let i = 0; i < sessions.value.length; i++) {
+                if (sessions.value[i].index === sessionIndex) {
+                    sessions.value.splice(i, 1);
+                    break;
+                }
+            }
+
+            loadSessions();
+        })
+        .onRequestError((err, handleErr) => {
+            busyClosing.value = false;
+
+            handleErr(err, {
+                unauthorized: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busyClosing.value = false;
+
+            console.error(err);
+
+            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+        });
+};
 </script>

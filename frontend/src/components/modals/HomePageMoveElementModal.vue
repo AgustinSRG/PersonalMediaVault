@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Move element") }}
@@ -20,7 +20,7 @@
                         step="1"
                         min="1"
                         :max="maxPosition + 1"
-                        class="form-control form-control-full-width auto-focus"
+                        class="form-control form-control-full-width auto-focus auto-select"
                     />
                 </div>
             </div>
@@ -33,78 +33,83 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { getDefaultGroupName } from "@/utils/home";
+<script setup lang="ts">
+import { ref, useTemplateRef, watch } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "HomePageMoveElementModal",
-    props: {
-        display: Boolean,
+// Translation function
+const { $t } = useI18n();
 
-        selectedPosition: Number,
+// Display model
+const display = defineModel<boolean>("display");
 
-        maxPosition: Number,
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Selected position
+     */
+    selectedPosition: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:display", "move-element"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            currentPos: this.selectedPosition + 1,
 
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.currentPos = this.selectedPosition + 1;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.currentPos = this.selectedPosition + 1;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        getDefaultGroupName: getDefaultGroupName,
-
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                elem.focus();
-                elem.select();
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            const position = this.currentPos - 1;
-
-            if (position === this.selectedPosition) {
-                this.close();
-                return;
-            }
-
-            this.$emit("move-element", this.selectedPosition, position);
-            this.close();
-        },
+    /**
+     * Max position
+     */
+    maxPosition: {
+        type: Number,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the user chooses to move the element
+     * to a new position
+     */
+    (e: "move-element", oldPos: number, newPos: number): void;
+}>();
+
+// Current position
+const currentPos = ref(props.selectedPosition + 1);
+
+/**
+ * Resets the position
+ */
+const reset = () => {
+    currentPos.value = props.selectedPosition;
+};
+
+watch(display, () => {
+    if (display.value) {
+        reset();
+    }
+});
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    const position = currentPos.value - 1;
+
+    if (position === props.selectedPosition) {
+        close();
+        return;
+    }
+
+    emit("move-element", props.selectedPosition, position);
+
+    close();
+};
 </script>

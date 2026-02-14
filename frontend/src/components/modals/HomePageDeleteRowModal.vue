@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete row") }}
@@ -22,7 +17,7 @@
                     <tbody>
                         <tr>
                             <td class="text-right td-shrink no-padding">
-                                <ToggleSwitch v-model:val="confirmation"></ToggleSwitch>
+                                <ToggleSwitch v-model:val="deleteConfirmation"></ToggleSwitch>
                             </td>
                             <td>
                                 {{ $t("Remember. If you delete the row by accident you would have to recreate it.") }}
@@ -35,7 +30,7 @@
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button :disabled="busy || !confirmation" type="submit" class="modal-footer-btn">
+                <button :disabled="busy || !deleteConfirmation" type="submit" class="modal-footer-btn">
                     <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete row") }}
                 </button>
             </div>
@@ -47,17 +42,14 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="submitInternal"
+            @confirm="performRequest"
         ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -65,160 +57,167 @@ import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { getDefaultGroupName } from "@/utils/home";
 import { apiHomeGroupDelete } from "@/api/api-home";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "HomePageDeleteRowModal",
-    components: {
-        LoadingIcon,
-        ToggleSwitch,
-        AuthConfirmationModal,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Id of the selected row
+     */
+    selectedRow: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
 
-        selectedRowType: Number,
-        selectedRow: Number,
-        selectedRowName: String,
+    /**
+     * Type of the selected row
+     */
+    selectedRowType: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:display", "row-deleted", "must-reload"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            confirmation: false,
 
-            busy: false,
-            error: "",
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.confirmation = false;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.confirmation = false;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        getDefaultGroupName: getDefaultGroupName,
-
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            this.submitInternal({});
-        },
-
-        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const rowId = this.selectedRow;
-            const oldName = this.selectedRowName || getDefaultGroupName(this.selectedRowType, this.$t);
-
-            makeApiRequest(apiHomeGroupDelete(rowId, confirmation))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Row deleted") + ": " + oldName);
-                    this.busy = false;
-                    this.confirmation = false;
-                    this.forceCloseSignal++;
-                    this.$emit("row-deleted", rowId);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.error = this.$t("Not found");
-                            this.$emit("must-reload");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
+    /**
+     * Name of the selected row
+     */
+    selectedRowName: {
+        type: String,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the row is deleted
+     */
+    (e: "row-deleted", id: number): void;
+
+    /**
+     * Emitted to indicate the home page should be reloaded
+     */
+    (e: "must-reload"): void;
+}>();
+
+// Delete confirmation
+const deleteConfirmation = ref(false);
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+// Reset error when modal opens
+watch(display, () => {
+    if (display.value) {
+        deleteConfirmation.value = false;
+        resetErrors();
+    }
+});
+
+/**
+ * Performs the request
+ * @param confirmation The auth confirmation
+ */
+const performRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    const rowId = props.selectedRow;
+    const oldName = props.selectedRowName || getDefaultGroupName(props.selectedRowType, $t);
+
+    makeApiRequest(apiHomeGroupDelete(rowId, confirmation))
+        .onSuccess(() => {
+            busy.value = false;
+
+            PagesController.ShowSnackBar($t("Row deleted") + ": " + oldName);
+
+            deleteConfirmation.value = false;
+
+            forceClose();
+
+            emit("row-deleted", rowId);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                notFound: () => {
+                    error.value = $t("Not found");
+
+                    forceClose();
+
+                    emit("must-reload");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    performRequest({});
+};
 </script>

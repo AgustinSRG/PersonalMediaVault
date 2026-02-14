@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-sm" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Size Statistics") }}
@@ -81,194 +81,156 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { onMounted, ref, useTemplateRef, watch } from "vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { AuthController } from "@/control/auth";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaGetMediaSizeStats } from "@/api/api-media";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { renderSize } from "@/utils/size";
 
-export default defineComponent({
-    name: "SizeStatsModal",
-    props: {
-        display: Boolean,
-        mid: Number,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            loadRequestId: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            loading: false,
-            metaSize: 0,
+// Translation function
+const { $t } = useI18n();
 
-            originalSize: 0,
+// Display model
+const display = defineModel<boolean>("display");
 
-            thumbnailSize: 0,
+// Modal container
+const container = useTemplateRef("container");
 
-            resizedSize: 0,
+// Modal composable
+const { close } = useModal(display, container);
 
-            videoPreviewsSize: 0,
-
-            subtitlesSize: 0,
-            audioTracksSize: 0,
-            imageNotesSize: 0,
-            descriptionSize: 0,
-
-            attachmentsSize: 0,
-
-            otherSize: 0,
-
-            total: 0,
-
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.load();
-            }
-        },
-
-        mid: function () {
-            this.load();
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    methods: {
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
-
-            if (!this.display) {
-                return;
-            }
-
-            this.loading = true;
-
-            if (AuthController.Locked) {
-                return; // Vault is locked
-            }
-
-            makeNamedApiRequest(this.loadRequestId, apiMediaGetMediaSizeStats(this.mid))
-                .onSuccess((result) => {
-                    this.loading = false;
-                    this.metaSize = result.meta_size;
-
-                    this.originalSize = 0;
-
-                    this.resizedSize = 0;
-
-                    this.thumbnailSize = 0;
-
-                    this.subtitlesSize = 0;
-                    this.audioTracksSize = 0;
-                    this.imageNotesSize = 0;
-
-                    this.descriptionSize = 0;
-
-                    this.attachmentsSize = 0;
-
-                    this.videoPreviewsSize = 0;
-
-                    this.otherSize = 0;
-
-                    this.total = 0;
-
-                    this.total += result.meta_size;
-
-                    for (const asset of result.assets) {
-                        const assetName = asset.name + "";
-
-                        if (assetName === "ORIGINAL") {
-                            this.originalSize += asset.size;
-                        } else if (assetName === "THUMBNAIL") {
-                            this.thumbnailSize += asset.size;
-                        } else if (assetName === "VIDEO_PREVIEWS") {
-                            this.videoPreviewsSize += asset.size;
-                        } else if (assetName === "IMG_NOTES") {
-                            this.imageNotesSize += asset.size;
-                        } else if (assetName === "DESCRIPTION") {
-                            this.descriptionSize += asset.size;
-                        } else if (assetName.startsWith("RESIZED_")) {
-                            this.resizedSize += asset.size;
-                        } else if (assetName.startsWith("SUBTITLES_")) {
-                            this.subtitlesSize += asset.size;
-                        } else if (assetName.startsWith("AUDIO_TRACK_")) {
-                            this.audioTracksSize += asset.size;
-                        } else if (assetName.startsWith("ATTACHMENT:")) {
-                            this.attachmentsSize += asset.size;
-                        } else {
-                            this.otherSize += asset.size;
-                        }
-
-                        this.total += asset.size;
-                    }
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        notFound: () => {
-                            this.close();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        renderSize: function (bytes: number): string {
-            if (bytes > 1024 * 1024 * 1024) {
-                let gb = bytes / (1024 * 1024 * 1024);
-                gb = Math.floor(gb * 100) / 100;
-                return gb + " GB";
-            } else if (bytes > 1024 * 1024) {
-                let mb = bytes / (1024 * 1024);
-                mb = Math.floor(mb * 100) / 100;
-                return mb + " MB";
-            } else if (bytes > 1024) {
-                let kb = bytes / 1024;
-                kb = Math.floor(kb * 100) / 100;
-                return kb + " KB";
-            } else {
-                return bytes + " Bytes";
-            }
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
+// Props
+const props = defineProps({
+    /**
+     * ID of the media
+     */
+    mid: {
+        type: Number,
+        required: true,
     },
 });
+
+// Sizes for every kind of asset in the media
+const metaSize = ref(0);
+const originalSize = ref(0);
+const thumbnailSize = ref(0);
+const resizedSize = ref(0);
+const videoPreviewsSize = ref(0);
+const subtitlesSize = ref(0);
+const audioTracksSize = ref(0);
+const imageNotesSize = ref(0);
+const descriptionSize = ref(0);
+const attachmentsSize = ref(0);
+const otherSize = ref(0);
+
+// Total media size
+const total = ref(0);
+
+// Loading status
+const loading = ref(false);
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to retry after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    if (!display.value) {
+        return;
+    }
+
+    loading.value = true;
+
+    if (AuthController.Locked) {
+        return; // Vault is locked
+    }
+
+    makeNamedApiRequest(loadRequestId, apiMediaGetMediaSizeStats(props.mid))
+        .onSuccess((result) => {
+            loading.value = false;
+
+            metaSize.value = result.meta_size;
+
+            originalSize.value = 0;
+            resizedSize.value = 0;
+            thumbnailSize.value = 0;
+            subtitlesSize.value = 0;
+            audioTracksSize.value = 0;
+            imageNotesSize.value = 0;
+            descriptionSize.value = 0;
+            attachmentsSize.value = 0;
+            videoPreviewsSize.value = 0;
+            otherSize.value = 0;
+
+            total.value = 0;
+
+            // Compute size of assets and total size
+
+            total.value += result.meta_size;
+
+            for (const asset of result.assets) {
+                const assetName = asset.name + "";
+
+                if (assetName === "ORIGINAL") {
+                    originalSize.value += asset.size;
+                } else if (assetName === "THUMBNAIL") {
+                    thumbnailSize.value += asset.size;
+                } else if (assetName === "VIDEO_PREVIEWS") {
+                    videoPreviewsSize.value += asset.size;
+                } else if (assetName === "IMG_NOTES") {
+                    imageNotesSize.value += asset.size;
+                } else if (assetName === "DESCRIPTION") {
+                    descriptionSize.value += asset.size;
+                } else if (assetName.startsWith("RESIZED_")) {
+                    resizedSize.value += asset.size;
+                } else if (assetName.startsWith("SUBTITLES_")) {
+                    subtitlesSize.value += asset.size;
+                } else if (assetName.startsWith("AUDIO_TRACK_")) {
+                    audioTracksSize.value += asset.size;
+                } else if (assetName.startsWith("ATTACHMENT:")) {
+                    attachmentsSize.value += asset.size;
+                } else {
+                    otherSize.value += asset.size;
+                }
+
+                total.value += asset.size;
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                notFound: () => {
+                    close();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+onMounted(load);
+watch(display, load);
+watch(() => props.mid, load);
 </script>

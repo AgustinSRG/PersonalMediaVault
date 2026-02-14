@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Add new row") }}
@@ -27,13 +22,17 @@
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
                     />
+
+                    <div v-if="nameError" class="form-error form-error-pt">{{ nameError }}</div>
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Row type") }}:</label>
                     <select v-model="rowType" class="form-control form-control-full-width form-select" :disabled="busy">
-                        <option v-for="t in rowTypes" :key="t" :value="t">{{ getDefaultGroupName(t, $t) }}</option>
+                        <option v-for="t in ROW_TYPES" :key="t" :value="t">{{ getDefaultGroupName(t, $t) }}</option>
                     </select>
+
+                    <div v-if="rowTypeError" class="form-error form-error-pt">{{ rowTypeError }}</div>
                 </div>
 
                 <div class="form-error">{{ error }}</div>
@@ -47,144 +46,142 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import type { HomePageGroup } from "@/api/api-home";
 import { apiHomeAddGroup } from "@/api/api-home";
 import { getDefaultGroupName, HomePageGroupTypes } from "@/utils/home";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "HomePageCreateRowModal",
-    components: {
-        LoadingIcon,
-    },
-    props: {
-        display: Boolean,
+// Translation function
+const { $t } = useI18n();
 
-        prepend: Boolean,
-    },
-    emits: ["update:display", "new-row"],
-    setup(props) {
-        return {
-            rowTypes: [HomePageGroupTypes.Custom, HomePageGroupTypes.RecentMedia, HomePageGroupTypes.RecentAlbums],
+// Display model
+const display = defineModel<boolean>("display");
 
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            name: "",
-            rowType: HomePageGroupTypes.Custom,
+// Modal container
+const container = useTemplateRef("container");
 
-            busy: false,
-            error: "",
+// Modal composable
+const { close, forceClose } = useModal(display, container);
 
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    methods: {
-        getDefaultGroupName: getDefaultGroupName,
-
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const prepend = this.prepend;
-
-            makeApiRequest(
-                apiHomeAddGroup({
-                    name: this.name,
-                    type: this.rowType,
-                    prepend,
-                }),
-            )
-                .onSuccess((response) => {
-                    PagesController.ShowSnackBar(
-                        this.$t("Row added") + ": " + (response.name || this.getDefaultGroupName(response.type, this.$t)),
-                    );
-                    this.busy = false;
-                    this.name = "";
-                    this.forceCloseSignal++;
-                    this.$emit("new-row", response, prepend);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidName: () => {
-                            this.error = this.$t("Invalid row name provided");
-                        },
-                        invalidGroupType: () => {
-                            this.error = this.$t("Invalid row type provided");
-                        },
-                        tooManyGroups: () => {
-                            this.error = this.$t("There are already too many rows in the home page");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-    },
+// Props
+const props = defineProps({
+    /**
+     * True to prepend the row, false to append it.
+     */
+    prepend: Boolean,
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the new row is added
+     */
+    (e: "new-row", group: HomePageGroup, prepend: boolean): void;
+}>();
+
+// Home page tow types
+const ROW_TYPES = [HomePageGroupTypes.Custom, HomePageGroupTypes.RecentMedia, HomePageGroupTypes.RecentAlbums];
+
+// Row name
+const name = ref("");
+
+// Row type
+const rowType = ref(HomePageGroupTypes.Custom);
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Other errors
+const nameError = ref("");
+const rowTypeError = ref("");
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+
+    nameError.value = "";
+    rowTypeError.value = "";
+};
+
+// Reset error when modal opens
+watch(display, () => {
+    if (display.value) {
+        resetErrors();
+    }
+});
+
+/**
+ * Event handler for 'submit'
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    busy.value = true;
+
+    const prepend = props.prepend;
+
+    makeApiRequest(
+        apiHomeAddGroup({
+            name: name.value,
+            type: rowType.value,
+            prepend,
+        }),
+    )
+        .onSuccess((response) => {
+            PagesController.ShowSnackBar($t("Row added") + ": " + (response.name || getDefaultGroupName(response.type, $t)));
+
+            busy.value = false;
+            name.value = "";
+
+            forceClose();
+
+            emit("new-row", response, prepend);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                invalidName: () => {
+                    nameError.value = $t("Invalid row name provided");
+                },
+                invalidGroupType: () => {
+                    rowTypeError.value = $t("Invalid row type provided");
+                },
+                tooManyGroups: () => {
+                    error.value = $t("There are already too many rows in the home page");
+                },
+                accessDenied,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
 </script>

@@ -1,11 +1,6 @@
 <template>
-    <ModalDialogContainer
-        v-model:display="displayStatus"
-        :close-signal="closeSignal"
-        :force-close-signal="forceCloseSignal"
-        :lock-close="busy"
-    >
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display" :lock-close="busy">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Move row") }}
@@ -30,7 +25,7 @@
                         step="1"
                         min="1"
                         :max="maxPosition + 1"
-                        class="form-control form-control-full-width auto-focus"
+                        class="form-control form-control-full-width auto-focus auto-select"
                     />
                 </div>
                 <div class="form-error">{{ error }}</div>
@@ -44,143 +39,166 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { makeApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-
+import { ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { getDefaultGroupName } from "@/utils/home";
 import { apiHomeGroupMove } from "@/api/api-home";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
-export default defineComponent({
-    name: "HomePageMoveRowModal",
-    components: {
-        LoadingIcon,
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close, forceClose } = useModal(display, container);
+
+// Props
+const props = defineProps({
+    /**
+     * Id of the selected row
+     */
+    selectedRow: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
 
-        selectedRowType: Number,
-        selectedRow: Number,
-        selectedRowName: String,
-
-        selectedRowPosition: Number,
-
-        maxPosition: Number,
+    /**
+     * Type of the selected row
+     */
+    selectedRowType: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:display", "moved", "must-reload"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+
+    /**
+     * Name of the selected row
+     */
+    selectedRowName: {
+        type: String,
+        required: true,
     },
-    data: function () {
-        return {
-            currentPos: this.selectedRowPosition + 1,
 
-            busy: false,
-            error: "",
-
-            closeSignal: 0,
-            forceCloseSignal: 0,
-        };
+    /**
+     * Position of the selected row
+     */
+    selectedRowPosition: {
+        type: Number,
+        required: true,
     },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.currentPos = this.selectedRowPosition + 1;
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.currentPos = this.selectedRowPosition + 1;
-            this.autoFocus();
-        }
-    },
-    methods: {
-        getDefaultGroupName: getDefaultGroupName,
 
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                elem.focus();
-                elem.select();
-            });
-        },
-
-        close: function () {
-            this.closeSignal++;
-        },
-
-        submit: function (e: Event) {
-            e.preventDefault();
-
-            if (this.busy) {
-                return;
-            }
-
-            const position = this.currentPos - 1;
-
-            if (position === this.selectedRowPosition) {
-                this.forceCloseSignal++;
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            const rowId = this.selectedRow;
-
-            makeApiRequest(apiHomeGroupMove(rowId, position))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBar(
-                        this.$t("Row moved") + ": " + (this.selectedRowName || this.getDefaultGroupName(this.selectedRowType, this.$t)),
-                    );
-                    this.busy = false;
-                    this.forceCloseSignal++;
-                    this.$emit("moved", rowId, position);
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.forceCloseSignal++;
-                            this.$emit("must-reload");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
+    /**
+     * Max position
+     */
+    maxPosition: {
+        type: Number,
+        required: true,
     },
 });
+
+// Events
+const emit = defineEmits<{
+    /**
+     * Emitted when the row is moved
+     */
+    (e: "moved", id: number, position: number): void;
+
+    /**
+     * Emitted to indicate the home page should be reloaded
+     */
+    (e: "must-reload"): void;
+}>();
+
+// Current position
+const currentPos = ref(props.selectedRowPosition + 1);
+
+// Busy (request in progress)
+const busy = ref(false);
+
+// Request error
+const { error, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
+// Resets the error messages
+const resetErrors = () => {
+    error.value = "";
+};
+
+// Reset error when modal opens
+watch(display, () => {
+    if (display.value) {
+        currentPos.value = props.selectedRowPosition + 1;
+        resetErrors();
+    }
+});
+
+/**
+ * Submits the form
+ * @param e The submit event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    if (busy.value) {
+        return;
+    }
+
+    resetErrors();
+
+    const position = currentPos.value - 1;
+
+    if (position === props.selectedRowPosition) {
+        forceClose();
+        return;
+    }
+
+    busy.value = true;
+
+    const rowId = props.selectedRow;
+
+    makeApiRequest(apiHomeGroupMove(rowId, position))
+        .onSuccess(() => {
+            PagesController.ShowSnackBar(
+                $t("Row moved") + ": " + (props.selectedRowName || getDefaultGroupName(props.selectedRowType, $t)),
+            );
+
+            busy.value = false;
+
+            forceClose();
+
+            emit("moved", rowId, position);
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                accessDenied,
+                notFound: () => {
+                    forceClose();
+                    emit("must-reload");
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            error.value = err.message;
+
+            console.error(err);
+        });
+};
 </script>

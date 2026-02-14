@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <form class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Close invited session") }}
@@ -21,62 +21,40 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "InviteCloseSessionConfirmationModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "confirm"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Translation function
+const { $t } = useI18n();
 
-        close: function () {
-            this.closeSignal++;
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        submit: function (e: Event) {
-            e.preventDefault();
+// Modal container
+const container = useTemplateRef("container");
 
-            this.$emit("confirm");
+// Modal composable
+const { close } = useModal(display, container);
 
-            this.close();
-        },
-    },
-});
+// Events
+const emit = defineEmits<{
+    /**
+     * Confirmation event
+     */
+    (e: "confirm"): void;
+}>();
+
+/**
+ * Handler for the 'submit' event
+ * @param e The event
+ */
+const submit = (e: Event) => {
+    e.preventDefault();
+
+    emit("confirm");
+
+    close();
+};
 </script>

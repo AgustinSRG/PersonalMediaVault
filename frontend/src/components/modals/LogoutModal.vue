@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Close vault") }}</div>
                 <button class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -19,60 +19,29 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AuthController } from "@/control/auth";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { useTemplateRef } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "LogoutModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
+// Translation function
+const { $t } = useI18n();
 
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        logout: function () {
-            AuthController.Logout();
-            this.close();
-        },
-    },
-});
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close } = useModal(display, container);
+
+/**
+ * Logs out of the vault
+ */
+const logout = () => {
+    AuthController.Logout();
+    close();
+};
 </script>

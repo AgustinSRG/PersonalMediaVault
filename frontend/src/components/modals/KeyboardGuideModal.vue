@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-lg" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Keyboard shortcuts") }}
@@ -372,46 +372,20 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useModal } from "@/composables/use-modal";
 
-export default defineComponent({
-    name: "KeyboardGuideModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
-    },
-});
+// Translation function
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Modal container
+const container = useTemplateRef("container");
+
+// Modal composable
+const { close } = useModal(display, container);
 </script>

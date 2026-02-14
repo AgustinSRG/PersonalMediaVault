@@ -83,7 +83,7 @@ import { defineComponent } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
-import type { MediaResolution, NamedResolution } from "@/api/models";
+import type { MediaResolution, MediaType, NamedResolution } from "@/api/models";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
@@ -119,7 +119,7 @@ export default defineComponent({
     },
     data: function () {
         return {
-            type: 0,
+            type: 0 as MediaType,
 
             width: 0,
             height: 0,

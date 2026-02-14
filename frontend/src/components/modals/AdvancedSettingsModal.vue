@@ -230,7 +230,7 @@
             @confirm="performRequest"
         ></AuthConfirmationModal>
 
-        <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="forceClose"></SaveChangesAskModal>
+        <SaveChangesAskModal v-model:display="displayAskSave" @yes="performRequest({})" @no="forceClose"></SaveChangesAskModal>
     </ModalDialogContainer>
 </template>
 
