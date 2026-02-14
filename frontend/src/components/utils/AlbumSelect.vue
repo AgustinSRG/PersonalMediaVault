@@ -286,7 +286,6 @@ const toggleExpand = () => {
     }
 };
 
-
 /**
  * Gets the URL of a suggestion
  * @param s The suggestion item

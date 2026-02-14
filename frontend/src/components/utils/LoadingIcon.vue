@@ -1,35 +1,13 @@
 <template>
-    <i :class="getClass(displayLoader, icon, extraClass)"><slot></slot></i>
+    <i :class="computedClass"><slot></slot></i>
 </template>
 
 <script setup lang="ts">
 import { useTimeout } from "@/composables/use-timeout";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 // Default delay (milliseconds)
 const DEFAULT_DELAY = 333;
-
-/**
- * Generates the icon class list
- * @param displayLoader True if the loader should display
- * @param icon The icon when not loading
- * @param extraClass Extra class
- */
-const getClass = (displayLoader: boolean, icon: string, extraClass: string): string => {
-    const classes = [];
-
-    if (displayLoader) {
-        classes.push("fa", "fa-spinner", "fa-spin");
-    } else if (icon) {
-        classes.push(icon);
-    }
-
-    if (extraClass) {
-        classes.push(extraClass);
-    }
-
-    return classes.join(" ");
-};
 
 const props = defineProps({
     /**
@@ -54,11 +32,28 @@ const props = defineProps({
     delay: Number,
 });
 
-// Timeout for displaying
-const displayTimeout = useTimeout();
-
 // True to display the loader icon
 const displayLoader = ref(false);
+
+// Computed class for the icon
+const computedClass = computed(() => {
+    const classes = [];
+
+    if (displayLoader.value) {
+        classes.push("fa", "fa-spinner", "fa-spin");
+    } else if (props.icon) {
+        classes.push(props.icon);
+    }
+
+    if (props.extraClass) {
+        classes.push(props.extraClass);
+    }
+
+    return classes.join(" ");
+});
+
+// Timeout for displaying
+const displayTimeout = useTimeout();
 
 /**
  * Call when 'loading' changes to true

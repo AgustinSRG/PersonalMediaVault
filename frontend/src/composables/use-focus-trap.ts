@@ -3,7 +3,8 @@
 "use strict";
 
 import { FocusTrap } from "@/utils/focus-trap";
-import { nextTick, onBeforeUnmount, onMounted, Ref, ShallowRef, watch } from "vue";
+import type { Ref, ShallowRef } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, watch } from "vue";
 
 /**
  * Sets up a focus trap for the component

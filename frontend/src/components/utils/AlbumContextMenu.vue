@@ -47,6 +47,10 @@ import { reactive, useTemplateRef, watch } from "vue";
 import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { onDocumentEvent } from "@/composables/on-document-event";
+import { useI18n } from "@/composables/use-i18n";
+
+// Translation function
+const { $t } = useI18n();
 
 // Shown model
 const shown = defineModel<boolean>("shown");

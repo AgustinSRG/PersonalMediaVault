@@ -1,17 +1,18 @@
 <template>
     <div
+        ref="container"
         class="album-body-item-options-menu"
         :class="{
             hidden: !shown,
         }"
         :style="{
-            top: top,
-            left: left,
-            right: right,
-            bottom: bottom,
-            width: width,
-            'max-width': maxWidth,
-            'max-height': maxHeight,
+            top: dimensions.top,
+            left: dimensions.left,
+            right: dimensions.right,
+            bottom: dimensions.bottom,
+            width: dimensions.width,
+            'max-width': dimensions.maxWidth,
+            'max-height': dimensions.maxHeight,
         }"
         tabindex="-1"
         @mousedown="stopPropagationEvent"
@@ -29,131 +30,154 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
+<script setup lang="ts">
+import { reactive, useTemplateRef, watch } from "vue";
+import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
+import { onDocumentEvent } from "@/composables/on-document-event";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "HomePageElementContextMenu",
-    props: {
-        shown: Boolean,
+// Translation function
+const { $t } = useI18n();
 
-        elementIndex: Number,
+// Shown model
+const shown = defineModel<boolean>("shown");
 
-        x: Number,
-        y: Number,
+/**
+ * Hides the context menu
+ */
+const hide = () => {
+    shown.value = false;
+};
+
+onDocumentEvent("mousedown", hide);
+onDocumentEvent("touchstart", hide);
+
+// Props
+const props = defineProps({
+    /**
+     * Index of the element in the list
+     */
+    elementIndex: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:shown", "change-pos", "element-remove"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            shownState: useVModel(props, "shown"),
-        };
+
+    /**
+     * X coordinate of the context menu
+     */
+    x: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            top: "",
-            left: "",
-            right: "",
-            bottom: "",
 
-            width: "",
-
-            maxWidth: "",
-            maxHeight: "",
-        };
-    },
-    watch: {
-        x: function () {
-            this.computeDimensions();
-        },
-        y: function () {
-            this.computeDimensions();
-        },
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.computeDimensions();
-
-        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
-        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        changePosition: function () {
-            this.$emit("change-pos", this.elementIndex);
-            this.hide();
-        },
-
-        removeElement: function () {
-            this.$emit("element-remove", this.elementIndex);
-            this.hide();
-        },
-
-        hide: function () {
-            this.shownState = false;
-        },
-
-        computeDimensions: function () {
-            const pageWidth = window.innerWidth;
-            const pageHeight = window.innerHeight;
-
-            const x = this.x;
-            const y = this.y;
-
-            if (y > pageHeight / 2) {
-                const bottom = pageHeight - y;
-
-                const maxHeight = pageHeight - bottom;
-
-                this.top = "auto";
-                this.bottom = bottom + "px";
-
-                this.maxHeight = maxHeight + "px";
-            } else {
-                const top = y;
-
-                const maxHeight = pageHeight - top;
-
-                this.top = top + "px";
-                this.bottom = "auto";
-
-                this.maxHeight = maxHeight + "px";
-            }
-
-            if (x > pageWidth / 2) {
-                const right = pageWidth - x;
-                const maxWidth = pageWidth - right;
-
-                this.left = "auto";
-                this.right = right + "px";
-
-                this.width = "auto";
-                this.maxWidth = maxWidth + "px";
-            } else {
-                const maxWidth = pageWidth - x;
-
-                this.left = x + "px";
-                this.right = "auto";
-
-                this.width = "auto";
-                this.maxWidth = maxWidth + "px";
-            }
-        },
+    /**
+     * Y coordinate of the context menu
+     */
+    y: {
+        type: Number,
+        required: true,
     },
 });
+
+const emit = defineEmits<{
+    /**
+     * The user want to move the element
+     */
+    (e: "change-pos", index: number): void;
+
+    /**
+     * The user want to remove element
+     */
+    (e: "element-remove", index: number): void;
+}>();
+
+// Dimensions
+const dimensions = reactive({
+    top: "",
+    left: "",
+    right: "",
+    bottom: "",
+
+    width: "",
+
+    maxWidth: "",
+    maxHeight: "",
+});
+
+/**
+ * Computes the context menu dimensions
+ */
+const computeDimensions = () => {
+    const pageWidth = window.innerWidth;
+    const pageHeight = window.innerHeight;
+
+    const x = props.x;
+    const y = props.y;
+
+    if (y > pageHeight / 2) {
+        const bottom = pageHeight - y;
+
+        const maxHeight = pageHeight - bottom;
+
+        dimensions.top = "auto";
+        dimensions.bottom = bottom + "px";
+
+        dimensions.maxHeight = maxHeight + "px";
+    } else {
+        const top = y;
+
+        const maxHeight = pageHeight - top;
+
+        dimensions.top = top + "px";
+        dimensions.bottom = "auto";
+
+        dimensions.maxHeight = maxHeight + "px";
+    }
+
+    if (x > pageWidth / 2) {
+        const right = pageWidth - x;
+        const maxWidth = pageWidth - right;
+
+        dimensions.left = "auto";
+        dimensions.right = right + "px";
+
+        dimensions.width = "auto";
+        dimensions.maxWidth = maxWidth + "px";
+    } else {
+        const maxWidth = pageWidth - x;
+
+        dimensions.left = x + "px";
+        dimensions.right = "auto";
+
+        dimensions.width = "auto";
+        dimensions.maxWidth = maxWidth + "px";
+    }
+};
+
+computeDimensions();
+watch(() => props.x, computeDimensions);
+watch(() => props.y, computeDimensions);
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Focus trap
+useFocusTrap(container, shown, hide, "home-page-row-context-btn", true);
+
+/**
+ * The user wants to change the position of the element
+ */
+const changePosition = () => {
+    emit("change-pos", props.elementIndex);
+    hide();
+};
+
+/**
+ * The user wants to remove the element
+ */
+const removeElement = () => {
+    emit("element-remove", props.elementIndex);
+    hide();
+};
 </script>

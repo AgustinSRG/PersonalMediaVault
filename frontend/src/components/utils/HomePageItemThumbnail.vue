@@ -9,6 +9,8 @@
             class="home-page-row-context-btn"
             :title="$t('Options to modify element')"
             @click="showContextMenu"
+            @mousedown="stopPropagationEvent"
+            @touchstart="stopPropagationEvent"
         >
             <i class="fas fa-bars"></i>
         </button>
@@ -23,6 +25,8 @@
             class="home-page-row-context-btn"
             :title="$t('Options to modify element')"
             @click="showContextMenu"
+            @mousedown="stopPropagationEvent"
+            @touchstart="stopPropagationEvent"
         >
             <i class="fas fa-bars"></i>
         </button>
@@ -43,6 +47,8 @@
                 class="home-page-row-context-btn"
                 :title="$t('Options to modify element')"
                 @click="showContextMenu"
+                @mousedown="stopPropagationEvent"
+                @touchstart="stopPropagationEvent"
             >
                 <i class="fas fa-bars"></i>
             </button>
@@ -87,6 +93,7 @@ const props = defineProps({
  * @param e The mouse event
  */
 const showContextMenu = (e: MouseEvent) => {
+    e.stopPropagation();
     emit("open-options", props.position, e);
 };
 </script>

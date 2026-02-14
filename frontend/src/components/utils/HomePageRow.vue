@@ -955,6 +955,13 @@ export default defineComponent({
 
             event.preventDefault();
 
+            if (this.contextMenuShown && i === this.contextMenuSelectedIndex) {
+                if (event.type === "click") {
+                    this.contextMenuShown = false;
+                }
+                return;
+            }
+
             this.contextMenuSelectedIndex = i;
             this.contextMenuX = event.pageX;
             this.contextMenuY = event.pageY;
