@@ -1,17 +1,18 @@
 <template>
     <div
+        ref="container"
         class="album-body-item-options-menu"
         :class="{
             hidden: !shown,
         }"
         :style="{
-            top: top,
-            left: left,
-            right: right,
-            bottom: bottom,
-            width: width,
-            'max-width': maxWidth,
-            'max-height': maxHeight,
+            top: dimensions.top,
+            left: dimensions.left,
+            right: dimensions.right,
+            bottom: dimensions.bottom,
+            width: dimensions.width,
+            'max-width': dimensions.maxWidth,
+            'max-height': dimensions.maxHeight,
         }"
         tabindex="-1"
         @mousedown="stopPropagationEvent"
@@ -41,135 +42,177 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
+<script setup lang="ts">
+import { reactive, useTemplateRef, watch } from "vue";
+import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { onDocumentEvent } from "@/composables/on-document-event";
 
-export default defineComponent({
-    name: "AlbumContextMenu",
-    props: {
-        shown: Boolean,
+// Shown model
+const shown = defineModel<boolean>("shown");
 
-        mediaIndex: Number,
-        albumLength: Number,
+/**
+ * Hides the context menu
+ */
+const hide = () => {
+    shown.value = false;
+};
 
-        x: Number,
-        y: Number,
+onDocumentEvent("mousedown", hide);
+onDocumentEvent("touchstart", hide);
+
+// Props
+const props = defineProps({
+    /**
+     * Index of the media in the album list
+     */
+    mediaIndex: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            shownState: useVModel(props, "shown"),
-        };
+
+    /**
+     * Length of the album list
+     */
+    albumLength: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            top: "",
-            left: "",
-            right: "",
-            bottom: "",
 
-            width: "",
-
-            maxWidth: "",
-            maxHeight: "",
-        };
+    /**
+     * X coordinate of the context menu
+     */
+    x: {
+        type: Number,
+        required: true,
     },
-    watch: {
-        x: function () {
-            this.computeDimensions();
-        },
-        y: function () {
-            this.computeDimensions();
-        },
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.computeDimensions();
 
-        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
-        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        moveMediaUp: function () {
-            this.$emit("move-up", this.mediaIndex);
-            this.hide();
-        },
-
-        moveMediaDown: function () {
-            this.$emit("move-down", this.mediaIndex);
-            this.hide();
-        },
-
-        changePosition: function () {
-            this.$emit("change-pos", this.mediaIndex);
-            this.hide();
-        },
-
-        removeMedia: function () {
-            this.$emit("media-remove", this.mediaIndex);
-            this.hide();
-        },
-
-        hide: function () {
-            this.shownState = false;
-        },
-
-        computeDimensions: function () {
-            const pageWidth = window.innerWidth;
-            const pageHeight = window.innerHeight;
-
-            const x = this.x;
-            const y = this.y;
-
-            if (y > pageHeight / 2) {
-                const bottom = pageHeight - y;
-                const right = pageWidth - x;
-
-                const maxWidth = pageWidth - right;
-
-                const maxHeight = pageHeight - bottom;
-
-                this.top = "auto";
-                this.left = "auto";
-                this.right = right + "px";
-                this.bottom = bottom + "px";
-                this.width = "auto";
-                this.maxWidth = maxWidth + "px";
-                this.maxHeight = maxHeight + "px";
-            } else {
-                const top = y;
-                const right = pageWidth - x;
-
-                const maxWidth = pageWidth - right;
-
-                const maxHeight = pageHeight - top;
-
-                this.top = top + "px";
-                this.left = "auto";
-                this.right = right + "px";
-                this.bottom = "auto";
-                this.width = "auto";
-                this.maxWidth = maxWidth + "px";
-                this.maxHeight = maxHeight + "px";
-            }
-        },
+    /**
+     * Y coordinate of the context menu
+     */
+    y: {
+        type: Number,
+        required: true,
     },
 });
+
+const emit = defineEmits<{
+    /**
+     * The user want to move the media element up in the list
+     */
+    (e: "move-up", index: number): void;
+
+    /**
+     * The user want to move the media element down in the list
+     */
+    (e: "move-down", index: number): void;
+
+    /**
+     * The user want to move the media element to another position
+     */
+    (e: "change-pos", index: number): void;
+
+    /**
+     * The user want to remove the media element from the list
+     */
+    (e: "media-remove", index: number): void;
+}>();
+
+// Dimensions
+const dimensions = reactive({
+    top: "",
+    left: "",
+    right: "",
+    bottom: "",
+
+    width: "",
+
+    maxWidth: "",
+    maxHeight: "",
+});
+
+/**
+ * Computes the dimensions of the context menu
+ */
+const computeDimensions = () => {
+    const pageWidth = window.innerWidth;
+    const pageHeight = window.innerHeight;
+
+    const x = props.x;
+    const y = props.y;
+
+    if (y > pageHeight / 2) {
+        const bottom = pageHeight - y;
+        const right = pageWidth - x;
+
+        const maxWidth = pageWidth - right;
+
+        const maxHeight = pageHeight - bottom;
+
+        dimensions.top = "auto";
+        dimensions.left = "auto";
+        dimensions.right = right + "px";
+        dimensions.bottom = bottom + "px";
+        dimensions.width = "auto";
+        dimensions.maxWidth = maxWidth + "px";
+        dimensions.maxHeight = maxHeight + "px";
+    } else {
+        const top = y;
+        const right = pageWidth - x;
+
+        const maxWidth = pageWidth - right;
+
+        const maxHeight = pageHeight - top;
+
+        dimensions.top = top + "px";
+        dimensions.left = "auto";
+        dimensions.right = right + "px";
+        dimensions.bottom = "auto";
+        dimensions.width = "auto";
+        dimensions.maxWidth = maxWidth + "px";
+        dimensions.maxHeight = maxHeight + "px";
+    }
+};
+
+computeDimensions();
+watch(() => props.x, computeDimensions);
+watch(() => props.y, computeDimensions);
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Focus trap
+useFocusTrap(container, shown, hide, "album-body-btn", true);
+
+/**
+ * The user wants to move the media element up
+ */
+const moveMediaUp = () => {
+    emit("move-up", props.mediaIndex);
+    hide();
+};
+
+/**
+ * The user wants to move the media element down
+ */
+const moveMediaDown = () => {
+    emit("move-down", props.mediaIndex);
+    hide();
+};
+
+/**
+ * The user want to change the position in the album
+ */
+const changePosition = () => {
+    emit("change-pos", props.mediaIndex);
+    hide();
+};
+
+/**
+ * The user want to remove the mdia
+ */
+const removeMedia = () => {
+    emit("media-remove", props.mediaIndex);
+    hide();
+};
 </script>

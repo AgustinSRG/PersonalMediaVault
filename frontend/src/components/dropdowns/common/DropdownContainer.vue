@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
+import { useFocusTrap } from "@/composables/use-focus-trap";
 import { stopPropagationEvent } from "@/utils/events";
-import { FocusTrap } from "@/utils/focus-trap";
-import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
+import { computed, useTemplateRef } from "vue";
 
 const props = defineProps({
     /**
@@ -69,37 +69,6 @@ const onKeyDown = (e: KeyboardEvent) => {
 // Ref to the container element
 const container = useTemplateRef("container");
 
-/**
- * Automatically focuses the container element
- */
-const autoFocus = () => {
-    nextTick(() => {
-        container.value?.focus();
-    });
-};
-
 // Focus trap
-let focusTrap: null | FocusTrap = null;
-
-onMounted(() => {
-    focusTrap = new FocusTrap(container.value, close, props.focusTrapExceptionClass);
-
-    if (display.value) {
-        focusTrap.activate();
-        autoFocus();
-    }
-});
-
-watch(display, () => {
-    if (display.value) {
-        focusTrap?.activate();
-        autoFocus();
-    } else {
-        focusTrap?.deactivate();
-    }
-});
-
-onBeforeUnmount(() => {
-    focusTrap?.destroy();
-});
+useFocusTrap(container, display, close, props.focusTrapExceptionClass, true);
 </script>

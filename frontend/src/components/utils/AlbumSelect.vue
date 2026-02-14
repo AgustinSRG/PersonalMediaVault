@@ -42,15 +42,15 @@
 
 <script setup lang="ts">
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
 import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { FocusTrap } from "@/utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+import { nextTick, ref, useTemplateRef, watch } from "vue";
 
 // Translation function
 const { $t } = useI18n();
@@ -229,9 +229,6 @@ const onFilterChanged = () => {
     filterChangedTimeout.set(updateSuggestions, UPDATE_SUGGESTIONS_DELAY);
 };
 
-// Focus trap
-let focusTrap: null | FocusTrap = null;
-
 // Timeout to blur the element and hide the suggestions
 const blurTimeout = useTimeout();
 
@@ -247,8 +244,6 @@ const expand = () => {
     expanded.value = true;
 
     updateSuggestions();
-
-    focusTrap?.activate();
 
     AlbumsController.Refresh();
 
@@ -267,8 +262,6 @@ const closeInstantly = () => {
     expanded.value = false;
 
     filter.value = "";
-
-    focusTrap?.deactivate();
 };
 
 // Delay to blur the element
@@ -293,13 +286,6 @@ const toggleExpand = () => {
     }
 };
 
-onMounted(() => {
-    focusTrap = new FocusTrap(container.value, close);
-});
-
-onBeforeUnmount(() => {
-    focusTrap?.destroy();
-});
 
 /**
  * Gets the URL of a suggestion
@@ -314,6 +300,9 @@ const getSuggestionURL = (s: AlbumItemFiltered): string => {
 
 // Main container of the component
 const container = useTemplateRef("container");
+
+// Focus trap
+useFocusTrap(container, expanded, close);
 
 /**
  * Event handler for 'click on a suggestion'

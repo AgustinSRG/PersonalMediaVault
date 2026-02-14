@@ -20,11 +20,10 @@
 </template>
 
 <script setup lang="ts">
+import { useFocusTrap } from "@/composables/use-focus-trap";
 import { stopPropagationEvent } from "@/utils/events";
-import { FocusTrap } from "@/utils/focus-trap";
-
 import type { PropType } from "vue";
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+import { ref, useTemplateRef, watch } from "vue";
 
 const emit = defineEmits<{
     /**
@@ -82,9 +81,6 @@ const closing = ref(false);
 // Ref to the container element
 const container = useTemplateRef("container");
 
-// Focus trap
-let focusTrap: null | FocusTrap = null;
-
 // Called when focus on the modal is lost
 const onFocusLost = () => {
     if (display.value && !closing.value) {
@@ -92,25 +88,13 @@ const onFocusLost = () => {
     }
 };
 
-onMounted(() => {
-    focusTrap = new FocusTrap(container.value, onFocusLost);
-
-    if (display.value) {
-        focusTrap.activate();
-    }
-});
+// Focus trap
+useFocusTrap(container, display, onFocusLost);
 
 watch(display, () => {
     if (display.value) {
         closing.value = false;
-        focusTrap?.activate();
-    } else {
-        focusTrap?.deactivate();
     }
-});
-
-onBeforeUnmount(() => {
-    focusTrap?.destroy();
 });
 
 /**

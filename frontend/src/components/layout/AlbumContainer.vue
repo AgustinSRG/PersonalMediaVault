@@ -119,6 +119,7 @@
             </div>
         </div>
         <AlbumContextMenu
+            v-if="contextShown"
             v-model:shown="contextShown"
             :media-index="contextIndex"
             :album-length="albumListLength"

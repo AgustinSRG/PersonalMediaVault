@@ -28,9 +28,9 @@
 </template>
 
 <script setup lang="ts">
+import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
-import { FocusTrap } from "@/utils/focus-trap";
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef } from "vue";
 
 // Translation function
 const { $t } = useI18n();
@@ -87,27 +87,22 @@ const toggleHide = () => {
     }
 };
 
-// Focus trap
-let focusTrap: null | FocusTrap = null;
+// Focused state
+const focused = ref(false);
 
 // Called on focus
 const onFocus = () => {
-    focusTrap?.activate();
+    focused.value = true;
 };
 
 // Called on blur
 const onBlur = () => {
     hidden.value = true;
-    focusTrap?.deactivate();
+    focused.value = false;
 };
 
-onMounted(() => {
-    focusTrap = new FocusTrap(container.value, onBlur);
-});
-
-onBeforeUnmount(() => {
-    focusTrap?.destroy();
-});
+// Focus trap
+useFocusTrap(container, focused, onBlur);
 
 /**
  * Event listener for 'keydown' on the input
