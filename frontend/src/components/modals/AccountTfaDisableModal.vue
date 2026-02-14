@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { onMounted, ref, useTemplateRef } from "vue";
 import { PagesController } from "@/control/pages";

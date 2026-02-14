@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { PropType } from "vue";
 import { ref, useTemplateRef } from "vue";
 import type { MediaAttachment } from "@/api/models";

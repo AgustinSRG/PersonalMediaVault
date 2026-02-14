@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { getFrontendUrl } from "@/utils/api";

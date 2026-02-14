@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";

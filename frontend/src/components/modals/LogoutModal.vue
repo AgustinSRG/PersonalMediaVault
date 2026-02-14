@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { AuthController } from "@/control/auth";
 import { useTemplateRef } from "vue";
 import { useI18n } from "@/composables/use-i18n";

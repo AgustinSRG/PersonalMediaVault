@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";

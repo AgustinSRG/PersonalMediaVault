@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { apiAccountChangePassword } from "@/api/api-account";
 import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";

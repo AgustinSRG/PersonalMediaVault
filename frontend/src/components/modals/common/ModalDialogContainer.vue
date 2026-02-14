@@ -71,16 +71,6 @@ const props = defineProps({
      * and may call it to confirm closing the modal.
      */
     closeCallback: Function as PropType<(close: () => void) => void>,
-
-    /**
-     * Change this value in order to close the modal
-     */
-    closeSignal: Number,
-
-    /**
-     * Change this value to forcefully close the modal
-     */
-    forceCloseSignal: Number,
 });
 
 // Display model
@@ -141,22 +131,6 @@ const close = (forced?: boolean) => {
         closing.value = true;
     }
 };
-
-// Watchers for close signals
-
-watch(
-    () => props.closeSignal,
-    () => {
-        close();
-    },
-);
-
-watch(
-    () => props.forceCloseSignal,
-    () => {
-        close(true);
-    },
-);
 
 // Listeners for events
 

@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { useTemplateRef } from "vue";
 import type { PropType } from "vue";
 import type { MediaAudioTrack } from "@/api/models";

@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";

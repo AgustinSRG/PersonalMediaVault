@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";

@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { useTemplateRef } from "vue";
 import type { PropType } from "vue";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaType, type NamedResolution } from "@/api/models";

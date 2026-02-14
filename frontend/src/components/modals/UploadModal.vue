@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, ref, useTemplateRef, watch } from "vue";
 import AlbumSelect from "../utils/AlbumSelect.vue";

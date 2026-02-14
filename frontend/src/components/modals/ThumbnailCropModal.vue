@@ -70,6 +70,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { useI18n } from "@/composables/use-i18n";

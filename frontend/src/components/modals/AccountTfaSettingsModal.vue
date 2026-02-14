@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";

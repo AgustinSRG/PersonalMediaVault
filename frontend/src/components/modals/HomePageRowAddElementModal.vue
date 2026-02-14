@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { PropType } from "vue";
 import { computed, ref, useTemplateRef, watch } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";

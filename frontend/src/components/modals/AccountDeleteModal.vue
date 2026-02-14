@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
 import { apiAdminDeleteAccount } from "@/api/api-admin";
 import { PagesController } from "@/control/pages";
