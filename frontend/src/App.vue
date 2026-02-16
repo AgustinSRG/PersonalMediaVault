@@ -2,7 +2,7 @@
     <MainLayout></MainLayout>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController } from "./control/albums";
 import { AppStatus } from "./control/app-status";
@@ -10,7 +10,6 @@ import { MediaController } from "./control/media";
 import { type UploadEntryMin } from "./control/upload";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
-import { defineComponent } from "vue";
 import { PagesController } from "./control/pages";
 import {
     EVENT_NAME_APP_STATUS_CHANGED,
@@ -19,110 +18,110 @@ import {
     EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
     EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
 } from "./control/app-events";
+import { useI18n } from "./composables/use-i18n";
+import { onApplicationEvent } from "./composables/on-app-event";
 
-export default defineComponent({
-    name: "App",
-    components: {
-        MainLayout,
-    },
-    data: function () {
-        return {};
-    },
-    mounted: function () {
-        this.updateAppStatus();
+// Translation function
+const { $t } = useI18n();
 
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateAppStatus.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.updateAppStatus.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateAppStatus.bind(this));
+/**
+ * Gets the application title
+ * @returns The application title
+ */
+const getAppTitle = () => {
+    return AuthController.Title || $t("Personal Media Vault");
+};
 
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, this.onUploadReady.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, this.onUploadError.bind(this));
-    },
-    methods: {
-        updateTitle: function () {
-            if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
-                if (AppStatus.CurrentAlbum >= 0) {
-                    // Media with album list
-                    if (AlbumsController.CurrentAlbumData) {
-                        document.title =
-                            MediaController.MediaData.title + " | " + AlbumsController.CurrentAlbumData.name + " | " + this.getAppTitle();
-                    } else {
-                        document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
-                    }
-                } else if (AppStatus.ListSplitMode) {
-                    // Media with list
-                    document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
-                } else {
-                    // Media alone
-                    document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
-                }
-            } else if (AppStatus.CurrentAlbum >= 0) {
-                if (AlbumsController.CurrentAlbumData) {
-                    document.title = AlbumsController.CurrentAlbumData.name + " | " + this.getAppTitle();
-                } else {
-                    document.title = this.getAppTitle();
-                }
+/**
+ * Updates the document title
+ */
+const updateTitle = () => {
+    if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+        if (AppStatus.CurrentAlbum >= 0) {
+            // Media with album list
+            if (AlbumsController.CurrentAlbumData) {
+                document.title = MediaController.MediaData.title + " | " + AlbumsController.CurrentAlbumData.name + " | " + getAppTitle();
             } else {
-                const searchPart = AppStatus.CurrentSearch ? " (" + this.$t("Tag") + ": " + AppStatus.CurrentSearch + ")" : "";
-                switch (AppStatus.CurrentPage) {
-                    case "upload":
-                        document.title = this.$t("Upload") + " | " + this.getAppTitle();
-                        break;
-                    case "random":
-                        document.title = this.$t("Random") + searchPart + " | " + this.getAppTitle();
-                        break;
-                    case "albums":
-                        document.title = this.$t("Albums") + " | " + this.getAppTitle();
-                        break;
-                    case "media":
-                        document.title = this.$t("Media") + searchPart + " | " + this.getAppTitle();
-                        break;
-                    case "search":
-                        document.title = this.$t("Find media") + " | " + this.getAppTitle();
-                        break;
-                    default:
-                        document.title = this.getAppTitle();
-                }
+                document.title = MediaController.MediaData.title + " | " + getAppTitle();
             }
-        },
+        } else if (AppStatus.ListSplitMode) {
+            // Media with list
+            document.title = MediaController.MediaData.title + " | " + getAppTitle();
+        } else {
+            // Media alone
+            document.title = MediaController.MediaData.title + " | " + getAppTitle();
+        }
+    } else if (AppStatus.CurrentAlbum >= 0) {
+        if (AlbumsController.CurrentAlbumData) {
+            document.title = AlbumsController.CurrentAlbumData.name + " | " + getAppTitle();
+        } else {
+            document.title = getAppTitle();
+        }
+    } else {
+        const searchPart = AppStatus.CurrentSearch ? " (" + $t("Tag") + ": " + AppStatus.CurrentSearch + ")" : "";
+        switch (AppStatus.CurrentPage) {
+            case "upload":
+                document.title = $t("Upload") + " | " + getAppTitle();
+                break;
+            case "random":
+                document.title = $t("Random") + searchPart + " | " + getAppTitle();
+                break;
+            case "albums":
+                document.title = $t("Albums") + " | " + getAppTitle();
+                break;
+            case "media":
+                document.title = $t("Media") + searchPart + " | " + getAppTitle();
+                break;
+            case "search":
+                document.title = $t("Find media") + " | " + getAppTitle();
+                break;
+            default:
+                document.title = getAppTitle();
+        }
+    }
+};
 
-        getAppTitle: function () {
-            return AuthController.Title || this.$t("Personal Media Vault");
-        },
+/**
+ * Updates 'mediaSession.metadata' for navigator media features
+ */
+const updateMediaMetadata = () => {
+    if (!window.navigator || !window.navigator.mediaSession) {
+        return;
+    }
+    if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+        window.navigator.mediaSession.metadata = new MediaMetadata({
+            title: MediaController.MediaData.title,
+            album: AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : undefined,
+            artwork: MediaController.MediaData.thumbnail
+                ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
+                : undefined,
+        });
+    } else {
+        window.navigator.mediaSession.metadata = null;
+    }
+};
 
-        updateMediaMetadata: function () {
-            if (!window.navigator || !window.navigator.mediaSession) {
-                return;
-            }
-            if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
-                window.navigator.mediaSession.metadata = new MediaMetadata({
-                    title: MediaController.MediaData.title,
-                    album:
-                        AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData
-                            ? AlbumsController.CurrentAlbumData.name
-                            : undefined,
-                    artwork: MediaController.MediaData.thumbnail
-                        ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
-                        : undefined,
-                });
-            } else {
-                window.navigator.mediaSession.metadata = null;
-            }
-        },
+/**
+ * Updates application status
+ */
+const updateAppStatus = () => {
+    updateTitle();
+    updateMediaMetadata();
+};
 
-        updateAppStatus: function () {
-            this.updateTitle();
-            this.updateMediaMetadata();
-        },
+updateAppStatus();
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, updateAppStatus);
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, updateAppStatus);
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateAppStatus);
 
-        onUploadReady: function (m: UploadEntryMin) {
-            PagesController.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
-        },
+// Notify when upload is ready
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (m: UploadEntryMin) => {
+    PagesController.ShowSnackBar($t("Successfully uploaded") + ": " + m.name);
+});
 
-        onUploadError: function (m: UploadEntryMin) {
-            PagesController.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
-        },
-    },
+// Notify when upload fails
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (m: UploadEntryMin) => {
+    PagesController.ShowSnackBar($t("Error uploading file") + ": " + m.name);
 });
 </script>
 

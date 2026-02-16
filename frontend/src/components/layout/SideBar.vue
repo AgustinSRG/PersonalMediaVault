@@ -1,9 +1,10 @@
 <template>
     <div
+        ref="container"
         class="side-bar"
         :class="{ hidden: !display }"
         tabindex="-1"
-        :role="initialLayout ? '' : 'dialog'"
+        :role="isInitialLayout ? '' : 'dialog'"
         @click="stopPropagationEvent"
         @keydown="keyDownHandle"
     >
@@ -12,8 +13,8 @@
                 <button type="button" class="top-bar-button" :title="$t('Main menu')" @click="close">
                     <i class="fas fa-bars"></i>
                 </button>
-                <img class="top-bar-logo-img" src="/img/icons/favicon.png" :alt="getAppLogoText(customLogo)" />
-                <span :title="getAppTitle(customTitle)" class="top-bar-title">{{ getAppLogoText(customLogo) }}</span>
+                <img class="top-bar-logo-img" src="/img/icons/favicon.png" :alt="appLogo" />
+                <span :title="appTitle" class="top-bar-title">{{ appLogo }}</span>
             </div>
         </div>
         <div class="side-bar-body" tabindex="-1">
@@ -107,7 +108,7 @@
                 :href="getAlbumURL(a.id)"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToAlbum(a, $event)"
+                @click="goToAlbum(a.id, $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-star"></i></div>
                 <div class="side-bar-option-text">{{ a.name }}</div>
@@ -124,7 +125,7 @@
                 :href="getAlbumURL(a.id)"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToAlbum(a, $event)"
+                @click="goToAlbum(a.id, $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-list-ol"></i></div>
                 <div class="side-bar-option-text">{{ a.name }}</div>
@@ -133,7 +134,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { AlbumListItemMinExt } from "@/control/albums";
 import { AlbumsController } from "@/control/albums";
 import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/control/app-preferences";
@@ -141,9 +142,7 @@ import type { AppStatusPage } from "@/control/app-status";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { getFrontendUrl } from "@/utils/api";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_ALBUMS_LIST_UPDATE,
@@ -151,231 +150,265 @@ import {
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
 } from "@/control/app-events";
+import { useI18n } from "@/composables/use-i18n";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { stopPropagationEvent } from "@/utils/events";
 
+// Translation
+const { $t } = useI18n();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Events
+const emit = defineEmits<{
+    /**
+     * The user wants to skip the focus to the main content.
+     */
+    (e: "skip-to-content"): void;
+}>();
+
+// Custom title
+const customTitle = ref(AuthController.Title);
+
+// Custom logo
+const customLogo = ref(AuthController.Logo);
+
+// Application title
+const appTitle = computed(() => customTitle.value || $t("Personal Media Vault"));
+
+// Application logo
+const appLogo = computed(() => customLogo.value || "PMV");
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
+    customTitle.value = AuthController.Title;
+    customLogo.value = AuthController.Logo;
+});
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Current page
+const page = ref(AppStatus.CurrentPage);
+
+// Current album
+const album = ref(AppStatus.CurrentAlbum);
+
+// Current layout
+const layout = ref(AppStatus.CurrentLayout);
+
+// Is initial layout?
+const isInitialLayout = computed(() => layout.value === "initial");
+
+// Current search
+const search = ref(AppStatus.CurrentSearch);
+
+// Cached album search params
+const cachedAlbumsSearchParams = ref(AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "");
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    if (AppStatus.CurrentLayout !== "initial") {
+        display.value = false;
+    } else if (layout.value !== "initial") {
+        display.value = true;
+    }
+
+    layout.value = AppStatus.CurrentLayout;
+
+    page.value = AppStatus.CurrentPage;
+    album.value = AppStatus.CurrentAlbum;
+
+    search.value = AppStatus.CurrentSearch;
+
+    if (AppStatus.CurrentPage === "albums") {
+        cachedAlbumsSearchParams.value = AppStatus.SearchParams;
+    }
+});
+
+// Albums
+const albumsFavorite = ref<AlbumListItemMinExt[]>();
+const albumsRest = ref<AlbumListItemMinExt[]>();
+
+// Max number of albums in the sidebar
 const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 
-export default defineComponent({
-    name: "SideBar",
-    props: {
-        display: Boolean,
-        initialLayout: Boolean,
-    },
-    emits: ["update:display", "skip-to-content"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            page: AppStatus.CurrentPage,
-            album: AppStatus.CurrentAlbum,
-            layout: AppStatus.CurrentLayout,
-            search: AppStatus.CurrentSearch,
+// Complete list of albums
+let albums: AlbumListItemMinExt[] = [];
 
-            canWrite: AuthController.CanWrite,
-
-            albums: [] as AlbumListItemMinExt[],
-            albumsFavorite: [] as AlbumListItemMinExt[],
-            albumsRest: [] as AlbumListItemMinExt[],
-
-            cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
-
-            customTitle: AuthController.Title,
-            customLogo: AuthController.Logo,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                if (!this.initialLayout) {
-                    nextTick(() => {
-                        this.$el.focus();
-                    });
-                }
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateStatus.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateAlbums.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, this.putAlbumFirst.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
-
-        if (this.display) {
-            this.focusTrap.activate();
+/**
+ * Updates the albums lists
+ */
+const updateAlbums = () => {
+    const albumsOrderMap = getAlbumsOrderMap();
+    albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
+        const lruA = albumsOrderMap[a.id + ""] || 0;
+        const lruB = albumsOrderMap[b.id + ""] || 0;
+        if (lruA > lruB) {
+            return -1;
+        } else if (lruA < lruB) {
+            return 1;
+        } else if (a.nameLowerCase < b.nameLowerCase) {
+            return -1;
+        } else if (a.nameLowerCase > b.nameLowerCase) {
+            return 1;
+        } else {
+            return 0;
         }
+    });
+    const favIdList = getAlbumFavoriteList();
+    const fav = [];
+    const rest = [];
+    albums.forEach((album) => {
+        if (favIdList.includes(album.id + "")) {
+            fav.push(album);
+        } else {
+            rest.push(album);
+        }
+    });
+    albumsFavorite.value = fav;
+    albumsRest.value = rest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
+};
 
-        this.updateStatus();
-        this.updateAlbums();
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        close: function () {
-            this.displayStatus = false;
-        },
+updateAlbums();
+onApplicationEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, updateAlbums);
+onApplicationEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, updateAlbums);
 
-        getAppTitle: function (customTitle: string) {
-            return customTitle || this.$t("Personal Media Vault");
-        },
-
-        getAppLogoText: function (customLogo: string) {
-            return customLogo || "PMV";
-        },
-
-        updateStatus: function () {
-            if (AppStatus.CurrentLayout !== "initial") {
-                this.displayStatus = false;
-            } else if (this.layout !== "initial") {
-                this.displayStatus = true;
+/**
+ * Moves an album to the first position when accessed
+ * @param albumId The album ID
+ */
+const putAlbumFirst = (albumId: number) => {
+    for (let i = 0; i < albumsFavorite.value.length; i++) {
+        if (albumsFavorite.value[i].id === albumId) {
+            const albumEntry = albumsFavorite.value.splice(i, 1)[0];
+            albumsFavorite.value.unshift(albumEntry);
+            return;
+        }
+    }
+    for (let i = 0; i < albumsRest.value.length; i++) {
+        if (albumsRest.value[i].id === albumId) {
+            const albumEntry = albumsRest.value.splice(i, 1)[0];
+            albumsRest.value.unshift(albumEntry);
+            return;
+        }
+    }
+    for (let i = 0; i < albums.length; i++) {
+        if (albums[i].id === albumId) {
+            const albumEntry = albums[i];
+            albumsRest.value.unshift(albumEntry);
+            if (albumsRest.value.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
+                albumsRest.value.pop();
             }
+            return;
+        }
+    }
+};
 
-            this.layout = AppStatus.CurrentLayout;
+onApplicationEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, putAlbumFirst);
 
-            this.page = AppStatus.CurrentPage;
-            this.album = AppStatus.CurrentAlbum;
+// Ref to the container element
+const container = useTemplateRef("container");
 
-            this.search = AppStatus.CurrentSearch;
-
-            if (AppStatus.CurrentPage === "albums") {
-                this.cachedAlbumsSearchParams = AppStatus.SearchParams;
-            }
-        },
-
-        goToPage: function (p: AppStatusPage, e: Event, searchParams?: string) {
-            if (e) {
-                e.preventDefault();
-            }
-            AppStatus.GoToPageConditionalSplit(p, searchParams);
-            nextTick(() => {
-                this.$emit("skip-to-content");
-            });
-            if (window.innerWidth < 1000) {
-                this.close();
-            }
-        },
-
-        goToAlbum: function (a, e) {
-            if (e) {
-                e.preventDefault();
-            }
-            AppStatus.ClickOnAlbum(a.id);
-            nextTick(() => {
-                this.$emit("skip-to-content");
-            });
-            if (window.innerWidth < 1000) {
-                this.close();
-            }
-        },
-
-        getPageURL: function (page: AppStatusPage, searchParams?: string): string {
-            return getFrontendUrl({
-                page: page,
-                sp: searchParams || null,
-            });
-        },
-
-        getAlbumURL: function (albumId: number): string {
-            return getFrontendUrl({
-                album: albumId,
-            });
-        },
-
-        updateAlbums: function () {
-            const albumsOrderMap = getAlbumsOrderMap();
-            this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
-                const lruA = albumsOrderMap[a.id + ""] || 0;
-                const lruB = albumsOrderMap[b.id + ""] || 0;
-                if (lruA > lruB) {
-                    return -1;
-                } else if (lruA < lruB) {
-                    return 1;
-                } else if (a.nameLowerCase < b.nameLowerCase) {
-                    return -1;
-                } else if (a.nameLowerCase > b.nameLowerCase) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            });
-            const favIdList = getAlbumFavoriteList();
-            const albumsFavorite = [];
-            const albumsRest = [];
-            this.albums.forEach((album) => {
-                if (favIdList.includes(album.id + "")) {
-                    albumsFavorite.push(album);
-                } else {
-                    albumsRest.push(album);
-                }
-            });
-            this.albumsFavorite = albumsFavorite;
-            this.albumsRest = albumsRest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-            this.customTitle = AuthController.Title;
-            this.customLogo = AuthController.Logo;
-        },
-
-        putAlbumFirst: function (albumId: number) {
-            for (let i = 0; i < this.albumsFavorite.length; i++) {
-                if (this.albumsFavorite[i].id === albumId) {
-                    const albumEntry = this.albumsFavorite.splice(i, 1)[0];
-                    this.albumsFavorite.unshift(albumEntry);
-                    return;
-                }
-            }
-            for (let i = 0; i < this.albumsRest.length; i++) {
-                if (this.albumsRest[i].id === albumId) {
-                    const albumEntry = this.albumsRest.splice(i, 1)[0];
-                    this.albumsRest.unshift(albumEntry);
-                    return;
-                }
-            }
-            for (let i = 0; i < this.albums.length; i++) {
-                if (this.albums[i].id === albumId) {
-                    const albumEntry = this.albums[i];
-                    this.albumsRest.unshift(albumEntry);
-                    if (this.albumsRest.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
-                        this.albumsRest.pop();
-                    }
-                    return;
-                }
-            }
-        },
-
-        undoScroll: function () {
-            const e = this.$el.querySelector(".side-bar-body");
-            if (e) {
-                e.scrollTop = 0;
-            }
-        },
-
-        lostFocus: function () {
-            if (!this.initialLayout) {
-                this.close();
-            }
-        },
-
-        keyDownHandle: function (e: KeyboardEvent) {
-            if (!this.initialLayout && e.key === "Escape") {
-                e.stopPropagation();
-                this.close();
-            }
-        },
-    },
+// Auto focus container when the menu is displayed
+watch(display, () => {
+    if (display.value && !isInitialLayout.value) {
+        nextTick(() => {
+            container.value?.focus();
+        });
+    }
 });
+
+/**
+ * Closes the sidebar
+ */
+const close = () => {
+    display.value = false;
+};
+
+/**
+ * Call when the sidebar loses focus
+ */
+const lostFocus = () => {
+    if (!isInitialLayout.value) {
+        close();
+    }
+};
+
+// Focus trap
+useFocusTrap(container, display, lostFocus);
+
+/**
+ * Gets the URL for a page link
+ * @param page The page
+ * @param searchParams The search params
+ * @returns The URL
+ */
+const getPageURL = (page: AppStatusPage, searchParams?: string): string => {
+    return getFrontendUrl({
+        page: page,
+        sp: searchParams || null,
+    });
+};
+
+/**
+ * Navigates to a page
+ * @param p The page
+ * @param e The click event
+ * @param searchParams The search params
+ */
+const goToPage = (p: AppStatusPage, e: Event, searchParams?: string) => {
+    if (e) {
+        e.preventDefault();
+    }
+    AppStatus.GoToPageConditionalSplit(p, searchParams);
+    nextTick(() => {
+        emit("skip-to-content");
+    });
+    if (window.innerWidth < 1000) {
+        close();
+    }
+};
+
+/**
+ * Gets the URL of an album
+ * @param albumId The album ID
+ * @returns The URL
+ */
+const getAlbumURL = (albumId: number): string => {
+    return getFrontendUrl({
+        album: albumId,
+    });
+};
+
+/**
+ * Navigates to an album
+ * @param albumId The album ID
+ * @param e The click event
+ */
+const goToAlbum = (albumId: number, e?: Event) => {
+    e?.preventDefault();
+
+    AppStatus.ClickOnAlbum(albumId);
+
+    nextTick(() => {
+        emit("skip-to-content");
+    });
+
+    if (window.innerWidth < 1000) {
+        close();
+    }
+};
+
+/**
+ * Event handler for 'keydown'
+ * @param e The keyboard event
+ */
+const keyDownHandle = (e: KeyboardEvent) => {
+    if (!isInitialLayout.value && e.key === "Escape") {
+        e.stopPropagation();
+        close();
+    }
+};
 </script>

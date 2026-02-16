@@ -15,7 +15,7 @@
         }"
     >
         <a v-if="!locked" href="javascript:;" class="skip-to-main-content" @click="skipToMainContent">{{ $t("Skip to main content") }}</a>
-        <SideBar v-model:display="displaySidebar" :initial-layout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
+        <SideBar v-model:display="displaySidebar" @skip-to-content="skipToMainContent"></SideBar>
         <TopBar
             @logout="logout"
             @vault-settings="showVaultSettings"
@@ -439,7 +439,7 @@ export default defineComponent({
             this.displaySidebar = false;
         },
 
-        skipToMainContent: function (event: Event) {
+        skipToMainContent: function (event?: Event) {
             if (event) {
                 event.preventDefault();
             }
