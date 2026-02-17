@@ -67,7 +67,7 @@ import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
-import PageLoaderFiller from "../utils/PageLoaderFiller.vue";
+import PageLoaderFiller from "./common/PageLoaderFiller.vue";
 
 export default defineComponent({
     name: "PageRandom",

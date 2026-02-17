@@ -58,8 +58,8 @@
 <script setup lang="ts">
 import type { HomePageElement } from "@/api/api-home";
 import type { PropType } from "vue";
-import AlbumItemThumbnail from "./AlbumItemThumbnail.vue";
-import MediaItemThumbnail from "./MediaItemThumbnail.vue";
+import AlbumItemThumbnail from "@/components/utils/AlbumItemThumbnail.vue";
+import MediaItemThumbnail from "@/components/utils/MediaItemThumbnail.vue";
 
 const emit = defineEmits<{
     /**

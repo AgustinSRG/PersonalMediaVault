@@ -107,7 +107,7 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
-import PageMenu from "@/components/utils/PageMenu.vue";
+import PageMenu from "@/components/pages/common/PageMenu.vue";
 import { AuthController } from "@/control/auth";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -118,7 +118,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
 import { shuffleArray } from "@/utils/shuffle";
-import PageLoaderFiller from "../utils/PageLoaderFiller.vue";
+import PageLoaderFiller from "./common/PageLoaderFiller.vue";
 import AlbumItemThumbnail from "../utils/AlbumItemThumbnail.vue";
 
 export default defineComponent({

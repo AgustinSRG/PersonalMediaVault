@@ -264,7 +264,7 @@ import { isTouchDevice } from "@/utils/touch";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
-import HomePageItemThumbnail from "../utils/HomePageItemThumbnail.vue";
+import HomePageItemThumbnail from "./HomePageItemThumbnail.vue";
 import { AuthController } from "@/control/auth";
 import { apiSearch } from "@/api/api-search";
 import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
@@ -279,7 +279,7 @@ const HomePageRowAddElementModal = defineAsyncComponent({
 });
 
 const HomePageElementContextMenu = defineAsyncComponent({
-    loader: () => import("@/components/utils/HomePageElementContextMenu.vue"),
+    loader: () => import("@/components/pages/common/HomePageElementContextMenu.vue"),
 });
 
 const HomePageMoveElementModal = defineAsyncComponent({

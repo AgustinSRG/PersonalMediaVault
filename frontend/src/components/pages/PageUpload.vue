@@ -153,7 +153,7 @@ import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
-import DiskUsage from "../utils/DiskUsage.vue";
+import DiskUsage from "./common/DiskUsage.vue";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
 import {
     EVENT_NAME_UPLOAD_LIST_CLEAR,

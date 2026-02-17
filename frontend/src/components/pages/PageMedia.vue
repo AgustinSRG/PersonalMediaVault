@@ -72,7 +72,7 @@ import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
-import PageMenu from "@/components/utils/PageMenu.vue";
+import PageMenu from "@/components/pages/common/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -80,7 +80,7 @@ import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearch } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
-import PageLoaderFiller from "../utils/PageLoaderFiller.vue";
+import PageLoaderFiller from "./common/PageLoaderFiller.vue";
 
 export default defineComponent({
     name: "PageMedia",
