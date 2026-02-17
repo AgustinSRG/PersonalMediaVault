@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="main-layout"
         :class="{
             'light-theme': theme !== 'dark',
@@ -94,8 +95,8 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, defineAsyncComponent, nextTick } from "vue";
+<script setup lang="ts">
+import { defineAsyncComponent, nextTick, ref, useTemplateRef } from "vue";
 
 import TopBar from "./TopBar.vue";
 import BottomBar from "./BottomBar.vue";
@@ -120,6 +121,8 @@ import {
     EVENT_NAME_AUTH_ERROR,
     EVENT_NAME_APP_NEW_VERSION,
 } from "@/control/app-events";
+import { useI18n } from "@/composables/use-i18n";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -247,290 +250,335 @@ const AccountSecuritySettingsModal = defineAsyncComponent({
     delay: 1000,
 });
 
-export default defineComponent({
-    name: "MainLayout",
-    components: {
-        TopBar,
-        BottomBar,
-        SideBar,
-        PageContent,
-        AlbumContainer,
-        PlayerContainer,
-        LoadingOverlay,
-        LoginModal,
-        LogoutModal,
-        VaultSettingsDropdown,
-        AccountSettingsDropdown,
-        LanguageDropdown,
-        ThemeDropdown,
-        ChangeUsernameModal,
-        ChangePasswordModal,
-        AdvancedSettingsModal,
-        AccountsAdminModal,
-        TaskListModal,
-        ClearBrowserDataModal,
-        HelpHubDropdown,
-        AboutModal,
-        KeyboardGuideModal,
-        BatchOperationModal,
-        InviteModal,
-        AccountSecuritySettingsModal,
-        SnackBar,
-    },
-    data: function () {
-        return {
-            theme: getTheme(),
+// Ref to the container element
+const container = useTemplateRef("container");
 
-            locked: AuthController.Locked,
-            loadingAuth: AuthController.Loading,
-            loadingAuthError: false,
+// Translation function
+const { $t } = useI18n();
 
-            layout: AppStatus.CurrentLayout,
-            focus: AppStatus.CurrentFocus,
+// Current theme
+const theme = ref(getTheme());
 
-            displayLogout: false,
-            displayVaultSettings: false,
-            displayAccountSettings: false,
-            displayTheme: false,
-            displayLang: false,
-            displayUsernameModal: false,
-            displayPasswordModal: false,
-            displayAdvancedSettings: false,
-            displayBatchOperation: false,
-            displayInvite: false,
-            displaySecuritySettings: false,
+// Is vault locked?
+const locked = ref(AuthController.Locked);
 
-            displayAccountAdmin: false,
+// Is auth status being loaded?
+const loadingAuth = ref(AuthController.Loading);
 
-            displayTaskList: false,
+// Is there an error loading the auth status?
+const loadingAuthError = ref(false);
 
-            displayClearBrowserData: false,
+// Current layout
+const layout = ref(AppStatus.CurrentLayout);
 
-            displaySidebar: window.innerWidth >= 1000,
+// Current focus
+const focus = ref(AppStatus.CurrentFocus);
 
-            displayHelpModal: false,
+// Display the logout modal?
+const displayLogout = ref(false);
 
-            displayAboutModal: false,
-            displayKeyboardHelpModal: false,
+// Display the vault settings dropdown?
+const displayVaultSettings = ref(false);
 
-            newVersionAvailable: false,
-            newVersionDismissed: false,
+// Display the account settings dropdown?
+const displayAccountSettings = ref(false);
 
-            displayUpload: false,
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.onThemeChanged.bind(this));
+// Display the theme dropdown
+const displayTheme = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusUpdate.bind(this));
+// Display the language dropdown?
+const displayLang = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthStatusChanged.bind(this));
+// Display the modal to change username?
+const displayUsernameModal = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_LOADING, this.onAuthStatusLoading.bind(this));
+// Display modal to change password?
+const displayPasswordModal = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_ERROR, this.onAuthLoadingError.bind(this));
+// Display advanced settings modal?
+const displayAdvancedSettings = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_APP_NEW_VERSION, this.onNewAppVersion.bind(this));
-    },
-    methods: {
-        logout: function () {
-            this.displayLogout = true;
-        },
+// Display batch operation modal?
+const displayBatchOperation = ref(false);
 
-        showVaultSettings: function () {
-            this.displayVaultSettings = !this.displayVaultSettings;
-            this.displayAccountSettings = false;
-            this.displayHelpModal = false;
-            this.displayTheme = false;
-            this.displayLang = false;
-        },
+// Display the invite options modal?
+const displayInvite = ref(false);
 
-        showAccountSettings: function () {
-            this.displayAccountSettings = !this.displayAccountSettings;
-            this.displayVaultSettings = false;
-            this.displayHelpModal = false;
-            this.displayTheme = false;
-            this.displayLang = false;
-        },
+// Display security settings modal?
+const displaySecuritySettings = ref(false);
 
-        showHelp: function () {
-            this.displayHelpModal = !this.displayHelpModal;
-            this.displayVaultSettings = false;
-            this.displayAccountSettings = false;
-            this.displayTheme = false;
-            this.displayLang = false;
-        },
+// Display account admin modal?
+const displayAccountAdmin = ref(false);
 
-        onGoSettings: function (o: string) {
-            switch (o) {
-                case "theme":
-                    this.displayTheme = true;
-                    break;
-                case "lang":
-                    this.displayLang = true;
-                    break;
-                case "username":
-                    this.displayUsernameModal = true;
-                    break;
-                case "password":
-                    this.displayPasswordModal = true;
-                    break;
-                case "advanced":
-                    this.displayAdvancedSettings = true;
-                    break;
-                case "batch":
-                    this.displayBatchOperation = true;
-                    break;
-                case "tasks":
-                    this.displayTaskList = true;
-                    break;
-                case "clear-browser-data":
-                    this.displayClearBrowserData = true;
-                    break;
-                case "admin":
-                    this.displayAccountAdmin = true;
-                    break;
-                case "invite":
-                    this.displayInvite = true;
-                    break;
-                case "security":
-                    this.displaySecuritySettings = true;
-                    break;
-                case "logout":
-                    AuthController.Logout();
-                    break;
-            }
-        },
+// Display task list modal?
+const displayTaskList = ref(false);
 
-        onGoHelp: function (o: string) {
-            switch (o) {
-                case "about":
-                    this.displayAboutModal = true;
-                    break;
-                case "keyboard":
-                    this.displayKeyboardHelpModal = true;
-                    break;
-            }
-        },
+// Display clear browser data modal?
+const displayClearBrowserData = ref(false);
 
-        toggleSidebar: function () {
-            this.displaySidebar = !this.displaySidebar;
-            if (this.displaySidebar) {
-                nextTick(() => {
-                    const sideBar = this.$el.querySelector(".side-bar");
-                    if (sideBar) {
-                        sideBar.focus();
-                    }
-                });
-            }
-        },
+// Display sidebar?
+const displaySidebar = ref(window.innerWidth >= 1000);
 
-        openSideBar: function () {
-            this.displaySidebar = true;
-            nextTick(() => {
-                const sideBar = this.$el.querySelector(".side-bar");
-                if (sideBar) {
-                    sideBar.focus();
-                }
-            });
-        },
+// Display help modal?
+const displayHelpModal = ref(false);
 
-        hideSidebar: function () {
-            this.displaySidebar = false;
-        },
+// Display about modal?
+const displayAboutModal = ref(false);
 
-        skipToMainContent: function (event?: Event) {
-            if (event) {
-                event.preventDefault();
-            }
-            let skipTo = null;
-            switch (AppStatus.CurrentLayout) {
-                case "media":
-                case "media-split":
-                case "album":
-                    skipTo = this.$el.querySelector(".player-container");
-                    break;
-                default:
-                    skipTo = this.$el.querySelector(".page-content");
-                    if (skipTo && !isTouchDevice()) {
-                        const autoFocused = skipTo.querySelector(".auto-focus");
-                        if (autoFocused) {
-                            skipTo = autoFocused;
-                        }
-                    }
-            }
-            if (skipTo) {
-                skipTo.focus();
-            }
-        },
+// Display keyboard help modal?
+const displayKeyboardHelpModal = ref(false);
 
-        onThemeChanged: function (theme: ColorThemeName) {
-            this.theme = theme;
-        },
+// Display upload modal?
+const displayUpload = ref(false);
 
-        onAppStatusUpdate: function () {
-            this.layout = AppStatus.CurrentLayout;
-            this.focus = AppStatus.CurrentFocus;
-        },
+// Is a new version available?
+const newVersionAvailable = ref(false);
 
-        onAuthStatusChanged: function (locked: boolean) {
-            this.locked = locked;
-            this.loadingAuthError = false;
+// Has the user dismissed the warning of a new version
+const newVersionDismissed = ref(false);
 
-            if (this.locked) {
-                // Close all modals
-                this.displayLogout = false;
-                this.displayVaultSettings = false;
-                this.displayAccountSettings = false;
-                this.displayTheme = false;
-                this.displayLang = false;
-                this.displayUsernameModal = false;
-                this.displayPasswordModal = false;
-                this.displayAdvancedSettings = false;
-                this.displayBatchOperation = false;
-                this.displayInvite = false;
-                this.displaySecuritySettings = false;
-
-                this.displayAccountAdmin = false;
-            }
-        },
-
-        onAuthStatusLoading: function (l: boolean) {
-            this.loadingAuth = l;
-        },
-
-        onAuthLoadingError: function () {
-            this.loadingAuthError = true;
-        },
-
-        onNewAppVersion: function () {
-            this.newVersionAvailable = true;
-        },
-
-        dismissNewVersion: function () {
-            this.newVersionDismissed = true;
-        },
-
-        hardReload: function () {
-            try {
-                navigator.serviceWorker.getRegistrations().then((registrations) => {
-                    registrations.forEach((registration) => {
-                        registration.unregister();
-                    });
-
-                    caches.keys().then((allCaches) => {
-                        allCaches.forEach((cache) => {
-                            caches.delete(cache);
-                        });
-
-                        const loc: any = window.location;
-                        loc.reload(true);
-                    });
-                });
-            } catch (ex) {
-                console.error(ex);
-            }
-        },
-    },
+onApplicationEvent(EVENT_NAME_THEME_CHANGED, (t: ColorThemeName) => {
+    theme.value = t;
 });
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    layout.value = AppStatus.CurrentLayout;
+    focus.value = AppStatus.CurrentFocus;
+});
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (l: boolean) => {
+    locked.value = l;
+    loadingAuthError.value = false;
+
+    if (locked.value) {
+        // Close all modals
+        displayLogout.value = false;
+        displayVaultSettings.value = false;
+        displayAccountSettings.value = false;
+        displayTheme.value = false;
+        displayLang.value = false;
+        displayUsernameModal.value = false;
+        displayPasswordModal.value = false;
+        displayAdvancedSettings.value = false;
+        displayBatchOperation.value = false;
+        displayInvite.value = false;
+        displaySecuritySettings.value = false;
+
+        displayAccountAdmin.value = false;
+    }
+});
+
+onApplicationEvent(EVENT_NAME_AUTH_LOADING, (l: boolean) => {
+    loadingAuth.value = l;
+});
+
+onApplicationEvent(EVENT_NAME_AUTH_ERROR, () => {
+    loadingAuthError.value = true;
+});
+
+onApplicationEvent(EVENT_NAME_APP_NEW_VERSION, () => {
+    newVersionAvailable.value = true;
+});
+
+/**
+ * Opens logout modal
+ */
+const logout = () => {
+    displayLogout.value = true;
+};
+
+/**
+ * Opens vault settings dropdown
+ */
+const showVaultSettings = () => {
+    displayVaultSettings.value = !displayVaultSettings.value;
+    displayAccountSettings.value = false;
+    displayHelpModal.value = false;
+    displayTheme.value = false;
+    displayLang.value = false;
+};
+
+/**
+ * Opens account settings dropdown
+ */
+const showAccountSettings = () => {
+    displayAccountSettings.value = !displayAccountSettings.value;
+    displayVaultSettings.value = false;
+    displayHelpModal.value = false;
+    displayTheme.value = false;
+    displayLang.value = false;
+};
+
+/**
+ * Opens the help dropdown
+ */
+const showHelp = () => {
+    displayHelpModal.value = !displayHelpModal.value;
+    displayVaultSettings.value = false;
+    displayAccountSettings.value = false;
+    displayTheme.value = false;
+    displayLang.value = false;
+};
+
+/**
+ * Handler for events on the setting dropdowns.
+ * Opens the corresponding modal or performs the corresponding action.
+ * @param o Selected option
+ */
+const onGoSettings = (o: string) => {
+    switch (o) {
+        case "theme":
+            displayTheme.value = true;
+            break;
+        case "lang":
+            displayLang.value = true;
+            break;
+        case "username":
+            displayUsernameModal.value = true;
+            break;
+        case "password":
+            displayPasswordModal.value = true;
+            break;
+        case "advanced":
+            displayAdvancedSettings.value = true;
+            break;
+        case "batch":
+            displayBatchOperation.value = true;
+            break;
+        case "tasks":
+            displayTaskList.value = true;
+            break;
+        case "clear-browser-data":
+            displayClearBrowserData.value = true;
+            break;
+        case "admin":
+            displayAccountAdmin.value = true;
+            break;
+        case "invite":
+            displayInvite.value = true;
+            break;
+        case "security":
+            displaySecuritySettings.value = true;
+            break;
+        case "logout":
+            AuthController.Logout();
+            break;
+    }
+};
+
+/**
+ * Handler for events on the help dropdown.
+ * Opens the corresponding modal or performs the corresponding action.
+ * @param o Selected option
+ */
+const onGoHelp = (o: string) => {
+    switch (o) {
+        case "about":
+            displayAboutModal.value = true;
+            break;
+        case "keyboard":
+            displayKeyboardHelpModal.value = true;
+            break;
+    }
+};
+
+/**
+ * Focuses sidebar element
+ */
+const focusSidebar = () => {
+    nextTick(() => {
+        const sideBar = container.value?.querySelector(".side-bar") as HTMLElement;
+        if (sideBar) {
+            sideBar.focus();
+        }
+    });
+};
+
+/**
+ * Toggles sidebar visibility
+ */
+const toggleSidebar = () => {
+    displaySidebar.value = !displaySidebar.value;
+
+    if (displaySidebar.value) {
+        focusSidebar();
+    }
+};
+
+/**
+ * Opens the sidebar
+ */
+const openSideBar = () => {
+    displaySidebar.value = true;
+
+    focusSidebar();
+};
+
+/**
+ * Hides the sidebar
+ */
+const hideSidebar = () => {
+    displaySidebar.value = false;
+};
+
+/**
+ * Skips focus to main content
+ * @param event The click event
+ */
+const skipToMainContent = (event?: Event) => {
+    if (event) {
+        event.preventDefault();
+    }
+    let skipTo = null;
+    switch (AppStatus.CurrentLayout) {
+        case "media":
+        case "media-split":
+        case "album":
+            skipTo = container.value?.querySelector(".player-container");
+            break;
+        default:
+            skipTo = container.value?.querySelector(".page-content");
+            if (skipTo && !isTouchDevice()) {
+                const autoFocused = skipTo.querySelector(".auto-focus");
+                if (autoFocused) {
+                    skipTo = autoFocused;
+                }
+            }
+    }
+    if (skipTo) {
+        skipTo.focus();
+    }
+};
+
+/**
+ * Dismissed warning for new version
+ */
+const dismissNewVersion = () => {
+    newVersionDismissed.value = true;
+};
+
+/**
+ * Reloads the page clearing the cache,
+ * forcing to use the newest version.
+ */
+const hardReload = () => {
+    try {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => {
+                registration.unregister();
+            });
+
+            caches.keys().then((allCaches) => {
+                allCaches.forEach((cache) => {
+                    caches.delete(cache);
+                });
+
+                const loc: any = window.location;
+                loc.reload(true);
+            });
+        });
+    } catch (ex) {
+        console.error(ex);
+    }
+};
 </script>
