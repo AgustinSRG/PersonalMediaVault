@@ -10,13 +10,13 @@
             '--max-cell-size': maxItemSize + 'px',
             '--cell-padding': padding + 'px',
         }"
-        @keydown="onKeyPress"
+        @keydown="onKeyDown"
     >
         <div class="page-header">
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
+            <div class="page-title" :title="title"><i :class="icon"></i> {{ title }}</div>
             <button
                 v-if="(page === 'home' || page === 'media') && canWrite"
                 type="button"
@@ -45,7 +45,7 @@
                 <LoadingIcon icon="fas fa-check" :loading="savingHome"></LoadingIcon>
             </button>
             <button
-                v-if="page === 'random' || (hasOrderAlbums(page) && order === 'rand')"
+                v-if="page === 'random' || (pageHasOrderAlbums && order === 'rand')"
                 type="button"
                 :title="$t('Refresh')"
                 class="page-header-btn"
@@ -54,7 +54,7 @@
                 <i class="fas fa-sync-alt"></i>
             </button>
             <button
-                v-if="hasOrderDate(page) && order === 'desc'"
+                v-if="pageHasOrderDate && order === 'desc'"
                 type="button"
                 :title="$t('Show oldest')"
                 class="page-header-btn"
@@ -63,7 +63,7 @@
                 <i class="fas fa-arrow-up-short-wide"></i>
             </button>
             <button
-                v-if="hasOrderDate(page) && order !== 'desc'"
+                v-if="pageHasOrderDate && order !== 'desc'"
                 type="button"
                 :title="$t('Show most recent')"
                 class="page-header-btn"
@@ -72,7 +72,7 @@
                 <i class="fas fa-arrow-down-short-wide"></i>
             </button>
             <button
-                v-if="hasOrderAlbums(page) && order === 'desc'"
+                v-if="pageHasOrderAlbums && order === 'desc'"
                 type="button"
                 :title="$t('Order alphabetically')"
                 class="page-header-btn"
@@ -81,7 +81,7 @@
                 <i class="fas fa-arrow-down-a-z"></i>
             </button>
             <button
-                v-else-if="hasOrderAlbums(page) && order === 'asc'"
+                v-else-if="pageHasOrderAlbums && order === 'asc'"
                 type="button"
                 :title="$t('Random')"
                 class="page-header-btn"
@@ -90,7 +90,7 @@
                 <i class="fas fa-shuffle"></i>
             </button>
             <button
-                v-else-if="hasOrderAlbums(page)"
+                v-else-if="pageHasOrderAlbums"
                 type="button"
                 :title="$t('Order by last modified date')"
                 class="page-header-btn"
@@ -107,7 +107,7 @@
             >
                 <i class="fas fa-angles-up"></i>
             </button>
-            <button v-if="hasConfigOptions(page)" type="button" :title="$t('Page settings')" class="page-header-btn" @click="openConfig">
+            <button v-if="pageHasConfigOptions" type="button" :title="$t('Page settings')" class="page-header-btn" @click="openConfig">
                 <i class="fas fa-sliders"></i>
             </button>
             <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage">
@@ -180,25 +180,25 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     emitAppEvent,
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
     EVENT_NAME_APP_STATUS_CHANGED,
-    EVENT_NAME_AUTH_CHANGED,
-    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-
+import { computed, defineAsyncComponent, nextTick, ref, watch } from "vue";
 import { AuthController } from "@/control/auth";
-
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import { getPagePreferences } from "@/control/app-preferences";
 import { waitForHomePageSilentSaveActions } from "@/utils/home";
+import { usePagePreferences } from "@/composables/use-page-preferences";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -242,287 +242,281 @@ const PageSettingsDropdown = defineAsyncComponent({
     delay: 1000,
 });
 
-export default defineComponent({
-    name: "PageContent",
-    components: {
-        LoadingIcon,
-        PageHome,
-        PageMedia,
-        PageAlbums,
-        PageUpload,
-        PageRandom,
-        PageSearch,
-        PageSettingsDropdown,
-    },
-    props: {
-        min: Boolean,
-    },
-    setup: function () {
-        return {
-            resizeObserver: null as ResizeObserver,
-        };
-    },
-    data: function () {
-        const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
-        return {
-            canWrite: AuthController.CanWrite,
+// Translation function
+const { $t } = useI18n();
 
-            windowWidth: window.innerWidth,
-
-            isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
-            page: AppStatus.CurrentPage,
-            search: AppStatus.CurrentSearch,
-
-            pageN: 1,
-            order: "desc",
-            searchParams: AppStatus.SearchParams,
-
-            displayConfigModal: false,
-
-            pageSize: pagePreferences.pageSize,
-
-            rowSize: pagePreferences.rowSize,
-            rowSizeMin: pagePreferences.rowSizeMin,
-
-            minItemSize: pagePreferences.minItemSize,
-            maxItemSize: pagePreferences.maxItemSize,
-
-            padding: pagePreferences.padding,
-
-            displayTitles: pagePreferences.displayTitles,
-            roundedCorners: pagePreferences.roundedCorners,
-
-            pageScroll: 0,
-
-            homeEditMode: false,
-            savingHome: false,
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updatePage.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthChanged.bind(this));
-
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
-
-        this.updateSearchParams();
-
-        this.resizeObserver = new ResizeObserver(() => {
-            if (this.windowWidth !== window.innerWidth) {
-                this.updatePagePreferences();
-                this.windowWidth = window.innerWidth;
-            }
-        });
-
-        this.resizeObserver.observe(document.body);
-    },
-    beforeUnmount: function () {
-        if (this.resizeObserver) {
-            this.resizeObserver.disconnect();
-        }
-    },
-    methods: {
-        updatePage: function () {
-            if (this.page !== AppStatus.CurrentPage && AppStatus.CurrentPage === "home") {
-                this.homeEditMode = false;
-            }
-            this.page = AppStatus.CurrentPage;
-            this.search = AppStatus.CurrentSearch;
-            this.isDisplayed = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
-
-            this.searchParams = AppStatus.SearchParams;
-            this.updateSearchParams();
-            this.updatePagePreferences();
-        },
-
-        onAuthChanged: function () {
-            this.canWrite = AuthController.CanWrite;
-
-            if (!this.canWrite) {
-                this.homeEditMode = false;
-            }
-        },
-
-        expandPage: function () {
-            AppStatus.ExpandPage();
-        },
-
-        closePage: function () {
-            AppStatus.ClosePage();
-            const player: any = document.querySelector(".player-container");
-            if (player) {
-                player.focus();
-            }
-        },
-
-        hasConfigOptions: function (p: string): boolean {
-            switch (p) {
-                case "home":
-                case "media":
-                case "search":
-                case "albums":
-                case "random":
-                    return true;
-                default:
-                    return false;
-            }
-        },
-
-        hasOrderDate: function (p: string): boolean {
-            switch (p) {
-                case "media":
-                    return true;
-                default:
-                    return false;
-            }
-        },
-
-        hasOrderAlbums: function (p: string): boolean {
-            switch (p) {
-                case "albums":
-                    return true;
-                default:
-                    return false;
-            }
-        },
-
-        renderTitle: function (p: string, s: string): string {
-            switch (p) {
-                case "home":
-                    return this.$t("Home");
-                case "media":
-                    return this.$t("Media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
-                case "search":
-                    return this.$t("Find media");
-                case "upload":
-                    return this.$t("Upload media");
-                case "albums":
-                    return this.$t("Albums list");
-                case "random":
-                    return this.$t("Random media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
-                default:
-                    return "";
-            }
-        },
-
-        getIcon: function (p) {
-            switch (p) {
-                case "home":
-                    return "fas fa-home";
-                case "media":
-                    return "fas fa-photo-film";
-                case "search":
-                    return "fas fa-search";
-                case "upload":
-                    return "fas fa-upload";
-                case "albums":
-                    return "fas fa-list";
-                case "random":
-                    return "fas fa-shuffle";
-                default:
-                    return "";
-            }
-        },
-
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
-                return false;
-            }
-
-            if (event.key.toUpperCase() === "Q") {
-                this.closePage();
-                return true;
-            }
-
-            if (event.key.toUpperCase() === "BACKSPACE") {
-                this.expandPage();
-                return true;
-            }
-
-            return false;
-        },
-
-        updateSearchParams: function () {
-            const params = unPackSearchParams(this.searchParams);
-            this.pageN = params.page;
-            this.order = params.order;
-        },
-
-        onSearchParamsChanged: function () {
-            this.searchParams = packSearchParams(this.pageN, this.order);
-            AppStatus.ChangeSearchParams(this.searchParams);
-        },
-
-        triggerRefresh: function () {
-            emitAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH);
-            nextTick(() => {
-                const elementToFocus: any = document.querySelector(".page-content .search-results");
-                if (elementToFocus) {
-                    elementToFocus.focus();
-                }
-            });
-        },
-
-        homeStartEdit: function () {
-            this.homeEditMode = true;
-        },
-
-        homeFinishEdit: function () {
-            this.savingHome = true;
-
-            waitForHomePageSilentSaveActions(() => {
-                this.savingHome = false;
-                this.homeEditMode = false;
-            });
-        },
-
-        openConfig: function () {
-            this.displayConfigModal = !this.displayConfigModal;
-        },
-
-        toggleOrder: function () {
-            if (this.order === "desc") {
-                this.order = "asc";
-            } else if (this.order === "asc") {
-                this.order = this.hasOrderAlbums(this.page) ? "rand" : "desc";
-            } else {
-                this.order = "desc";
-            }
-            this.onSearchParamsChanged();
-        },
-
-        updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
-
-            this.pageSize = pagePreferences.pageSize;
-
-            this.rowSize = pagePreferences.rowSize;
-            this.rowSizeMin = pagePreferences.rowSizeMin;
-
-            this.minItemSize = pagePreferences.minItemSize;
-            this.maxItemSize = pagePreferences.maxItemSize;
-
-            this.padding = pagePreferences.padding;
-
-            this.displayTitles = pagePreferences.displayTitles;
-            this.roundedCorners = pagePreferences.roundedCorners;
-        },
-
-        goToTop: function () {
-            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
-        },
-
-        onKeyPress: function (e: KeyboardEvent) {
-            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                e.stopPropagation();
-            }
-        },
-
-        uploadMedia: function () {
-            AppStatus.GoToPageConditionalSplit("upload");
-        },
-    },
+// Props
+defineProps({
+    /**
+     * Minimized style
+     */
+    min: Boolean,
 });
+
+// True if the page container is being displayed
+const isDisplayed = ref((AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0);
+
+// Current page
+const page = ref(AppStatus.CurrentPage);
+
+// Current search
+const search = ref(AppStatus.CurrentSearch);
+
+// Current search params
+const searchParams = ref(AppStatus.SearchParams);
+
+// Current page number
+const pageN = ref(1);
+
+// Current page order
+const order = ref<"desc" | "asc" | "rand">("desc");
+
+/**
+ * Updates the search parameters
+ */
+const updateSearchParams = () => {
+    const params = unPackSearchParams(searchParams.value);
+    pageN.value = params.page;
+    order.value = params.order;
+};
+
+updateSearchParams();
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    if (page.value !== AppStatus.CurrentPage && AppStatus.CurrentPage === "home") {
+        homeEditMode.value = false;
+    }
+
+    page.value = AppStatus.CurrentPage;
+    search.value = AppStatus.CurrentSearch;
+    isDisplayed.value = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
+
+    searchParams.value = AppStatus.SearchParams;
+    updateSearchParams();
+});
+
+// Title of the page
+const title = computed<string>(() => {
+    switch (page.value) {
+        case "home":
+            return $t("Home");
+        case "media":
+            return $t("Media") + (search.value ? " (" + $t("Tag") + ": " + search.value + ")" : "");
+        case "search":
+            return $t("Find media");
+        case "upload":
+            return $t("Upload media");
+        case "albums":
+            return $t("Albums list");
+        case "random":
+            return $t("Random media") + (search.value ? " (" + $t("Tag") + ": " + search.value + ")" : "");
+        default:
+            return "";
+    }
+});
+
+const icon = computed(() => {
+    switch (page.value) {
+        case "home":
+            return "fas fa-home";
+        case "media":
+            return "fas fa-photo-film";
+        case "search":
+            return "fas fa-search";
+        case "upload":
+            return "fas fa-upload";
+        case "albums":
+            return "fas fa-list";
+        case "random":
+            return "fas fa-shuffle";
+        default:
+            return "";
+    }
+});
+
+// True if the page has config options, to display the button
+const pageHasConfigOptions = computed<boolean>(() => {
+    switch (page.value) {
+        case "home":
+        case "media":
+        case "search":
+        case "albums":
+        case "random":
+            return true;
+        default:
+            return false;
+    }
+});
+
+// True of the page can be order by date
+const pageHasOrderDate = computed<boolean>(() => {
+    switch (page.value) {
+        case "media":
+            return true;
+        default:
+            return false;
+    }
+});
+
+// True if the page has the ordering of albums
+const pageHasOrderAlbums = computed<boolean>(() => {
+    switch (page.value) {
+        case "albums":
+            return true;
+        default:
+            return false;
+    }
+});
+
+// Page preferences
+const { pageSize, rowSize, rowSizeMin, minItemSize, maxItemSize, padding, displayTitles, roundedCorners } = usePagePreferences(page, true);
+
+// Edit mode for home page
+const homeEditMode = ref(false);
+
+// True if home page is being saved
+const savingHome = ref(false);
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+watch(canWrite, () => {
+    if (!canWrite.value) {
+        homeEditMode.value = false;
+    }
+});
+
+/**
+ * Expands the page
+ */
+const expandPage = () => {
+    AppStatus.ExpandPage();
+};
+
+/**
+ * Closes the page and focus the player (if any)
+ */
+const closePage = () => {
+    AppStatus.ClosePage();
+    const player: any = document.querySelector(".player-container");
+    if (player) {
+        player.focus();
+    }
+};
+
+// Display the page configuration modal?
+const displayConfigModal = ref(false);
+
+/**
+ * Opens the page configuration modal
+ */
+const openConfig = () => {
+    displayConfigModal.value = !displayConfigModal.value;
+};
+
+/**
+ * Call this when making any changes to the search parameters,
+ * in order to update the application status
+ */
+const onSearchParamsChanged = () => {
+    searchParams.value = packSearchParams(pageN.value, order.value);
+    AppStatus.ChangeSearchParams(searchParams.value);
+};
+
+/**
+ * Toggles the page ordering direction
+ */
+const toggleOrder = () => {
+    if (order.value === "desc") {
+        order.value = "asc";
+    } else if (order.value === "asc") {
+        order.value = pageHasOrderAlbums.value ? "rand" : "desc";
+    } else {
+        order.value = "desc";
+    }
+
+    onSearchParamsChanged();
+};
+
+/**
+ * Triggers the refresh of the random results, changing the seed
+ */
+const triggerRefresh = () => {
+    emitAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH);
+
+    nextTick(() => {
+        const elementToFocus: any = document.querySelector(".page-content .search-results");
+        if (elementToFocus) {
+            elementToFocus.focus();
+        }
+    });
+};
+
+/**
+ * Starts editing the home page
+ */
+const homeStartEdit = () => {
+    homeEditMode.value = true;
+};
+
+/**
+ * Finish editing the home page
+ */
+const homeFinishEdit = () => {
+    savingHome.value = true;
+
+    waitForHomePageSilentSaveActions(() => {
+        savingHome.value = false;
+        homeEditMode.value = false;
+    });
+};
+
+/**
+ * Navigates to the upload page
+ */
+const uploadMedia = () => {
+    AppStatus.GoToPageConditionalSplit("upload");
+};
+
+// Current page scroll
+const pageScroll = ref(0);
+
+/**
+ * Goes to the top of the scrolled section of the page
+ */
+const goToTop = () => {
+    emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+};
+
+/**
+ * Event handler for 'keydown'
+ * @param e The keyboard event
+ */
+const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.stopPropagation();
+    }
+};
+
+// Priority for the global keyboard handler
+const KEYBOARD_HANDLER_PRIORITY = 10;
+
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+        return false;
+    }
+
+    if (event.key.toUpperCase() === "Q") {
+        closePage();
+        return true;
+    }
+
+    if (event.key.toUpperCase() === "BACKSPACE") {
+        expandPage();
+        return true;
+    }
+
+    return false;
+}, KEYBOARD_HANDLER_PRIORITY);
 </script>

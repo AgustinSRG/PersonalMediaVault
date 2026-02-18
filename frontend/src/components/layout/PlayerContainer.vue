@@ -1,5 +1,5 @@
 <template>
-    <div class="player-container" :class="{ 'using-touch-device': touchDevice }" tabindex="-1">
+    <div ref="container" class="player-container" :class="{ 'using-touch-device': touchDevice }" tabindex="-1">
         <EmptyPlayer
             v-if="!mediaData || mediaData.type === 0"
             v-model:fullscreen="fullScreen"
@@ -16,7 +16,6 @@
             :min="minPlayer"
             @go-next="goNext"
             @go-prev="goPrev"
-            @update:fullscreen="onUpdateFullScreen"
             @delete="openDelete"
         ></EmptyPlayer>
         <ImagePlayer
@@ -37,7 +36,6 @@
             :min="minPlayer"
             @go-next="goNext"
             @go-prev="goPrev"
-            @update:fullscreen="onUpdateFullScreen"
             @albums-open="openAlbums"
             @stats-open="openStats"
             @delete="openDelete"
@@ -63,7 +61,6 @@
             :auto-play="!(displayAlbumList || displaySizeStats || displayUpload)"
             @go-next="goNext"
             @go-prev="goPrev"
-            @update:fullscreen="onUpdateFullScreen"
             @albums-open="openAlbums"
             @stats-open="openStats"
             @force-loop="onForceLoop"
@@ -89,7 +86,6 @@
             :auto-play="!(displayAlbumList || displaySizeStats || displayUpload)"
             @go-next="goNext"
             @go-prev="goPrev"
-            @update:fullscreen="onUpdateFullScreen"
             @albums-open="openAlbums"
             @stats-open="openStats"
             @force-loop="onForceLoop"
@@ -104,10 +100,9 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     emitAppEvent,
-    EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_LOADING,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_GO_NEXT,
@@ -119,15 +114,16 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
 } from "@/control/app-events";
 import { MediaController } from "@/control/media";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
-import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 import { PagesController } from "@/control/pages";
 import { isTouchDevice } from "@/utils/touch";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -171,204 +167,233 @@ const MediaDeleteModal = defineAsyncComponent({
     delay: 1000,
 });
 
-export default defineComponent({
-    name: "PlayerContainer",
-    components: {
-        EmptyPlayer,
-        AudioPlayer,
-        VideoPlayer,
-        ImagePlayer,
-        AlbumListModal,
-        SizeStatsModal,
-        MediaDeleteModal,
-    },
-    props: {
-        displayUpload: Boolean,
-    },
-    setup() {
-        return {
-            focusTrap: null as FocusTrap,
-            timer: null as ReturnType<typeof setInterval> | null,
-        };
-    },
-    data: function () {
-        return {
-            tick: 0,
-            status: "loading",
-            loading: MediaController.Loading,
-            mid: MediaController.MediaId,
-            mediaData: MediaController.MediaData,
-
-            fullScreen: false,
-            showControls: true,
-
-            prev: AlbumsController.CurrentPrev,
-            next: AlbumsController.CurrentNext,
-            isInAlbum: AppStatus.CurrentAlbum >= 0,
-            albumLoading: AlbumsController.CurrentAlbumLoading,
-
-            canWrite: AuthController.CanWrite,
-
-            displayAlbumList: false,
-            displaySizeStats: false,
-            displayTagList: false,
-            displayDescription: false,
-            displayDelete: false,
-
-            hasPagePrev: PagesController.HasPagePrev,
-            hasPageNext: PagesController.HasPageNext,
-
-            minPlayer: false,
-            touchDevice: isTouchDevice(),
-
-            loopForced: false,
-            loopForcedValue: false,
-        };
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
-
-        this.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
-        this.checkPlayerSize();
-
-        this.updateStatus();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_LOADING, this.updateLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.updateAlbumsLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_GO_PREV, this.goPrev.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_GO_NEXT, this.goNext.bind(this));
-
-        nextTick(() => {
-            this.$el.focus();
-        });
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-        clearInterval(this.timer);
-    },
-    methods: {
-        updateMedia: function () {
-            this.displayDelete = false;
-            this.mid = MediaController.MediaId;
-            if (MediaController.MediaData !== this.mediaData) {
-                this.mediaData = MediaController.MediaData;
-                this.tick++;
-                if (this.mid) {
-                    this.$el.focus();
-                }
-            }
-            this.updateStatus();
-        },
-
-        updateLoading: function (l) {
-            this.loading = l;
-            this.updateStatus();
-        },
-
-        updateAlbumsLoading: function (l) {
-            this.albumLoading = l;
-        },
-
-        updateStatus: function () {
-            if (this.loading) {
-                this.status = "loading";
-            } else if (this.mediaData) {
-                this.status = "200";
-            } else if (this.mid === -1) {
-                this.status = "none";
-            } else {
-                this.status = "404";
-            }
-        },
-
-        openAlbums: function () {
-            this.displayAlbumList = true;
-        },
-
-        openStats: function () {
-            this.displaySizeStats = true;
-        },
-
-        openDelete: function () {
-            this.displayDelete = true;
-        },
-
-        goNext: function () {
-            if (this.next) {
-                AppStatus.ClickOnMedia(this.next.id, false);
-            } else if (this.hasPageNext) {
-                emitAppEvent(EVENT_NAME_PAGE_NAV_NEXT);
-            }
-        },
-
-        goPrev: function () {
-            if (this.prev) {
-                AppStatus.ClickOnMedia(this.prev.id, false);
-            } else if (this.hasPagePrev) {
-                emitAppEvent(EVENT_NAME_PAGE_NAV_PREV);
-            }
-        },
-
-        onAlbumPosUpdate: function () {
-            this.prev = AlbumsController.CurrentPrev;
-            this.next = AlbumsController.CurrentNext;
-            this.isInAlbum = AppStatus.CurrentAlbum >= 0;
-        },
-
-        onPagePosUpdate: function (prev: boolean, next: boolean) {
-            this.hasPagePrev = prev;
-            this.hasPageNext = next;
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        onUpdateFullScreen: function () {
-            if (this.fullScreen) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-
-        focusLost: function () {
-            closeFullscreen();
-            this.fullScreen = false;
-        },
-
-        checkPlayerSize() {
-            const rect = this.$el.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
-
-            if (width < 480 || height < 360) {
-                this.minPlayer = true;
-            } else {
-                this.minPlayer = false;
-            }
-
-            this.touchDevice = isTouchDevice();
-        },
-
-        onForceLoop: function (v: boolean) {
-            this.loopForced = true;
-            this.loopForcedValue = v;
-        },
-    },
+// Props
+defineProps({
+    /**
+     * Is the upload modal being displayed?
+     */
+    displayUpload: Boolean,
 });
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Show player controls?
+const showControls = ref(true);
+
+// Display album list modal?
+const displayAlbumList = ref(false);
+
+// Display the size stats modal?
+const displaySizeStats = ref(false);
+
+// Display the tag list widget?
+const displayTagList = ref(false);
+
+// Display the description widget?
+const displayDescription = ref(false);
+
+// Display the deletion modal?
+const displayDelete = ref(false);
+
+// Is loop forced by the user
+const loopForced = ref(false);
+
+// The value for loop the user forced
+const loopForcedValue = ref(false);
+
+// Tick to reload the
+const tick = ref(0);
+
+// Media loading status
+const loading = ref(MediaController.Loading);
+
+onApplicationEvent(EVENT_NAME_MEDIA_LOADING, (l) => {
+    loading.value = l;
+});
+
+// Current media ID
+const mid = ref(MediaController.MediaId);
+
+// Current media data
+const mediaData = ref(MediaController.MediaData);
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    displayDelete.value = false;
+
+    mid.value = MediaController.MediaId;
+    if (MediaController.MediaData !== mediaData.value) {
+        mediaData.value = MediaController.MediaData;
+
+        tick.value++;
+
+        if (mid.value >= 0) {
+            container.value.focus();
+        }
+    }
+});
+
+// Player statuses
+type PlayerStatus = "loading" | "200" | "none" | "404";
+
+// Current player status
+const status = computed<PlayerStatus>(() => {
+    if (loading.value) {
+        return "loading";
+    } else if (mediaData.value) {
+        return "200";
+    } else if (mid.value < 0) {
+        return "none";
+    } else {
+        return "404";
+    }
+});
+
+// Previous element in the album
+const prev = ref(AlbumsController.CurrentPrev);
+
+// Next element in the album
+const next = ref(AlbumsController.CurrentNext);
+
+// Is player coexisting with the album layout?
+const isInAlbum = ref(AppStatus.CurrentAlbum >= 0);
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, () => {
+    prev.value = AlbumsController.CurrentPrev;
+    next.value = AlbumsController.CurrentNext;
+    isInAlbum.value = AppStatus.CurrentAlbum >= 0;
+});
+
+// Is the current album being loaded?
+const albumLoading = ref(AlbumsController.CurrentAlbumLoading);
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
+    albumLoading.value = l;
+});
+
+// Does the media has a previous element within the current page?
+const hasPagePrev = ref(PagesController.HasPagePrev);
+
+// Does the media has a next element within the current page?
+const hasPageNext = ref(PagesController.HasPageNext);
+
+onApplicationEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, (pageHasPrev: boolean, pageHasNext: boolean) => {
+    hasPagePrev.value = pageHasPrev;
+    hasPageNext.value = pageHasNext;
+});
+
+// Is a touch device?
+const touchDevice = ref(false);
+
+// Is a miniature player?
+const minPlayer = ref(false);
+
+/**
+ * Checks the player size
+ */
+const checkPlayerSize = () => {
+    if (!container.value) {
+        return;
+    }
+
+    const rect = container.value.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    minPlayer.value = width < 480 || height < 360;
+
+    touchDevice.value = isTouchDevice();
+};
+
+// Resize observer to update the player size
+const resizeObserver = new ResizeObserver(checkPlayerSize);
+
+onMounted(() => {
+    if (container.value) {
+        resizeObserver.observe(container.value);
+    }
+});
+
+onBeforeUnmount(() => {
+    resizeObserver.disconnect();
+});
+
+// Is player in full screen
+const fullScreen = ref(false);
+
+/**
+ * Call when focus is lost
+ */
+const focusLost = () => {
+    closeFullscreen();
+
+    fullScreen.value = false;
+};
+
+// Focus trap for full screen
+useFocusTrap(container, fullScreen, focusLost, null, true);
+
+// Focus the player container on mounted
+onMounted(() => {
+    container.value?.focus();
+});
+
+/**
+ * Navigates to the previous media element
+ */
+const goPrev = () => {
+    if (prev.value) {
+        AppStatus.ClickOnMedia(prev.value.id, false);
+    } else if (hasPagePrev.value) {
+        emitAppEvent(EVENT_NAME_PAGE_NAV_PREV);
+    }
+};
+
+onApplicationEvent(EVENT_NAME_GO_PREV, goPrev);
+
+/**
+ * Navigates to the next media element
+ */
+const goNext = () => {
+    if (next.value) {
+        AppStatus.ClickOnMedia(next.value.id, false);
+    } else if (hasPageNext.value) {
+        emitAppEvent(EVENT_NAME_PAGE_NAV_NEXT);
+    }
+};
+
+onApplicationEvent(EVENT_NAME_GO_NEXT, goNext);
+
+/**
+ * Opens the album list modal
+ */
+const openAlbums = () => {
+    displayAlbumList.value = true;
+};
+
+/**
+ * Opens the size stats modal
+ */
+const openStats = () => {
+    displaySizeStats.value = true;
+};
+
+/**
+ * Opens the deletion modal
+ */
+const openDelete = () => {
+    displayDelete.value = true;
+};
+
+/**
+ * Forces the loop
+ * @param v The value of the loop setting chosen by the user
+ */
+const onForceLoop = (v: boolean) => {
+    loopForced.value = true;
+    loopForcedValue.value = v;
+};
 </script>

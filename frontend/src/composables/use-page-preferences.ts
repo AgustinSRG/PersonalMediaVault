@@ -5,7 +5,7 @@
 import { getPagePreferences } from "@/control/app-preferences";
 import type { AppStatusPage } from "@/control/app-status";
 import type { Ref } from "vue";
-import { ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import { onApplicationEvent } from "./on-app-event";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED } from "@/control/app-events";
 
@@ -57,9 +57,10 @@ export type PagePreferencesComposable = {
 /**
  * Gets the page preferences composable
  * @param page The page name
+ * @param updateOnWindowResize True to update the preferences when the window resizes
  * @returns The page preferences composable
  */
-export function usePagePreferences(page: AppStatusPage | Ref<AppStatusPage>): PagePreferencesComposable {
+export function usePagePreferences(page: AppStatusPage | Ref<AppStatusPage>, updateOnWindowResize?: boolean): PagePreferencesComposable {
     // Initial preferences
     const initialPagePreferences = getPagePreferences(typeof page === "string" ? page : page.value);
 
@@ -114,6 +115,23 @@ export function usePagePreferences(page: AppStatusPage | Ref<AppStatusPage>): Pa
 
     if (typeof page === "object") {
         watch(page, updatePreferences);
+    }
+
+    if (updateOnWindowResize) {
+        let windowWidth = window.innerWidth;
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (windowWidth !== window.innerWidth) {
+                updatePreferences();
+                windowWidth = window.innerWidth;
+            }
+        });
+
+        resizeObserver.observe(document.body);
+
+        onBeforeUnmount(() => {
+            resizeObserver.disconnect();
+        });
     }
 
     return {
