@@ -1,6 +1,6 @@
 <template>
-    <div class="page-inner scrollbar-stable" :class="{ hidden: !display }">
-        <div class="search-results auto-focus" tabindex="-1">
+    <div ref="container" class="page-inner scrollbar-stable">
+        <div ref="autoFocusElement" class="search-results auto-focus" tabindex="-1">
             <PageMenu
                 v-if="total > 0"
                 :page-name="'media'"
@@ -56,7 +56,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     emitAppEvent,
     EVENT_NAME_APP_STATUS_CHANGED,
@@ -71,387 +71,451 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import PageMenu from "@/components/pages/common/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearch } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
 import PageLoaderFiller from "./common/PageLoaderFiller.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
+import { useRequestId } from "@/composables/use-request-id";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 
-export default defineComponent({
-    name: "PageMedia",
-    components: {
-        PageMenu,
-        MediaItem,
-        PageLoaderFiller,
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// Props
+const props = defineProps({
+    /**
+     * Size of the page
+     */
+    pageSize: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
-        min: Boolean,
-        pageSize: Number,
-        displayTitles: Boolean,
 
-        rowSize: Number,
-        rowSizeMin: Number,
-        minItemsSize: Number,
-        maxItemsSize: Number,
+    /**
+     * True to display titles
+     */
+    displayTitles: Boolean,
+
+    /**
+     * Page is in miniature mode
+     */
+    min: Boolean,
+
+    /**
+     * Preferred row size
+     */
+    rowSize: {
+        type: Number,
+        required: true,
     },
-    setup() {
-        return {
-            loadRequestId: getUniqueStringId(),
-            windowResizeObserver: null as ResizeObserver,
-        };
+
+    /**
+     * Preferred row size for miniature mode
+     */
+    rowSizeMin: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            search: AppStatus.CurrentSearch,
 
-            loading: false,
-            firstLoaded: false,
-
-            order: "desc" as "asc" | "desc",
-            searchParams: AppStatus.SearchParams,
-
-            currentMedia: AppStatus.CurrentMedia,
-
-            page: 0,
-            total: 0,
-            totalPages: 0,
-            pageItems: [] as MediaListItem[],
-
-            loadingFiller: [] as number[],
-
-            switchMediaOnLoad: "",
-
-            windowWidth: 0,
-        };
+    /**
+     * Min size for items
+     */
+    minItemsSize: {
+        type: Number,
+        required: true,
     },
-    computed: {
-        lastRowPadding() {
-            const containerWidth = this.windowWidth;
 
-            const itemWidth = Math.max(
-                this.minItemsSize,
-                Math.min(
-                    this.maxItemsSize,
-                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
-                ),
-            );
-
-            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
-
-            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
-        },
+    /**
+     * Max size for items
+     */
+    maxItemsSize: {
+        type: Number,
+        required: true,
     },
-    watch: {
-        display: function () {
-            this.load();
-            this.switchMediaOnLoad = "";
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        pageSize: function () {
-            this.updatePageSize();
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
+});
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+// Loading status
+const loading = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+// True if it was loaded at least once
+const firstLoaded = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
+// Current media
+const currentMedia = ref(AppStatus.CurrentMedia);
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
+// Current search
+const search = ref(AppStatus.CurrentSearch);
 
-        this.updateSearchParams();
-        this.load();
+// Search parameters
+const searchParams = ref(AppStatus.SearchParams);
 
-        if (this.display) {
-            this.autoFocus();
-        }
+// Page order (type)
+type PageOrder = "asc" | "desc";
 
-        this.windowWidth = this.$el.getBoundingClientRect().width;
+// Page order
+const order = ref<PageOrder>("desc");
 
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-        this.windowResizeObserver.observe(this.$el);
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        PagesController.OnPageUnload();
-        this.windowResizeObserver.disconnect();
-    },
-    methods: {
-        scrollToTop: function () {
-            this.$el.scrollTop = 0;
-        },
+// Page number
+const page = ref(0);
 
-        autoFocus: function () {
-            nextTick(() => {
-                const el = this.$el.querySelector(".auto-focus");
-                if (el) {
-                    el.focus();
-                    if (el.select) {
-                        el.select();
-                    }
+/**
+ * Updates the search parameters (page, order)
+ */
+const updateSearchParams = () => {
+    const params = unPackSearchParams(searchParams.value);
+    page.value = params.page;
+    order.value = orderSimple(params.order);
+};
+
+updateSearchParams();
+
+/**
+ * Call when the search params are changed
+ * in order to update them in the application status
+ */
+const onSearchParamsChanged = () => {
+    searchParams.value = packSearchParams(page.value, order.value);
+    AppStatus.ChangeSearchParams(searchParams.value);
+};
+
+// Total number of items
+const total = ref(0);
+
+// Total number of pages
+const totalPages = ref(0);
+
+// Items displayed in the current page
+const pageItems = ref<MediaListItem[]>([]);
+
+// Action to perform when page loads
+const switchMediaOnLoad = ref<"" | "next" | "prev">("");
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to display the loader (milliseconds)
+const LOADER_DISPLAY_DELAY = 330;
+
+// Delay to retry loading (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    scrollToTop();
+
+    setNamedTimeout(loadRequestId, LOADER_DISPLAY_DELAY, () => {
+        loading.value = true;
+    });
+
+    if (AuthController.Locked) {
+        return; // Vault is locked
+    }
+
+    makeNamedApiRequest(loadRequestId, apiSearch(search.value || "", order.value, page.value, props.pageSize))
+        .onSuccess((result) => {
+            TagsController.OnMediaListReceived(result.page_items);
+
+            pageItems.value = result.page_items;
+            page.value = result.page_index;
+            totalPages.value = result.page_count;
+            total.value = result.total_count;
+
+            clearNamedTimeout(loadRequestId);
+
+            loading.value = false;
+
+            firstLoaded.value = true;
+
+            if (switchMediaOnLoad.value === "next") {
+                switchMediaOnLoad.value = "";
+
+                if (pageItems.value.length > 0) {
+                    goToMedia(pageItems.value[0].id);
                 }
-            });
-        },
+            } else if (switchMediaOnLoad.value === "prev") {
+                switchMediaOnLoad.value = "";
 
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
+                if (pageItems.value.length > 0) {
+                    goToMedia(pageItems.value[pageItems.value.length - 1].id);
+                }
+            }
 
-            if (!this.display) {
+            if (page.value < 0) {
+                page.value = 0;
+                load();
+                return;
+            } else if (page.value >= totalPages.value && totalPages.value > 0) {
+                page.value = totalPages.value - 1;
+                load();
                 return;
             }
 
-            this.scrollToTop();
-
-            setNamedTimeout(this.loadRequestId, 330, () => {
-                this.loading = true;
-            });
-
-            if (AuthController.Locked) {
-                return; // Vault is locked
-            }
-
-            makeNamedApiRequest(this.loadRequestId, apiSearch(this.search || "", this.order, this.page, this.pageSize))
-                .onSuccess((result) => {
-                    TagsController.OnMediaListReceived(result.page_items);
-                    this.pageItems = result.page_items;
-                    this.page = result.page_index;
-                    this.totalPages = result.page_count;
-                    this.total = result.total_count;
-                    clearNamedTimeout(this.loadRequestId);
-                    this.loading = false;
-                    this.firstLoaded = true;
-                    if (this.switchMediaOnLoad === "next") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[0].id);
-                        }
-                    } else if (this.switchMediaOnLoad === "prev") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                        }
-                    }
-                    if (this.page < 0) {
-                        this.page = 0;
-                        this.load();
-                        return;
-                    } else if (this.page >= this.totalPages && this.totalPages > 0) {
-                        this.page = this.totalPages - 1;
-                        this.load();
-                        return;
-                    }
-                    this.scrollToCurrentMedia();
-                    this.onCurrentMediaChanged();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        temporalError: () => {
-                            // Retry
-                            this.loading = true;
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
+            scrollToCurrentMedia();
+            onCurrentMediaChanged();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                temporalError: () => {
                     // Retry
-                    this.loading = true;
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        updatePageSize: function () {
-            this.updateLoadingFiller();
-            this.page = 0;
-            this.load();
-        },
-
-        onAppStatusChanged: function () {
-            const changed = this.currentMedia !== AppStatus.CurrentMedia;
-            this.currentMedia = AppStatus.CurrentMedia;
-
-            let mustLoad = false;
-
-            if (AppStatus.CurrentSearch !== this.search) {
-                this.search = AppStatus.CurrentSearch;
-                mustLoad = true;
-            }
-
-            if (AppStatus.SearchParams !== this.searchParams) {
-                this.searchParams = AppStatus.SearchParams;
-                this.updateSearchParams();
-                this.load();
-            }
-
-            if (mustLoad) {
-                this.load();
-            }
-
-            if (changed) {
-                this.scrollToCurrentMedia();
-            }
-
-            this.onCurrentMediaChanged();
-        },
-
-        scrollToCurrentMedia: function () {
-            nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
-                }
+                    loading.value = true;
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            loading.value = true;
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
 
-        onCurrentMediaChanged: function () {
-            const i = this.findCurrentMediaIndex();
-            PagesController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
-        },
+onMounted(load);
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
+onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
 
-        onSearchParamsChanged: function () {
-            this.searchParams = packSearchParams(this.page, this.order);
-            AppStatus.ChangeSearchParams(this.searchParams);
-        },
-
-        changePage: function (p) {
-            this.page = p;
-            this.onSearchParamsChanged();
-            this.load();
-        },
-
-        goToMedia: function (mid: number) {
-            AppStatus.ClickOnMedia(mid, true);
-        },
-
-        updateSearchParams: function () {
-            const params = unPackSearchParams(this.searchParams);
-            this.page = params.page;
-            this.order = orderSimple(params.order);
-            this.updateLoadingFiller();
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
-        },
-
-        clearSearch: function () {
-            AppStatus.ClearSearch();
-        },
-
-        goAdvancedSearch: function () {
-            AppStatus.GoToPage("search");
-        },
-
-        findCurrentMediaIndex: function (): number {
-            for (let i = 0; i < this.pageItems.length; i++) {
-                if (this.pageItems[i].id === this.currentMedia) {
-                    return i;
-                }
-            }
-            return -1;
-        },
-
-        nextMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i < this.pageItems.length - 1) {
-                this.goToMedia(this.pageItems[i + 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === this.pageItems.length - 1) {
-                if (this.page < this.totalPages - 1) {
-                    this.switchMediaOnLoad = "next";
-                    this.changePage(this.page + 1);
-                }
-            }
-        },
-
-        prevMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i > 0) {
-                this.goToMedia(this.pageItems[i - 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === 0) {
-                if (this.page > 0) {
-                    this.switchMediaOnLoad = "prev";
-                    this.changePage(this.page - 1);
-                }
-            }
-        },
-
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
-                return false;
-            }
-
-            if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
-                if (this.page > 0) {
-                    this.changePage(this.page - 1);
-                }
-                return true;
-            }
-
-            if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
-                if (this.page < this.totalPages - 1) {
-                    this.changePage(this.page + 1);
-                }
-                return true;
-            }
-
-            if (event.key === "Home") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[0].id);
-                }
-                return true;
-            }
-
-            if (event.key === "End") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                }
-                return true;
-            }
-
-            if (event.key === "ArrowLeft") {
-                this.prevMedia();
-                return true;
-            }
-
-            if (event.key === "ArrowRight") {
-                this.nextMedia();
-                return true;
-            }
-
-            return false;
-        },
-
-        updateWindowWidth: function () {
-            this.windowWidth = this.$el.getBoundingClientRect().width;
-        },
+// Reload when page size changes
+watch(
+    () => props.pageSize,
+    () => {
+        page.value = 0;
+        load();
     },
+);
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    const changed = currentMedia.value !== AppStatus.CurrentMedia;
+    currentMedia.value = AppStatus.CurrentMedia;
+
+    let mustLoad = false;
+
+    if (AppStatus.CurrentSearch !== search.value) {
+        search.value = AppStatus.CurrentSearch;
+        mustLoad = true;
+    }
+
+    if (AppStatus.SearchParams !== searchParams.value) {
+        searchParams.value = AppStatus.SearchParams;
+        updateSearchParams();
+        load();
+    }
+
+    if (mustLoad) {
+        load();
+    }
+
+    if (changed) {
+        scrollToCurrentMedia();
+    }
+
+    onCurrentMediaChanged();
 });
+
+/**
+ * Changes the page number
+ * @param p The page number
+ */
+const changePage = (p: number) => {
+    page.value = p;
+    onSearchParamsChanged();
+    load();
+};
+
+/**
+ * Navigates to a media element
+ * @param mid The ID of the media
+ */
+const goToMedia = (mid: number) => {
+    AppStatus.ClickOnMedia(mid, true);
+};
+
+/**
+ * Fins the index of the current media
+ * @returns The index, or -1 (if not found)
+ */
+const findCurrentMediaIndex = (): number => {
+    for (let i = 0; i < pageItems.value.length; i++) {
+        if (pageItems.value[i].id === currentMedia.value) {
+            return i;
+        }
+    }
+    return -1;
+};
+
+/**
+ * Navigates to the previous media
+ */
+const prevMedia = () => {
+    const i = findCurrentMediaIndex();
+    if (i !== -1 && i > 0) {
+        goToMedia(pageItems.value[i - 1].id);
+    } else if (i === -1 && pageItems.value.length > 0) {
+        goToMedia(pageItems.value[0].id);
+    } else if (i === 0) {
+        if (page.value > 0) {
+            switchMediaOnLoad.value = "prev";
+            changePage(page.value - 1);
+        }
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_PREV, prevMedia);
+
+/**
+ * Navigates to the next media
+ */
+const nextMedia = () => {
+    const i = findCurrentMediaIndex();
+    if (i !== -1 && i < pageItems.value.length - 1) {
+        goToMedia(pageItems.value[i + 1].id);
+    } else if (i === -1 && pageItems.value.length > 0) {
+        goToMedia(pageItems.value[0].id);
+    } else if (i === pageItems.value.length - 1) {
+        if (page.value < totalPages.value - 1) {
+            switchMediaOnLoad.value = "next";
+            changePage(page.value + 1);
+        }
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_NEXT, nextMedia);
+
+/**
+ * Call to update the current media position in the page context
+ */
+const onCurrentMediaChanged = () => {
+    const i = findCurrentMediaIndex();
+    PagesController.OnPageLoad(i, pageItems.value.length, page.value, totalPages.value);
+};
+
+// Make sure to unload the page context when the component unmounts
+onBeforeUnmount(() => {
+    PagesController.OnPageUnload();
+});
+
+/**
+ * Clears the search
+ */
+const clearSearch = () => {
+    AppStatus.ClearSearch();
+};
+
+/**
+ * Navigates to advanced search
+ */
+const goAdvancedSearch = () => {
+    AppStatus.GoToPage("search");
+};
+
+/**
+ * Scrolls the page to the top
+ */
+const scrollToTop = () => {
+    if (container.value) {
+        container.value.scrollTop = 0;
+    }
+};
+
+// Element to be auto-focused on load
+const autoFocusElement = useTemplateRef("autoFocusElement");
+
+/**
+ * Automatically focuses the appropriate element on load
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        autoFocusElement.value?.focus();
+    });
+};
+
+onMounted(autoFocus);
+
+/**
+ * Scrolls to the current media element
+ */
+const scrollToCurrentMedia = () => {
+    nextTick(() => {
+        const currentElem = container.value?.querySelector(".search-result-item.current") as HTMLElement;
+        if (currentElem) {
+            currentElem.scrollIntoView();
+        }
+    });
+};
+
+// Padding for the last row
+const lastRowPadding = usePageLastRowPadding(
+    props,
+    container,
+    computed(() => pageItems.value.length),
+);
+
+// Priority for the global keyboard handler
+const KEYBOARD_HANDLER_PRIORITY = 20;
+
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+        return false;
+    }
+
+    if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
+        if (page.value > 0) {
+            changePage(page.value - 1);
+        }
+        return true;
+    }
+
+    if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
+        if (page.value < totalPages.value - 1) {
+            changePage(page.value + 1);
+        }
+        return true;
+    }
+
+    if (event.key === "Home") {
+        if (pageItems.value.length > 0) {
+            goToMedia(pageItems.value[0].id);
+        }
+        return true;
+    }
+
+    if (event.key === "End") {
+        if (pageItems.value.length > 0) {
+            goToMedia(pageItems.value[pageItems.value.length - 1].id);
+        }
+        return true;
+    }
+
+    if (event.key === "ArrowLeft") {
+        prevMedia();
+        return true;
+    }
+
+    if (event.key === "ArrowRight") {
+        nextMedia();
+        return true;
+    }
+
+    return false;
+}, KEYBOARD_HANDLER_PRIORITY);
 </script>

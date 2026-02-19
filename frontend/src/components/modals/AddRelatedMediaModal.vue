@@ -22,7 +22,6 @@
             </div>
             <div class="modal-body no-padding">
                 <PageSearch
-                    :display="true"
                     :in-modal="true"
                     :min="false"
                     :no-album="-1"

@@ -1,6 +1,6 @@
 <template>
     <div
-        :class="{ 'page-inner': !inModal, 'scrollbar-stable': !inModal, 'page-in-modal': !!inModal, hidden: !display }"
+        :class="{ 'page-inner': !inModal, 'scrollbar-stable': !inModal, 'page-in-modal': !!inModal }"
         tabindex="-1"
         @scroll.passive="onPageScroll"
     >
@@ -261,7 +261,6 @@ export default defineComponent({
         TagIdList,
     },
     props: {
-        display: Boolean,
         min: Boolean,
         inModal: Boolean,
         removeMediaFromList: Object as PropType<Set<number>>,
@@ -370,16 +369,6 @@ export default defineComponent({
         },
     },
     watch: {
-        display: function () {
-            if (this.display && this.inModal) {
-                this.startSearch();
-            } else if (this.inModal) {
-                this.cancel();
-            }
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
         pageSize: function () {
             this.updatePageSize();
         },
@@ -445,9 +434,7 @@ export default defineComponent({
 
         this.startSearch();
 
-        if (this.display) {
-            this.autoFocus();
-        }
+        this.autoFocus();
 
         const container = this.getContainer();
 
@@ -572,7 +559,7 @@ export default defineComponent({
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
 
-            if (!this.display || this.finished) {
+            if (this.finished) {
                 return;
             }
 
@@ -640,7 +627,7 @@ export default defineComponent({
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
 
-            if (!this.display || this.finished) {
+            if (this.finished) {
                 return;
             }
 
@@ -697,7 +684,7 @@ export default defineComponent({
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
 
-            if (!this.display || this.finished) {
+            if (this.finished) {
                 return;
             }
 
@@ -776,7 +763,7 @@ export default defineComponent({
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
 
-            if (!this.display || this.finished) {
+            if (this.finished) {
                 return;
             }
 
@@ -843,7 +830,7 @@ export default defineComponent({
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
 
-            if (!this.display || this.finished) {
+            if (this.finished) {
                 return;
             }
 
@@ -1296,7 +1283,7 @@ export default defineComponent({
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
                 return false;
             }
 

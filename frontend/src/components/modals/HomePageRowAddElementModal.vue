@@ -44,7 +44,6 @@
                 </div>
                 <PageSearch
                     v-if="!isAlbums"
-                    :display="true"
                     :in-modal="true"
                     :min="false"
                     :no-album="-1"
@@ -59,7 +58,6 @@
                 ></PageSearch>
                 <PageAlbums
                     v-else
-                    :display="true"
                     :in-modal="true"
                     :min="false"
                     :page-size="pageSize"

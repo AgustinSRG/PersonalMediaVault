@@ -117,7 +117,6 @@
 
         <PageHome
             v-if="isDisplayed && page === 'home'"
-            :display="isDisplayed && page === 'home'"
             :min="min"
             :page-size="pageSize"
             :display-titles="displayTitles"
@@ -129,7 +128,6 @@
         ></PageHome>
         <PageMedia
             v-if="isDisplayed && page === 'media'"
-            :display="isDisplayed && page === 'media'"
             :min="min"
             :page-size="pageSize"
             :display-titles="displayTitles"
@@ -138,10 +136,9 @@
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
         ></PageMedia>
-        <PageUpload v-if="isDisplayed && page === 'upload'" :display="isDisplayed && page === 'upload'"></PageUpload>
+        <PageUpload v-if="isDisplayed && page === 'upload'"></PageUpload>
         <PageRandom
             v-if="isDisplayed && page === 'random'"
-            :display="isDisplayed && page === 'random'"
             :min="min"
             :page-size="pageSize"
             :display-titles="displayTitles"
@@ -153,7 +150,6 @@
         <PageSearch
             v-if="isDisplayed && page === 'search'"
             v-model:page-scroll="pageScroll"
-            :display="isDisplayed && page === 'search'"
             :min="min"
             :in-modal="false"
             :no-album="-1"
@@ -166,7 +162,6 @@
         ></PageSearch>
         <PageAlbums
             v-if="isDisplayed && page === 'albums'"
-            :display="isDisplayed && page === 'albums'"
             :min="min"
             :page-size="pageSize"
             :display-titles="displayTitles"

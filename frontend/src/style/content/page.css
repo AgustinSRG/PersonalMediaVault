@@ -72,10 +72,6 @@
     padding: 1rem;
 }
 
-.page-inner.hidden {
-    display: none;
-}
-
 .search-continue-mark {
     padding: 0.5rem;
 }

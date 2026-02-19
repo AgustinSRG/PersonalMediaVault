@@ -44,7 +44,6 @@
                 </div>
                 <PageSearch
                     v-if="!isUpload"
-                    :display="true"
                     :in-modal="true"
                     :min="false"
                     :no-album="aid"
@@ -56,7 +55,7 @@
                     :max-items-size="maxItemSize"
                     @select-media="selectMedia"
                 ></PageSearch>
-                <PageUpload v-if="isUpload" :display="true" :in-modal="true" :fixed-album="aid" @media-go="close"></PageUpload>
+                <PageUpload v-if="isUpload" :in-modal="true" :fixed-album="aid" @media-go="close"></PageUpload>
             </div>
 
             <div v-if="pageScroll > 0" class="modal-button-br-container">

@@ -1,14 +1,15 @@
 <template>
     <div
+        ref="container"
         class="page-inner scrollbar-stable"
-        :class="{ hidden: !display, 'page-editing': editing, 'is-min': min }"
+        :class="{ 'page-editing': editing, 'is-min': min }"
         :style="{
             '--moving-group-width': movingGroupData.width + 'px',
             '--moving-group-height': movingGroupData.height + 'px',
         }"
         @scroll.passive="onScroll"
     >
-        <div class="search-results auto-focus" tabindex="-1">
+        <div ref="autoFocusElement" class="search-results auto-focus" tabindex="-1">
             <LoadingOverlay v-if="loading"></LoadingOverlay>
 
             <div v-else-if="!loading && groups.length == 0 && firstLoaded" class="search-results-msg-display">
@@ -27,7 +28,7 @@
             </div>
 
             <div v-else>
-                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                <div v-if="editing && groups.length < MAX_GROUPS_COUNT" class="home-add-row-form">
                     <button type="button" class="btn btn-primary btn-mr" @click="showAddRowPrepend">
                         <i class="fas fa-plus"></i> {{ $t("Add new row") }}
                     </button>
@@ -44,7 +45,6 @@
                     :moving-over="movingGroup && movingGroupData.movingOver === i + 1"
                     :moving-self="movingGroup && movingGroupData.startPosition === i"
                     :current-media="currentMedia"
-                    :tag-version="tagVersion"
                     :is-current-group="currentGroup == g.id"
                     :load-tick="loadTick"
                     :is-mobile-size="isMobileSize"
@@ -73,12 +73,11 @@
                     :editing="editing"
                     :moving="true"
                     :current-media="currentMedia"
-                    :tag-version="tagVersion"
                     :moving-initial-elements="initialMovingElements"
                     :moving-initial-scroll="initialMovingScroll"
                 ></HomePageRow>
 
-                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                <div v-if="editing && groups.length < MAX_GROUPS_COUNT" class="home-add-row-form">
                     <button type="button" class="btn btn-primary btn-mr" @click="showAddRow">
                         <i class="fas fa-plus"></i> {{ $t("Add new row") }}
                     </button>
@@ -127,7 +126,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
@@ -138,22 +137,25 @@ import {
     EVENT_NAME_MEDIA_METADATA_CHANGE,
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
-    EVENT_NAME_TAGS_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
 import HomePageRow from "./common/HomePageRow.vue";
 import { doHomePageSilentSaveAction, getHomePageBackStatePage, HomePageGroupTypes, type HomePageGroupStartMovingData } from "@/utils/home";
 import { AppStatus } from "@/control/app-status";
-import { TagsController } from "@/control/tags";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useInterval } from "@/composables/use-interval";
+import { onDocumentEvent } from "@/composables/on-document-event";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -179,711 +181,841 @@ const HomePageDeleteRowModal = defineAsyncComponent({
     delay: 200,
 });
 
+// Props
+const props = defineProps({
+    /**
+     * Page is in miniature mode
+     */
+    min: Boolean,
+
+    /**
+     * Size of the page
+     */
+    pageSize: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * True to display titles
+     */
+    displayTitles: Boolean,
+
+    /**
+     * Preferred row size
+     */
+    rowSize: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * Preferred row size for miniature mode
+     */
+    rowSizeMin: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * Min size for items
+     */
+    minItemsSize: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * Max size for items
+     */
+    maxItemsSize: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * True if editing
+     */
+    editing: Boolean,
+});
+
+// Translation
+const { $t } = useI18n();
+
+// Max number of groups
+const MAX_GROUPS_COUNT = 1024;
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Loading status
+const loading = ref(false);
+
+// True if it was loaded at least once
+const firstLoaded = ref(false);
+
+// Load tick. When updated, the rows are reloaded.
+const loadTick = ref(0);
+
+// Home page groups
+const groups = ref<HomePageGroup[]>([]);
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to display the loader (milliseconds)
+const LOADER_DISPLAY_DELAY = 330;
+
+// Delay to retry loading (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    scrollToTop();
+
+    setNamedTimeout(loadRequestId, LOADER_DISPLAY_DELAY, () => {
+        loading.value = true;
+    });
+
+    if (AuthController.Locked) {
+        return; // Vault is locked
+    }
+
+    makeNamedApiRequest(loadRequestId, apiHomeGetGroups())
+        .onSuccess((newGroups) => {
+            clearNamedTimeout(loadRequestId);
+
+            loading.value = false;
+            firstLoaded.value = true;
+            loadTick.value++;
+
+            groups.value = newGroups;
+
+            scrollToCurrentRow();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                temporalError: () => {
+                    // Retry
+                    loading.value = true;
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            loading.value = true;
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+onMounted(load);
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
+onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
+onApplicationEvent(EVENT_NAME_ALBUMS_CHANGED, load);
+
+// Reload when page size changes
+watch(() => props.pageSize, load);
+
+// Reload when edit mode changes
+watch(
+    () => props.editing,
+    () => {
+        movingGroup.value = false;
+
+        storeCurrentScroll();
+
+        load();
+    },
+);
+
+// Current media
+const currentMedia = ref(AppStatus.CurrentMedia);
+
+// Current media group
+const currentGroup = ref(AppStatus.CurrentHomePageGroup);
+
+// Relative element to the current media
+const currentGroupNext = ref(-1);
+const currentGroupPrev = ref(-1);
+const currentGroupFirst = ref(-1);
+const currentGroupLast = ref(-1);
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    const changed = currentMedia.value !== AppStatus.CurrentMedia || currentGroup.value !== AppStatus.CurrentHomePageGroup;
+
+    currentMedia.value = AppStatus.CurrentMedia;
+    currentGroup.value = AppStatus.CurrentHomePageGroup;
+
+    if (changed) {
+        currentGroupPrev.value = -1;
+        currentGroupNext.value = -1;
+        currentGroupFirst.value = -1;
+        currentGroupLast.value = -1;
+        PagesController.OnHomeGroupLoad(false, false);
+
+        scrollToCurrentRow();
+    }
+});
+
+/**
+ * Updates the current media prev-next context
+ * @param newCurrentGroupPrev Previous media
+ * @param newCurrentGroupNext Next media
+ * @param newCurrentGroupFirst First media
+ * @param newCurrentGroupLast Last media
+ */
+const onPrevNextUpdated = (
+    newCurrentGroupPrev: number,
+    newCurrentGroupNext: number,
+    newCurrentGroupFirst: number,
+    newCurrentGroupLast: number,
+) => {
+    currentGroupPrev.value = newCurrentGroupPrev;
+    currentGroupNext.value = newCurrentGroupNext;
+    currentGroupFirst.value = newCurrentGroupFirst;
+    currentGroupLast.value = newCurrentGroupLast;
+
+    PagesController.OnHomeGroupLoad(currentGroupPrev.value >= 0, currentGroupNext.value >= 0);
+};
+
+// Make sure to unload the page context before unmounting
+onBeforeUnmount(() => {
+    PagesController.OnPageUnload();
+});
+
+/**
+ * Navigates to media element
+ * @param id Media ID
+ */
+const goToMedia = (id: number) => {
+    AppStatus.ClickOnMedia(id, true, currentGroup.value);
+};
+
+/**
+ * Navigates to previous media
+ */
+const prevMedia = () => {
+    if (currentGroupPrev.value >= 0) {
+        goToMedia(currentGroupPrev.value);
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_PREV, prevMedia);
+
+/**
+ * navigates to the next media
+ */
+const nextMedia = () => {
+    if (currentGroupNext.value >= 0) {
+        goToMedia(currentGroupNext.value);
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_NEXT, nextMedia);
+
+// Container width
+const windowWidth = ref(0);
+
+// Window width under is is considered mobile size
 const WINDOW_MOBILE_SIZE = 600;
 
-export default defineComponent({
-    name: "PageHome",
-    components: {
-        LoadingOverlay,
-        HomePageRow,
-        HomePageCreateRowModal,
-        HomePageRenameRowModal,
-        HomePageMoveRowModal,
-        HomePageDeleteRowModal,
-    },
-    props: {
-        display: Boolean,
-        min: Boolean,
-        pageSize: Number,
-        displayTitles: Boolean,
+// True if the window has a mobile size
+const isMobileSize = ref(document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE);
 
-        rowSize: Number,
-        rowSizeMin: Number,
-        minItemsSize: Number,
-        maxItemsSize: Number,
+// Actual row size
+const actualRowSize = ref(props.rowSize || 1);
 
-        editing: Boolean,
-    },
-    setup() {
-        return {
-            maxGroupsCount: 1024,
+/**
+ * Called when the window size changes
+ */
+const updateWindowWidth = () => {
+    if (!container.value) {
+        return;
+    }
 
-            loadRequestId: getUniqueStringId(),
-            windowResizeObserver: null as ResizeObserver,
+    windowWidth.value = container.value.getBoundingClientRect().width;
+    isMobileSize.value = document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE;
+    updateActualRowSize();
+    onScroll();
+};
 
-            dragCheckInterval: null as ReturnType<typeof setInterval> | null,
+/**
+ * Updated the actual size for the rows
+ */
+const updateActualRowSize = () => {
+    const preferRowSize = (props.min ? props.rowSizeMin : props.rowSize) || 1;
 
-            initialMovingElements: null as HomePageElement[] | null,
-            initialMovingScroll: 0,
+    let itemsWidth = windowWidth.value / preferRowSize;
 
-            scrollingToCurrent: false,
-        };
-    },
-    data: function () {
-        return {
-            groups: [] as HomePageGroup[],
+    itemsWidth = Math.min(itemsWidth, Math.min(windowWidth.value, props.maxItemsSize || 0));
 
-            loading: false,
-            firstLoaded: false,
+    itemsWidth = Math.max(1, Math.max(itemsWidth, props.minItemsSize || 0));
 
-            loadTick: 0,
+    actualRowSize.value = Math.ceil(windowWidth.value / itemsWidth);
 
-            windowWidth: 0,
+    if (currentMedia.value) {
+        scrollToCurrentRow();
+    }
+};
 
-            isMobileSize: document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE,
+watch(
+    [() => props.rowSize, () => props.rowSizeMin, () => props.minItemsSize, () => props.maxItemsSize, () => props.min],
+    updateActualRowSize,
+);
 
-            canWrite: AuthController.CanWrite,
+const windowResizeObserver = new ResizeObserver(updateWindowWidth);
 
-            actualRowSize: this.rowSize || 1,
+onMounted(() => {
+    if (container.value) {
+        windowResizeObserver.observe(container.value);
+    }
 
-            displayRowAdd: false,
-            displayRowAddPrepend: false,
-
-            selectedRow: -1,
-            selectedRowType: HomePageGroupTypes.Custom,
-            selectedRowName: "",
-            selectedRowPosition: 0,
-
-            displayRowRename: false,
-            displayRowMove: false,
-            displayRowDelete: false,
-
-            movingGroup: false,
-
-            mouseX: 0,
-            mouseY: 0,
-
-            movingGroupData: {
-                group: null as HomePageGroup,
-
-                startX: 0,
-                startY: 0,
-
-                offsetX: 0,
-                offsetY: 0,
-
-                width: 0,
-                height: 0,
-
-                x: 0,
-                y: 0,
-
-                startPosition: -1,
-                movingOver: -1,
-            },
-
-            currentMedia: AppStatus.CurrentMedia,
-            currentGroup: AppStatus.CurrentHomePageGroup,
-
-            tagVersion: TagsController.TagsVersion,
-
-            currentGroupNext: -1,
-            currentGroupPrev: -1,
-
-            currentGroupFirst: -1,
-            currentGroupLast: -1,
-
-            storedScroll: 0,
-            shouldRestoreStoreScroll: false,
-        };
-    },
-    watch: {
-        display: function () {
-            this.load();
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        editing: function () {
-            this.movingGroup = false;
-
-            this.storeCurrentScroll();
-
-            this.load();
-        },
-        pageSize: function () {
-            this.updatePageSize();
-        },
-        rowSize: function () {
-            this.updateActualRowSize();
-        },
-        rowSizeMin: function () {
-            this.updateActualRowSize();
-        },
-        minItemsSize: function () {
-            this.updateActualRowSize();
-        },
-        maxItemsSize: function () {
-            this.updateActualRowSize();
-        },
-        min: function () {
-            this.updateActualRowSize();
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
-            this.canWrite = AuthController.CanWrite;
-            this.load();
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.updateTagData();
-
-        this.load();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-
-        this.updateWindowWidth();
-
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-        this.windowResizeObserver.observe(this.$el);
-
-        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
-
-        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        PagesController.OnPageUnload();
-        this.windowResizeObserver.disconnect();
-        if (this.dragCheckInterval) {
-            clearInterval(this.dragCheckInterval);
-            this.dragCheckInterval = null;
-        }
-    },
-    methods: {
-        scrollToTop: function () {
-            let scroll = 0;
-
-            if (this.shouldRestoreStoreScroll) {
-                scroll = this.storedScroll * (this.$el.scrollHeight || 1);
-                this.shouldRestoreStoreScroll = false;
-            }
-
-            this.$el.scrollTop = scroll;
-        },
-
-        storeCurrentScroll: function () {
-            this.storedScroll = (this.$el.scrollTop || 0) / (this.$el.scrollHeight || 1);
-            this.shouldRestoreStoreScroll = true;
-        },
-
-        autoFocus: function () {
-            nextTick(() => {
-                const el = this.$el.querySelector(".auto-focus");
-                if (el) {
-                    el.focus();
-                    if (el.select) {
-                        el.select();
-                    }
-                }
-            });
-        },
-
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
-
-            if (!this.display) {
-                return;
-            }
-
-            this.scrollToTop();
-
-            setNamedTimeout(this.loadRequestId, 330, () => {
-                this.loading = true;
-            });
-
-            if (AuthController.Locked) {
-                return; // Vault is locked
-            }
-
-            makeNamedApiRequest(this.loadRequestId, apiHomeGetGroups())
-                .onSuccess((groups) => {
-                    clearNamedTimeout(this.loadRequestId);
-                    this.loading = false;
-                    this.firstLoaded = true;
-                    this.loadTick++;
-                    this.groups = groups;
-                    this.scrollToCurrentRow();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        temporalError: () => {
-                            // Retry
-                            this.loading = true;
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    this.loading = true;
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        updatePageSize: function () {
-            this.load();
-        },
-
-        updateWindowWidth: function () {
-            this.windowWidth = this.$el.getBoundingClientRect().width;
-            this.isMobileSize = document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE;
-            this.updateActualRowSize();
-            this.onScroll();
-        },
-
-        updateActualRowSize: function () {
-            const preferRowSize = (this.min ? this.rowSizeMin : this.rowSize) || 1;
-
-            let itemsWidth = this.windowWidth / preferRowSize;
-
-            itemsWidth = Math.min(itemsWidth, Math.min(this.windowWidth, this.maxItemsSize || 0));
-
-            itemsWidth = Math.max(1, Math.max(itemsWidth, this.minItemsSize || 0));
-
-            this.actualRowSize = Math.ceil(this.windowWidth / itemsWidth);
-
-            if (this.currentMedia) {
-                this.scrollToCurrentRow();
-            }
-        },
-
-        showAddRow: function () {
-            this.displayRowAdd = true;
-            this.displayRowAddPrepend = false;
-        },
-
-        showAddRowPrepend: function () {
-            this.displayRowAdd = true;
-            this.displayRowAddPrepend = true;
-        },
-
-        onRowAdded: function (row: HomePageGroup, prepend: boolean) {
-            if (prepend) {
-                this.groups.unshift(row);
-            } else {
-                this.groups.push(row);
-            }
-        },
-
-        showRenameRow: function (group: HomePageGroup) {
-            this.displayRowRename = true;
-            this.selectedRow = group.id;
-            this.selectedRowName = group.name;
-            this.selectedRowType = group.type;
-        },
-
-        onRowRenamed: function (id: number, newName: string) {
-            for (const g of this.groups) {
-                if (g.id === id) {
-                    g.name = newName;
-                    break;
-                }
-            }
-        },
-
-        showMoveRow: function (group: HomePageGroup) {
-            let startPosition = 0;
-            for (let i = 0; i < this.groups.length; i++) {
-                if (this.groups[i].id === group.id) {
-                    startPosition = i;
-                    break;
-                }
-            }
-
-            this.displayRowMove = true;
-            this.selectedRow = group.id;
-            this.selectedRowPosition = startPosition;
-            this.selectedRowName = group.name;
-            this.selectedRowType = group.type;
-        },
-
-        onRowMoved: function (id: number, position: number) {
-            position = Math.max(0, Math.min(position, this.groups.length));
-            for (let i = 0; i < this.groups.length; i++) {
-                if (this.groups[i].id === id) {
-                    this.groups.splice(position, 0, this.groups.splice(i, 1)[0]);
-                    return;
-                }
-            }
-        },
-
-        showDeleteRow: function (group: HomePageGroup) {
-            this.displayRowDelete = true;
-            this.selectedRow = group.id;
-            this.selectedRowName = group.name;
-            this.selectedRowType = group.type;
-        },
-
-        onRowDeleted: function (id: number) {
-            for (let i = 0; i < this.groups.length; i++) {
-                if (this.groups[i].id === id) {
-                    this.groups.splice(i, 1);
-                    return;
-                }
-            }
-        },
-
-        onStartMoving: function (group: HomePageGroup, moveData: HomePageGroupStartMovingData) {
-            let startPosition = -1;
-            for (let i = 0; i < this.groups.length; i++) {
-                if (this.groups[i].id === group.id) {
-                    startPosition = i;
-                    break;
-                }
-            }
-
-            this.mouseX = moveData.startX;
-            this.mouseY = moveData.startY;
-
-            this.movingGroup = true;
-            this.movingGroupData.group = group;
-            this.movingGroupData.startPosition = startPosition;
-
-            this.movingGroupData.startX = moveData.startX;
-            this.movingGroupData.startY = moveData.startY;
-
-            this.movingGroupData.offsetX = moveData.offsetX;
-            this.movingGroupData.offsetY = moveData.offsetY;
-
-            this.movingGroupData.width = moveData.width;
-            this.movingGroupData.height = moveData.height;
-
-            this.movingGroupData.x = moveData.startX - moveData.offsetX;
-            this.movingGroupData.y = moveData.startY - moveData.offsetY;
-
-            this.initialMovingElements = moveData.initialElements;
-            this.initialMovingScroll = moveData.initialScroll;
-
-            this.updateMovingOver();
-
-            if (this.dragCheckInterval) {
-                clearInterval(this.dragCheckInterval);
-                this.dragCheckInterval = null;
-            }
-            this.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
-        },
-
-        updateMovingOver: function () {
-            const topAddButtonForm = this.$el.querySelector(".home-add-row-form");
-            const container = this.$el;
-
-            if (!container || !topAddButtonForm) {
-                this.movingGroupData.movingOver = -1;
-                return;
-            }
-
-            const offsetTop = container.getBoundingClientRect().top + topAddButtonForm.getBoundingClientRect().height;
-            const scrollTop = container.scrollTop || 0;
-
-            const y = this.movingGroupData.y + Math.round(this.movingGroupData.height / 2);
-
-            const height = this.movingGroupData.height;
-            const expectedIndex = Math.round((y - offsetTop + scrollTop) / height);
-
-            this.movingGroupData.movingOver = Math.min(this.groups.length + 1, Math.max(1, 1 + expectedIndex));
-        },
-
-        onDragCheck: function () {
-            const con = this.$el;
-
-            if (!con) {
-                return;
-            }
-
-            const conBounds = con.getBoundingClientRect();
-
-            if (this.mouseX >= conBounds.left - this.movingGroupData.height) {
-                // Auto scroll
-
-                const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
-                const scrollStep = Math.floor(conBounds.height / 20);
-
-                if (relTop <= 0.1) {
-                    con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
-                } else if (relTop >= 0.9) {
-                    con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
-                }
-            }
-
-            this.updateMovingOver();
-        },
-
-        onDocumentMouseMove: function (event: MouseEvent) {
-            if (!this.movingGroup) {
-                return;
-            }
-
-            if (typeof event.pageX !== "number" || typeof event.pageY !== "number") {
-                return;
-            }
-
-            if (isNaN(event.pageX) || isNaN(event.pageY)) {
-                return;
-            }
-
-            this.mouseX = event.pageX;
-            this.mouseY = event.pageY;
-
-            this.movingGroupData.x = event.pageX - this.movingGroupData.offsetX;
-            this.movingGroupData.y = event.pageY - this.movingGroupData.offsetY;
-        },
-
-        onDocumentMouseUp: function (event: MouseEvent) {
-            if (!this.movingGroup) {
-                return;
-            }
-
-            if (this.dragCheckInterval) {
-                clearInterval(this.dragCheckInterval);
-                this.dragCheckInterval = null;
-            }
-
-            event.stopPropagation();
-
-            this.movingGroup = false;
-
-            if (!this.movingGroupData.group) {
-                return;
-            }
-
-            const groupId = this.movingGroupData.group.id;
-
-            let position =
-                this.movingGroupData.movingOver > this.movingGroupData.startPosition + 1
-                    ? this.movingGroupData.movingOver - 1
-                    : this.movingGroupData.movingOver;
-
-            position = Math.max(0, Math.min(this.groups.length, position - 1));
-
-            const startPosition = this.movingGroupData.startPosition;
-
-            if (startPosition === -1 || position === startPosition) {
-                return;
-            }
-
-            this.doSilentMove(groupId, position);
-            this.groups.splice(position, 0, this.groups.splice(startPosition, 1)[0]);
-        },
-
-        doSilentMove: function (rowId: number, position: number) {
-            doHomePageSilentSaveAction((callback) => {
-                makeApiRequest(apiHomeGroupMove(rowId, position))
-                    .onSuccess(() => {
-                        callback();
-                    })
-                    .onCancel(() => {
-                        callback();
-                    })
-                    .onRequestError((err, handleErr) => {
-                        callback();
-                        handleErr(err, {
-                            unauthorized: () => {
-                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            },
-                            accessDenied: () => {
-                                AuthController.CheckAuthStatus();
-                            },
-                            notFound: () => {
-                                this.load();
-                            },
-                            temporalError: () => {
-                                this.load();
-                            },
-                        });
-                    })
-                    .onUnexpectedError((err) => {
-                        callback();
-                        console.error(err);
-                        this.load();
-                    });
-            });
-        },
-
-        onAppStatusChanged: function () {
-            const changed = this.currentMedia !== AppStatus.CurrentMedia || this.currentGroup !== AppStatus.CurrentHomePageGroup;
-
-            this.currentMedia = AppStatus.CurrentMedia;
-            this.currentGroup = AppStatus.CurrentHomePageGroup;
-
-            if (changed) {
-                this.currentGroupPrev = -1;
-                this.currentGroupNext = -1;
-                this.currentGroupFirst = -1;
-                this.currentGroupLast = -1;
-                PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
-
-                this.scrollToCurrentRow();
-            }
-        },
-
-        scrollToCurrentRow: function () {
-            if (this.scrollingToCurrent) {
-                return;
-            }
-            this.scrollingToCurrent = true;
-
-            const backState = getHomePageBackStatePage();
-
-            if (backState !== null && this.currentGroup === -1) {
-                nextTick(() => {
-                    this.scrollingToCurrent = false;
-                    const currentElem = this.$el.querySelector(".home-page-row-" + backState);
-                    if (currentElem) {
-                        currentElem.scrollIntoView();
-                    }
-                });
-                return;
-            }
-
-            nextTick(() => {
-                this.scrollingToCurrent = false;
-                const currentElem = this.$el.querySelector(".home-page-row.current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
-                }
-            });
-        },
-
-        updateTagData: function () {
-            this.tagVersion = TagsController.TagsVersion;
-        },
-
-        onScroll: function () {
-            emitAppEvent(EVENT_NAME_HOME_SCROLL_CHANGED);
-        },
-
-        onPrevNextUpdated: function (
-            currentGroupPrev: number,
-            currentGroupNext: number,
-            currentGroupFirst: number,
-            currentGroupLast: number,
-        ) {
-            this.currentGroupPrev = currentGroupPrev;
-            this.currentGroupNext = currentGroupNext;
-            this.currentGroupFirst = currentGroupFirst;
-            this.currentGroupLast = currentGroupLast;
-
-            PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
-        },
-
-        goToMedia: function (id: number) {
-            AppStatus.ClickOnMedia(id, true, this.currentGroup);
-        },
-
-        nextMedia: function () {
-            if (this.currentGroupNext >= 0) {
-                this.goToMedia(this.currentGroupNext);
-            }
-        },
-
-        prevMedia: function () {
-            if (this.currentGroupPrev >= 0) {
-                this.goToMedia(this.currentGroupPrev);
-            }
-        },
-
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey || this.editing) {
-                return false;
-            }
-
-            if (event.shiftKey && event.key === "PageUp") {
-                const activeElement = document.activeElement as HTMLElement;
-
-                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.previousElementSibling) {
-                    const sibling = activeElement.previousElementSibling as HTMLElement;
-                    sibling.focus();
-                } else if (
-                    activeElement &&
-                    activeElement.parentElement &&
-                    activeElement.parentElement.parentElement &&
-                    activeElement.parentElement.parentElement.parentElement &&
-                    activeElement.parentElement.parentElement.parentElement.parentElement
-                ) {
-                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
-
-                    if (rowElement.classList.contains("home-page-row") && rowElement.previousElementSibling) {
-                        const sibling = rowElement.previousElementSibling as HTMLElement;
-                        sibling.focus();
-                    }
-                }
-
-                return true;
-            }
-
-            if (event.shiftKey && event.key === "PageDown") {
-                const activeElement = document.activeElement as HTMLElement;
-
-                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.nextElementSibling) {
-                    const sibling = activeElement.nextElementSibling as HTMLElement;
-                    sibling.focus();
-                } else if (
-                    activeElement &&
-                    activeElement.parentElement &&
-                    activeElement.parentElement.parentElement &&
-                    activeElement.parentElement.parentElement.parentElement &&
-                    activeElement.parentElement.parentElement.parentElement.parentElement
-                ) {
-                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
-
-                    if (rowElement.classList.contains("home-page-row") && rowElement.nextElementSibling) {
-                        const sibling = rowElement.nextElementSibling as HTMLElement;
-                        sibling.focus();
-                    }
-                }
-
-                return true;
-            }
-
-            if (event.key === "Home") {
-                if (this.currentGroupFirst > 0) {
-                    this.goToMedia(this.currentGroupFirst);
-                }
-                return true;
-            }
-
-            if (event.key === "End") {
-                if (this.currentGroupLast > 0) {
-                    this.goToMedia(this.currentGroupLast);
-                }
-                return true;
-            }
-
-            if (event.key === "PageUp" || event.key === "ArrowLeft") {
-                this.prevMedia();
-                return true;
-            }
-
-            if (event.key === "PageDown" || event.key === "ArrowRight") {
-                this.nextMedia();
-                return true;
-            }
-
-            return false;
-        },
-    },
+    updateWindowWidth();
 });
+
+onBeforeUnmount(() => {
+    windowResizeObserver.disconnect();
+});
+
+// Stored scroll in order to maintain it
+const storedScroll = ref(0);
+
+// Should scroll be restored?
+const shouldRestoreStoreScroll = ref(false);
+
+/**
+ * Scrolls the page to the top,
+ * or to the stored scroll level.
+ */
+const scrollToTop = () => {
+    let scroll = 0;
+
+    if (shouldRestoreStoreScroll.value) {
+        scroll = storedScroll.value * (container.value?.scrollHeight || 1);
+        shouldRestoreStoreScroll.value = false;
+    }
+
+    if (container.value) {
+        container.value.scrollTop = scroll;
+    }
+};
+
+/**
+ * Stores current scroll level
+ * in order to restore it later
+ */
+const storeCurrentScroll = () => {
+    storedScroll.value = (container.value?.scrollTop || 0) / (container.value?.scrollHeight || 1);
+    shouldRestoreStoreScroll.value = true;
+};
+
+// Scrolling to current row?
+let scrollingToCurrent = false;
+
+/**
+ * Scrolls page to current row
+ */
+const scrollToCurrentRow = () => {
+    if (scrollingToCurrent) {
+        return;
+    }
+    scrollingToCurrent = true;
+
+    const backState = getHomePageBackStatePage();
+
+    if (backState !== null && currentGroup.value === -1) {
+        nextTick(() => {
+            scrollingToCurrent = false;
+            const currentElem = container.value?.querySelector(".home-page-row-" + backState);
+            if (currentElem) {
+                currentElem.scrollIntoView();
+            }
+        });
+        return;
+    }
+
+    nextTick(() => {
+        scrollingToCurrent = false;
+        const currentElem = container.value?.querySelector(".home-page-row.current");
+        if (currentElem) {
+            currentElem.scrollIntoView();
+        }
+    });
+};
+
+/**
+ * Called whenever the page is scrolled
+ */
+const onScroll = () => {
+    emitAppEvent(EVENT_NAME_HOME_SCROLL_CHANGED);
+};
+
+// Element to be auto-focused on load
+const autoFocusElement = useTemplateRef("autoFocusElement");
+
+/**
+ * Automatically focuses the appropriate element on load
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        autoFocusElement.value?.focus();
+    });
+};
+
+onMounted(autoFocus);
+
+// Display modal to add a row
+const displayRowAdd = ref(false);
+
+// Should the added row be prepended?
+const displayRowAddPrepend = ref(false);
+
+/**
+ * Opens the modal to add a row
+ */
+const showAddRow = () => {
+    displayRowAdd.value = true;
+    displayRowAddPrepend.value = false;
+};
+
+/**
+ * Opens the modal to add a row (prepend mode)
+ */
+const showAddRowPrepend = () => {
+    displayRowAdd.value = true;
+    displayRowAddPrepend.value = true;
+};
+
+/**
+ * Called when a row is added
+ * @param row The row
+ * @param prepend Has been prepended?
+ */
+const onRowAdded = (row: HomePageGroup, prepend: boolean) => {
+    if (prepend) {
+        groups.value.unshift(row);
+    } else {
+        groups.value.push(row);
+    }
+};
+
+// Selected row
+const selectedRow = ref(-1);
+const selectedRowType = ref(HomePageGroupTypes.Custom);
+const selectedRowName = ref("");
+const selectedRowPosition = ref(0);
+
+// True to display the modal to rename a row
+const displayRowRename = ref(false);
+
+/**
+ * Opens the modal to rename a row
+ * @param group The row
+ */
+const showRenameRow = (group: HomePageGroup) => {
+    displayRowRename.value = true;
+    selectedRow.value = group.id;
+    selectedRowName.value = group.name;
+    selectedRowType.value = group.type;
+};
+
+/**
+ * Called when a row is renamed
+ * @param id The row ID
+ * @param newName The new name
+ */
+const onRowRenamed = (id: number, newName: string) => {
+    for (const g of groups.value) {
+        if (g.id === id) {
+            g.name = newName;
+            break;
+        }
+    }
+};
+
+// True to display the modal to move a row
+const displayRowMove = ref(false);
+
+/**
+ * Opens the modal to move a row
+ * @param group The row
+ */
+const showMoveRow = (group: HomePageGroup) => {
+    let startPosition = 0;
+    for (let i = 0; i < groups.value.length; i++) {
+        if (groups.value[i].id === group.id) {
+            startPosition = i;
+            break;
+        }
+    }
+
+    displayRowMove.value = true;
+    selectedRow.value = group.id;
+    selectedRowPosition.value = startPosition;
+    selectedRowName.value = group.name;
+    selectedRowType.value = group.type;
+};
+
+/**
+ * Called when row is moved
+ * @param id The row ID
+ * @param position The new position
+ */
+const onRowMoved = (id: number, position: number) => {
+    position = Math.max(0, Math.min(position, groups.value.length));
+    for (let i = 0; i < groups.value.length; i++) {
+        if (groups.value[i].id === id) {
+            groups.value.splice(position, 0, groups.value.splice(i, 1)[0]);
+            return;
+        }
+    }
+};
+
+// True to display the modal to delete a row
+const displayRowDelete = ref(false);
+
+/**
+ * Thens the modal to delete a row
+ * @param group The row
+ */
+const showDeleteRow = (group: HomePageGroup) => {
+    displayRowDelete.value = true;
+    selectedRow.value = group.id;
+    selectedRowName.value = group.name;
+    selectedRowType.value = group.type;
+};
+
+/**
+ * Called when a row is deleted
+ * @param id The row ID
+ */
+const onRowDeleted = (id: number) => {
+    for (let i = 0; i < groups.value.length; i++) {
+        if (groups.value[i].id === id) {
+            groups.value.splice(i, 1);
+            return;
+        }
+    }
+};
+
+// Interval to check the drag status
+const dragCheckInterval = useInterval();
+
+// Elements before movement
+let initialMovingElements: HomePageElement[] | null = null;
+
+// Scroll before row movement
+let initialMovingScroll = 0;
+
+// TRue if a group is being moved by dragging it
+const movingGroup = ref(false);
+
+// X position of the mouse while dragging
+const mouseX = ref(0);
+
+// Y position of the mouse while dragging
+const mouseY = ref(0);
+
+// Data to keep track of the move-by-drag process
+const movingGroupData = reactive({
+    group: null as HomePageGroup,
+
+    startX: 0,
+    startY: 0,
+
+    offsetX: 0,
+    offsetY: 0,
+
+    width: 0,
+    height: 0,
+
+    x: 0,
+    y: 0,
+
+    startPosition: -1,
+    movingOver: -1,
+});
+
+// Drag check delay (milliseconds)
+const DRAG_CHECK_DELAY = 40;
+
+/**
+ * Call to start moving a group
+ * @param group The group
+ * @param moveData The initial move data
+ */
+const onStartMoving = (group: HomePageGroup, moveData: HomePageGroupStartMovingData) => {
+    let startPosition = -1;
+    for (let i = 0; i < groups.value.length; i++) {
+        if (groups.value[i].id === group.id) {
+            startPosition = i;
+            break;
+        }
+    }
+
+    mouseX.value = moveData.startX;
+    mouseY.value = moveData.startY;
+
+    movingGroup.value = true;
+    movingGroupData.group = group;
+    movingGroupData.startPosition = startPosition;
+
+    movingGroupData.startX = moveData.startX;
+    movingGroupData.startY = moveData.startY;
+
+    movingGroupData.offsetX = moveData.offsetX;
+    movingGroupData.offsetY = moveData.offsetY;
+
+    movingGroupData.width = moveData.width;
+    movingGroupData.height = moveData.height;
+
+    movingGroupData.x = moveData.startX - moveData.offsetX;
+    movingGroupData.y = moveData.startY - moveData.offsetY;
+
+    initialMovingElements = moveData.initialElements;
+    initialMovingScroll = moveData.initialScroll;
+
+    updateMovingOver();
+
+    dragCheckInterval.set(onDragCheck, DRAG_CHECK_DELAY);
+};
+
+/**
+ * Updates the element being moved over
+ */
+const updateMovingOver = () => {
+    const topAddButtonForm = container.value?.querySelector(".home-add-row-form");
+    const containerEl = container.value;
+
+    if (!containerEl || !topAddButtonForm) {
+        movingGroupData.movingOver = -1;
+        return;
+    }
+
+    const offsetTop = containerEl.getBoundingClientRect().top + topAddButtonForm.getBoundingClientRect().height;
+    const scrollTop = containerEl.scrollTop || 0;
+
+    const y = movingGroupData.y + Math.round(movingGroupData.height / 2);
+
+    const height = movingGroupData.height;
+    const expectedIndex = Math.round((y - offsetTop + scrollTop) / height);
+
+    movingGroupData.movingOver = Math.min(groups.value.length + 1, Math.max(1, 1 + expectedIndex));
+};
+
+/**
+ * Checks the dragging status
+ */
+const onDragCheck = () => {
+    const con = container.value;
+
+    if (!con) {
+        return;
+    }
+
+    const conBounds = con.getBoundingClientRect();
+
+    if (mouseX.value >= conBounds.left - movingGroupData.height) {
+        // Auto scroll
+
+        const relTop = (mouseY.value - conBounds.top) / (conBounds.height || 1);
+        const scrollStep = Math.floor(conBounds.height / 20);
+
+        if (relTop <= 0.1) {
+            con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+        } else if (relTop >= 0.9) {
+            con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+        }
+    }
+
+    updateMovingOver();
+};
+
+// Listener for 'mousemove'
+onDocumentEvent("mousemove", (event: MouseEvent) => {
+    if (!movingGroup.value) {
+        return;
+    }
+
+    if (typeof event.pageX !== "number" || typeof event.pageY !== "number") {
+        return;
+    }
+
+    if (isNaN(event.pageX) || isNaN(event.pageY)) {
+        return;
+    }
+
+    mouseX.value = event.pageX;
+    mouseY.value = event.pageY;
+
+    movingGroupData.x = event.pageX - movingGroupData.offsetX;
+    movingGroupData.y = event.pageY - movingGroupData.offsetY;
+});
+
+// Listener for 'mouseup'
+onDocumentEvent("mouseup", (event: MouseEvent) => {
+    if (!movingGroup.value) {
+        return;
+    }
+
+    dragCheckInterval.clear();
+
+    event.stopPropagation();
+
+    movingGroup.value = false;
+
+    if (!movingGroupData.group) {
+        return;
+    }
+
+    const groupId = movingGroupData.group.id;
+
+    let position =
+        movingGroupData.movingOver > movingGroupData.startPosition + 1 ? movingGroupData.movingOver - 1 : movingGroupData.movingOver;
+
+    position = Math.max(0, Math.min(groups.value.length, position - 1));
+
+    const startPosition = movingGroupData.startPosition;
+
+    if (startPosition === -1 || position === startPosition) {
+        return;
+    }
+
+    doSilentMove(groupId, position);
+    groups.value.splice(position, 0, groups.value.splice(startPosition, 1)[0]);
+});
+
+/**
+ * Silently moves the row by calling the API
+ * @param rowId The row ID
+ * @param position The new row position
+ */
+const doSilentMove = (rowId: number, position: number) => {
+    doHomePageSilentSaveAction((callback) => {
+        makeApiRequest(apiHomeGroupMove(rowId, position))
+            .onSuccess(() => {
+                callback();
+            })
+            .onCancel(() => {
+                callback();
+            })
+            .onRequestError((err, handleErr) => {
+                callback();
+                handleErr(err, {
+                    unauthorized: () => {
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                    },
+                    accessDenied: () => {
+                        AuthController.CheckAuthStatus();
+                    },
+                    notFound: () => {
+                        load();
+                    },
+                    temporalError: () => {
+                        load();
+                    },
+                });
+            })
+            .onUnexpectedError((err) => {
+                callback();
+                console.error(err);
+                load();
+            });
+    });
+};
+
+// Priority for the global keyboard handler
+const KEYBOARD_HANDLER_PRIORITY = 20;
+
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey || props.editing) {
+        return false;
+    }
+
+    if (event.shiftKey && event.key === "PageUp") {
+        const activeElement = document.activeElement as HTMLElement;
+
+        if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.previousElementSibling) {
+            const sibling = activeElement.previousElementSibling as HTMLElement;
+            sibling.focus();
+        } else if (
+            activeElement &&
+            activeElement.parentElement &&
+            activeElement.parentElement.parentElement &&
+            activeElement.parentElement.parentElement.parentElement &&
+            activeElement.parentElement.parentElement.parentElement.parentElement
+        ) {
+            const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+            if (rowElement.classList.contains("home-page-row") && rowElement.previousElementSibling) {
+                const sibling = rowElement.previousElementSibling as HTMLElement;
+                sibling.focus();
+            }
+        }
+
+        return true;
+    }
+
+    if (event.shiftKey && event.key === "PageDown") {
+        const activeElement = document.activeElement as HTMLElement;
+
+        if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.nextElementSibling) {
+            const sibling = activeElement.nextElementSibling as HTMLElement;
+            sibling.focus();
+        } else if (
+            activeElement &&
+            activeElement.parentElement &&
+            activeElement.parentElement.parentElement &&
+            activeElement.parentElement.parentElement.parentElement &&
+            activeElement.parentElement.parentElement.parentElement.parentElement
+        ) {
+            const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+            if (rowElement.classList.contains("home-page-row") && rowElement.nextElementSibling) {
+                const sibling = rowElement.nextElementSibling as HTMLElement;
+                sibling.focus();
+            }
+        }
+
+        return true;
+    }
+
+    if (event.key === "Home") {
+        if (currentGroupFirst.value > 0) {
+            goToMedia(currentGroupFirst.value);
+        }
+        return true;
+    }
+
+    if (event.key === "End") {
+        if (currentGroupLast.value > 0) {
+            goToMedia(currentGroupLast.value);
+        }
+        return true;
+    }
+
+    if (event.key === "PageUp" || event.key === "ArrowLeft") {
+        prevMedia();
+        return true;
+    }
+
+    if (event.key === "PageDown" || event.key === "ArrowRight") {
+        nextMedia();
+        return true;
+    }
+
+    return false;
+}, KEYBOARD_HANDLER_PRIORITY);
 </script>

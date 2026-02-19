@@ -1,9 +1,9 @@
 <template>
-    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display, 'scrollbar-stable': !inModal }" @drop="onDrop">
+    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, 'scrollbar-stable': !inModal }" @drop="onDrop">
         <div class="upload-option-container">
             <div class="upload-option-label">{{ $t("Max number of uploads in parallel") }}:</div>
             <button
-                v-for="v in parallelOptions"
+                v-for="v in MAX_PARALLEL_UPLOADS_OPTIONS"
                 :key="v"
                 type="button"
                 class="page-option"
@@ -13,8 +13,9 @@
                 {{ v }}
             </button>
         </div>
-        <input type="file" class="file-hidden" name="media-upload" multiple @change="inputFileChanged" />
+        <input ref="hiddenFileInput" type="file" class="file-hidden" name="media-upload" multiple @change="inputFileChanged" />
         <div
+            ref="autoFocusElement"
             class="upload-box auto-focus"
             :class="{ dragging: dragging }"
             tabindex="0"
@@ -138,19 +139,19 @@
             v-model:display="displayUploadModal"
             :in-modal="inModal"
             :fixed-album="fixedAlbum"
-            :files="files"
+            :files="filesToUpload"
             @upload="onUploadConfirmed"
         >
         </UploadModal>
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AppStatus } from "@/control/app-status";
 import type { UploadEntryMin } from "@/control/upload";
 import { UploadController } from "@/control/upload";
 import { getFrontendUrl } from "@/utils/api";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
 import DiskUsage from "./common/DiskUsage.vue";
@@ -164,6 +165,8 @@ import {
     EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
     EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
 } from "@/control/app-events";
+import { useI18n } from "@/composables/use-i18n";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
@@ -171,6 +174,11 @@ const UploadModal = defineAsyncComponent({
     delay: 1000,
 });
 
+/**
+ * Removes upload entry from upload entry list
+ * @param list Upload entry list
+ * @param e Element to remove
+ */
 function removeEntryFromList(list: UploadEntryMin[], e: UploadEntryMin) {
     for (let i = 0; i < list.length; i++) {
         if (list[i].id === e.id) {
@@ -180,326 +188,434 @@ function removeEntryFromList(list: UploadEntryMin[], e: UploadEntryMin) {
     }
 }
 
-export default defineComponent({
-    name: "PageUpload",
-    components: {
-        UploadModal,
-        DiskUsage,
-    },
-    props: {
-        display: Boolean,
-        inModal: Boolean,
-        fixedAlbum: Number,
-    },
-    emits: ["media-go"],
-    data: function () {
-        return {
-            dragging: false,
+// Translation
+const { $t } = useI18n();
 
-            entriesPending: [] as UploadEntryMin[],
-            entriesReady: [] as UploadEntryMin[],
-            entriesError: [] as UploadEntryMin[],
+// Props
+defineProps({
+    /**
+     * Page is being displayed in a modal
+     */
+    inModal: Boolean,
 
-            maxParallelUploads: UploadController.GetMaxParallelUploads(),
-
-            selectedState: "pending" as "pending" | "ready" | "error",
-
-            filteredEntries: [] as UploadEntryMin[],
-
-            displayUploadModal: false,
-            files: [] as File[],
-
-            parallelOptions: [1, 2, 4, 8, 16, 32, 64],
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-    },
-    mounted: function () {
-        this.refreshUploadList();
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_CLEAR, () => {
-            this.refreshUploadList();
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, (e: UploadEntryMin) => {
-            this.entriesPending.push(e);
-            if (this.selectedState === "pending") {
-                this.filteredEntries.push(e);
-            }
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, (e: UploadEntryMin) => {
-            const entry = this.entriesPending.find((p) => p.id === e.id);
-
-            if (entry) {
-                entry.status = e.status;
-                entry.progress = e.progress;
-                entry.mid = e.mid;
-            }
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (e: UploadEntryMin) => {
-            removeEntryFromList(this.entriesPending, e);
-
-            this.entriesReady.push(e);
-
-            if (this.selectedState === "pending") {
-                removeEntryFromList(this.filteredEntries, e);
-            } else if (this.selectedState === "ready") {
-                this.filteredEntries.unshift(e);
-            }
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (e: UploadEntryMin) => {
-            removeEntryFromList(this.entriesPending, e);
-
-            this.entriesError.push(e);
-
-            if (this.selectedState === "pending") {
-                removeEntryFromList(this.filteredEntries, e);
-            } else if (this.selectedState === "error") {
-                this.filteredEntries.unshift(e);
-            }
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, (e: UploadEntryMin) => {
-            removeEntryFromList(this.entriesError, e);
-
-            this.entriesError.push(e);
-
-            if (this.selectedState === "error") {
-                removeEntryFromList(this.filteredEntries, e);
-            } else if (this.selectedState === "pending") {
-                this.filteredEntries.push(e);
-            }
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, (e: UploadEntryMin) => {
-            switch (e.status) {
-                case "ready":
-                    removeEntryFromList(this.entriesReady, e);
-                    if (this.selectedState === "ready") {
-                        removeEntryFromList(this.filteredEntries, e);
-                    }
-                    break;
-                case "error":
-                    removeEntryFromList(this.entriesError, e);
-                    if (this.selectedState === "error") {
-                        removeEntryFromList(this.filteredEntries, e);
-                    }
-                    break;
-                default:
-                    removeEntryFromList(this.entriesPending, e);
-                    if (this.selectedState === "pending") {
-                        removeEntryFromList(this.filteredEntries, e);
-                    }
-            }
-        });
-
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    methods: {
-        clickToSelect: function () {
-            const fileElem = this.$el.querySelector(".file-hidden");
-            if (fileElem) {
-                fileElem.value = null;
-                fileElem.click();
-            }
-        },
-
-        autoFocus: function () {
-            nextTick(() => {
-                const el = this.$el.querySelector(".auto-focus");
-                if (el) {
-                    el.focus();
-                    if (el.select) {
-                        el.select();
-                    }
-                }
-            });
-        },
-
-        updateSelectedState: function (s: "pending" | "ready" | "error") {
-            this.selectedState = s;
-            this.updateFilteredEntries();
-        },
-
-        updateFilteredEntries: function () {
-            switch (this.selectedState) {
-                case "ready":
-                    this.filteredEntries = this.entriesReady.slice();
-                    break;
-                case "error":
-                    this.filteredEntries = this.entriesError.slice();
-                    break;
-                default:
-                    this.filteredEntries = this.entriesPending.slice();
-            }
-
-            if (this.selectedState !== "pending") {
-                this.filteredEntries = this.filteredEntries.reverse();
-            }
-        },
-
-        updateMaxParallelUploads: function (m: number) {
-            this.maxParallelUploads = m;
-            UploadController.SetMaxParallelUploads(m);
-        },
-
-        inputFileChanged: function (e: InputEvent) {
-            const data = (e.target as HTMLInputElement).files;
-            if (data && data.length > 0) {
-                const files = [];
-                for (const file of data) {
-                    files.push(file);
-                }
-                this.addFiles(files);
-            }
-        },
-
-        onDrop: function (e: DragEvent) {
-            e.preventDefault();
-            this.dragging = false;
-            const data = e.dataTransfer.files;
-            if (data && data.length > 0) {
-                const files = [];
-                for (const file of data) {
-                    files.push(file);
-                }
-                this.addFiles(files);
-            }
-        },
-
-        dragOver: function (e: DragEvent) {
-            e.preventDefault();
-        },
-        dragEnter: function (e: DragEvent) {
-            e.preventDefault();
-            this.dragging = true;
-        },
-        dragLeave: function (e: DragEvent) {
-            e.preventDefault();
-            this.dragging = false;
-        },
-
-        renderSize: renderSize,
-
-        addFiles: function (files: File[]) {
-            this.files = files;
-            this.displayUploadModal = true;
-            this.updateSelectedState("pending");
-        },
-
-        onUploadConfirmed: function (album: number, tags: string[]) {
-            for (const file of this.files) {
-                UploadController.AddFile(file, album, tags.slice());
-            }
-            this.files = [];
-        },
-
-        removeFile: function (id: number) {
-            UploadController.RemoveFile(id);
-        },
-
-        clearList: function () {
-            UploadController.ClearList();
-        },
-
-        cancelAll: function () {
-            UploadController.CancelAll();
-        },
-
-        tryAgain: function (m: UploadEntryMin) {
-            UploadController.TryAgain(m.id);
-        },
-
-        goToMedia: function (m: UploadEntryMin, e?: MouseEvent) {
-            if (e) {
-                e.preventDefault();
-            }
-            if (m.mid < 0) {
-                return;
-            }
-            AppStatus.ClickOnMedia(m.mid, true);
-            this.$emit("media-go");
-        },
-
-        renderStatus(status: string, p: number, err: string) {
-            switch (status) {
-                case "ready":
-                    return this.$t("Ready");
-                case "pending":
-                    return this.$t("Pending");
-                case "uploading":
-                    if (p > 0) {
-                        return this.$t("Uploading") + "... (" + p + "%)";
-                    } else {
-                        return this.$t("Uploading") + "...";
-                    }
-                case "encrypting":
-                    if (p > 0) {
-                        return this.$t("Encrypting") + "... (" + p + "%)";
-                    } else {
-                        return this.$t("Encrypting") + "...";
-                    }
-                case "tag":
-                    return this.$t("Adding tags") + "... (" + stringMultiReplace(this.$t("$N left"), { $N: "" + p }) + ")";
-                case "album":
-                    return this.$t("Inserting into album") + "...";
-                case "error":
-                    switch (err) {
-                        case "invalid-media":
-                            return this.$t("Error") + ": " + this.$t("Invalid media file provided");
-                        case "access-denied":
-                            return this.$t("Error") + ": " + this.$t("Access denied");
-                        case "deleted":
-                            return this.$t("Error") + ": " + this.$t("The media asset was deleted");
-                        case "no-internet":
-                            return this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        default:
-                            return this.$t("Error") + ": " + this.$t("Internal server error");
-                    }
-                default:
-                    return "-";
-            }
-        },
-
-        cssProgress: function (status: string, p: number) {
-            p = Math.min(100, Math.max(0, p));
-            switch (status) {
-                case "uploading":
-                    return Math.round((p * 50) / 100) + "%";
-                case "encrypting":
-                    return Math.round(50 + (p * 50) / 100) + "%";
-                case "ready":
-                case "error":
-                case "tag":
-                    return "100%";
-                default:
-                    return "0";
-            }
-        },
-
-        getMediaURL: function (mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-            });
-        },
-
-        refreshUploadList: function () {
-            this.entriesPending = UploadController.GetPendingEntries();
-            this.entriesReady = UploadController.GetReadyEntries();
-            this.entriesError = UploadController.GetErrorEntries();
-
-            this.updateFilteredEntries();
-        },
-    },
+    /**
+     * If set, any uploads will be added into this album
+     */
+    fixedAlbum: Number,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Emitted when the user navigates into a media element
+     */
+    (e: "media-go"): void;
+}>();
+
+// True if the user is dragging something into the upload box
+const dragging = ref(false);
+
+// List of pending entries
+const entriesPending = ref<UploadEntryMin[]>([]);
+
+// List of ready entries
+const entriesReady = ref<UploadEntryMin[]>([]);
+
+// List of errored entries
+const entriesError = ref<UploadEntryMin[]>([]);
+
+// Allows values for the max parallel uploads option
+const MAX_PARALLEL_UPLOADS_OPTIONS = [1, 2, 4, 8, 16, 32, 64];
+
+// Max number of allowed parallel uploads
+const maxParallelUploads = ref(UploadController.GetMaxParallelUploads());
+
+// Base statuses of entries in order to classify them
+type UploadEntryBaseStatus = "pending" | "ready" | "error";
+
+// Current selected status to display
+const selectedState = ref<UploadEntryBaseStatus>("pending");
+
+// List of filtered upload entries to actually display
+const filteredEntries = ref<UploadEntryMin[]>([]);
+
+// True to display the upload modal
+const displayUploadModal = ref(false);
+
+// List of files to upload
+const filesToUpload = ref<File[]>([]);
+
+/**
+ * Updates filtered upload entries
+ */
+const updateFilteredEntries = () => {
+    switch (selectedState.value) {
+        case "ready":
+            filteredEntries.value = entriesReady.value.slice();
+            break;
+        case "error":
+            filteredEntries.value = entriesError.value.slice();
+            break;
+        default:
+            filteredEntries.value = entriesPending.value.slice();
+    }
+
+    if (selectedState.value !== "pending") {
+        filteredEntries.value = filteredEntries.value.reverse();
+    }
+};
+
+/**
+ * Refreshes uploads entries lists
+ */
+const refreshUploadList = () => {
+    entriesPending.value = UploadController.GetPendingEntries();
+    entriesReady.value = UploadController.GetReadyEntries();
+    entriesError.value = UploadController.GetErrorEntries();
+
+    updateFilteredEntries();
+};
+
+refreshUploadList();
+
+// List cleared: Full refresh
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_CLEAR, refreshUploadList);
+
+// New entry added
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, (e: UploadEntryMin) => {
+    entriesPending.value.push(e);
+    if (selectedState.value === "pending") {
+        filteredEntries.value.push(e);
+    }
+});
+
+// A pending entry changed its progress
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, (e: UploadEntryMin) => {
+    const entry = entriesPending.value.find((p) => p.id === e.id);
+
+    if (entry) {
+        entry.status = e.status;
+        entry.progress = e.progress;
+        entry.mid = e.mid;
+    }
+});
+
+// A pending entry is now ready
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (e: UploadEntryMin) => {
+    removeEntryFromList(entriesPending.value, e);
+
+    entriesReady.value.push(e);
+
+    if (selectedState.value === "pending") {
+        removeEntryFromList(filteredEntries.value, e);
+    } else if (selectedState.value === "ready") {
+        filteredEntries.value.unshift(e);
+    }
+});
+
+// A pending entry failed
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (e: UploadEntryMin) => {
+    removeEntryFromList(entriesPending.value, e);
+
+    entriesError.value.push(e);
+
+    if (selectedState.value === "pending") {
+        removeEntryFromList(filteredEntries.value, e);
+    } else if (selectedState.value === "error") {
+        filteredEntries.value.unshift(e);
+    }
+});
+
+// An errored entry is being retried
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, (e: UploadEntryMin) => {
+    removeEntryFromList(entriesError.value, e);
+
+    entriesPending.value.push(e);
+
+    if (selectedState.value === "error") {
+        removeEntryFromList(filteredEntries.value, e);
+    } else if (selectedState.value === "pending") {
+        filteredEntries.value.push(e);
+    }
+});
+
+// Entry removed
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, (e: UploadEntryMin) => {
+    switch (e.status) {
+        case "ready":
+            removeEntryFromList(entriesReady.value, e);
+            if (selectedState.value === "ready") {
+                removeEntryFromList(filteredEntries.value, e);
+            }
+            break;
+        case "error":
+            removeEntryFromList(entriesError.value, e);
+            if (selectedState.value === "error") {
+                removeEntryFromList(filteredEntries.value, e);
+            }
+            break;
+        default:
+            removeEntryFromList(entriesPending.value, e);
+            if (selectedState.value === "pending") {
+                removeEntryFromList(filteredEntries.value, e);
+            }
+    }
+});
+
+// Element to be auto-focused on load
+const autoFocusElement = useTemplateRef("autoFocusElement");
+
+/**
+ * Automatically focuses the appropriate element on load
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        autoFocusElement.value?.focus();
+    });
+};
+
+onMounted(autoFocus);
+
+// Hidden file input element
+const hiddenFileInput = useTemplateRef("hiddenFileInput");
+
+/**
+ * User clicked on the upload box.
+ * The file input must be triggered.
+ */
+const clickToSelect = () => {
+    if (hiddenFileInput.value) {
+        hiddenFileInput.value.value = null;
+        hiddenFileInput.value.click();
+    }
+};
+
+/**
+ * Updates the selected state
+ * @param s The state
+ */
+const updateSelectedState = (s: UploadEntryBaseStatus) => {
+    selectedState.value = s;
+    updateFilteredEntries();
+};
+
+/**
+ * Updates the max parallel uploads option
+ * @param m The max parallel uploads option
+ */
+const updateMaxParallelUploads = (m: number) => {
+    maxParallelUploads.value = m;
+    UploadController.SetMaxParallelUploads(m);
+};
+
+/**
+ * Removes a file
+ * @param id The file entry ID
+ */
+const removeFile = (id: number) => {
+    UploadController.RemoveFile(id);
+};
+
+/**
+ * Clears the list
+ */
+const clearList = () => {
+    UploadController.ClearList();
+};
+
+/**
+ * Cancels all uploads
+ */
+const cancelAll = () => {
+    UploadController.CancelAll();
+};
+
+/**
+ * Retries an errored entry
+ * @param m The entry
+ */
+const tryAgain = (m: UploadEntryMin) => {
+    UploadController.TryAgain(m.id);
+};
+
+/**
+ * Navigates into an uploaded media element
+ * @param m The upload entry
+ * @param e The click event on the link
+ */
+const goToMedia = (m: UploadEntryMin, e?: MouseEvent) => {
+    if (e) {
+        e.preventDefault();
+    }
+
+    if (m.mid < 0) {
+        return;
+    }
+
+    AppStatus.ClickOnMedia(m.mid, true);
+
+    emit("media-go");
+};
+
+/**
+ * Adds files to be uploaded and displays the confirmation modal
+ * @param files List of files
+ */
+const addFiles = (files: File[]) => {
+    filesToUpload.value = files;
+    displayUploadModal.value = true;
+    updateSelectedState("pending");
+};
+
+/**
+ * Called when the user confirms an upload
+ * @param album The album for the media to be added into
+ * @param tags The tags for the uploaded media
+ */
+const onUploadConfirmed = (album: number, tags: string[]) => {
+    for (const file of filesToUpload.value) {
+        UploadController.AddFile(file, album, tags.slice());
+    }
+    filesToUpload.value = [];
+};
+
+/**
+ * Event handler for 'changed' on the file input
+ * @param e The event
+ */
+const inputFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        const files = [];
+        for (const file of data) {
+            files.push(file);
+        }
+        addFiles(files);
+    }
+};
+
+/**
+ * Event handler for 'drop' on the upload box
+ * @param e The event
+ */
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+
+    dragging.value = false;
+
+    const data = e.dataTransfer.files;
+    if (data && data.length > 0) {
+        const files = [];
+        for (const file of data) {
+            files.push(file);
+        }
+        addFiles(files);
+    }
+};
+
+/**
+ * Event handler for 'dragover' on the upload box
+ * @param e The event
+ */
+const dragOver = (e: DragEvent) => {
+    e.preventDefault();
+};
+
+/**
+ * Event handler for 'dragenter' on the upload box
+ * @param e The event
+ */
+const dragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    dragging.value = true;
+};
+
+/**
+ * Event handler for 'dragleave' on the upload box
+ * @param e The event
+ */
+const dragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    dragging.value = false;
+};
+
+/**
+ * Gets the URL for a media element
+ * @param mid The media element ID
+ * @returns The URL
+ */
+const getMediaURL = (mid: number): string => {
+    return getFrontendUrl({
+        media: mid,
+    });
+};
+
+/**
+ * Renders the status of an entry
+ * @param status The status
+ * @param p The progress (0-1)
+ * @param err The error message
+ * @returns The rendered status
+ */
+const renderStatus = (status: string, p: number, err: string) => {
+    switch (status) {
+        case "ready":
+            return $t("Ready");
+        case "pending":
+            return $t("Pending");
+        case "uploading":
+            if (p > 0) {
+                return $t("Uploading") + "... (" + p + "%)";
+            } else {
+                return $t("Uploading") + "...";
+            }
+        case "encrypting":
+            if (p > 0) {
+                return $t("Encrypting") + "... (" + p + "%)";
+            } else {
+                return $t("Encrypting") + "...";
+            }
+        case "tag":
+            return $t("Adding tags") + "... (" + stringMultiReplace($t("$N left"), { $N: "" + p }) + ")";
+        case "album":
+            return $t("Inserting into album") + "...";
+        case "error":
+            switch (err) {
+                case "invalid-media":
+                    return $t("Error") + ": " + $t("Invalid media file provided");
+                case "access-denied":
+                    return $t("Error") + ": " + $t("Access denied");
+                case "deleted":
+                    return $t("Error") + ": " + $t("The media asset was deleted");
+                case "no-internet":
+                    return $t("Error") + ": " + $t("Could not connect to the server");
+                default:
+                    return $t("Error") + ": " + $t("Internal server error");
+            }
+        default:
+            return "-";
+    }
+};
+
+/**
+ * Turns thew progress into percentage for CSS style value
+ * @param status The current status
+ * @param p The progress (0-1)
+ * @returns The progress as CSS-compatible percentage
+ */
+const cssProgress = (status: string, p: number) => {
+    p = Math.min(100, Math.max(0, p));
+    switch (status) {
+        case "uploading":
+            return Math.round((p * 50) / 100) + "%";
+        case "encrypting":
+            return Math.round(50 + (p * 50) / 100) + "%";
+        case "ready":
+        case "error":
+        case "tag":
+            return "100%";
+        default:
+            return "0";
+    }
+};
 </script>

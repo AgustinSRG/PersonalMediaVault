@@ -1,6 +1,6 @@
 <template>
-    <div class="page-inner scrollbar-stable" :class="{ hidden: !display }">
-        <div class="search-results auto-focus" tabindex="-1">
+    <div ref="container" class="page-inner scrollbar-stable">
+        <div ref="autoFocusElement" class="search-results auto-focus" tabindex="-1">
             <PageLoaderFiller v-if="loading" :page-size="pageSize" :display-titles="displayTitles"></PageLoaderFiller>
 
             <div v-else-if="total <= 0 && firstLoaded" class="search-results-msg-display">
@@ -42,7 +42,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { MediaListItem } from "@/api/models";
 import {
     emitAppEvent,
@@ -60,375 +60,405 @@ import { AuthController } from "@/control/auth";
 import { TagsController } from "@/control/tags";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import { MediaController } from "@/control/media";
-import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
 import PageLoaderFiller from "./common/PageLoaderFiller.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
+import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
-export default defineComponent({
-    name: "PageRandom",
-    components: {
-        MediaItem,
-        PageLoaderFiller,
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// Props
+const props = defineProps({
+    /**
+     * Size of the page
+     */
+    pageSize: {
+        type: Number,
+        required: true,
     },
-    props: {
-        display: Boolean,
-        min: Boolean,
-        pageSize: Number,
-        displayTitles: Boolean,
 
-        rowSize: Number,
-        rowSizeMin: Number,
-        minItemsSize: Number,
-        maxItemsSize: Number,
+    /**
+     * True to display titles
+     */
+    displayTitles: Boolean,
+
+    /**
+     * Page is in miniature mode
+     */
+    min: Boolean,
+
+    /**
+     * Preferred row size
+     */
+    rowSize: {
+        type: Number,
+        required: true,
     },
-    setup() {
-        return {
-            loadRequestId: getUniqueStringId(),
-            windowResizeObserver: null as ResizeObserver,
-        };
+
+    /**
+     * Preferred row size for miniature mode
+     */
+    rowSizeMin: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            loading: false,
-            firstLoaded: false,
 
-            search: AppStatus.CurrentSearch,
-
-            order: "desc",
-            searchParams: AppStatus.SearchParams,
-            seed: AppStatus.RandomSeed,
-            page: 0,
-
-            currentMedia: AppStatus.CurrentMedia,
-
-            pageItems: [] as MediaListItem[],
-            total: 0,
-
-            loadingFiller: [] as number[],
-
-            switchMediaOnLoad: "",
-
-            tagVersion: TagsController.TagsVersion,
-
-            windowWidth: 0,
-        };
+    /**
+     * Min size for items
+     */
+    minItemsSize: {
+        type: Number,
+        required: true,
     },
-    computed: {
-        lastRowPadding() {
-            const containerWidth = this.windowWidth;
 
-            const itemWidth = Math.max(
-                this.minItemsSize,
-                Math.min(
-                    this.maxItemsSize,
-                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
-                ),
-            );
-
-            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
-
-            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
-        },
-    },
-    watch: {
-        display: function () {
-            this.load();
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        pageSize: function () {
-            this.updatePageSize();
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.refreshSeed.bind(this));
-
-        this.updateSearchParams();
-        this.load();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-
-        this.windowWidth = this.$el.getBoundingClientRect().width;
-
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-        this.windowResizeObserver.observe(this.$el);
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        PagesController.OnPageUnload();
-        this.windowResizeObserver.disconnect();
-    },
-    methods: {
-        scrollToTop: function () {
-            this.$el.scrollTop = 0;
-        },
-
-        autoFocus: function () {
-            nextTick(() => {
-                const el = this.$el.querySelector(".auto-focus");
-                if (el) {
-                    el.focus();
-                    if (el.select) {
-                        el.select();
-                    }
-                }
-            });
-        },
-
-        refreshSeed: function () {
-            AppStatus.RefreshSeed();
-        },
-
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
-
-            if (!this.display) {
-                return;
-            }
-
-            this.scrollToTop();
-
-            setNamedTimeout(this.loadRequestId, 330, () => {
-                this.loading = true;
-            });
-
-            if (AuthController.Locked) {
-                return; // Vault is locked
-            }
-
-            makeNamedApiRequest(this.loadRequestId, apiSearchRandom(this.search, this.seed, this.pageSize))
-                .onSuccess((result) => {
-                    const s = new Set();
-                    this.pageItems = result.page_items.filter((i) => {
-                        if (s.has(i.id)) {
-                            return false;
-                        }
-                        s.add(i.id);
-                        return true;
-                    });
-                    TagsController.OnMediaListReceived(this.pageItems);
-                    this.total = this.pageItems.length;
-                    clearNamedTimeout(this.loadRequestId);
-                    this.loading = false;
-                    this.firstLoaded = true;
-                    if (this.switchMediaOnLoad === "next") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            if (MediaController.MediaId === this.pageItems[0].id) {
-                                MediaController.Load();
-                            } else {
-                                this.goToMedia(this.pageItems[0].id);
-                            }
-                        }
-                    } else if (this.switchMediaOnLoad === "prev") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            if (MediaController.MediaId === this.pageItems[this.pageItems.length - 1].id) {
-                                MediaController.Load();
-                            } else {
-                                this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                            }
-                        }
-                    }
-                    this.scrollToCurrentMedia();
-                    this.onCurrentMediaChanged();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        temporalError: () => {
-                            // Retry
-                            this.loading = true;
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    this.loading = true;
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        updatePageSize: function () {
-            this.updateLoadingFiller();
-            this.load();
-        },
-
-        onAppStatusChanged: function () {
-            const changed = this.currentMedia !== AppStatus.CurrentMedia;
-            this.currentMedia = AppStatus.CurrentMedia;
-
-            let mustLoad = false;
-
-            if (AppStatus.CurrentSearch !== this.search) {
-                this.search = AppStatus.CurrentSearch;
-                mustLoad = true;
-            }
-
-            if (AppStatus.SearchParams !== this.searchParams || AppStatus.RandomSeed !== this.seed) {
-                this.seed = AppStatus.RandomSeed;
-                this.searchParams = AppStatus.SearchParams;
-                this.updateSearchParams();
-                mustLoad = true;
-            }
-
-            if (mustLoad) {
-                this.load();
-            }
-
-            if (changed) {
-                this.scrollToCurrentMedia();
-            }
-            this.onCurrentMediaChanged();
-        },
-
-        scrollToCurrentMedia: function () {
-            nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
-                }
-            });
-        },
-
-        onSearchParamsChanged: function () {
-            this.searchParams = packSearchParams(this.page, this.order);
-            AppStatus.ChangeSearchParams(this.searchParams);
-        },
-
-        goToMedia: function (mid: number) {
-            AppStatus.ClickOnMedia(mid, true);
-        },
-
-        updateSearchParams: function () {
-            const params = unPackSearchParams(this.searchParams);
-            this.page = params.page;
-            this.order = params.order;
-            this.updateLoadingFiller();
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
-        },
-
-        clearSearch: function () {
-            AppStatus.ClearSearch();
-        },
-
-        goAdvancedSearch: function () {
-            AppStatus.GoToPage("search");
-        },
-
-        findCurrentMediaIndex: function (): number {
-            for (let i = 0; i < this.pageItems.length; i++) {
-                if (this.pageItems[i].id === this.currentMedia) {
-                    return i;
-                }
-            }
-            return -1;
-        },
-
-        onCurrentMediaChanged: function () {
-            const i = this.findCurrentMediaIndex();
-            PagesController.OnPageLoad(i, this.pageItems.length, 1, 3);
-        },
-
-        prevMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i > 0) {
-                this.goToMedia(this.pageItems[i - 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else {
-                this.switchMediaOnLoad = "prev";
-                this.refreshSeed();
-            }
-        },
-
-        nextMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i < this.pageItems.length - 1) {
-                this.goToMedia(this.pageItems[i + 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else {
-                this.switchMediaOnLoad = "next";
-                this.refreshSeed();
-            }
-        },
-
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
-                return false;
-            }
-
-            if (event.key === "Home") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[0].id);
-                }
-                return true;
-            }
-
-            if (event.key === "End") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                }
-                return true;
-            }
-
-            if (event.key === "ArrowLeft") {
-                this.prevMedia();
-                return true;
-            }
-
-            if (event.key === "ArrowRight") {
-                this.nextMedia();
-                return true;
-            }
-
-            if (event.key.toUpperCase() === "R") {
-                this.refreshSeed();
-                return true;
-            }
-
-            return false;
-        },
-
-        updateWindowWidth: function () {
-            this.windowWidth = this.$el.getBoundingClientRect().width;
-        },
+    /**
+     * Max size for items
+     */
+    maxItemsSize: {
+        type: Number,
+        required: true,
     },
 });
+
+// Loading status
+const loading = ref(false);
+
+// True if it was loaded at least once
+const firstLoaded = ref(false);
+
+// Current media
+const currentMedia = ref(AppStatus.CurrentMedia);
+
+// Current search
+const search = ref(AppStatus.CurrentSearch);
+
+// Search parameters
+const searchParams = ref(AppStatus.SearchParams);
+
+// RNG seed
+const seed = ref(AppStatus.RandomSeed);
+
+// Total number of items
+const total = ref(0);
+
+// Items displayed in the current page
+const pageItems = ref<MediaListItem[]>([]);
+
+// Action to perform when page loads
+const switchMediaOnLoad = ref<"" | "next" | "prev">("");
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to display the loader (milliseconds)
+const LOADER_DISPLAY_DELAY = 330;
+
+// Delay to retry loading (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    scrollToTop();
+
+    setNamedTimeout(loadRequestId, LOADER_DISPLAY_DELAY, () => {
+        loading.value = true;
+    });
+
+    if (AuthController.Locked) {
+        return; // Vault is locked
+    }
+
+    makeNamedApiRequest(loadRequestId, apiSearchRandom(search.value, seed.value, props.pageSize))
+        .onSuccess((result) => {
+            const s = new Set();
+
+            pageItems.value = result.page_items.filter((i) => {
+                if (s.has(i.id)) {
+                    return false;
+                }
+                s.add(i.id);
+                return true;
+            });
+
+            TagsController.OnMediaListReceived(pageItems.value);
+
+            total.value = pageItems.value.length;
+
+            clearNamedTimeout(loadRequestId);
+
+            loading.value = false;
+            firstLoaded.value = true;
+
+            if (switchMediaOnLoad.value === "next") {
+                switchMediaOnLoad.value = "";
+                if (pageItems.value.length > 0) {
+                    if (MediaController.MediaId === pageItems.value[0].id) {
+                        MediaController.Load();
+                    } else {
+                        goToMedia(pageItems.value[0].id);
+                    }
+                }
+            } else if (switchMediaOnLoad.value === "prev") {
+                switchMediaOnLoad.value = "";
+                if (pageItems.value.length > 0) {
+                    if (MediaController.MediaId === pageItems.value[pageItems.value.length - 1].id) {
+                        MediaController.Load();
+                    } else {
+                        goToMedia(pageItems.value[pageItems.value.length - 1].id);
+                    }
+                }
+            }
+            scrollToCurrentMedia();
+            onCurrentMediaChanged();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                temporalError: () => {
+                    // Retry
+                    loading.value = true;
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            loading.value = true;
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+onMounted(load);
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
+onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
+
+// Reload when page size changes
+watch(
+    () => props.pageSize,
+    () => {
+        load();
+    },
+);
+
+onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    const changed = currentMedia.value !== AppStatus.CurrentMedia;
+    currentMedia.value = AppStatus.CurrentMedia;
+
+    let mustLoad = false;
+
+    if (AppStatus.CurrentSearch !== search.value) {
+        search.value = AppStatus.CurrentSearch;
+        mustLoad = true;
+    }
+
+    if (AppStatus.SearchParams !== searchParams.value || AppStatus.RandomSeed !== seed.value) {
+        seed.value = AppStatus.RandomSeed;
+        searchParams.value = AppStatus.SearchParams;
+        mustLoad = true;
+    }
+
+    if (mustLoad) {
+        load();
+    }
+
+    if (changed) {
+        scrollToCurrentMedia();
+    }
+
+    onCurrentMediaChanged();
+});
+
+/**
+ * Navigates to a media element
+ * @param mid The ID of the media
+ */
+const goToMedia = (mid: number) => {
+    AppStatus.ClickOnMedia(mid, true);
+};
+
+/**
+ * Fins the index of the current media
+ * @returns The index, or -1 (if not found)
+ */
+const findCurrentMediaIndex = (): number => {
+    for (let i = 0; i < pageItems.value.length; i++) {
+        if (pageItems.value[i].id === currentMedia.value) {
+            return i;
+        }
+    }
+    return -1;
+};
+
+/**
+ * Navigates to the previous media
+ */
+const prevMedia = () => {
+    const i = findCurrentMediaIndex();
+    if (i !== -1 && i > 0) {
+        goToMedia(pageItems.value[i - 1].id);
+    } else if (i === -1 && pageItems.value.length > 0) {
+        goToMedia(pageItems.value[0].id);
+    } else {
+        switchMediaOnLoad.value = "prev";
+        refreshSeed();
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_PREV, prevMedia);
+
+/**
+ * Navigates to the next media
+ */
+const nextMedia = () => {
+    const i = findCurrentMediaIndex();
+    if (i !== -1 && i < pageItems.value.length - 1) {
+        goToMedia(pageItems.value[i + 1].id);
+    } else if (i === -1 && pageItems.value.length > 0) {
+        goToMedia(pageItems.value[0].id);
+    } else {
+        switchMediaOnLoad.value = "next";
+        refreshSeed();
+    }
+};
+
+onApplicationEvent(EVENT_NAME_PAGE_NAV_NEXT, nextMedia);
+
+/**
+ * Call to update the current media position in the page context
+ */
+const onCurrentMediaChanged = () => {
+    const i = findCurrentMediaIndex();
+    PagesController.OnPageLoad(i, pageItems.value.length, 1, 3);
+};
+
+// Make sure to unload the page context when the component unmounts
+onBeforeUnmount(() => {
+    PagesController.OnPageUnload();
+});
+
+/**
+ * Clears the search
+ */
+const clearSearch = () => {
+    AppStatus.ClearSearch();
+};
+
+/**
+ * Navigates to advanced search
+ */
+const goAdvancedSearch = () => {
+    AppStatus.GoToPage("search");
+};
+
+/**
+ * Refreshes the seed
+ */
+const refreshSeed = () => {
+    AppStatus.RefreshSeed();
+};
+
+onApplicationEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, refreshSeed);
+
+/**
+ * Scrolls the page to the top
+ */
+const scrollToTop = () => {
+    if (container.value) {
+        container.value.scrollTop = 0;
+    }
+};
+
+/**
+ * Scrolls to the current media element
+ */
+const scrollToCurrentMedia = () => {
+    nextTick(() => {
+        const currentElem = container.value?.querySelector(".search-result-item.current") as HTMLElement;
+        if (currentElem) {
+            currentElem.scrollIntoView();
+        }
+    });
+};
+
+// Element to be auto-focused on load
+const autoFocusElement = useTemplateRef("autoFocusElement");
+
+/**
+ * Automatically focuses the appropriate element on load
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        autoFocusElement.value?.focus();
+    });
+};
+
+onMounted(autoFocus);
+
+// Padding for the last row
+const lastRowPadding = usePageLastRowPadding(
+    props,
+    container,
+    computed(() => pageItems.value.length),
+);
+
+// Priority for the global keyboard handler
+const KEYBOARD_HANDLER_PRIORITY = 20;
+
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+        return false;
+    }
+
+    if (event.key === "Home") {
+        if (pageItems.value.length > 0) {
+            goToMedia(pageItems.value[0].id);
+        }
+        return true;
+    }
+
+    if (event.key === "End") {
+        if (pageItems.value.length > 0) {
+            goToMedia(pageItems.value[pageItems.value.length - 1].id);
+        }
+        return true;
+    }
+
+    if (event.key === "ArrowLeft") {
+        prevMedia();
+        return true;
+    }
+
+    if (event.key === "ArrowRight") {
+        nextMedia();
+        return true;
+    }
+
+    if (event.key.toUpperCase() === "R") {
+        refreshSeed();
+        return true;
+    }
+
+    return false;
+}, KEYBOARD_HANDLER_PRIORITY);
 </script>
