@@ -700,7 +700,7 @@ export class UploadController {
 
         makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiTagsTagMedia(mediaId, tag))
             .onSuccess((res) => {
-                setLastUsedTag(res.id);
+                setLastUsedTag(res.id, "edit");
 
                 m.tags.shift(); // Remove tag from list
                 m.progress = m.tags.length;

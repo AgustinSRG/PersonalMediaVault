@@ -10,6 +10,7 @@ import { useTimeout } from "./use-timeout";
 import { onApplicationEvent } from "./on-app-event";
 import { EVENT_NAME_TAGS_UPDATE } from "@/control/app-events";
 import { parseTagName } from "@/utils/tags";
+import type { LastUsedTagMode } from "@/control/app-preferences";
 import { getLastUsedTags } from "@/control/app-preferences";
 
 /**
@@ -43,7 +44,10 @@ export type TagSuggestionsComposable = {
  * Composable for tag suggestions
  * @param suggestionFilter A filter for the tag suggestions
  */
-export function useTagSuggestions(suggestionFilter?: (id: number, name: string) => boolean): TagSuggestionsComposable {
+export function useTagSuggestions(
+    mode: LastUsedTagMode,
+    suggestionFilter?: (id: number, name: string) => boolean,
+): TagSuggestionsComposable {
     // Max number of tag suggestions
     const TAGS_SUGGESTION_LIMIT = 10;
 
@@ -64,7 +68,7 @@ export function useTagSuggestions(suggestionFilter?: (id: number, name: string) 
 
         const nameFilter = parseTagName(tagFilter.value);
 
-        const lastUsedTagsIds = getLastUsedTags();
+        const lastUsedTagsIds = getLastUsedTags(mode);
 
         if (!nameFilter) {
             const lastUsedTags: MatchingTag[] = [];

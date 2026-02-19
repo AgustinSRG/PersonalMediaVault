@@ -329,14 +329,36 @@ export function resetPagePreferences(page: AppStatusPage) {
 }
 
 const LS_KEY_LAST_USED_TAGS = "app-last-used-tags";
+const LS_KEY_LAST_USED_TAGS_SEARCH = "app-last-search-tags";
 
 const LAST_USED_TAGS_LIMIT = 64;
 
 /**
- * Gets the list of last used tags
+ * Gets the key to store the last used tags
+ * @param mode The mode
+ * @returns The key
  */
-export function getLastUsedTags(): number[] {
-    let r = fetchFromLocalStorageCache(LS_KEY_LAST_USED_TAGS, []);
+function getLastUsedTagsKey(mode: LastUsedTagMode): string {
+    if (mode === "search") {
+        return LS_KEY_LAST_USED_TAGS_SEARCH;
+    } else {
+        return LS_KEY_LAST_USED_TAGS;
+    }
+}
+
+/**
+ * The last used tag mode:
+ *  - 'search' - Tags being searched for
+ *  - 'edit' - Tags being added to media
+ */
+export type LastUsedTagMode = "search" | "edit";
+
+/**
+ * Gets the list of last used tags
+ * @param mode The mode
+ */
+export function getLastUsedTags(mode: LastUsedTagMode): number[] {
+    let r = fetchFromLocalStorageCache(getLastUsedTagsKey(mode), []);
 
     if (!Array.isArray(r)) {
         r = [];
@@ -348,9 +370,12 @@ export function getLastUsedTags(): number[] {
 /**
  * Updates the last used tags
  * @param tag The used tag
+ * @param mode The mode
  */
-export function setLastUsedTag(tag: number) {
-    let r = fetchFromLocalStorage(LS_KEY_LAST_USED_TAGS, []);
+export function setLastUsedTag(tag: number, mode: LastUsedTagMode) {
+    const key = getLastUsedTagsKey(mode);
+
+    let r = fetchFromLocalStorage(key, []);
 
     if (!Array.isArray(r)) {
         r = [];
@@ -366,7 +391,7 @@ export function setLastUsedTag(tag: number) {
         r.pop();
     }
 
-    saveIntoLocalStorage(LS_KEY_LAST_USED_TAGS, r);
+    saveIntoLocalStorage(key, r);
 }
 
 /**
@@ -374,6 +399,7 @@ export function setLastUsedTag(tag: number) {
  */
 export function clearLastUsedTags() {
     clearLocalStorage(LS_KEY_LAST_USED_TAGS);
+    clearLocalStorage(LS_KEY_LAST_USED_TAGS_SEARCH);
 }
 
 /**

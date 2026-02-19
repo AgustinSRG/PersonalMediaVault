@@ -74,7 +74,10 @@ defineProps({
 const tags = defineModel<number[]>("tags");
 
 // Tag suggestions
-const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions((id) => !tags.value.includes(id));
+const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions(
+    "search",
+    (id) => !tags.value.includes(id),
+);
 
 // Container element
 const container = useTemplateRef("container");
@@ -95,7 +98,7 @@ const addTag = (tag: MatchingTag) => {
 
     emit("changed");
 
-    setLastUsedTag(tag.id);
+    setLastUsedTag(tag.id, "search");
 
     updateTagSuggestions();
 

@@ -104,7 +104,10 @@ const { getTagName } = useTagNames();
 const mediaTags = ref<number[]>([]);
 
 // Tag suggestions
-const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions((id) => !mediaTags.value.includes(id));
+const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions(
+    "edit",
+    (id) => !mediaTags.value.includes(id),
+);
 
 /**
  * Loads the tag list for the current media
@@ -167,7 +170,7 @@ const addTag = (tag: string, resetTagInput: boolean) => {
         .onSuccess((res) => {
             busy.value = false;
 
-            setLastUsedTag(res.id);
+            setLastUsedTag(res.id, "edit");
 
             PagesController.ShowSnackBar($t("Added tag") + ": " + res.name);
 

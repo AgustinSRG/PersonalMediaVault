@@ -68,6 +68,7 @@ const tags = defineModel<string[]>("tags");
 
 // Tag suggestions
 const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = useTagSuggestions(
+    "edit",
     (_id, name) => !tags.value.includes(name),
 );
 
