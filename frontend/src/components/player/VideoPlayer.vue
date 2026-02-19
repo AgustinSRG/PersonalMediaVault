@@ -493,7 +493,7 @@ import PlayerTooltip from "./PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
-    loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
+    loader: () => import("@/components/widgets/TimeSlicesEditHelper.vue"),
 });
 
 const PlayerEncodingPending = defineAsyncComponent({
@@ -501,11 +501,11 @@ const PlayerEncodingPending = defineAsyncComponent({
 });
 
 const TagsEditHelper = defineAsyncComponent({
-    loader: () => import("@/components/player/TagsEditHelper.vue"),
+    loader: () => import("@/components/widgets/TagsEditHelper.vue"),
 });
 
 const DescriptionWidget = defineAsyncComponent({
-    loader: () => import("@/components/player/DescriptionWidget.vue"),
+    loader: () => import("@/components/widgets/DescriptionWidget.vue"),
 });
 
 const PlayerAttachmentsList = defineAsyncComponent({

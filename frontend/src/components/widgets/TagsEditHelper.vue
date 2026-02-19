@@ -17,7 +17,7 @@
 <script lang="ts">
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
-import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
 
 export default defineComponent({

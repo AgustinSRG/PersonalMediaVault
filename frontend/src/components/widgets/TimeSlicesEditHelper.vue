@@ -132,7 +132,7 @@ import { parseTimeSeconds } from "@/utils/time-slices";
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
 
-import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";

@@ -337,11 +337,11 @@ const PlayerEncodingPending = defineAsyncComponent({
 });
 
 const TagsEditHelper = defineAsyncComponent({
-    loader: () => import("@/components/player/TagsEditHelper.vue"),
+    loader: () => import("@/components/widgets/TagsEditHelper.vue"),
 });
 
 const DescriptionWidget = defineAsyncComponent({
-    loader: () => import("@/components/player/DescriptionWidget.vue"),
+    loader: () => import("@/components/widgets/DescriptionWidget.vue"),
 });
 
 const PlayerRelatedMediaList = defineAsyncComponent({

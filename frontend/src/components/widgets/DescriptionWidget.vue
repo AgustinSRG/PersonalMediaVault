@@ -200,8 +200,8 @@
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
 
-import type { ActionButton } from "@/components/player/ResizableWidget.vue";
-import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import type { ActionButton } from "@/components/widgets/common/ResizableWidget.vue";
+import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
