@@ -84,9 +84,14 @@ export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
 export const SUPPORTED_LOCALES = AVAILABLE_LANGUAGES.map((l) => l.id);
 
 /**
+ * Base locale. This locale does not need any translation and the keys are written in this language.
+ */
+const BASE_LOCALE = "en";
+
+/**
  * Fallback locale
  */
-const FALLBACK_LOCALE = import.meta.env.VITE__I18N_LOCALE || "en";
+const FALLBACK_LOCALE = import.meta.env.VITE__I18N_LOCALE || BASE_LOCALE;
 
 /**
  * Finds locale by comparing the prefix
@@ -279,7 +284,15 @@ async function setLocale(locale: string) {
     }
 
     // Load locale messages
-    await loadLocaleMessages(locale);
+    if (locale === BASE_LOCALE) {
+        // Empty map for base locale
+        i18nData.messages = new Map();
+
+        // Wait 1 animation tick
+        await nextTick();
+    } else {
+        await loadLocaleMessages(locale);
+    }
 
     // Set i18n language
     setI18nLanguage(locale);
