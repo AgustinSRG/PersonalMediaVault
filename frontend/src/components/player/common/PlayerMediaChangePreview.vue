@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 import { type MediaListItem } from "@/api/models";
-import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
+import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 import { useI18n } from "@/composables/use-i18n";
 
 // Translation function

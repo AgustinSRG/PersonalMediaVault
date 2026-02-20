@@ -133,9 +133,9 @@
 import { getAutoNextTime, getImageNotesVisible, setAutoNextTime, setImageNotesVisible } from "@/control/player-preferences";
 import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
-import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { useVModel } from "@/utils/v-model";
+import { FocusTrap } from "@/utils/focus-trap";
+import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import type { MediaData, MediaResolution } from "@/api/models";
 
 export default defineComponent({

@@ -34,11 +34,11 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
+import { useVModel } from "@/utils/v-model";
+import { FocusTrap } from "@/utils/focus-trap";
 import type { MediaListItem } from "@/api/models";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
-import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
+import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 
 export default defineComponent({
     name: "PlayerRelatedMediaList",

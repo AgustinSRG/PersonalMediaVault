@@ -59,7 +59,7 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
-import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
+import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
 import {
     EVENT_NAME_CURRENT_ALBUM_LOADING,

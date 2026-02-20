@@ -1,13 +1,13 @@
 <template>
     <div
-        class="video-player-config"
-        :class="{ hidden: !shown }"
+        class="audio-player-config"
         tabindex="-1"
+        :class="{ hidden: !shown }"
         role="dialog"
         @click="stopPropagationEvent"
+        @dblclick="stopPropagationEvent"
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
-        @dblclick="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
         @mouseenter="enterConfig"
         @mouseleave="leaveConfig"
@@ -47,14 +47,14 @@
                 <tr v-if="!isShort && !inAlbum">
                     <td>
                         <i class="fas fa-clock icon-config"></i>
-                        <b>{{ $t("Wait after video ends") }}</b>
+                        <b>{{ $t("Wait after audio ends") }}</b>
                     </td>
                     <td class="td-right">
                         <ToggleSwitch v-model:val="autoNextPageDelayState"></ToggleSwitch>
                     </td>
                 </tr>
 
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSpeeds">
+                <tr class="tr-button" tabindex="0" @click="goToSpeeds" @keydown="clickOnEnter">
                     <td>
                         <i class="fas fa-gauge icon-config"></i>
                         <b>{{ $t("Playback speed") }}</b>
@@ -64,42 +64,37 @@
                         <i class="fas fa-chevron-right arrow-config"></i>
                     </td>
                 </tr>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToScales">
+                <tr class="tr-button" tabindex="0" @click="goToAnimStyles" @keydown="clickOnEnter">
                     <td>
-                        <i class="fas fa-magnifying-glass icon-config"></i>
-                        <b>{{ $t("Scale") }}</b>
+                        <i class="fas fa-chart-column icon-config"></i>
+                        <b>{{ $t("Animation style") }}</b>
                     </td>
                     <td class="td-right">
-                        {{ renderScale(scale) }}
+                        {{ renderAnimStyle(animColors) }}
                         <i class="fas fa-chevron-right arrow-config"></i>
                     </td>
                 </tr>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToResolutions">
+
+                <tr v-if="!isShort">
                     <td>
-                        <i class="fas fa-photo-film icon-config"></i>
-                        <b>{{ $t("Quality") }}</b>
+                        <i class="fas fa-eye icon-config"></i>
+                        <b>{{ $t("Show title") }}</b>
                     </td>
                     <td class="td-right">
-                        {{ renderResolution(resolution, rTick) }}
-                        <i class="fas fa-chevron-right arrow-config"></i>
+                        <ToggleSwitch v-model:val="showTitleState"></ToggleSwitch>
                     </td>
                 </tr>
-                <tr
-                    v-if="metadata.audios && metadata.audios.length > 0"
-                    class="tr-button"
-                    tabindex="0"
-                    @keydown="clickOnEnter"
-                    @click="goToAudios"
-                >
+
+                <tr v-if="!isShort">
                     <td>
-                        <i class="fas fa-headphones icon-config"></i>
-                        <b>{{ $t("Audio") }}</b>
+                        <i class="fas fa-eye icon-config"></i>
+                        <b>{{ $t("Show thumbnail") }}</b>
                     </td>
                     <td class="td-right">
-                        {{ renderAudio(audioTrack, rTick) }}
-                        <i class="fas fa-chevron-right arrow-config"></i>
+                        <ToggleSwitch v-model:val="showThumbnailState"></ToggleSwitch>
                     </td>
                 </tr>
+
                 <tr
                     v-if="metadata.subtitles && metadata.subtitles.length > 0"
                     class="tr-button"
@@ -116,23 +111,12 @@
                         <i class="fas fa-chevron-right arrow-config"></i>
                     </td>
                 </tr>
-
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToDelays">
-                    <td>
-                        <i class="fas fa-clock icon-config"></i>
-                        <b>{{ $t("Toggle play delay") }}</b>
-                    </td>
-                    <td class="td-right">
-                        {{ renderToggleDelay(toggleDelay) }}
-                        <i class="fas fa-chevron-right arrow-config"></i>
-                    </td>
-                </tr>
             </tbody>
         </table>
 
         <table v-if="page === 'speed'">
             <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <tr class="tr-button" tabindex="0" @click="goBack" @keydown="clickOnEnter">
                     <td>
                         <i class="fas fa-chevron-left icon-config"></i>
                         <b>{{ $t("Playback speed") }}</b>
@@ -141,7 +125,7 @@
                         <a href="#playback-speed-custom" @click="goToCustomSpeed">{{ $t("Custom") }}</a>
                     </td>
                 </tr>
-                <tr v-for="s in speeds" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSpeed(s)">
+                <tr v-for="s in speeds" :key="s" class="tr-button" tabindex="0" @click="changeSpeed(s)" @keydown="clickOnEnter">
                     <td>
                         <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== speed }"></i>
                         {{ renderSpeed(s) }}
@@ -198,134 +182,19 @@
             </tbody>
         </table>
 
-        <table v-if="page === 'scales'">
+        <table v-if="page === 'anim'">
             <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <tr class="tr-button" tabindex="0" @click="goBack" @keydown="clickOnEnter">
                     <td>
                         <i class="fas fa-chevron-left icon-config"></i>
-                        <b>{{ $t("Scale") }}</b>
-                    </td>
-                    <td class="td-right" @click="goToCustomScale">
-                        <a href="#video-scale-custom" @click="goToCustomScale">{{ $t("Custom") }}</a>
-                    </td>
-                </tr>
-                <tr v-for="s in scales" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeScale(s)">
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== scale }"></i>
-                        {{ renderScale(s) }}
+                        <b>{{ $t("Animation style") }}</b>
                     </td>
                     <td class="td-right"></td>
                 </tr>
-                <tr v-if="!scales.includes(scale)" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeScale(scale)">
+                <tr v-for="s in animStyles" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="setAnimStyle(s)">
                     <td>
-                        <i class="fas fa-check icon-config"></i>
-                        {{ $t("Custom") }}: {{ renderScale(scale) }}
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table v-if="page === 'scale-custom'">
-            <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToScales">
-                    <td>
-                        <i class="fas fa-chevron-left icon-config"></i>
-                        <b>{{ $t("Scale") }} ({{ $t("Custom") }})</b>
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-
-                <tr>
-                    <td colspan="2">
-                        <input
-                            v-model.number="scaleNum"
-                            type="range"
-                            class="form-range"
-                            :min="100"
-                            :max="800"
-                            :step="1"
-                            @input="updateScaleNum"
-                        />
-                    </td>
-                </tr>
-
-                <tr>
-                    <td colspan="2" class="custom-size-row">
-                        <input
-                            v-model.number="scaleNum"
-                            type="number"
-                            class="form-control custom-size-input"
-                            :min="1"
-                            :step="1"
-                            @input="updateScaleNum"
-                        />
-                        <b class="custom-size-unit">%</b>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table v-if="page === 'resolution'">
-            <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
-                    <td>
-                        <i class="fas fa-chevron-left icon-config"></i>
-                        <b>{{ $t("Quality") }}</b>
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeResolution(-1)">
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': -1 !== resolution }"></i>
-                        {{ renderResolution(-1, rTick) }}
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-                <tr
-                    v-for="(r, i) in metadata.resolutions"
-                    :key="i"
-                    class="tr-button"
-                    tabindex="0"
-                    @keydown="clickOnEnter"
-                    @click="changeResolution(i)"
-                >
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': i !== resolution }"></i>
-                        {{ renderResolution(i, rTick) }}
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table v-if="page === 'audios'">
-            <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
-                    <td>
-                        <i class="fas fa-chevron-left icon-config"></i>
-                        <b>{{ $t("Audio") }}</b>
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeAudioTrack('')">
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== audioTrack }"></i>
-                        {{ renderAudio("", rTick) }}
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-                <tr
-                    v-for="aud in metadata.audios"
-                    :key="aud.id"
-                    class="tr-button"
-                    tabindex="0"
-                    @keydown="clickOnEnter"
-                    @click="changeAudioTrack(aud.id)"
-                >
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': aud.id !== audioTrack }"></i>
-                        {{ aud.name }}
+                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== animColors }"></i>
+                        {{ renderAnimStyle(s) }}
                     </td>
                     <td class="td-right"></td>
                 </tr>
@@ -369,32 +238,6 @@
 
         <PlayerSubtitlesConfig v-if="page === 'subtitle-options'" @page-switch="focus" @go-back="goToSubtitles"></PlayerSubtitlesConfig>
 
-        <table v-if="page === 'time-delays'">
-            <tbody>
-                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
-                    <td>
-                        <i class="fas fa-chevron-left icon-config"></i>
-                        <b>{{ $t("Toggle play delay") }}</b>
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-                <tr
-                    v-for="s in toggleDelayOptions"
-                    :key="s"
-                    class="tr-button"
-                    tabindex="0"
-                    @keydown="clickOnEnter"
-                    @click="changeToggleDelay(s)"
-                >
-                    <td>
-                        <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== toggleDelay }"></i>
-                        {{ renderToggleDelay(s) }}
-                    </td>
-                    <td class="td-right"></td>
-                </tr>
-            </tbody>
-        </table>
-
         <table v-if="page === 'auto-next'">
             <tbody>
                 <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
@@ -417,26 +260,18 @@
 </template>
 
 <script lang="ts">
-import {
-    getAutoNextTime,
-    getSelectedSubtitles,
-    getTogglePlayDelay,
-    setAutoNextTime,
-    setSelectedAudioTrack,
-    setSelectedSubtitles,
-    setTogglePlayDelay,
-} from "@/control/player-preferences";
+import { getAutoNextTime, getSelectedSubtitles, setAutoNextTime, setSelectedSubtitles } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
 import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { FocusTrap } from "../../utils/focus-trap";
+import { useVModel } from "@/utils/v-model";
+import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
+import { FocusTrap } from "@/utils/focus-trap";
 import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
-import type { MediaData, MediaResolution } from "@/api/models";
+import type { MediaData } from "@/api/models";
 
 export default defineComponent({
-    name: "VideoPlayerConfig",
+    name: "AudioPlayerConfig",
     components: { ToggleSwitch, PlayerSubtitlesConfig },
     props: {
         shown: Boolean,
@@ -444,11 +279,11 @@ export default defineComponent({
         loop: Boolean,
         nextEnd: Boolean,
         speed: Number,
-        scale: Number,
-        resolution: Number,
+        animColors: String,
         rTick: Number,
-        audioTrack: String,
         isShort: Boolean,
+        showTitle: Boolean,
+        showThumbnail: Boolean,
         inAlbum: Boolean,
         autoNextPageDelay: Boolean,
     },
@@ -457,9 +292,9 @@ export default defineComponent({
         "update:loop",
         "update:nextEnd",
         "update:speed",
-        "update:scale",
-        "update:resolution",
-        "update:audioTrack",
+        "update:animColors",
+        "update:showTitle",
+        "update:showThumbnail",
         "update:autoNextPageDelay",
         "update-auto-next",
         "enter",
@@ -472,9 +307,9 @@ export default defineComponent({
             loopState: useVModel(props, "loop"),
             nextEndState: useVModel(props, "nextEnd"),
             speedState: useVModel(props, "speed"),
-            scaleState: useVModel(props, "scale"),
-            resolutionState: useVModel(props, "resolution"),
-            audioTrackState: useVModel(props, "audioTrack"),
+            animColorsState: useVModel(props, "animColors"),
+            showTitleState: useVModel(props, "showTitle"),
+            showThumbnailState: useVModel(props, "showThumbnail"),
             autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),
         };
     },
@@ -482,19 +317,12 @@ export default defineComponent({
         return {
             page: "",
             speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-            scales: [1, 1.25, 1.5, 1.75, 2, 4, 8],
-            resolutions: [] as MediaResolution[],
+            animStyles: ["gradient", "rainbow", "", "none"],
 
             speedNum: Math.floor(this.speed * 100),
-            scaleNum: Math.floor(this.scale * 100),
 
             subtitles: "",
             effectiveSubtitles: "",
-
-            subSizeCustomNum: this.subSizeCustom,
-
-            toggleDelay: getTogglePlayDelay(),
-            toggleDelayOptions: [0, 250, 500, 750, 1000],
 
             autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
@@ -515,16 +343,11 @@ export default defineComponent({
         speed: function () {
             this.speedNum = Math.floor(this.speed * 100);
         },
-        scale: function () {
-            this.scaleNum = Math.floor(this.scale * 100);
-        },
         rTick: function () {
-            this.updateResolutions();
             this.updateEffectiveSubtitles();
         },
     },
     mounted: function () {
-        this.updateResolutions();
         this.subtitles = getSelectedSubtitles();
         this.updateEffectiveSubtitles();
         this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
@@ -533,39 +356,6 @@ export default defineComponent({
         this.focusTrap.destroy();
     },
     methods: {
-        changeResolution: function (i: number) {
-            this.resolutionState = i;
-        },
-
-        changeToggleDelay: function (d: number) {
-            this.toggleDelay = d;
-            setTogglePlayDelay(d);
-        },
-
-        changeSubtitle: function (s: string) {
-            this.subtitles = s;
-            this.updateEffectiveSubtitles();
-            setSelectedSubtitles(s);
-            SubtitlesController.OnSubtitlesChanged(s);
-        },
-
-        changeAudioTrack: function (s: string) {
-            this.audioTrackState = s;
-            setSelectedAudioTrack(s);
-        },
-
-        changeAutoNext: function (b: number) {
-            this.autoNext = b;
-            setAutoNextTime(b);
-            this.$emit("update-auto-next");
-        },
-
-        focus: function () {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        },
-
         enterConfig: function () {
             this.$emit("enter");
         },
@@ -574,12 +364,18 @@ export default defineComponent({
             this.$emit("leave");
         },
 
+        focus: function () {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        },
+
         goBack: function () {
             this.page = "";
             this.focus();
         },
 
-        changeSpeed: function (s: number) {
+        changeSpeed: function (s) {
             this.speedState = s;
         },
 
@@ -588,27 +384,13 @@ export default defineComponent({
             this.focus();
         },
 
-        changeScale: function (s: number) {
-            this.scaleState = s;
-        },
-
-        goToScales: function () {
-            this.page = "scales";
-            this.focus();
-        },
-
-        goToResolutions: function () {
-            this.page = "resolution";
+        goToAnimStyles: function () {
+            this.page = "anim";
             this.focus();
         },
 
         goToSubtitles: function () {
             this.page = "subtitles";
-            this.focus();
-        },
-
-        goToAudios: function () {
-            this.page = "audios";
             this.focus();
         },
 
@@ -622,14 +404,15 @@ export default defineComponent({
             this.focus();
         },
 
-        goToDelays: function () {
-            this.page = "time-delays";
-            this.focus();
-        },
-
         goToAutoNext: function () {
             this.page = "auto-next";
             this.focus();
+        },
+
+        changeAutoNext: function (b: number) {
+            this.autoNext = b;
+            setAutoNextTime(b);
+            this.$emit("update-auto-next");
         },
 
         goToSubtitlesOptions: function (e?: Event) {
@@ -652,16 +435,6 @@ export default defineComponent({
             this.focus();
         },
 
-        goToCustomScale: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            this.page = "scale-custom";
-            this.focus();
-        },
-
         renderSpeed: function (speed: number) {
             if (speed > 1) {
                 return Math.floor(speed * 100) + "%";
@@ -672,47 +445,39 @@ export default defineComponent({
             }
         },
 
-        renderScale: function (scale: number) {
-            if (scale > 1) {
-                return Math.floor(scale * 100) + "%";
-            } else if (scale < 1) {
-                return Math.floor(scale * 100) + "%";
-            } else {
-                return this.$t("Normal");
+        renderAnimStyle: function (s: string) {
+            switch (s) {
+                case "gradient":
+                    return this.$t("Gradient");
+                case "rainbow":
+                    return this.$t("Rainbow");
+                case "none":
+                    return this.$t("None");
+                default:
+                    return this.$t("Monochrome");
             }
         },
 
-        renderResolution: function (res: number, rTick: number) {
-            if (rTick < 0 || !this.metadata) {
-                return this.$t("Unknown");
-            }
-            if (res < 0) {
-                return (
-                    this.metadata.width +
-                    "x" +
-                    this.metadata.height +
-                    ", " +
-                    this.metadata.fps +
-                    " fps (" +
-                    this.$t("Original") +
-                    ")" +
-                    (this.metadata.encoded ? "" : " (" + this.$t("Pending") + ")")
-                );
-            } else {
-                const resData = this.metadata.resolutions[res];
-                if (resData) {
-                    return (
-                        resData.width +
-                        "x" +
-                        resData.height +
-                        ", " +
-                        resData.fps +
-                        " fps " +
-                        (resData.ready ? "" : " (" + this.$t("Pending") + ")")
-                    );
+        setAnimStyle: function (s: string) {
+            this.animColorsState = s;
+        },
+
+        changeSubtitle: function (s: string) {
+            this.subtitles = s;
+            this.updateEffectiveSubtitles();
+            setSelectedSubtitles(s);
+            SubtitlesController.OnSubtitlesChanged(s);
+        },
+
+        renderAutoNext: function (s: number) {
+            if (!isNaN(s) && isFinite(s) && s > 0) {
+                if (s === 1) {
+                    return s + " " + this.$t("second");
                 } else {
-                    return this.$t("Unknown");
+                    return s + " " + this.$t("seconds");
                 }
+            } else {
+                return this.$t("Disabled");
             }
         },
 
@@ -754,57 +519,6 @@ export default defineComponent({
             return this.$t("No subtitles");
         },
 
-        renderAudio: function (audioId: string, rTick: number) {
-            if (rTick < 0 || !this.metadata || !this.metadata.audios || !audioId) {
-                return "(" + this.$t("From video") + ")";
-            }
-
-            for (const aud of this.metadata.audios) {
-                if (aud.id === audioId) {
-                    return aud.name;
-                }
-            }
-
-            return "(" + this.$t("From video") + ")";
-        },
-
-        renderToggleDelay: function (d: number) {
-            switch (d) {
-                case 0:
-                    return this.$t("No delay");
-                case 250:
-                    return "0.25 s";
-                case 500:
-                    return "0.5 s";
-                case 750:
-                    return "0.75 s";
-                case 1000:
-                    return "1 s";
-                default:
-                    return "" + d;
-            }
-        },
-
-        renderAutoNext: function (s: number) {
-            if (!isNaN(s) && isFinite(s) && s > 0) {
-                if (s === 1) {
-                    return s + " " + this.$t("second");
-                } else {
-                    return s + " " + this.$t("seconds");
-                }
-            } else {
-                return this.$t("Disabled");
-            }
-        },
-
-        updateResolutions: function () {
-            if (this.metadata && this.metadata.resolutions) {
-                this.resolutions = this.metadata.resolutions.slice();
-            } else {
-                this.resolutions = [];
-            }
-        },
-
         updateSpeedNum: function () {
             if (typeof this.speedNum !== "number" || isNaN(this.speedNum) || this.speedNum < 0.1) {
                 return;
@@ -812,15 +526,6 @@ export default defineComponent({
 
             this.speedState = this.speedNum / 100;
         },
-
-        updateScaleNum: function () {
-            if (typeof this.scaleNum !== "number" || isNaN(this.scaleNum) || this.scaleNum < 0.1) {
-                return;
-            }
-
-            this.scaleState = this.scaleNum / 100;
-        },
-
         close: function () {
             this.shownState = false;
         },

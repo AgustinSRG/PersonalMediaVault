@@ -48,7 +48,7 @@
 import { MediaController } from "@/control/media";
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { useVModel } from "@/utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import { AuthController } from "@/control/auth";
 import type { MediaData } from "@/api/models";

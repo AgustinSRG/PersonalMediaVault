@@ -153,7 +153,7 @@
 <script lang="ts">
 import { MediaController } from "@/control/media";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
+import { useVModel } from "@/utils/v-model";
 
 export default defineComponent({
     name: "PlayerContextMenu",

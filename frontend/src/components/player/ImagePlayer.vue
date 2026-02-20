@@ -312,15 +312,13 @@ import {
 } from "@/control/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import ScaleControl from "./ScaleControl.vue";
-import PlayerTopBar from "./PlayerTopBar.vue";
-import ImageNotes from "./ImageNotes.vue";
-import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
+import ScaleControl from "./common/ScaleControl.vue";
+import PlayerTopBar from "./common/PlayerTopBar.vue";
+import ImageNotes from "./common/ImageNotes.vue";
+import { openFullscreen, closeFullscreen } from "@/utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
-import ImagePlayerConfig from "./ImagePlayerConfig.vue";
-import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { getAssetURL } from "@/utils/api";
-import { useVModel } from "../../utils/v-model";
+import { useVModel } from "@/utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { AlbumsController } from "@/control/albums";
@@ -329,11 +327,19 @@ import { MEDIA_TYPE_IMAGE } from "@/api/models";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
-import PlayerTooltip from "./PlayerTooltip.vue";
+import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_NEXT_PRE_FETCH } from "@/control/app-events";
 
+const PlayerContextMenu = defineAsyncComponent({
+    loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
+});
+
+const ImagePlayerConfig = defineAsyncComponent({
+    loader: () => import("@/components/player/config/ImagePlayerConfig.vue"),
+});
+
 const PlayerEncodingPending = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerEncodingPending.vue"),
+    loader: () => import("@/components/player/common/PlayerEncodingPending.vue"),
 });
 
 const TagsEditHelper = defineAsyncComponent({
@@ -345,11 +351,11 @@ const DescriptionWidget = defineAsyncComponent({
 });
 
 const PlayerRelatedMediaList = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerRelatedMediaList.vue"),
+    loader: () => import("@/components/player/common/PlayerRelatedMediaList.vue"),
 });
 
 const PlayerAttachmentsList = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerAttachmentsList.vue"),
+    loader: () => import("@/components/player/common/PlayerAttachmentsList.vue"),
 });
 
 const SCALE_RANGE = 2;

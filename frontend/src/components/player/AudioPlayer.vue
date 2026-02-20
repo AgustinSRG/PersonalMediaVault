@@ -443,18 +443,15 @@ import {
 } from "@/control/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import VolumeControl from "./VolumeControl.vue";
-import PlayerTopBar from "./PlayerTopBar.vue";
-import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
-import { renderTimeSeconds } from "../../utils/time";
-import type { NormalizedTimeSlice } from "../../utils/time-slices";
-import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
+import VolumeControl from "./common/VolumeControl.vue";
+import PlayerTopBar from "./common/PlayerTopBar.vue";
+import { openFullscreen, closeFullscreen } from "@/utils/full-screen";
+import { renderTimeSeconds } from "@/utils/time";
+import type { NormalizedTimeSlice } from "@/utils/time-slices";
+import { findTimeSlice, normalizeTimeSlices } from "@/utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
-import AudioPlayerConfig from "./AudioPlayerConfig.vue";
-import PlayerContextMenu from "./PlayerContextMenu.vue";
-import PlayerSubtitles from "./PlayerSubtitles.vue";
 import { getAssetURL } from "@/utils/api";
-import { useVModel } from "../../utils/v-model";
+import { useVModel } from "@/utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
@@ -465,15 +462,27 @@ import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
-import PlayerTooltip from "./PlayerTooltip.vue";
+import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE, EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
+
+const PlayerContextMenu = defineAsyncComponent({
+    loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
+});
+
+const AudioPlayerConfig = defineAsyncComponent({
+    loader: () => import("@/components/player/config/AudioPlayerConfig.vue"),
+});
+
+const PlayerSubtitles = defineAsyncComponent({
+    loader: () => import("@/components/player/common/PlayerSubtitles.vue"),
+});
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/widgets/TimeSlicesEditHelper.vue"),
 });
 
 const PlayerEncodingPending = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerEncodingPending.vue"),
+    loader: () => import("@/components/player/common/PlayerEncodingPending.vue"),
 });
 
 const TagsEditHelper = defineAsyncComponent({
@@ -485,11 +494,11 @@ const DescriptionWidget = defineAsyncComponent({
 });
 
 const PlayerAttachmentsList = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerAttachmentsList.vue"),
+    loader: () => import("@/components/player/common/PlayerAttachmentsList.vue"),
 });
 
 const PlayerRelatedMediaList = defineAsyncComponent({
-    loader: () => import("@/components/player/PlayerRelatedMediaList.vue"),
+    loader: () => import("@/components/player/common/PlayerRelatedMediaList.vue"),
 });
 
 export default defineComponent({

@@ -241,7 +241,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import { getSubtitlesOptions, setSubtitlesOptions } from "@/control/player-preferences";
 import { emitAppEvent, EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/control/app-events";
 
