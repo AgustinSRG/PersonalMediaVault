@@ -34,6 +34,11 @@
     background: var(--theme-bg-color);
 }
 
+.loading-delayed {
+    animation-name: delayed-loader;
+    animation-duration: 0.33s;
+}
+
 .loader-delayed-custom {
     animation-name: delayed-loader;
     animation-duration: 0.33s;

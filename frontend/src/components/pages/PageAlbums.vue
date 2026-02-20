@@ -543,7 +543,7 @@ const onNewAlbum = (albumId: number) => {
 };
 
 // Padding for the last row
-const lastRowPadding = usePageLastRowPadding(
+const { lastRowPadding } = usePageLastRowPadding(
     props,
     container,
     computed(() => pageItems.value.length),
