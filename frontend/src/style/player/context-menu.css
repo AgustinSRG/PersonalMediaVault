@@ -1,5 +1,25 @@
 /* Player context menu */
 
+@keyframes player-context-menu-show-animation {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes player-context-menu-close-animation {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
 .player-context-menu {
     position: fixed;
     background: var(--player-menu-background);
@@ -9,7 +29,9 @@
     padding-top: 0.3rem;
     padding-bottom: 0.3rem;
     opacity: 1;
-    transition: opacity 0.1s;
+
+    animation-name: player-context-menu-show-animation;
+    animation-duration: 0.1s;
 }
 
 .player-context-menu:focus {
@@ -20,12 +42,17 @@
     min-width: fit-content;
 }
 
-.player-context-menu.hidden {
-    transition:
-        opacity 0.1s,
-        visibility 0.1s;
-    opacity: 0;
+.player-context-menu.closing {
+    animation-name: player-context-menu-close-animation;
+    animation-duration: 0.1s;
     pointer-events: none;
+}
+
+.player-context-menu.hidden {
+    animation-name: none;
+    pointer-events: none;
+
+    opacity: 0;
     visibility: hidden;
 }
 

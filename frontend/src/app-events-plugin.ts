@@ -16,7 +16,7 @@ declare module "vue" {
         /**
          * Override refs
          */
-        $refs: never;
+        $refs: any;
 
         /**
          * Mapping of app event handlers

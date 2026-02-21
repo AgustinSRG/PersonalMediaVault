@@ -399,8 +399,6 @@ const done = () => {
             // Convert to file
             const file = new File([blob], "thumbnail.png");
 
-            console.log(URL.createObjectURL(file));
-
             // Change thumbnail
             emit("done", file);
         }, "image/png");

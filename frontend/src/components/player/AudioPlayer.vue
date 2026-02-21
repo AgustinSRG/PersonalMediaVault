@@ -400,6 +400,8 @@
         ></PlayerTopBar>
 
         <PlayerContextMenu
+            v-if="contextMenuShown"
+            ref="contextMenu"
             v-model:shown="contextMenuShown"
             v-model:loop="loop"
             v-model:slice-loop="sliceLoop"
@@ -409,7 +411,6 @@
             :y="contextMenuY"
             :url="audioURL"
             :title="title"
-            :can-write="canWrite"
             :has-description="hasDescription"
             :has-slices="timeSlices && timeSlices.length > 0"
             :is-short="isShort"
@@ -766,6 +767,7 @@ export default defineComponent({
             this.contextMenuX = e.pageX;
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
+            this.$refs.contextMenu?.show();
             e.preventDefault();
         },
 
@@ -832,7 +834,7 @@ export default defineComponent({
 
         clickControls: function (e: Event) {
             this.displayConfig = false;
-            this.contextMenuShown = false;
+            this.$refs.contextMenu?.hide();
             this.displayAttachments = false;
             this.displayRelatedMedia = false;
             if (e) {
@@ -1121,7 +1123,7 @@ export default defineComponent({
             this.leaveControls();
             if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
-                this.contextMenuShown = false;
+                this.$refs.contextMenu?.hide();
                 this.displayAttachments = false;
                 this.displayRelatedMedia = false;
             } else {
@@ -1150,7 +1152,7 @@ export default defineComponent({
             this.leaveControls();
             if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
-                this.contextMenuShown = false;
+                this.$refs.contextMenu?.hide();
                 this.displayAttachments = false;
                 this.displayRelatedMedia = false;
             } else {
@@ -1236,7 +1238,7 @@ export default defineComponent({
 
         clickTimeline: function (e: Event) {
             this.displayConfig = false;
-            this.contextMenuShown = false;
+            this.$refs.contextMenu?.hide();
             this.displayAttachments = false;
             this.displayRelatedMedia = false;
             e.stopPropagation();

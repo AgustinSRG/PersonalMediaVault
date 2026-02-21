@@ -279,6 +279,8 @@
         ></PlayerTopBar>
 
         <PlayerContextMenu
+            v-if="contextMenuShown"
+            ref="contextMenu"
             v-model:shown="contextMenuShown"
             v-model:fit="fit"
             v-model:controls="showControlsState"
@@ -288,7 +290,6 @@
             :y="contextMenuY"
             :url="imageURL"
             :title="title"
-            :can-write="canWrite"
             :has-description="hasDescription"
             @update:fit="onUserFitUpdated"
             @stats="openStats"
@@ -557,6 +558,7 @@ export default defineComponent({
             this.contextMenuX = e.pageX;
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
+            this.$refs.contextMenu?.show();
             e.preventDefault();
         },
 
@@ -613,7 +615,7 @@ export default defineComponent({
 
             if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
-                this.contextMenuShown = false;
+                this.$refs.contextMenu?.hide();
                 this.displayAttachments = false;
                 this.displayRelatedMedia = false;
                 e.stopPropagation();
@@ -794,7 +796,7 @@ export default defineComponent({
 
         clickControls: function (e: Event) {
             this.displayConfig = false;
-            this.contextMenuShown = false;
+            this.$refs.contextMenu?.hide();
             this.displayAttachments = false;
             this.displayRelatedMedia = false;
             if (e) {

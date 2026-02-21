@@ -1,8 +1,10 @@
 <template>
     <div
+        ref="container"
         class="player-context-menu"
         :class="{
             hidden: !shown,
+            closing: closing,
         }"
         :style="{
             top: top,
@@ -19,6 +21,7 @@
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
+        @animationend="onAnimationEnd"
     >
         <table class="player-context-menu-table">
             <tbody>
@@ -150,210 +153,333 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { MediaController } from "@/control/media";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "@/utils/v-model";
+import type { PropType } from "vue";
+import { onMounted, ref, useTemplateRef, watch } from "vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
 
-export default defineComponent({
-    name: "PlayerContextMenu",
-    props: {
-        shown: Boolean,
-        type: String,
-        x: Number,
-        y: Number,
+// Ref to the container element
+const container = useTemplateRef("container");
 
-        url: String,
-        title: String,
+// Translation
+const { $t } = useI18n();
 
-        loop: Boolean,
-        fit: Boolean,
-        controls: Boolean,
+// User permissions
+const { canWrite } = useUserPermissions();
 
-        sliceLoop: Boolean,
-        hasSlices: Boolean,
+// Shown model
+const shown = defineModel<boolean>("shown");
 
-        isShort: Boolean,
+// Types of player
+type PlayerType = "video" | "audio" | "image";
 
-        notesEdit: Boolean,
-        canWrite: Boolean,
-
-        hasDescription: Boolean,
-
-        timeSlicesEdit: Boolean,
+// Props
+const props = defineProps({
+    /**
+     * Type of player
+     */
+    type: {
+        type: String as PropType<PlayerType>,
+        required: true,
     },
-    emits: [
-        "update:shown",
-        "update:loop",
-        "update:controls",
-        "update:fit",
-        "update:notesEdit",
-        "update:sliceLoop",
-        "update:timeSlicesEdit",
-        "open-tags",
-        "open-desc",
-        "stats",
-        "close",
-    ],
-    setup(props) {
-        return {
-            shownState: useVModel(props, "shown"),
-            loopState: useVModel(props, "loop"),
-            fitState: useVModel(props, "fit"),
-            controlsState: useVModel(props, "controls"),
-            notesState: useVModel(props, "notesEdit"),
-            sliceLoopState: useVModel(props, "sliceLoop"),
-            timeSlicesEditState: useVModel(props, "timeSlicesEdit"),
-        };
+
+    /**
+     * X coordinate
+     */
+    x: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            top: "",
-            left: "",
-            right: "",
-            bottom: "",
 
-            width: "",
-
-            maxWidth: "",
-            maxHeight: "",
-        };
+    y: {
+        type: Number,
+        required: true,
     },
-    watch: {
-        x: function () {
-            this.computeDimensions();
-        },
-        y: function () {
-            this.computeDimensions();
-        },
-        shown: function () {
-            if (this.shown) {
-                nextTick(() => {
-                    this.computeDimensions();
-                    this.$el.focus();
-                });
-            }
-        },
+
+    /**
+     * Download URL
+     */
+    url: String,
+
+    /**
+     * Media title
+     */
+    title: String,
+
+    /**
+     * Has slices?
+     */
+    hasSlices: Boolean,
+
+    /**
+     * Is short duration?
+     */
+    isShort: Boolean,
+
+    /**
+     * Has description?
+     */
+    hasDescription: Boolean,
+});
+
+// Loop
+const loop = defineModel<boolean>("loop");
+
+// Fit image
+const fit = defineModel<boolean>("fit");
+
+// Show controls
+const controls = defineModel<boolean>("controls");
+
+// Slice loop
+const sliceLoop = defineModel<boolean>("sliceLoop");
+
+// Image notes edit mode?
+const notesEdit = defineModel<boolean>("notesEdit");
+
+// Time slices edit mode?
+const timeSlicesEdit = defineModel<boolean>("timeSlicesEdit");
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Emitted when closed
+     */
+    (e: "close"): void;
+
+    /**
+     * Opens the tags widget
+     */
+    (e: "open-tags"): void;
+
+    /**
+     * Opens the description widget
+     */
+    (e: "open-desc"): void;
+
+    /**
+     * Opens the stats modal
+     */
+    (e: "stats"): void;
+}>();
+
+// True if the modal is closing
+const closing = ref(false);
+
+/**
+ * Show the menu
+ */
+const show = () => {
+    const shouldFocus = shown.value;
+
+    shown.value = true;
+    closing.value = false;
+
+    if (shouldFocus) {
+        container.value?.focus();
+    }
+};
+
+/**
+ * Hides the menu
+ */
+const hide = () => {
+    emit("close");
+    closing.value = true;
+};
+
+// Reset 'closing' when shown changes to true
+watch(shown, () => {
+    if (shown.value) {
+        closing.value = false;
+    }
+});
+
+// Coordinates
+const top = ref("");
+const left = ref("");
+const right = ref("");
+const bottom = ref("");
+const width = ref("");
+const maxWidth = ref("");
+const maxHeight = ref("");
+
+/**
+ * Computes the dimensions of the context menu
+ */
+const computeDimensions = () => {
+    if (!container.value) {
+        return;
+    }
+
+    const pageWidth = window.innerWidth;
+    const pageHeight = window.innerHeight || 1;
+
+    const elementBounds = container.value.getBoundingClientRect();
+
+    const x = props.x;
+    const y = props.y;
+
+    if (y + elementBounds.height > pageHeight) {
+        bottom.value = "0";
+        top.value = "auto";
+    } else {
+        top.value = y + "px";
+        bottom.value = "auto";
+    }
+
+    const mh = pageHeight;
+
+    maxHeight.value = mh + "px";
+
+    const l = x;
+    const mw = pageWidth - l;
+
+    left.value = l + "px";
+    right.value = "auto";
+    width.value = "auto";
+    maxWidth.value = mw + "px";
+};
+
+onMounted(() => {
+    if (shown.value) {
+        computeDimensions();
+    }
+});
+
+watch([() => props.x, () => props.y, shown], computeDimensions);
+
+/**
+ * Toggles loop value
+ */
+const toggleLoop = () => {
+    loop.value = !loop.value;
+    hide();
+};
+
+/**
+ * Toggles slice loop value
+ */
+const toggleSliceLoop = () => {
+    sliceLoop.value = !sliceLoop.value;
+    hide();
+};
+
+/**
+ * Toggles the image fit value
+ */
+const toggleFit = () => {
+    fit.value = !fit.value;
+    hide();
+};
+
+/**
+ * Toggles the notes edit mode
+ */
+const toggleNotes = () => {
+    notesEdit.value = !notesEdit.value;
+    hide();
+};
+
+/**
+ * Toggles the time slices edit mode
+ */
+const toggleTimeSlices = () => {
+    timeSlicesEdit.value = !timeSlicesEdit.value;
+    hide();
+};
+
+/**
+ * Toggles controls visibility
+ */
+const toggleControls = () => {
+    controls.value = !controls.value;
+    hide();
+};
+
+/**
+ * Shows the tags widget
+ */
+const showTags = () => {
+    emit("open-tags");
+    hide();
+};
+
+/**
+ * Shows the description widget
+ */
+const showDescription = () => {
+    emit("open-desc");
+    hide();
+};
+
+/**
+ * Opens the size stats modal
+ */
+const openStats = () => {
+    emit("stats");
+    hide();
+};
+
+/**
+ * Refreshes the media
+ */
+const refreshMedia = () => {
+    MediaController.Load();
+    hide();
+};
+
+/**
+ * Downloads the media
+ */
+const download = () => {
+    const link = document.createElement("a");
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const titlePart = props.title ? "&filename=" + encodeURIComponent(props.title) : "";
+
+    if ((props.url + "").includes("?")) {
+        link.href = props.url + "&download=force" + titlePart;
+    } else {
+        link.href = props.url + "?download=force" + titlePart;
+    }
+
+    link.click();
+
+    hide();
+};
+
+/**
+ * Called when the closing animation ends
+ * @param e The animation event
+ */
+const onAnimationEnd = (e: AnimationEvent) => {
+    e.stopPropagation();
+    if (closing.value && e.animationName === "player-context-menu-close-animation") {
+        closing.value = false;
+        shown.value = false;
+    }
+};
+
+// Focus trap
+useFocusTrap(
+    container,
+    shown,
+    () => {
+        hide();
     },
-    mounted: function () {
-        this.computeDimensions();
+    null,
+    true,
+);
 
-        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
-        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
-    },
-    methods: {
-        toggleLoop: function () {
-            this.loopState = !this.loopState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        toggleSliceLoop: function () {
-            this.sliceLoopState = !this.sliceLoopState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        toggleFit: function () {
-            this.fitState = !this.fitState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        toggleNotes: function () {
-            this.notesState = !this.notesState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        toggleTimeSlices: function () {
-            this.timeSlicesEditState = !this.timeSlicesEditState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        toggleControls: function () {
-            this.controlsState = !this.controlsState;
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        refreshMedia: function () {
-            MediaController.Load();
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        showTags: function () {
-            this.$emit("open-tags");
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        showDescription: function () {
-            this.$emit("open-desc");
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        download: function () {
-            this.shownState = false;
-            const link = document.createElement("a");
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-
-            const titlePart = this.title ? "&filename=" + encodeURIComponent(this.title) : "";
-
-            if ((this.url + "").includes("?")) {
-                link.href = this.url + "&download=force" + titlePart;
-            } else {
-                link.href = this.url + "?download=force" + titlePart;
-            }
-
-            link.click();
-            this.$emit("close");
-        },
-
-        hide: function () {
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        openStats: function () {
-            this.$emit("stats");
-            this.shownState = false;
-            this.$emit("close");
-        },
-
-        computeDimensions: function () {
-            const pageWidth = window.innerWidth;
-            const pageHeight = window.innerHeight || 1;
-
-            const elementBounds = (this.$el as HTMLElement).getBoundingClientRect();
-
-            const x = this.x;
-            const y = this.y;
-
-            if (y + elementBounds.height > pageHeight) {
-                this.bottom = "0";
-                this.top = "auto";
-            } else {
-                this.top = y + "px";
-                this.bottom = "auto";
-            }
-
-            const maxHeight = pageHeight;
-
-            this.maxHeight = maxHeight + "px";
-
-            const left = x;
-            const maxWidth = pageWidth - left;
-
-            this.left = left + "px";
-            this.right = "auto";
-            this.width = "auto";
-            this.maxWidth = maxWidth + "px";
-        },
-    },
+// Exposed methods
+defineExpose({
+    hide,
+    show,
 });
 </script>
