@@ -748,8 +748,8 @@ export default defineComponent({
                 this.imageWidth = Math.floor(fitDimensions.width) + "px";
                 this.imageHeight = Math.floor(fitDimensions.height) + "px";
             } else {
-                let width = 0;
-                let height = 0;
+                let width: number;
+                let height: number;
 
                 if (fitDimensions.fitWidth) {
                     width = scrollerDimensions.width * (0.5 + this.scale * SCALE_RANGE);

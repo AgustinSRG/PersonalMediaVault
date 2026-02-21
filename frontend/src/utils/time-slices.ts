@@ -10,7 +10,7 @@ export function parseTimeSeconds(str: string): number {
 
     let h = 0;
     let m = 0;
-    let s = 0;
+    let s: number;
 
     if (parts.length > 2) {
         h = parseInt(parts[0], 10) || 0;
@@ -47,7 +47,7 @@ export function parseTimeSlices(text: string): MediaTimeSlice[] {
 
         const spaceIndex = trimLine.indexOf(" ");
 
-        let timeStr = "";
+        let timeStr: string;
         let sliceName = "";
 
         if (spaceIndex >= 0) {

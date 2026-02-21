@@ -129,8 +129,9 @@ addAppEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, AlbumLis
         favorites = favorites.filter((id) => {
             return albums.has(parseInt(id, 10));
         });
-        saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
     }
+
+    saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
 });
 
 const LS_KEY_ALBUMS_ORDER = "app-pref-albums-order";

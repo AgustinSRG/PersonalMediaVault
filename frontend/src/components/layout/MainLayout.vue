@@ -529,7 +529,7 @@ const skipToMainContent = (event?: Event) => {
     if (event) {
         event.preventDefault();
     }
-    let skipTo = null;
+    let skipTo: HTMLElement;
     switch (AppStatus.CurrentLayout) {
         case "media":
         case "media-split":
@@ -539,7 +539,7 @@ const skipToMainContent = (event?: Event) => {
         default:
             skipTo = container.value?.querySelector(".page-content");
             if (skipTo && !isTouchDevice()) {
-                const autoFocused = skipTo.querySelector(".auto-focus");
+                const autoFocused = skipTo.querySelector(".auto-focus") as HTMLElement;
                 if (autoFocused) {
                     skipTo = autoFocused;
                 }
