@@ -233,7 +233,8 @@
             :scale-range-percent="scaleRangePercent"
         ></PlayerTooltip>
 
-        <ImagePlayerConfig
+        <PlayerConfig
+            v-if="displayConfig"
             v-model:shown="displayConfig"
             v-model:resolution="currentResolution"
             v-model:background="background"
@@ -245,7 +246,7 @@
             @update-notes-visible="imageNotesVisibleUpdated"
             @enter="enterControls"
             @leave="leaveControls"
-        ></ImagePlayerConfig>
+        ></PlayerConfig>
 
         <PlayerAttachmentsList
             v-if="metadata && metadata.attachments"
@@ -334,8 +335,8 @@ const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
 });
 
-const ImagePlayerConfig = defineAsyncComponent({
-    loader: () => import("@/components/player/config/ImagePlayerConfig.vue"),
+const PlayerConfig = defineAsyncComponent({
+    loader: () => import("@/components/player/config/PlayerConfig.vue"),
 });
 
 const PlayerEncodingPending = defineAsyncComponent({
@@ -366,7 +367,7 @@ export default defineComponent({
     name: "ImagePlayer",
     components: {
         ScaleControl,
-        ImagePlayerConfig,
+        PlayerConfig,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,

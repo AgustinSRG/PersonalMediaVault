@@ -343,7 +343,8 @@
             </div>
         </div>
 
-        <AudioPlayerConfig
+        <PlayerConfig
+            v-if="displayConfig"
             v-model:shown="displayConfig"
             v-model:speed="speed"
             v-model:loop="loop"
@@ -365,7 +366,7 @@
             @enter="enterControls"
             @leave="leaveControls"
             @update-auto-next="setupAutoNextTimer"
-        ></AudioPlayerConfig>
+        ></PlayerConfig>
 
         <PlayerAttachmentsList
             v-if="metadata && metadata.attachments"
@@ -469,8 +470,8 @@ const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
 });
 
-const AudioPlayerConfig = defineAsyncComponent({
-    loader: () => import("@/components/player/config/AudioPlayerConfig.vue"),
+const PlayerConfig = defineAsyncComponent({
+    loader: () => import("@/components/player/config/PlayerConfig.vue"),
 });
 
 const PlayerSubtitles = defineAsyncComponent({
@@ -505,7 +506,7 @@ export default defineComponent({
     name: "AudioPlayer",
     components: {
         VolumeControl,
-        AudioPlayerConfig,
+        PlayerConfig,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,

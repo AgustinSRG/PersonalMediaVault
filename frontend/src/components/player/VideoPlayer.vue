@@ -369,7 +369,8 @@
             </div>
         </div>
 
-        <VideoPlayerConfig
+        <PlayerConfig
+            v-if="displayConfig"
             v-model:shown="displayConfig"
             v-model:speed="speed"
             v-model:scale="scale"
@@ -391,7 +392,7 @@
             @leave="leaveControls"
             @update:audio-track="onUpdateAudioTrack"
             @update-auto-next="setupAutoNextTimer"
-        ></VideoPlayerConfig>
+        ></PlayerConfig>
 
         <PlayerAttachmentsList
             v-if="metadata && metadata.attachments"
@@ -493,8 +494,8 @@ const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
 });
 
-const VideoPlayerConfig = defineAsyncComponent({
-    loader: () => import("@/components/player/config/VideoPlayerConfig.vue"),
+const PlayerConfig = defineAsyncComponent({
+    loader: () => import("@/components/player/config/PlayerConfig.vue"),
 });
 
 const PlayerSubtitles = defineAsyncComponent({
@@ -529,7 +530,7 @@ export default defineComponent({
     name: "VideoPlayer",
     components: {
         VolumeControl,
-        VideoPlayerConfig,
+        PlayerConfig,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,
