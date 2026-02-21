@@ -14,7 +14,7 @@
         "update-locales": "npm run update-translations",
         "update-translations": "node scripts/translate-file-maker.cjs",
         "apply-missing-translations": "node scripts/apply-missing-translations.cjs",
-        "update-fa-subset": "node scripts/create-fa-subset.cjs",
+        "update-fa-subset": "node scripts/create-fa-subset.cjs && npm run prettier",
         "visualize-bundle": "vite-bundle-visualizer -o bundle-size-stats.html --sourcemap"
     },
     "dependencies": {
@@ -35,6 +35,9 @@
         "vite": "7.3.1",
         "vite-plugin-pwa": "1.2.0",
         "vue-tsc": "3.2.5"
+    },
+    "overrides": {
+        "minimatch": "10.2.2"
     },
     "optionalDependencies": {
         "fonteditor-core": "2.6.3",
