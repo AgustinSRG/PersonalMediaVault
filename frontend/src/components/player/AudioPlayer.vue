@@ -466,6 +466,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE, EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
+import type { HelpTooltipType } from "@/utils/player-tooltip";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -627,7 +628,7 @@ export default defineComponent({
 
             feedback: "",
 
-            helpTooltip: "",
+            helpTooltip: "" as HelpTooltipType,
 
             animationColors: "",
 
@@ -809,7 +810,7 @@ export default defineComponent({
             this.displayConfig = false;
         },
 
-        enterTooltip: function (t: string) {
+        enterTooltip: function (t: HelpTooltipType) {
             if (isTouchDevice()) {
                 this.helpTooltip = "";
                 return;
@@ -832,7 +833,7 @@ export default defineComponent({
             }
         },
 
-        clickControls: function (e: Event) {
+        clickControls: function (e?: Event) {
             this.displayConfig = false;
             this.$refs.contextMenu?.hide();
             this.displayAttachments = false;

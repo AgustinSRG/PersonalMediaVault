@@ -15,93 +15,142 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent } from "vue";
+import { computed } from "vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import type { MediaListItem } from "@/api/models";
+import { useI18n } from "@/composables/use-i18n";
+import type { HelpTooltipType } from "@/utils/player-tooltip";
 
+// Tooltips to be displayed on the left
 const LEFT_TOOLTIPS = ["play", "pause", "prev", "next", "volume", "scale"];
 
-export default defineComponent({
-    name: "PlayerTooltip",
-    components: {
-        PlayerMediaChangePreview,
-    },
-    props: {
-        next: Object as PropType<MediaListItem>,
-        prev: Object as PropType<MediaListItem>,
+// Translation
+const { $t } = useI18n();
 
-        pageNext: Boolean,
-        pagePrev: Boolean,
+// Props
+const props = defineProps({
+    /**
+     * Next element
+     */
+    next: Object as PropType<MediaListItem>,
 
-        helpTooltip: String,
+    /**
+     * Previous element
+     */
+    prev: Object as PropType<MediaListItem>,
 
-        muted: Boolean,
-        volume: Number,
+    /**
+     * Has next element? (page)
+     */
+    pageNext: Boolean,
 
-        fit: Boolean,
-        scale: Number,
+    /**
+     * Has previous element? (page)
+     */
+    pagePrev: Boolean,
 
-        scaleRangePercent: Number,
+    /**
+     * Type of help tooltip
+     */
+    helpTooltip: String as PropType<HelpTooltipType>,
 
-        hideRightTooltip: Boolean,
-    },
-    computed: {
-        isLeft(): boolean {
-            return LEFT_TOOLTIPS.includes(this.helpTooltip);
-        },
-        isHidden(): boolean {
-            if (!this.helpTooltip) {
-                return true;
-            }
+    /**
+     * Muted?
+     */
+    muted: Boolean,
 
-            switch (this.helpTooltip) {
-                case "next":
-                    return !this.next && !this.pageNext;
-                case "prev":
-                    return !this.prev && !this.pagePrev;
-                default:
-                    return !this.isLeft && this.hideRightTooltip;
-            }
-        },
-        helpTooltipText(): string {
-            switch (this.helpTooltip) {
-                case "play":
-                    return this.$t("Play");
-                case "pause":
-                    return this.$t("Pause");
-                case "volume":
-                    return this.$t("Volume") + " (" + (this.muted ? this.$t("Muted") : this.renderVolume(this.volume)) + ")";
-                case "scale":
-                    return this.$t("Scale") + " (" + (this.fit ? this.$t("Fit") : this.renderScale(this.scale)) + ")";
-                case "desc":
-                    return this.$t("Description");
-                case "attachments":
-                    return this.$t("Attachments");
-                case "related-media":
-                    return this.$t("Related media");
-                case "config":
-                    return this.$t("Player Configuration");
-                case "albums":
-                    return this.$t("Manage albums");
-                case "full-screen":
-                    return this.$t("Full screen");
-                case "full-screen-exit":
-                    return this.$t("Exit full screen");
-                default:
-                    return "???";
-            }
-        },
-    },
-    methods: {
-        renderVolume: function (v: number): string {
-            return Math.round(v * 100) + "%";
-        },
+    /**
+     * Volume
+     */
+    volume: Number,
 
-        renderScale: function (v: number): string {
-            return Math.round(50 + v * this.scaleRangePercent) + "%";
-        },
-    },
+    /**
+     * Fit image?
+     */
+    fit: Boolean,
+
+    /**
+     * Image scale
+     */
+    scale: Number,
+
+    /**
+     * Scale (percent)
+     */
+    scaleRangePercent: Number,
+
+    /**
+     * Hide right tooltip?
+     */
+    hideRightTooltip: Boolean,
 });
+
+// True if the tooltip must be displayed to the left
+const isLeft = computed<boolean>(() => LEFT_TOOLTIPS.includes(props.helpTooltip));
+
+// True if the tooltip must be hidden
+const isHidden = computed<boolean>(() => {
+    if (!props.helpTooltip) {
+        return true;
+    }
+
+    switch (props.helpTooltip) {
+        case "next":
+            return !props.next && !props.pageNext;
+        case "prev":
+            return !props.prev && !props.pagePrev;
+        default:
+            return !isLeft.value && props.hideRightTooltip;
+    }
+});
+
+// Text to display in the tooltip
+const helpTooltipText = computed<string>(() => {
+    switch (props.helpTooltip) {
+        case "play":
+            return $t("Play");
+        case "pause":
+            return $t("Pause");
+        case "volume":
+            return $t("Volume") + " (" + (props.muted ? $t("Muted") : renderVolume(props.volume)) + ")";
+        case "scale":
+            return $t("Scale") + " (" + (props.fit ? $t("Fit") : renderScale(props.scale)) + ")";
+        case "desc":
+            return $t("Description");
+        case "attachments":
+            return $t("Attachments");
+        case "related-media":
+            return $t("Related media");
+        case "config":
+            return $t("Player Configuration");
+        case "albums":
+            return $t("Manage albums");
+        case "full-screen":
+            return $t("Full screen");
+        case "full-screen-exit":
+            return $t("Exit full screen");
+        default:
+            return "???";
+    }
+});
+
+/**
+ * Renders volume
+ * @param v The value
+ * @returns The rendered value
+ */
+const renderVolume = (v: number): string => {
+    return Math.round(v * 100) + "%";
+};
+
+/**
+ * Renders scale
+ * @param v The value
+ * @returns The rendered value
+ */
+const renderScale = (v: number): string => {
+    return Math.round(50 + v * props.scaleRangePercent) + "%";
+};
 </script>

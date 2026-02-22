@@ -467,15 +467,7 @@ const onAnimationEnd = (e: AnimationEvent) => {
 };
 
 // Focus trap
-useFocusTrap(
-    container,
-    shown,
-    () => {
-        hide();
-    },
-    null,
-    true,
-);
+useFocusTrap(container, shown, hide, null, true);
 
 // Exposed methods
 defineExpose({

@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="image-notes-container"
         :class="{ 'edit-active': editing, 'add-active': adding, 'always-visible': visible && !editing && !adding }"
         :style="{ top: top, left: left, width: width, height: height }"
@@ -20,56 +21,56 @@
                 width: mapDim(note.w, 0, realWidth, imageWidth),
                 height: mapDim(note.h, 0, realHeight, imageHeight),
             }"
-            @mousedown="clickOnNotes(note, $event)"
-            @touchstart.passive="clickOnNotes(note, $event)"
+            @mousedown="startMovingMouse(note, $event)"
+            @touchstart.passive="startMovingTouch(note, $event)"
         >
             <div
                 v-if="editing"
                 class="resize resize-left"
-                @mousedown="startResizeNotes(note, $event, 'l')"
-                @touchstart.passive="startResizeNotes(note, $event, 'l')"
+                @mousedown="startResizingMouse(note, $event, 'l')"
+                @touchstart.passive="startResizingTouch(note, $event, 'l')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-top"
-                @mousedown="startResizeNotes(note, $event, 't')"
-                @touchstart.passive="startResizeNotes(note, $event, 't')"
+                @mousedown="startResizingMouse(note, $event, 't')"
+                @touchstart.passive="startResizingTouch(note, $event, 't')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-right"
-                @mousedown="startResizeNotes(note, $event, 'r')"
-                @touchstart.passive="startResizeNotes(note, $event, 'r')"
+                @mousedown="startResizingMouse(note, $event, 'r')"
+                @touchstart.passive="startResizingTouch(note, $event, 'r')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-bottom"
-                @mousedown="startResizeNotes(note, $event, 'b')"
-                @touchstart.passive="startResizeNotes(note, $event, 'b')"
+                @mousedown="startResizingMouse(note, $event, 'b')"
+                @touchstart.passive="startResizingTouch(note, $event, 'b')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-corner-top-left"
-                @mousedown="startResizeNotes(note, $event, 'tl')"
-                @touchstart.passive="startResizeNotes(note, $event, 'tl')"
+                @mousedown="startResizingMouse(note, $event, 'tl')"
+                @touchstart.passive="startResizingTouch(note, $event, 'tl')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-corner-top-right"
-                @mousedown="startResizeNotes(note, $event, 'tr')"
-                @touchstart.passive="startResizeNotes(note, $event, 'tr')"
+                @mousedown="startResizingMouse(note, $event, 'tr')"
+                @touchstart.passive="startResizingTouch(note, $event, 'tr')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-corner-bottom-left"
-                @mousedown="startResizeNotes(note, $event, 'bl')"
-                @touchstart.passive="startResizeNotes(note, $event, 'bl')"
+                @mousedown="startResizingMouse(note, $event, 'bl')"
+                @touchstart.passive="startResizingTouch(note, $event, 'bl')"
             ></div>
             <div
                 v-if="editing"
                 class="resize resize-corner-bottom-right"
-                @mousedown="startResizeNotes(note, $event, 'br')"
-                @touchstart.passive="startResizeNotes(note, $event, 'br')"
+                @mousedown="startResizingMouse(note, $event, 'br')"
+                @touchstart.passive="startResizingTouch(note, $event, 'br')"
             ></div>
 
             <div
@@ -132,516 +133,707 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
+<script setup lang="ts">
+import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import { ImageNotesController } from "@/control/img-notes";
 import { escapeHTML } from "@/utils/html";
 import type { ImageNote } from "@/utils/notes-format";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 import { EVENT_NAME_IMAGE_NOTES_UPDATE, EVENT_NAME_IMAGE_NOTES_CHANGE } from "@/control/app-events";
-
-export default defineComponent({
-    name: "ImageNotes",
-    props: {
-        top: String,
-        left: String,
-        width: String,
-        height: String,
-
-        visible: Boolean,
-
-        editing: Boolean,
-
-        contextOpen: Boolean,
-    },
-    data: function () {
-        return {
-            notes: [] as ImageNote[],
-
-            selectedNotes: -1,
-            selectedNotesData: null as ImageNote | null,
-
-            realWidth: 1,
-            realHeight: 1,
-
-            imageWidth: 1,
-            imageHeight: 1,
-
-            adding: false,
-
-            addStartX: 0,
-            addStartY: 0,
-
-            addX: 0,
-            addY: 0,
-            addW: 0,
-            addH: 0,
-
-            moving: false,
-            moveOriginalX: 0,
-            moveOriginalY: 0,
-            moveStartX: 0,
-            moveStartY: 0,
-
-            resizing: false,
-            resizeOriginalX: 0,
-            resizeOriginalY: 0,
-            resizeOriginalW: 0,
-            resizeOriginalH: 0,
-            resizeStartX: 0,
-            resizeStartY: 0,
-            resizeMode: "",
-
-            selectedNote: null as ImageNote | null,
-            hoverRight: "",
-            hoverLeft: "",
-            hoverTop: "",
-            hoverBottom: "",
-            hoverPinned: false,
-        };
-    },
-
-    watch: {
-        top: function () {
-            this.updateRealDimensions();
-        },
-
-        left: function () {
-            this.updateRealDimensions();
-        },
-
-        width: function () {
-            this.updateRealDimensions();
-        },
-
-        height: function () {
-            this.updateRealDimensions();
-        },
-    },
-
-    mounted: function () {
-        this.updateRealDimensions();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
-            switch (mode) {
-                case "push":
-                    this.onNotesPush(note);
-                    break;
-                case "rm":
-                    this.onNotesRemove(index);
-                    break;
-                case "update":
-                    this.onNotesChange(index, note);
-                    break;
-            }
-        });
-
-        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.touchMove.bind(this));
-
-        this.onNotesUpdate();
-    },
-
-    methods: {
-        mapDim: function (dim: number, minDim: number, maxDim: number, imgDim: number) {
-            return Math.min(maxDim, Math.max(minDim, Math.round((dim * maxDim) / imgDim))) + "px";
-        },
-
-        escapeText: function (txt: string): string {
-            return escapeHTML(txt).replace(/\n/g, "<br>");
-        },
-
-        startAddingMouse: function (e: MouseEvent) {
-            if (e.button !== 0) {
-                return; // Not the main button
-            }
-
-            this.startAdding(positionEventFromMouseEvent(e));
-        },
-
-        startAddingTouch: function (e: TouchEvent) {
-            this.startAdding(positionEventFromTouchEvent(e));
-        },
-
-        startAdding: function (e: PositionEvent) {
-            if (!this.editing) {
-                this.onClickFindNotes(e);
-                return;
-            }
-            if (this.contextOpen) {
-                return;
-            }
-            if (this.selectedNotesData) {
-                this.selectedNotesData = null;
-                this.selectedNotes = -1;
-                return;
-            }
-
-            e.e.stopPropagation();
-
-            const bounds = this.$el.getBoundingClientRect();
-            const x = e.x;
-            const y = e.y;
-
-            const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-            const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-            this.adding = true;
-            this.addStartX = trueX;
-            this.addStartY = trueY;
-
-            this.addX = trueX;
-            this.addY = trueY;
-            this.addW = 32;
-            this.addH = 32;
-        },
-
-        onClickFindNotes: function (e: PositionEvent) {
-            this.hoverPinned = false;
-            this.onMoveInsideNotesContainer(e);
-
-            this.hoverPinned = !!this.selectedNote;
-        },
-
-        onMouseLeave: function () {
-            if (this.hoverPinned) {
-                return;
-            }
-            this.selectedNote = null;
-        },
-
-        onMouseMoveInsideContainer: function (e: MouseEvent) {
-            this.onMoveInsideNotesContainer(positionEventFromMouseEvent(e));
-        },
-
-        onMoveInsideNotesContainer: function (e: PositionEvent) {
-            const x = e.x;
-            const y = e.y;
-
-            const bounds = this.$el.getBoundingClientRect();
-
-            const realY = y - bounds.top;
-            const realX = x - bounds.left;
-
-            const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-            const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-            for (const note of this.notes) {
-                if (this.hoverPinned && this.selectedNote === note) {
-                    continue;
-                }
-                if (trueX >= note.x && trueX <= note.x + note.w) {
-                    if (trueY >= note.y && trueY <= note.y + note.h) {
-                        this.selectedNote = note;
-
-                        // Position mouse
-
-                        if (realY < bounds.height / 2) {
-                            this.hoverTop = realY + 8 + "px";
-                            this.hoverBottom = "";
-                        } else {
-                            this.hoverTop = "";
-                            this.hoverBottom = bounds.height - realY + 8 + "px";
-                        }
-
-                        if (realX < bounds.width / 2) {
-                            this.hoverLeft = realX + 8 + "px";
-                            this.hoverRight = "";
-                        } else {
-                            this.hoverLeft = "";
-                            this.hoverRight = bounds.width - realX + 8 + "px";
-                        }
-
-                        this.hoverPinned = false;
-
-                        return;
-                    }
-                }
-            }
-
-            if (!this.hoverPinned) {
-                this.selectedNote = null;
-            }
-        },
-
-        autoFocus: function () {
-            nextTick(() => {
-                const editElement = this.$el.querySelector(".auto-focus");
-                if (editElement) {
-                    editElement.focus();
-                }
-            });
-        },
-
-        mouseDrop: function () {
-            if (!this.adding && !this.moving && !this.resizing) {
-                return;
-            }
-            if (this.adding) {
-                this.adding = false;
-                ImageNotesController.AddNote(this.addX, this.addY, this.addW, this.addH);
-            }
-
-            if (this.moving) {
-                this.moving = false;
-                if (this.selectedNotesData) {
-                    ImageNotesController.ModifyNote(this.selectedNotesData);
-                }
-                this.autoFocus();
-            }
-            if (this.resizing) {
-                this.resizing = false;
-                if (this.selectedNotesData) {
-                    ImageNotesController.ModifyNote(this.selectedNotesData);
-                }
-                this.autoFocus();
-            }
-        },
-
-        touchMove: function (e: TouchEvent) {
-            this.move(positionEventFromTouchEvent(e));
-        },
-
-        mouseMove(e: MouseEvent) {
-            this.move(positionEventFromMouseEvent(e));
-        },
-
-        move: function (e: PositionEvent) {
-            if (!this.adding && !this.moving && !this.resizing) {
-                return;
-            }
-            const bounds = this.$el.getBoundingClientRect();
-            const x = e.x;
-            const y = e.y;
-
-            if (this.adding) {
-                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-                if (trueX - this.addStartX > 0) {
-                    this.addX = this.addStartX;
-                    this.addW = Math.max(32, trueX - this.addStartX);
-                } else {
-                    this.addX = Math.max(0, trueX);
-                    this.addW = Math.max(32, this.addStartX - trueX);
-                }
-
-                if (trueY - this.addStartY > 0) {
-                    this.addY = this.addStartY;
-                    this.addH = trueY - this.addStartY;
-                } else {
-                    this.addY = Math.max(0, trueY);
-                    this.addH = Math.max(32, this.addStartY - trueY);
-                }
-            }
-            if (this.moving && this.selectedNotesData) {
-                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-                const diffX = this.moveStartX - trueX;
-                this.selectedNotesData.x = Math.max(0, this.moveOriginalX - diffX);
-
-                if (this.selectedNotesData.x + this.selectedNotesData.w > this.imageWidth) {
-                    this.selectedNotesData.x = Math.max(0, this.imageWidth - this.selectedNotesData.w);
-                }
-
-                const diffY = this.moveStartY - trueY;
-                this.selectedNotesData.y = Math.max(0, this.moveOriginalY - diffY);
-
-                if (this.selectedNotesData.y + this.selectedNotesData.h > this.imageHeight) {
-                    this.selectedNotesData.y = Math.max(0, this.imageHeight - this.selectedNotesData.h);
-                }
-            }
-            if (this.resizing && this.selectedNotesData) {
-                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-                const diffX = this.resizeStartX - trueX;
-                const diffY = this.resizeStartY - trueY;
-
-                let x1 = this.resizeOriginalX;
-                let y1 = this.resizeOriginalY;
-                let x2 = x1 + this.resizeOriginalW;
-                let y2 = y1 + this.resizeOriginalH;
-
-                switch (this.resizeMode) {
-                    case "t":
-                        y1 -= diffY;
-                        break;
-                    case "b":
-                        y2 -= diffY;
-                        break;
-                    case "l":
-                        x1 -= diffX;
-                        break;
-                    case "r":
-                        x2 -= diffX;
-                        break;
-                    case "tl":
-                        y1 -= diffY;
-                        x1 -= diffX;
-                        break;
-                    case "tr":
-                        y1 -= diffY;
-                        x2 -= diffX;
-                        break;
-                    case "bl":
-                        y2 -= diffY;
-                        x1 -= diffX;
-                        break;
-                    case "br":
-                        y2 -= diffY;
-                        x2 -= diffX;
-                        break;
-                }
-
-                x1 = Math.min(this.imageWidth, Math.max(0, x1));
-                x2 = Math.min(this.imageWidth, Math.max(0, x2));
-
-                y1 = Math.min(this.imageHeight, Math.max(0, y1));
-                y2 = Math.min(this.imageHeight, Math.max(0, y2));
-
-                this.selectedNotesData.x = Math.min(x1, x2);
-                this.selectedNotesData.y = Math.min(y1, y2);
-
-                this.selectedNotesData.w = Math.max(32, Math.abs(x1 - x2));
-                this.selectedNotesData.h = Math.max(32, Math.abs(y1 - y2));
-            }
-        },
-
-        clickOnNotes: function (notes, e) {
-            if (this.contextOpen) {
-                return;
-            }
-            if (!this.editing) {
-                return;
-            }
-            if (this.moving || this.resizing) {
-                return;
-            }
-            if ((e.which || e.button) !== 1) {
-                return;
-            }
-            e.stopPropagation();
-            this.selectedNotes = notes.id;
-            this.selectedNotesData = notes;
-            const bounds = this.$el.getBoundingClientRect();
-            let x: number;
-            let y: number;
-            if (e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX;
-                y = e.touches[0].pageY;
-            } else {
-                x = e.pageX;
-                y = e.pageY;
-            }
-            const trueX = Math.max(0, Math.min(this.imageWidth, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-            const trueY = Math.max(0, Math.min(this.imageHeight, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-            this.moving = true;
-            this.moveStartX = trueX;
-            this.moveStartY = trueY;
-            this.moveOriginalX = notes.x;
-            this.moveOriginalY = notes.y;
-        },
-
-        startResizeNotes: function (notes, e, resizeMode) {
-            if (this.contextOpen) {
-                return;
-            }
-            if (!this.editing) {
-                return;
-            }
-            if (this.moving || this.resizing) {
-                return;
-            }
-            if ((e.which || e.button) !== 1) {
-                return;
-            }
-            e.stopPropagation();
-            this.selectedNotes = notes.id;
-            this.selectedNotesData = notes;
-            const bounds = this.$el.getBoundingClientRect();
-            let x: number;
-            let y: number;
-            if (e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX;
-                y = e.touches[0].pageY;
-            } else {
-                x = e.pageX;
-                y = e.pageY;
-            }
-            const trueX = Math.max(0, Math.min(this.imageWidth, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
-            const trueY = Math.max(0, Math.min(this.imageHeight, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
-
-            this.resizing = true;
-            this.resizeMode = resizeMode;
-            this.resizeOriginalX = notes.x;
-            this.resizeOriginalY = notes.y;
-            this.resizeOriginalW = notes.w;
-            this.resizeOriginalH = notes.h;
-
-            this.resizeStartX = trueX;
-            this.resizeStartY = trueY;
-        },
-
-        saveNote: function (note: ImageNote) {
-            ImageNotesController.ModifyNote(note);
-            this.selectedNotes = -1;
-            this.selectedNotesData = null;
-        },
-
-        deleteNote: function (note: ImageNote) {
-            ImageNotesController.RemoveNote(note);
-            this.selectedNotes = -1;
-            this.selectedNotesData = null;
-        },
-
-        onNotesUpdate: function () {
-            this.notes = ImageNotesController.GetNotes();
-            this.imageWidth = Math.max(1, ImageNotesController.ImageWidth);
-            this.imageHeight = Math.max(1, ImageNotesController.ImageHeight);
-        },
-
-        onNotesPush: function (note: ImageNote) {
-            this.notes.push({
-                id: note.id,
-                x: note.x,
-                y: note.y,
-                w: note.w,
-                h: note.h,
-                text: note.text,
-            });
-
-            this.selectedNotes = note.id;
-            this.selectedNotesData = this.notes[this.notes.length - 1];
-            this.autoFocus();
-        },
-
-        onNotesChange: function (i: number, note: ImageNote) {
-            this.notes[i].x = note.x;
-            this.notes[i].y = note.y;
-            this.notes[i].w = note.w;
-            this.notes[i].h = note.h;
-        },
-
-        onNotesRemove: function (i: number) {
-            this.notes.splice(i, 1);
-        },
-
-        updateRealDimensions: function () {
-            nextTick(() => {
-                const bounds = this.$el.getBoundingClientRect();
-                this.realWidth = bounds.width;
-                this.realHeight = bounds.height;
-            });
-        },
-    },
+import { useI18n } from "@/composables/use-i18n";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { onDocumentEvent } from "@/composables/on-document-event";
+import { stopPropagationEvent } from "@/utils/events";
+
+/**
+ * Maps a dimension based in the image dimensions
+ * @param dim The dimension
+ * @param minDim The min dimension
+ * @param maxDim The max dimension
+ * @param imgDim The image dimension
+ * @returns The mapped dimension
+ */
+const mapDim = (dim: number, minDim: number, maxDim: number, imgDim: number) => {
+    return Math.min(maxDim, Math.max(minDim, Math.round((dim * maxDim) / imgDim))) + "px";
+};
+
+/**
+ * Escapes image notes text to avoid HTML injection
+ * @param txt The original text
+ * @returns The escaped text
+ */
+const escapeText = (txt: string): string => {
+    return escapeHTML(txt).replace(/\n/g, "<br>");
+};
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// Props
+const props = defineProps({
+    /**
+     * Top coordinate
+     */
+    top: String,
+    /**
+     * Left coordinate
+     */
+    left: String,
+
+    /**
+     * Width dimension
+     */
+    width: String,
+
+    /**
+     * Height dimension
+     */
+    height: String,
+
+    /**
+     * True if visible
+     */
+    visible: Boolean,
+
+    /**
+     * True if editing
+     */
+    editing: Boolean,
+
+    /**
+     * True if context menu is opened
+     */
+    contextOpen: Boolean,
 });
+
+// List of image notes
+const notes = ref<ImageNote[]>(ImageNotesController.GetNotes());
+
+// Image dimensions (pixels)
+const imageWidth = ref(Math.max(1, ImageNotesController.ImageWidth));
+const imageHeight = ref(Math.max(1, ImageNotesController.ImageHeight));
+
+onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, () => {
+    notes.value = ImageNotesController.GetNotes();
+    imageWidth.value = Math.max(1, ImageNotesController.ImageWidth);
+    imageHeight.value = Math.max(1, ImageNotesController.ImageHeight);
+});
+
+// Id of the selected note
+const selectedNotes = ref(-1);
+
+// Data of the selected note
+const selectedNotesData = ref<ImageNote | null>(null);
+
+/**
+ * Called when a note is pushed
+ * @param note The note
+ */
+const onNotesPush = (note: ImageNote) => {
+    notes.value.push({
+        id: note.id,
+        x: note.x,
+        y: note.y,
+        w: note.w,
+        h: note.h,
+        text: note.text,
+    });
+
+    selectedNotes.value = note.id;
+    selectedNotesData.value = notes.value[notes.value.length - 1];
+    autoFocus();
+};
+
+/**
+ * Called when anote changes
+ * @param i The note index
+ * @param note The new note data
+ */
+const onNotesChange = (i: number, note: ImageNote) => {
+    notes.value[i].x = note.x;
+    notes.value[i].y = note.y;
+    notes.value[i].w = note.w;
+    notes.value[i].h = note.h;
+};
+
+/**
+ * Called when a note is removed
+ * @param i The note index
+ */
+const onNotesRemove = (i: number) => {
+    notes.value.splice(i, 1);
+};
+
+onApplicationEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
+    switch (mode) {
+        case "push":
+            onNotesPush(note);
+            break;
+        case "rm":
+            onNotesRemove(index);
+            break;
+        case "update":
+            onNotesChange(index, note);
+            break;
+    }
+});
+
+// Real dimensions (pixels)
+const realWidth = ref(1);
+const realHeight = ref(1);
+
+/**
+ * Updates the real dimensions of the container
+ */
+const updateRealDimensions = () => {
+    nextTick(() => {
+        if (!container.value) {
+            return;
+        }
+
+        const bounds = container.value.getBoundingClientRect();
+        realWidth.value = bounds.width;
+        realHeight.value = bounds.height;
+    });
+};
+
+onMounted(updateRealDimensions);
+
+watch([() => props.top, () => props.left, () => props.width, () => props.height], updateRealDimensions);
+
+// True if adding anote
+const adding = ref(false);
+
+// Initial coordinated for the adding note
+const addStartX = ref(0);
+const addStartY = ref(0);
+
+// Coordinated of the adding note
+const addX = ref(0);
+const addY = ref(0);
+const addW = ref(0);
+const addH = ref(0);
+
+// True if moving anote
+const moving = ref(false);
+
+// Moving coordinates
+const moveOriginalX = ref(0);
+const moveOriginalY = ref(0);
+const moveStartX = ref(0);
+const moveStartY = ref(0);
+
+// True if resizing a note
+const resizing = ref(false);
+
+// Resizing coordinates
+const resizeOriginalX = ref(0);
+const resizeOriginalY = ref(0);
+const resizeOriginalW = ref(0);
+const resizeOriginalH = ref(0);
+const resizeStartX = ref(0);
+const resizeStartY = ref(0);
+
+// Resize modes. Depending in from where is being resized
+type ResizeMode = "" | "t" | "b" | "l" | "r" | "tl" | "tr" | "bl" | "br";
+
+// Resize mode
+const resizeMode = ref<ResizeMode>("");
+
+// Selected note to display
+const selectedNote = ref<ImageNote | null>(null);
+
+// Hover coordinates
+const hoverRight = ref("");
+const hoverLeft = ref("");
+const hoverTop = ref("");
+const hoverBottom = ref("");
+
+// True if hover is pinned
+const hoverPinned = ref(false);
+
+/**
+ * Called when the user moves inside a note container,
+ * in order to display it.
+ * @param e The position event
+ */
+const onMoveInsideNotesContainer = (e: PositionEvent) => {
+    if (!container.value) {
+        return;
+    }
+
+    const x = e.x;
+    const y = e.y;
+
+    const bounds = container.value.getBoundingClientRect();
+
+    const realY = y - bounds.top;
+    const realX = x - bounds.left;
+
+    const trueX = Math.max(0, Math.min(imageWidth.value - 32, Math.round(((x - bounds.left) * imageWidth.value) / bounds.width)));
+    const trueY = Math.max(0, Math.min(imageHeight.value - 32, Math.round(((y - bounds.top) * imageHeight.value) / bounds.height)));
+
+    for (const note of notes.value) {
+        if (hoverPinned.value && selectedNote.value === note) {
+            continue;
+        }
+        if (trueX >= note.x && trueX <= note.x + note.w) {
+            if (trueY >= note.y && trueY <= note.y + note.h) {
+                selectedNote.value = note;
+
+                // Position mouse
+
+                if (realY < bounds.height / 2) {
+                    hoverTop.value = realY + 8 + "px";
+                    hoverBottom.value = "";
+                } else {
+                    hoverTop.value = "";
+                    hoverBottom.value = bounds.height - realY + 8 + "px";
+                }
+
+                if (realX < bounds.width / 2) {
+                    hoverLeft.value = realX + 8 + "px";
+                    hoverRight.value = "";
+                } else {
+                    hoverLeft.value = "";
+                    hoverRight.value = bounds.width - realX + 8 + "px";
+                }
+
+                hoverPinned.value = false;
+
+                return;
+            }
+        }
+    }
+
+    if (!hoverPinned.value) {
+        selectedNote.value = null;
+    }
+};
+
+/**
+ * Called when the user click on a note
+ * @param e The click event
+ */
+const onClickFindNotes = (e: PositionEvent) => {
+    hoverPinned.value = false;
+    onMoveInsideNotesContainer(e);
+    hoverPinned.value = !!selectedNote.value;
+};
+
+/**
+ * Called when the user hovers a note
+ * @param e The mouse event
+ */
+const onMouseMoveInsideContainer = (e: MouseEvent) => {
+    onMoveInsideNotesContainer(positionEventFromMouseEvent(e));
+};
+
+/**
+ * Called when the mouse leaves a container
+ */
+const onMouseLeave = () => {
+    if (hoverPinned.value) {
+        return;
+    }
+    selectedNote.value = null;
+};
+
+/**
+ * Called when the user clicks in the container,
+ * in order to add or, if no edit mode, to select
+ * an image note.
+ * @param e The position event
+ */
+const startAdding = (e: PositionEvent) => {
+    if (!container.value) {
+        return;
+    }
+
+    if (!props.editing) {
+        onClickFindNotes(e);
+        return;
+    }
+
+    if (props.contextOpen) {
+        return;
+    }
+
+    if (selectedNotesData.value) {
+        selectedNotesData.value = null;
+        selectedNotes.value = -1;
+        return;
+    }
+
+    e.e.stopPropagation();
+
+    const bounds = container.value.getBoundingClientRect();
+
+    const x = e.x;
+    const y = e.y;
+
+    const trueX = Math.max(0, Math.min(imageWidth.value - 32, Math.round(((x - bounds.left) * imageWidth.value) / bounds.width)));
+    const trueY = Math.max(0, Math.min(imageHeight.value - 32, Math.round(((y - bounds.top) * imageHeight.value) / bounds.height)));
+
+    adding.value = true;
+    addStartX.value = trueX;
+    addStartY.value = trueY;
+
+    addX.value = trueX;
+    addY.value = trueY;
+    addW.value = 32;
+    addH.value = 32;
+};
+
+/**
+ * Starts adding a note with the mouse
+ * @param e The mouse event
+ */
+const startAddingMouse = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return; // Not the main button
+    }
+
+    startAdding(positionEventFromMouseEvent(e));
+};
+
+/**
+ * Starts adding a note with the touch screen
+ * @param e The touch screen
+ */
+const startAddingTouch = (e: TouchEvent) => {
+    startAdding(positionEventFromTouchEvent(e));
+};
+
+/**
+ * Start moving an image note
+ * @param notes The note
+ * @param e The position event
+ */
+const startMoving = (notes: ImageNote, e: PositionEvent) => {
+    if (!container.value) {
+        return;
+    }
+
+    if (props.contextOpen) {
+        return;
+    }
+
+    if (!props.editing) {
+        return;
+    }
+
+    if (moving.value || resizing.value) {
+        return;
+    }
+
+    e.e.stopPropagation();
+
+    selectedNotes.value = notes.id;
+    selectedNotesData.value = notes;
+
+    const bounds = container.value.getBoundingClientRect();
+
+    const x = e.x;
+    const y = e.y;
+
+    const trueX = Math.max(0, Math.min(imageWidth.value, Math.round(((x - bounds.left) * imageWidth.value) / bounds.width)));
+    const trueY = Math.max(0, Math.min(imageHeight.value, Math.round(((y - bounds.top) * imageHeight.value) / bounds.height)));
+
+    moving.value = true;
+    moveStartX.value = trueX;
+    moveStartY.value = trueY;
+    moveOriginalX.value = notes.x;
+    moveOriginalY.value = notes.y;
+};
+
+/**
+ * Starts moving a note with the mouse
+ * @param notes The note
+ * @param e The mouse event
+ */
+const startMovingMouse = (notes: ImageNote, e: MouseEvent) => {
+    if (e.button !== 0) {
+        return; // Not the main button
+    }
+
+    startMoving(notes, positionEventFromMouseEvent(e));
+};
+
+/**
+ * Starts moving a note with the touch screen
+ * @param notes The note
+ * @param e The touch screen
+ */
+const startMovingTouch = (notes: ImageNote, e: TouchEvent) => {
+    startMoving(notes, positionEventFromTouchEvent(e));
+};
+
+/**
+ * Starts resizing a note
+ * @param notes The note
+ * @param e The position event
+ * @param rm The resize mode
+ */
+const startResizing = (notes: ImageNote, e: PositionEvent, rm: ResizeMode) => {
+    if (!container.value) {
+        return;
+    }
+
+    if (props.contextOpen) {
+        return;
+    }
+
+    if (!props.editing) {
+        return;
+    }
+
+    if (moving.value || resizing.value) {
+        return;
+    }
+
+    e.e.stopPropagation();
+
+    selectedNotes.value = notes.id;
+    selectedNotesData.value = notes;
+
+    const bounds = container.value.getBoundingClientRect();
+
+    const x = e.x;
+    const y = e.y;
+
+    const trueX = Math.max(0, Math.min(imageWidth.value, Math.round(((x - bounds.left) * imageWidth.value) / bounds.width)));
+    const trueY = Math.max(0, Math.min(imageHeight.value, Math.round(((y - bounds.top) * imageHeight.value) / bounds.height)));
+
+    resizing.value = true;
+    resizeMode.value = rm;
+    resizeOriginalX.value = notes.x;
+    resizeOriginalY.value = notes.y;
+    resizeOriginalW.value = notes.w;
+    resizeOriginalH.value = notes.h;
+
+    resizeStartX.value = trueX;
+    resizeStartY.value = trueY;
+};
+
+/**
+ * Starts resizing a note with the mouse
+ * @param notes The note
+ * @param e The mouse event
+ * @param resizeMode The resize mode
+ */
+const startResizingMouse = (notes: ImageNote, e: MouseEvent, resizeMode: ResizeMode) => {
+    if (e.button !== 0) {
+        return; // Not the main button
+    }
+
+    startResizing(notes, positionEventFromMouseEvent(e), resizeMode);
+};
+
+/**
+ * Starts resizing a note with the touch screen
+ * @param notes The note
+ * @param e The touch screen
+ * @param resizeMode The resize mode
+ */
+const startResizingTouch = (notes: ImageNote, e: TouchEvent, resizeMode: ResizeMode) => {
+    startResizing(notes, positionEventFromTouchEvent(e), resizeMode);
+};
+
+/**
+ * Called when the user moved the position.
+ * Depending on the mode, it will do one thing or another.
+ * @param e The position event
+ */
+const move = (e: PositionEvent) => {
+    if (!container.value) {
+        return;
+    }
+
+    if (!adding.value && !moving.value && !resizing.value) {
+        return;
+    }
+    const bounds = container.value.getBoundingClientRect();
+
+    const x = e.x;
+    const y = e.y;
+
+    const trueX = Math.min(imageWidth.value, Math.max(0, Math.round(((x - bounds.left) * imageWidth.value) / bounds.width)));
+    const trueY = Math.min(imageHeight.value, Math.max(0, Math.round(((y - bounds.top) * imageHeight.value) / bounds.height)));
+
+    if (adding.value) {
+        if (trueX - addStartX.value > 0) {
+            addX.value = addStartX.value;
+            addW.value = Math.max(32, trueX - addStartX.value);
+        } else {
+            addX.value = Math.max(0, trueX);
+            addW.value = Math.max(32, addStartX.value - trueX);
+        }
+
+        if (trueY - addStartY.value > 0) {
+            addY.value = addStartY.value;
+            addH.value = trueY - addStartY.value;
+        } else {
+            addY.value = Math.max(0, trueY);
+            addH.value = Math.max(32, addStartY.value - trueY);
+        }
+    }
+
+    if (moving.value && selectedNotesData.value) {
+        const diffX = moveStartX.value - trueX;
+
+        selectedNotesData.value.x = Math.max(0, moveOriginalX.value - diffX);
+
+        if (selectedNotesData.value.x + selectedNotesData.value.w > imageWidth.value) {
+            selectedNotesData.value.x = Math.max(0, imageWidth.value - selectedNotesData.value.w);
+        }
+
+        const diffY = moveStartY.value - trueY;
+
+        selectedNotesData.value.y = Math.max(0, moveOriginalY.value - diffY);
+
+        if (selectedNotesData.value.y + selectedNotesData.value.h > imageHeight.value) {
+            selectedNotesData.value.y = Math.max(0, imageHeight.value - selectedNotesData.value.h);
+        }
+    }
+
+    if (resizing.value && selectedNotesData.value) {
+        const diffX = resizeStartX.value - trueX;
+        const diffY = resizeStartY.value - trueY;
+
+        let x1 = resizeOriginalX.value;
+        let y1 = resizeOriginalY.value;
+        let x2 = x1 + resizeOriginalW.value;
+        let y2 = y1 + resizeOriginalH.value;
+
+        switch (resizeMode.value) {
+            case "t":
+                y1 -= diffY;
+                break;
+            case "b":
+                y2 -= diffY;
+                break;
+            case "l":
+                x1 -= diffX;
+                break;
+            case "r":
+                x2 -= diffX;
+                break;
+            case "tl":
+                y1 -= diffY;
+                x1 -= diffX;
+                break;
+            case "tr":
+                y1 -= diffY;
+                x2 -= diffX;
+                break;
+            case "bl":
+                y2 -= diffY;
+                x1 -= diffX;
+                break;
+            case "br":
+                y2 -= diffY;
+                x2 -= diffX;
+                break;
+        }
+
+        x1 = Math.min(imageWidth.value, Math.max(0, x1));
+        x2 = Math.min(imageWidth.value, Math.max(0, x2));
+
+        y1 = Math.min(imageHeight.value, Math.max(0, y1));
+        y2 = Math.min(imageHeight.value, Math.max(0, y2));
+
+        selectedNotesData.value.x = Math.min(x1, x2);
+        selectedNotesData.value.y = Math.min(y1, y2);
+
+        selectedNotesData.value.w = Math.max(32, Math.abs(x1 - x2));
+        selectedNotesData.value.h = Math.max(32, Math.abs(y1 - y2));
+    }
+};
+
+onDocumentEvent("mousemove", (e: MouseEvent) => {
+    move(positionEventFromMouseEvent(e));
+});
+
+onDocumentEvent("touchmove", (e: TouchEvent) => {
+    move(positionEventFromTouchEvent(e));
+});
+
+/**
+ * Called when the mouse or touch is dropped.
+ * This will stop moving, adding or resizing.
+ */
+const drop = () => {
+    if (!adding.value && !moving.value && !resizing.value) {
+        return;
+    }
+
+    if (adding.value) {
+        adding.value = false;
+
+        ImageNotesController.AddNote(addX.value, addY.value, addW.value, addH.value);
+    }
+
+    if (moving.value) {
+        moving.value = false;
+
+        if (selectedNotesData.value) {
+            ImageNotesController.ModifyNote(selectedNotesData.value);
+        }
+
+        autoFocus();
+    }
+
+    if (resizing.value) {
+        resizing.value = false;
+
+        if (selectedNotesData.value) {
+            ImageNotesController.ModifyNote(selectedNotesData.value);
+        }
+
+        autoFocus();
+    }
+};
+
+onDocumentEvent("mouseup", drop);
+onDocumentEvent("touchend", drop);
+
+/**
+ * Saves a note
+ * @param note The note
+ */
+const saveNote = (note: ImageNote) => {
+    ImageNotesController.ModifyNote(note);
+
+    selectedNotes.value = -1;
+    selectedNotesData.value = null;
+};
+
+/**
+ * Deletes a note
+ * @param note The note
+ */
+const deleteNote = (note: ImageNote) => {
+    ImageNotesController.RemoveNote(note);
+
+    selectedNotes.value = -1;
+    selectedNotesData.value = null;
+};
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        const autoFocusElement = container.value?.querySelector(".auto-focus") as HTMLElement;
+
+        if (autoFocusElement) {
+            autoFocusElement.focus();
+        }
+    });
+};
 </script>

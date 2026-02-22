@@ -37,78 +37,73 @@
                           }
                         : {}
                 "
-                v-html="renderSubtitles(subtitles, allowLineBreaks, allowColors)"
+                v-html="renderedSubtitles"
             ></div>
         </div>
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { getSubtitlesOptions } from "@/control/player-preferences";
 import { toHtmlMinimal } from "@/utils/html-min";
 import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/control/app-events";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
-export default defineComponent({
-    name: "PlayerSubtitles",
-    props: {
-        showControls: Boolean,
-        subtitles: String,
-    },
-    data: function () {
-        const options = getSubtitlesOptions();
+// Props
+const props = defineProps({
+    /**
+     * Controls are shown?
+     */
+    showControls: Boolean,
 
-        return {
-            size: options.size,
-            customSize: options.customSize,
-            bg: options.bg,
-            pos: options.pos,
-            allowLineBreaks: options.allowLineBreaks,
-            allowColors: options.allowColors,
-            margin: options.margin,
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, this.fetchSubtitlesOptions.bind(this));
-    },
-    methods: {
-        renderSubtitles: function (text: string, allowLineBreaks: boolean, allowColors: boolean): string {
-            return toHtmlMinimal(text, {
-                allowColors,
-                allowLineBreaks,
-            });
-        },
-
-        fetchSubtitlesOptions: function () {
-            const options = getSubtitlesOptions();
-
-            if (options.size !== this.size) {
-                this.size = options.size;
-            }
-
-            if (options.customSize !== this.customSize) {
-                this.customSize = options.customSize;
-            }
-
-            if (options.allowColors !== this.allowColors) {
-                this.allowColors = options.allowColors;
-            }
-            if (options.allowLineBreaks !== this.allowLineBreaks) {
-                this.allowLineBreaks = options.allowLineBreaks;
-            }
-
-            if (options.bg !== this.bg) {
-                this.bg = options.bg;
-            }
-
-            if (options.pos !== this.pos) {
-                this.pos = options.pos;
-            }
-
-            if (options.margin !== this.margin) {
-                this.margin = options.margin;
-            }
-        },
-    },
+    /**
+     * Subtitles to display
+     */
+    subtitles: String,
 });
+
+// Initial subtitles options
+const initialOptions = getSubtitlesOptions();
+
+// Subtitles size
+const size = ref(initialOptions.size);
+
+// Custom subtitles size (px)
+const customSize = ref(initialOptions.customSize);
+
+// Subtitles background
+const bg = ref(initialOptions.bg);
+
+// Subtitles position
+const pos = ref(initialOptions.pos);
+
+// Allow line breaks?
+const allowLineBreaks = ref(initialOptions.allowLineBreaks);
+
+// Allow colors?
+const allowColors = ref(initialOptions.allowColors);
+
+// Subtitles margin
+const margin = ref(initialOptions.margin);
+
+onApplicationEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, () => {
+    const options = getSubtitlesOptions();
+
+    size.value = options.size;
+    customSize.value = options.customSize;
+    bg.value = options.bg;
+    pos.value = options.pos;
+    allowLineBreaks.value = options.allowLineBreaks;
+    allowColors.value = options.allowColors;
+    margin.value = options.margin;
+});
+
+// Rendered subtitles
+const renderedSubtitles = computed(() =>
+    toHtmlMinimal(props.subtitles, {
+        allowColors: allowColors.value,
+        allowLineBreaks: allowLineBreaks.value,
+    }),
+);
 </script>

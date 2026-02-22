@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="player-top-bar"
         :class="{
             hidden: !shown,
@@ -44,164 +45,236 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { MediaController } from "@/control/media";
 import type { PropType } from "vue";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import { useVModel } from "@/utils/v-model";
-import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
+import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
 import { AuthController } from "@/control/auth";
 import type { MediaData } from "@/api/models";
 import { ExitPreventer } from "@/control/exit-prevent";
+import { useI18n } from "@/composables/use-i18n";
+import { stopPropagationEvent } from "@/utils/events";
+import { useTimeout } from "@/composables/use-timeout";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+
+const PlayerAlbumFullScreen = defineAsyncComponent({
+    loader: () => import("@/components/player/common/PlayerAlbumFullScreen.vue"),
+});
 
 const PlayerMediaEditor = defineAsyncComponent({
     loader: () => import("@/components/player/editor/PlayerMediaEditor.vue"),
 });
 
-export default defineComponent({
-    name: "PlayerTopBar",
-    components: {
-        PlayerAlbumFullScreen,
-        PlayerMediaEditor,
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: Number,
+
+    /**
+     * Media metadata
+     */
+    metadata: Object as PropType<MediaData>,
+
+    /**
+     * Is in album?
+     */
+    inAlbum: Boolean,
+
+    /**
+     * Display the top bar?
+     */
+    shown: Boolean,
+
+    /**
+     * Is full screen?
+     */
+    fullscreen: Boolean,
+});
+
+// True if player editor is expanded
+const expanded = defineModel<boolean>("expanded");
+
+// Is album expanded in full screen
+const albumExpanded = defineModel<boolean>("albumExpanded");
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The top bar was clicked
+     */
+    (e: "click-player"): void;
+}>();
+
+// Changes made to the media in editor?
+const dirty = ref(false);
+
+// Expanding?
+const expanding = ref(false);
+
+// The user clicked to contract the top bar?
+const clickedContract = ref(false);
+
+// The album expanded can only be true when full screen
+watch(
+    () => props.fullscreen,
+    () => {
+        albumExpanded.value = false;
     },
-    props: {
-        mid: Number,
-        metadata: Object as PropType<MediaData>,
+);
 
-        inAlbum: Boolean,
+// Timeout to load the media after dirty editor closes
+const mediaLoadTimeout = useTimeout();
 
-        shown: Boolean,
-        fullscreen: Boolean,
-        expanded: Boolean,
-        albumExpanded: Boolean,
-    },
-    emits: ["update:expanded", "update:albumExpanded", "click-player"],
-    setup(props) {
-        return {
-            expandedState: useVModel(props, "expanded"),
-            albumExpandedState: useVModel(props, "albumExpanded"),
-        };
-    },
-    data: function () {
-        return {
-            dirty: false,
-            expanding: false,
+// Delay to load the media after
+const MEDIA_LOAD_DELAY = 100;
 
-            clickedContract: false,
-        };
-    },
-    watch: {
-        fullscreen: function () {
-            this.albumExpandedState = false;
-        },
-
-        expanded: function () {
-            this.clickedContract = !this.expanded;
-            if (this.expanded) {
-                nextTick(() => {
-                    const el = this.$el.querySelector(".player-media-editor");
-                    if (el) {
-                        el.focus();
-                    }
-                });
+// Watch expanded status in order to focus, or reload the media
+watch(expanded, () => {
+    clickedContract.value = !expanded.value;
+    if (expanded.value) {
+        nextTick(() => {
+            const el = container.value?.querySelector(".player-media-editor") as HTMLElement;
+            if (el) {
+                el.focus();
             }
-            if (this.dirty) {
-                this.dirty = false;
-                setTimeout(() => {
-                    MediaController.Load();
-                }, 100);
+        });
+    }
+    if (dirty.value) {
+        dirty.value = false;
+        mediaLoadTimeout.set(() => {
+            MediaController.Load();
+        }, MEDIA_LOAD_DELAY);
+    }
+});
+
+// Watch for albumExpanded in order to focus it
+watch(albumExpanded, () => {
+    clickedContract.value = false;
+    if (albumExpanded.value) {
+        nextTick(() => {
+            const el = container.value?.querySelector(".player-album-container") as HTMLElement;
+            if (el) {
+                el.focus();
             }
-        },
+        });
+    }
+});
 
-        albumExpanded: function () {
-            this.clickedContract = false;
-            if (this.albumExpanded) {
-                nextTick(() => {
-                    const el = this.$el.querySelector(".player-album-container");
-                    if (el) {
-                        el.focus();
-                    }
-                });
-            }
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
-    },
-    methods: {
-        clickTopBar: function (e) {
-            e.stopPropagation();
-            this.$emit("click-player");
-        },
+/**
+ * Event handler for 'click' on the top bar
+ * @param e The click event
+ */
+const clickTopBar = (e: Event) => {
+    e.stopPropagation();
+    emit("click-player");
+};
 
-        expandTitle: function () {
-            this.albumExpandedState = false;
-            this.expandedState = true;
-        },
+/**
+ * Expands the top bar
+ */
+const expandTitle = () => {
+    albumExpanded.value = false;
+    expanded.value = true;
+};
 
-        onEditDone: function () {
-            this.dirty = true;
-        },
+/**
+ * Called when a change is made using the media editor
+ */
+const onEditDone = () => {
+    dirty.value = true;
+};
 
-        closeTitle: function () {
-            ExitPreventer.TryExit(() => {
-                this.expandedState = false;
-            });
-        },
+/**
+ * Closes the top bar
+ */
+const closeTitle = () => {
+    ExitPreventer.TryExit(() => {
+        expanded.value = false;
+    });
+};
 
-        expandAlbum: function () {
-            this.albumExpandedState = true;
-            this.expandedState = false;
-        },
+/**
+ * Expands the album in full screen
+ */
+const expandAlbum = () => {
+    albumExpanded.value = true;
+    expanded.value = false;
+};
 
-        closeAlbum: function () {
-            this.albumExpandedState = false;
-        },
+/**
+ * Closes the album in full screen
+ */
+const closeAlbum = () => {
+    albumExpanded.value = false;
+};
 
-        close: function () {
-            this.closeTitle();
-            this.closeAlbum();
-        },
+/**
+ * Closes the top bar or the album in full screen
+ */
+const close = () => {
+    closeTitle();
+    closeAlbum();
+};
 
-        onKeyDown: function (e: KeyboardEvent) {
-            if (!this.expanded && !this.albumExpanded) {
-                return;
-            }
-            e.stopPropagation();
-            if (e.key === "Escape") {
-                e.preventDefault();
-                this.close();
-            }
-        },
+/**
+ * Event handler for 'keydown'
+ * @param e The keyboard event
+ */
+const onKeyDown = (e: KeyboardEvent) => {
+    if (!expanded.value && !albumExpanded.value) {
+        return;
+    }
+    e.stopPropagation();
+    if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+    }
+};
 
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !event.key || event.ctrlKey) {
-                return false;
-            }
+/**
+ * Event handler for 'animationstart'
+ * @param event The animation event
+ */
+const onAnimationStart = (event: AnimationEvent) => {
+    if (event.animationName == "player-top-bar-expand" && expanded.value) {
+        expanding.value = true;
+    }
+};
 
-            if (event.key.toUpperCase() === "E") {
-                this.expandTitle();
-                return true;
-            }
+/**
+ * Event handler for 'animationend'
+ * @param event The animation event
+ */
+const onAnimationEnd = (event: AnimationEvent) => {
+    if (event.animationName == "player-top-bar-expand" && expanded.value) {
+        expanding.value = false;
 
-            return false;
-        },
+        const autoFocus = container.value?.querySelector(".auto-focus") as HTMLElement;
+        if (autoFocus) {
+            autoFocus.focus();
+        }
+    }
+};
 
-        onAnimationStart: function (event: AnimationEvent) {
-            if (event.animationName == "player-top-bar-expand" && this.expanded) {
-                this.expanding = true;
-            }
-        },
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !event.key || event.ctrlKey) {
+        return false;
+    }
 
-        onAnimationEnd: function (event: AnimationEvent) {
-            if (event.animationName == "player-top-bar-expand" && this.expanded) {
-                this.expanding = false;
-                const autoFocus = this.$el.querySelector(".auto-focus");
-                if (autoFocus) {
-                    autoFocus.focus();
-                }
-            }
-        },
-    },
+    if (event.key.toUpperCase() === "E") {
+        expandTitle();
+        return true;
+    }
+
+    return false;
 });
 </script>

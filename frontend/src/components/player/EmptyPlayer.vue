@@ -121,6 +121,7 @@ import { AuthController } from "@/control/auth";
 import { isTouchDevice } from "@/utils/touch";
 import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
+import type { HelpTooltipType } from "@/utils/player-tooltip";
 
 export default defineComponent({
     name: "EmptyPlayer",
@@ -157,7 +158,7 @@ export default defineComponent({
     },
     data: function () {
         return {
-            helpTooltip: "",
+            helpTooltip: "" as HelpTooltipType,
 
             expandedTitle: false,
             expandedAlbum: false,
@@ -174,7 +175,7 @@ export default defineComponent({
         this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
     },
     methods: {
-        enterTooltip: function (t: string) {
+        enterTooltip: function (t: HelpTooltipType) {
             if (isTouchDevice()) {
                 this.helpTooltip = "";
                 return;
