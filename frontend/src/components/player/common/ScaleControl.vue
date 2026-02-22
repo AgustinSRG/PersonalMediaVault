@@ -1,198 +1,108 @@
 <template>
     <div
+        ref="container"
         class="player-scale-control"
         :class="{ expanded: expanded, 'player-min': min }"
-        :style="{ width: computeFullWidth(width, min, expanded) }"
+        :style="{ width: fulWidth }"
         @mouseenter="onEnter"
         @mouseleave="onLeave"
     >
-        <button class="player-scale-btn" @click="clickOnScaleButton">
+        <button class="player-scale-btn" @click="toggleFit">
             <i class="fas fa-magnifying-glass"></i>
         </button>
         <div
             class="player-scale-btn-expand"
             :class="{ hidden: !expanded }"
-            :style="{ width: computeBarContainerWidth(width) }"
-            @mousedown="grabScaleMouse"
-            @touchstart.passive="grabScaleTouch"
+            :style="{ width: barContainerWidth }"
+            @mousedown="grabMouse"
+            @touchstart.passive="grabTouch"
         >
-            <div class="player-scale-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
-                <div class="player-scale-bar" :style="{ width: getScaleBarWidth(width) }"></div>
-                <div class="player-scale-current" :style="{ width: getScaleBarCurrentWidth(width, scale, fit) }"></div>
-                <div class="player-scale-thumb" :style="{ left: getScaleThumbLeft(width, scale, fit) }"></div>
+            <div class="player-scale-bar-container" :style="{ width: barContainerInnerWidth }">
+                <div class="player-scale-bar" :style="{ width: barWidth }"></div>
+                <div class="player-scale-current" :style="{ width: barCurrentWidth }"></div>
+                <div class="player-scale-thumb" :style="{ left: thumbLeft }"></div>
             </div>
         </div>
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import { useVModel } from "@/utils/v-model";
-import { isTouchDevice } from "@/utils/touch";
-import type { PositionEvent } from "@/utils/position-event";
-import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+<script setup lang="ts">
+import { useTemplateRef } from "vue";
+import { usePlayerSlider } from "@/composables/use-player-slider";
 
-export default defineComponent({
-    name: "ScaleControl",
-    props: {
-        width: Number,
-        scale: Number,
-        min: Boolean,
-        fit: Boolean,
-        expanded: Boolean,
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Props
+const props = defineProps({
+    /**
+     * Width of the control (px)
+     */
+    width: {
+        type: Number,
+        required: true,
     },
-    emits: ["update:scale", "update:fit", "update:expanded", "enter", "leave"],
-    setup(props) {
-        return {
-            scaleState: useVModel(props, "scale"),
-            fitState: useVModel(props, "fit"),
-            expandedState: useVModel(props, "expanded"),
-        };
-    },
-    data: function () {
-        return {
-            scaleGrabbed: false,
-        };
-    },
-    mounted: function () {
-        if (isTouchDevice()) {
-            this.expandedState = true;
-            this.$listenOnDocumentEvent("touchend", this.dropScaleTouch.bind(this));
-            this.$listenOnDocumentEvent("touchmove", this.moveScaleTouch.bind(this));
-        } else {
-            this.$listenOnDocumentEvent("mouseup", this.dropScaleMouse.bind(this));
-            this.$listenOnDocumentEvent("mousemove", this.moveScaleMouse.bind(this));
-        }
-    },
-    methods: {
-        onEnter: function () {
-            this.$emit("enter");
-            this.showScaleBar();
-        },
-        onLeave: function () {
-            this.$emit("leave");
-        },
-        computeFullWidth: function (width: number, min: boolean, expanded: boolean) {
-            const margins = 40;
-            const barWidth = width;
-            let btnWidth = 40;
 
-            if (min) {
-                btnWidth = 24;
-            }
-
-            return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
-        },
-        computeBarContainerWidth: function (width: number) {
-            const margins = 32;
-            return width + margins + "px";
-        },
-        computeBarContainerInnerWidth: function (width: number) {
-            const margins = 16;
-            return width + margins + "px";
-        },
-        clickOnScaleButton: function () {
-            this.fitState = !this.fitState;
-        },
-        getScaleBarWidth: function (width: number) {
-            return width + 16 + "px";
-        },
-        getScaleBarCurrentWidth: function (width: number, scale: number, fit: boolean) {
-            let actualScale = scale;
-
-            if (fit) {
-                actualScale = 0;
-            }
-
-            actualScale = Math.max(0, Math.min(1, actualScale));
-
-            return Math.floor(actualScale * width) + "px";
-        },
-        getScaleThumbLeft: function (width: number, scale: number, fit: boolean) {
-            return this.getScaleBarCurrentWidth(width, scale, fit);
-        },
-        showScaleBar: function () {
-            this.expandedState = true;
-        },
-        hideScaleBar: function () {
-            if (isTouchDevice()) {
-                return;
-            }
-            this.expandedState = false;
-        },
-
-        grabScaleMouse: function (e: MouseEvent) {
-            e.stopPropagation();
-            if (isTouchDevice()) {
-                return;
-            }
-            this.grabScale(positionEventFromMouseEvent(e));
-        },
-
-        grabScaleTouch: function (e: TouchEvent) {
-            this.grabScale(positionEventFromTouchEvent(e));
-        },
-
-        grabScale: function (e: PositionEvent) {
-            this.scaleGrabbed = true;
-            this.modifyScaleByMouse(e.x, e.y);
-        },
-
-        dropScaleMouse: function (e: MouseEvent) {
-            this.dropScale(positionEventFromMouseEvent(e));
-        },
-
-        dropScaleTouch: function (e: TouchEvent) {
-            e.stopPropagation();
-            this.dropScale(null);
-        },
-
-        dropScale(e?: PositionEvent) {
-            if (!this.scaleGrabbed) {
-                return;
-            }
-            this.scaleGrabbed = false;
-            if (e) {
-                this.modifyScaleByMouse(e.x, e.y);
-            }
-        },
-
-        moveScaleMouse: function (e: MouseEvent) {
-            this.moveScale(positionEventFromMouseEvent(e));
-        },
-
-        moveScaleTouch: function (e: TouchEvent) {
-            this.moveScale(positionEventFromTouchEvent(e));
-        },
-
-        moveScale: function (e: PositionEvent) {
-            if (!this.scaleGrabbed) {
-                return;
-            }
-            this.modifyScaleByMouse(e.x, e.y);
-        },
-
-        modifyScaleByMouse: function (x: number, y: number) {
-            if (typeof x !== "number" || typeof y !== "number" || isNaN(x) || isNaN(y)) {
-                return;
-            }
-            const offset = this.$el.getBoundingClientRect();
-
-            const offsetX = offset.left + 8 + 40;
-
-            if (x < offsetX) {
-                this.changeScale(0);
-            } else {
-                const p = x - offsetX;
-                const vol = Math.min(1, p / this.width);
-                this.changeScale(vol);
-            }
-        },
-
-        changeScale: function (z: number) {
-            this.fitState = false;
-            this.scaleState = z;
-        },
-    },
+    /**
+     * Miniature mode?
+     */
+    min: Boolean,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The user enters the control
+     */
+    (e: "enter"): void;
+
+    /**
+     * The user leaves the control
+     */
+    (e: "leave"): void;
+}>();
+
+// Scale
+const scale = defineModel<number>("scale");
+
+// Fit image?
+const fit = defineModel<boolean>("fit");
+
+// Expanded?
+const expanded = defineModel<boolean>("expanded");
+
+// Player slider common
+const {
+    fullWidth: fulWidth,
+    barContainerWidth,
+    barContainerInnerWidth,
+    barWidth,
+    barCurrentWidth,
+    thumbLeft,
+    expand,
+    grabMouse,
+    grabTouch,
+} = usePlayerSlider(container, props, scale, fit, expanded);
+
+/**
+ * The user enters the control
+ */
+const onEnter = () => {
+    emit("enter");
+    expand();
+};
+
+/**
+ * The user leaves the control
+ */
+const onLeave = () => {
+    emit("leave");
+};
+
+/**
+ * Toggles the fit value
+ */
+const toggleFit = () => {
+    fit.value = !fit.value;
+};
 </script>
