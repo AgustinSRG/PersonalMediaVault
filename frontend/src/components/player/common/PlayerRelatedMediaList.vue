@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="related-media-list"
         :class="{ hidden: !shown }"
         tabindex="-1"
@@ -9,8 +10,8 @@
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
-        @mouseenter="enterConfig"
-        @mouseleave="leaveConfig"
+        @mouseenter="enter"
+        @mouseleave="leave"
         @keydown="keyDownHandle"
     >
         <a
@@ -31,92 +32,100 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "@/utils/v-model";
-import { FocusTrap } from "@/utils/focus-trap";
+import { useTemplateRef } from "vue";
 import type { MediaListItem } from "@/api/models";
-import { getAssetURL, getFrontendUrl } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
+import { useFocusTrap } from "@/composables/use-focus-trap";
+import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
 
-export default defineComponent({
-    name: "PlayerRelatedMediaList",
-    components: {
-        MediaItemAlbumThumbnail,
-    },
-    props: {
-        shown: Boolean,
-        relatedMedia: Array as PropType<MediaListItem[]>,
-    },
-    emits: ["update:shown", "enter", "leave"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            shownState: useVModel(props, "shown"),
-        };
-    },
-    watch: {
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        enterConfig: function () {
-            this.$emit("enter");
-        },
+// Ref to the container element
+const container = useTemplateRef("container");
 
-        leaveConfig: function () {
-            this.$emit("leave");
-        },
+// Shown model
+const shown = defineModel<boolean>("shown");
 
-        focus: function () {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        },
-
-        clickOnRelatedMedia: function (event: Event) {
-            event.stopPropagation();
-            this.close();
-        },
-
-        close: function () {
-            this.shownState = false;
-        },
-
-        keyDownHandle: function (e: KeyboardEvent) {
-            if (e.ctrlKey) {
-                return;
-            }
-            if (e.key === "Escape") {
-                this.close();
-                e.stopPropagation();
-            }
-        },
-
-        getMediaURL: function (mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-            });
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
+// Props
+defineProps({
+    /**
+     * List of related media
+     */
+    relatedMedia: {
+        type: Array as PropType<MediaListItem[]>,
+        required: true,
     },
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The user enters the control
+     */
+    (e: "enter"): void;
+
+    /**
+     * The user leaves the control
+     */
+    (e: "leave"): void;
+}>();
+
+/**
+ * Closes the control
+ */
+const close = () => {
+    shown.value = false;
+};
+
+/**
+ * The user enters the config
+ */
+const enter = () => {
+    emit("enter");
+};
+
+/**
+ * The user leaves the config
+ */
+const leave = () => {
+    emit("leave");
+};
+
+/**
+ * Gets the URL of a media element
+ * @param mid The media ID
+ * @returns The URL
+ */
+const getMediaURL = (mid: number): string => {
+    return getFrontendUrl({
+        media: mid,
+    });
+};
+
+/**
+ * The user clicked on a related media link
+ * @param event The click event
+ */
+const clickOnRelatedMedia = (event: Event) => {
+    event.stopPropagation();
+    close();
+};
+
+/**
+ * Event handler for 'keydown'
+ * @param e The keyboard event
+ */
+const keyDownHandle = (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+        return;
+    }
+    if (e.key === "Escape") {
+        close();
+        e.stopPropagation();
+    }
+};
+
+// Focus trap
+useFocusTrap(container, shown, close, "player-settings-no-trap", true);
 </script>

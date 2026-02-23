@@ -4,101 +4,20 @@
             class="horizontal-filter-menu"
             :class="{
                 'can-write': canWrite,
-                'image-opts-menu': type === 1,
-                'video-opts-menu': type === 2,
-                'audio-opts-menu': type == 3,
+                'image-opts-menu': type === MEDIA_TYPE_IMAGE,
+                'video-opts-menu': type === MEDIA_TYPE_VIDEO,
+                'audio-opts-menu': type == MEDIA_TYPE_AUDIO,
             }"
         >
             <a
+                v-for="p in availablePages"
+                :key="p.id"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
-                :title="$t('General')"
-                :class="{ selected: page === 'general' }"
-                @click="changePage('general')"
-                >{{ $t("General") }}</a
-            >
-
-            <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Description')"
-                :class="{ selected: page === 'description' }"
-                @click="changePage('description')"
-                >{{ $t("Description") }}</a
-            >
-
-            <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Attachments')"
-                :class="{ selected: page === 'attachments' }"
-                @click="changePage('attachments')"
-                >{{ $t("Attachments") }}</a
-            >
-
-            <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Related media')"
-                :class="{ selected: page === 'related' }"
-                @click="changePage('related')"
-                >{{ $t("Related media") }}</a
-            >
-
-            <a
-                v-if="type === 2 || type === 3"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Subtitles')"
-                :class="{ selected: page === 'subtitles' }"
-                @click="changePage('subtitles')"
-                >{{ $t("Subtitles") }}</a
-            >
-            <a
-                v-if="type === 2"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Audio tracks')"
-                :class="{ selected: page === 'audios' }"
-                @click="changePage('audios')"
-                >{{ $t("Audio tracks") }}</a
-            >
-            <a
-                v-if="type === 2 || type === 3"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Time slices')"
-                :class="{ selected: page === 'time-slices' }"
-                @click="changePage('time-slices')"
-                >{{ $t("Time slices") }}</a
-            >
-            <a
-                v-if="type === 1"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Image notes')"
-                :class="{ selected: page === 'image-notes' }"
-                @click="changePage('image-notes')"
-                >{{ $t("Image notes") }}</a
-            >
-
-            <a
-                v-if="type === 1 || type === 2"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Resolutions')"
-                :class="{ selected: page === 'resolutions' }"
-                @click="changePage('resolutions')"
-                >{{ $t("Resolutions") }}</a
-            >
-            <a
-                v-if="canWrite"
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :title="$t('Danger zone')"
-                :class="{ selected: page === 'danger' }"
-                @click="changePage('danger')"
-                >{{ $t("Danger zone") }}</a
+                :title="p.title"
+                :class="{ selected: page === p.id }"
+                @click="changePage(p.id)"
+                >{{ p.title }}</a
             >
         </div>
 
@@ -115,12 +34,16 @@
     </div>
 </template>
 
-<script lang="ts">
-import { EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+<script setup lang="ts">
+import type { MediaType } from "@/api/models";
+import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { ExitPreventer } from "@/control/exit-prevent";
 import { MediaController } from "@/control/media";
-import { defineAsyncComponent, defineComponent } from "vue";
+import { computed, defineAsyncComponent, ref } from "vue";
 
 const EditorGeneral = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorGeneral.vue"),
@@ -162,65 +85,156 @@ const EditorDangerZone = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorDangerZone.vue"),
 });
 
-export default defineComponent({
-    name: "PlayerMediaEditor",
-    components: {
-        EditorGeneral,
-        EditorDescription,
-        EditorRelatedMedia,
-        EditorSubtitles,
-        EditorAudios,
-        EditorAttachments,
-        EditorTimeSlices,
-        EditorImageNotes,
-        EditorResolutions,
-        EditorDangerZone,
-    },
-    emits: ["changed"],
-    data: function () {
-        return {
-            page: "general",
+// Translation
+const { $t } = useI18n();
 
-            type: 0,
+// User permissions
+const { canWrite } = useUserPermissions();
 
-            busy: false,
+// Emits
+const emit = defineEmits<{
+    /**
+     * Emitted when changes are made to the media
+     */
+    (e: "changed"): void;
+}>();
 
-            canWrite: AuthController.CanWrite,
-        };
-    },
+// Media type
+const type = ref<MediaType>(MediaController.MediaData?.type || 0);
 
-    mounted: function () {
-        this.updateMediaData();
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
 
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    methods: {
-        changePage: function (page: string) {
-            if (page === this.page) {
-                return;
-            }
-            ExitPreventer.TryExit(() => {
-                this.page = page;
-            });
-        },
-
-        onChanged: function () {
-            this.$emit("changed");
-        },
-
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
-            }
-
-            this.type = MediaController.MediaData.type;
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-    },
+    type.value = MediaController.MediaData.type || 0;
 });
+
+// Editor pages
+type EditorPage =
+    | "general"
+    | "description"
+    | "related"
+    | "subtitles"
+    | "audios"
+    | "attachments"
+    | "time-slices"
+    | "image-notes"
+    | "resolutions"
+    | "danger";
+
+// Metadata for editor page
+type EditorPageMetadata = {
+    // ID
+    id: EditorPage;
+
+    /**
+     * A function to get the title
+     * @returns The title
+     */
+    title: () => string;
+
+    /**
+     * A function to check the visibility of the page
+     * @returns True if the poge is visible
+     */
+    visible: () => boolean;
+};
+
+// List of pages, in order
+const PAGES: EditorPageMetadata[] = [
+    {
+        id: "general",
+        title: () => $t("General"),
+        visible: () => true,
+    },
+
+    {
+        id: "description",
+        title: () => $t("Description"),
+        visible: () => true,
+    },
+
+    {
+        id: "attachments",
+        title: () => $t("Attachments"),
+        visible: () => true,
+    },
+
+    {
+        id: "related",
+        title: () => $t("Related media"),
+        visible: () => true,
+    },
+
+    {
+        id: "subtitles",
+        title: () => $t("Subtitles"),
+        visible: () => [MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO].includes(type.value),
+    },
+
+    {
+        id: "audios",
+        title: () => $t("Audio tracks"),
+        visible: () => type.value === MEDIA_TYPE_VIDEO,
+    },
+
+    {
+        id: "time-slices",
+        title: () => $t("Time slices"),
+        visible: () => [MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO].includes(type.value),
+    },
+
+    {
+        id: "image-notes",
+        title: () => $t("Image notes"),
+        visible: () => type.value === MEDIA_TYPE_IMAGE,
+    },
+
+    {
+        id: "resolutions",
+        title: () => $t("Resolutions"),
+        visible: () => [MEDIA_TYPE_VIDEO, MEDIA_TYPE_IMAGE].includes(type.value),
+    },
+
+    {
+        id: "danger",
+        title: () => $t("Danger zone"),
+        visible: () => canWrite.value,
+    },
+];
+
+// Current page
+const page = ref<EditorPage>("general");
+
+// Available pages
+const availablePages = computed(() =>
+    PAGES.map((p) => {
+        return {
+            id: p.id,
+            title: p.title(),
+            visible: p.visible(),
+        };
+    }).filter((p) => p.visible),
+);
+
+/**
+ * Changes the page
+ * @param p The page
+ */
+const changePage = (p: EditorPage) => {
+    if (p === page.value) {
+        return;
+    }
+    ExitPreventer.TryExit(() => {
+        page.value = p;
+    });
+};
+
+/**
+ * Called when the media changes
+ */
+const onChanged = () => {
+    emit("changed");
+};
 </script>

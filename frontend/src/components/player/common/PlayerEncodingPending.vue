@@ -32,6 +32,7 @@
             </div>
             <div v-if="encodingError" class="player-task-info-row">
                 <textarea
+                    ref="encodingErrorTextArea"
                     class="form-control form-textarea player-task-encoding-error"
                     rows="10"
                     :value="encodingError"
@@ -72,288 +73,326 @@
 
             <div v-if="progress > 0" class="player-task-info-row">
                 <span
-                    >{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}:
-                    {{ renderTime(estimatedRemainingTime) }}</span
+                    >{{ $t("Stage progress") }}: {{ cssProgress }} / {{ $t("Remaining time (estimated)") }}:
+                    {{ renderedEstimatedRemainingTime }}</span
                 >
             </div>
             <div v-if="progress > 0" class="player-task-info-row">
                 <div class="player-task-progress-bar">
-                    <div class="player-task-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
+                    <div class="player-task-progress-bar-current" :style="{ width: cssProgress }"></div>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { MediaData, TaskStatus } from "@/api/models";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-
 import { MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { getUniqueStringId } from "@/utils/unique-id";
-import { defineComponent, nextTick } from "vue";
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTasksGetTask } from "@/api/api-tasks";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
 
-export default defineComponent({
-    name: "PlayerEncodingPending",
-    props: {
-        mid: Number,
-        tid: Number,
-        res: Number,
-        error: Boolean,
-        errorMessage: String,
-        encodingError: String,
-        canAutoReload: Boolean,
-    },
-    data: function () {
-        return {
-            status: "loading",
-            progress: 0,
-            stage: "",
-            stageNumber: -1,
-            stageProgress: 0,
-            startTime: 0,
-            estimatedRemainingTime: 0,
+// Known stages in order
+const KNOWN_STAGES_IN_ORDER = ["PREPARE", "COPY", "PROBE", "ENCODE", "ENCRYPT", "UPDATE", "FINISH"];
 
-            pendingId: "",
+/**
+ * Gets the stage number from the stage name
+ * @param s The stage name
+ * @returns The stage number
+ */
+function getStageNumber(s: string): number {
+    const i = KNOWN_STAGES_IN_ORDER.indexOf(s);
+    return i >= 0 ? i : 0;
+}
 
-            refreshPending: false,
-        };
-    },
+// Translation
+const { $t } = useI18n();
 
-    watch: {
-        mid: function () {
-            this.stop();
-            this.start();
-        },
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: Number,
 
-        res: function () {
-            this.stop();
-            this.start();
-        },
+    /**
+     * Task ID
+     */
+    tid: Number,
 
-        tid: function () {
-            this.stop();
-            this.start();
-        },
+    /**
+     * Resolution index
+     */
+    res: Number,
 
-        canAutoReload: function () {
-            if (this.canAutoReload && this.refreshPending) {
-                this.refreshPending = true;
-                MediaController.Load();
-            }
-        },
-    },
+    /**
+     * Is error
+     */
+    error: Boolean,
 
-    mounted: function () {
-        this.pendingId = getUniqueStringId();
-        this.start();
-    },
+    /**
+     * Error message
+     */
+    errorMessage: String,
 
-    beforeUnmount: function () {
-        this.stop();
-    },
+    /**
+     * Encoding error message
+     */
+    encodingError: String,
 
-    methods: {
-        start: function () {
-            this.checkTask();
-        },
-
-        stop: function () {
-            clearNamedTimeout(this.pendingId);
-            abortNamedApiRequest(this.pendingId);
-            this.status = "loading";
-            this.progress = 0;
-            this.stage = "";
-            this.stageNumber = -1;
-            this.startTime = 0;
-            this.estimatedRemainingTime = 0;
-            this.onStatusChanged();
-        },
-
-        checkTask: function () {
-            clearNamedTimeout(this.pendingId);
-            abortNamedApiRequest(this.pendingId);
-
-            if (this.error) {
-                return;
-            }
-
-            if (this.tid <= 0) {
-                this.status = "not-ready";
-                setNamedTimeout(this.pendingId, 1000, () => {
-                    if (!this.canAutoReload) {
-                        return;
-                    }
-
-                    this.refreshMedia();
-                });
-                this.onStatusChanged();
-                return;
-            }
-
-            makeNamedApiRequest(this.pendingId, apiTasksGetTask(this.tid))
-                .onSuccess((task: TaskStatus) => {
-                    this.status = "task";
-                    if (task.running) {
-                        this.progress = task.stage_progress;
-                        this.startTime = task.stage_start;
-                        this.stage = task.stage;
-
-                        this.estimatedRemainingTime =
-                            (((task.time_now - task.stage_start) / task.stage_progress) * 100 - (task.time_now - task.stage_start)) / 1000;
-
-                        switch (this.stage) {
-                            case "PREPARE":
-                                this.stageNumber = 0;
-                                break;
-                            case "COPY":
-                                this.stageNumber = 1;
-                                break;
-                            case "PROBE":
-                                this.stageNumber = 2;
-                                break;
-                            case "ENCODE":
-                                this.stageNumber = 3;
-                                break;
-                            case "ENCRYPT":
-                                this.stageNumber = 4;
-                                break;
-                            case "UPDATE":
-                                this.stageNumber = 5;
-                                break;
-                            case "FINISH":
-                                this.stageNumber = 6;
-                                break;
-                            default:
-                                this.stageNumber = 0;
-                        }
-
-                        this.stageProgress = (this.stageNumber * 100) / 6;
-
-                        setNamedTimeout(this.pendingId, 500, this.checkTask.bind(this));
-                    } else {
-                        this.stageNumber = -1;
-                        this.stage = "QUEUE";
-                        this.progress = 0;
-                        setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
-                    }
-
-                    this.onStatusChanged();
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        notFound: () => {
-                            this.status = "loading";
-                            this.checkMediaStatus();
-                            this.onStatusChanged();
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
-                });
-        },
-
-        checkMediaStatus: function () {
-            clearNamedTimeout(this.pendingId);
-            abortNamedApiRequest(this.pendingId);
-
-            makeNamedApiRequest(this.pendingId, apiMediaGetMedia(this.mid))
-                .onSuccess((media: MediaData) => {
-                    if (this.res >= 0) {
-                        if (media.resolutions[this.res] && media.resolutions[this.res].ready) {
-                            if (this.canAutoReload) {
-                                this.refreshMedia();
-                            } else {
-                                this.refreshPending = true;
-                            }
-                        } else {
-                            this.status = "not-ready";
-                            this.onStatusChanged();
-                        }
-                    } else {
-                        if (media.encoded) {
-                            if (this.canAutoReload) {
-                                this.refreshMedia();
-                            } else {
-                                this.refreshPending = true;
-                            }
-                        } else {
-                            this.status = "not-ready";
-                            this.onStatusChanged();
-                        }
-                    }
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        notFound: () => {
-                            if (this.canAutoReload) {
-                                this.refreshMedia();
-                            } else {
-                                this.refreshPending = true;
-                            }
-                        },
-                        temporalError: () => {
-                            // Retry
-                            setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
-                });
-        },
-
-        refreshMedia: function () {
-            MediaController.Load();
-        },
-
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
-        },
-
-        cssProgress: function (p: number) {
-            return Math.round(p) + "%";
-        },
-
-        onStatusChanged: function () {
-            if (this.status === "not-ready" && this.encodingError) {
-                nextTick(() => {
-                    this.scrollErrorToBottom();
-                });
-            }
-        },
-
-        scrollErrorToBottom: function () {
-            const el = this.$el.querySelector(".player-task-encoding-error") as HTMLElement;
-
-            if (!el) {
-                return;
-            }
-
-            const bounds = el.getBoundingClientRect();
-
-            el.scrollTop = el.scrollHeight - bounds.height;
-        },
-    },
+    /**
+     * True if the media can be auto-reloaded
+     */
+    canAutoReload: Boolean,
 });
+
+// Pending statuses
+type PendingStatus = "loading" | "not-ready" | "task";
+
+// Status
+const status = ref<PendingStatus>("loading");
+
+// Progress
+const progress = ref(0);
+
+// CSS style progress (as percentage)
+const cssProgress = computed(() => Math.round(progress.value) + "%");
+
+// Current stage
+const stage = ref("");
+
+// Current stage number
+const stageNumber = ref(-1);
+
+// Current stage progress
+const stageProgress = ref(0);
+
+// Stage start timestamp (Unix milliseconds)
+const startTime = ref(0);
+
+// Estimated remaining time (seconds)
+const estimatedRemainingTime = ref(0);
+
+// Rendered estimated remaining time
+const renderedEstimatedRemainingTime = computed(() => renderTimeSeconds(estimatedRemainingTime.value));
+
+// Pending refreshing?
+const refreshPending = ref(false);
+
+/**
+ * Refreshes the media
+ */
+const refreshMedia = () => {
+    MediaController.Load();
+};
+
+watch(
+    () => props.canAutoReload,
+    () => {
+        if (props.canAutoReload && refreshPending.value) {
+            refreshPending.value = true;
+            refreshMedia();
+        }
+    },
+);
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    status.value = "loading";
+    progress.value = 0;
+    stage.value = "";
+    stageNumber.value = -1;
+    startTime.value = 0;
+    estimatedRemainingTime.value = 0;
+
+    onStatusChanged();
+
+    checkTask();
+};
+
+onMounted(load);
+watch([() => props.mid, () => props.tid, () => props.res], load);
+
+// Delay to automatically refresh the media
+const AUTO_RELOAD_DELAY = 1000;
+
+// Delay to refresh the status periodically (milliseconds)
+const REFRESH_DELAY = 500;
+
+// Delay to retry after error (milliseconds)
+const RETRY_DELAY = 1500;
+
+/**
+ * Loads the task status
+ */
+const checkTask = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    if (props.error) {
+        return;
+    }
+
+    if (props.tid <= 0) {
+        status.value = "not-ready";
+        setNamedTimeout(loadRequestId, AUTO_RELOAD_DELAY, () => {
+            if (!props.canAutoReload) {
+                return;
+            }
+
+            refreshMedia();
+        });
+        onStatusChanged();
+        return;
+    }
+
+    makeNamedApiRequest(loadRequestId, apiTasksGetTask(props.tid))
+        .onSuccess((task: TaskStatus) => {
+            status.value = "task";
+            if (task.running) {
+                progress.value = task.stage_progress;
+                startTime.value = task.stage_start;
+                stage.value = task.stage;
+
+                estimatedRemainingTime.value =
+                    (((task.time_now - task.stage_start) / task.stage_progress) * 100 - (task.time_now - task.stage_start)) / 1000;
+
+                stageNumber.value = getStageNumber(stage.value);
+
+                stageProgress.value = (stageNumber.value * 100) / 6;
+
+                setNamedTimeout(loadRequestId, REFRESH_DELAY, checkTask);
+            } else {
+                stageNumber.value = -1;
+                stage.value = "QUEUE";
+                progress.value = 0;
+                setNamedTimeout(loadRequestId, RETRY_DELAY, checkTask);
+            }
+
+            onStatusChanged();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                notFound: () => {
+                    status.value = "loading";
+                    checkMediaStatus();
+                    onStatusChanged();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, RETRY_DELAY, checkTask);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, RETRY_DELAY, checkTask);
+        });
+};
+
+/**
+ * Checks the current media status if the task is not found
+ */
+const checkMediaStatus = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    makeNamedApiRequest(loadRequestId, apiMediaGetMedia(props.mid))
+        .onSuccess((media: MediaData) => {
+            if (props.res >= 0) {
+                if (media.resolutions[props.res] && media.resolutions[props.res].ready) {
+                    if (props.canAutoReload) {
+                        refreshMedia();
+                    } else {
+                        refreshPending.value = true;
+                    }
+                } else {
+                    status.value = "not-ready";
+                    onStatusChanged();
+                }
+            } else {
+                if (media.encoded) {
+                    if (props.canAutoReload) {
+                        refreshMedia();
+                    } else {
+                        refreshPending.value = true;
+                    }
+                } else {
+                    status.value = "not-ready";
+                    onStatusChanged();
+                }
+            }
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                notFound: () => {
+                    if (props.canAutoReload) {
+                        refreshMedia();
+                    } else {
+                        refreshPending.value = true;
+                    }
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, RETRY_DELAY, checkMediaStatus);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, RETRY_DELAY, checkMediaStatus);
+        });
+};
+
+/**
+ * Called whenever the status changes
+ */
+const onStatusChanged = () => {
+    if (status.value === "not-ready" && props.encodingError) {
+        nextTick(() => {
+            scrollErrorToBottom();
+        });
+    }
+};
+
+// Ref to the textarea containing the encoding error
+const encodingErrorTextArea = useTemplateRef("encodingErrorTextArea");
+
+/**
+ * Scrolls encoding error to bottom
+ */
+const scrollErrorToBottom = () => {
+    const el = encodingErrorTextArea.value;
+
+    if (!el) {
+        return;
+    }
+
+    const bounds = el.getBoundingClientRect();
+
+    el.scrollTop = el.scrollHeight - bounds.height;
+};
 </script>

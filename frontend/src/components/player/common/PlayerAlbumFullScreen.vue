@@ -18,11 +18,11 @@
                         <i class="fas fa-shuffle"></i>
                     </button>
                 </div>
-                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumListLength }}</div>
+                <div class="album-post-text">{{ renderedCurrentPos }} / {{ albumListLength }}</div>
             </div>
         </div>
 
-        <div v-show="!loading && loadedAlbum" class="album-body" tabindex="-1" @scroll.passive="onScroll">
+        <div v-show="!loading && loadedAlbum" ref="albumBody" class="album-body" tabindex="-1" @scroll.passive="onScroll">
             <div
                 v-for="item in albumList"
                 :key="item.pos"
@@ -52,13 +52,11 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { getAssetURL } from "@/utils/api";
-import { renderTimeSeconds } from "@/utils/time";
-import { defineComponent, nextTick } from "vue";
+import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
 import {
@@ -66,205 +64,242 @@ import {
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
 } from "@/control/app-events";
+import { useI18n } from "@/composables/use-i18n";
+import { useInterval } from "@/composables/use-interval";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
+// Emits
+const emit = defineEmits<{
+    /**
+     * Emitted when closed
+     */
+    (e: "close"): void;
+}>();
+
+// Translation
+const { $t } = useI18n();
+
+// True if album was loaded
+const loadedAlbum = ref(!!AlbumsController.CurrentAlbumData);
+
+// Current album ID
+const albumId = ref(AlbumsController.CurrentAlbum);
+
+// Current album name
+const albumName = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "");
+
+// Length of the album list
+const albumListLength = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0);
+
+// List of album items
+const albumList = ref<PositionedMediaListItem[]>();
+
+// Loading status
+const loading = ref(AlbumsController.CurrentAlbumLoading);
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
+    if (l) {
+        if (albumId.value !== AlbumsController.CurrentAlbum) {
+            loading.value = true;
+        }
+    } else {
+        loading.value = false;
+    }
+});
+
+// Current album position
+const currentPos = ref(AlbumsController.CurrentAlbumPos);
+
+// Rendered current position (to display it to the user)
+const renderedCurrentPos = computed<string>(() => {
+    if (currentPos.value < 0) {
+        return "?";
+    } else {
+        return "" + (currentPos.value + 1);
+    }
+});
+
+// Album loop
+const loop = ref(AlbumsController.AlbumLoop);
+
+// Album random
+const random = ref(AlbumsController.AlbumRandom);
+
+// Window size for the scroller
 const INITIAL_WINDOW_SIZE = 100;
 
-export default defineComponent({
-    name: "PlayerAlbumFullScreen",
-    components: {
-        MediaItemAlbumThumbnail,
+// Scroller
+const listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+    get: () => {
+        return albumList.value;
     },
-    emits: ["close"],
-    setup() {
-        return {
-            checkContainerTimer: null as ReturnType<typeof setInterval> | null,
-            listScroller: null as BigListScroller,
-        };
-    },
-    data: function () {
-        return {
-            albumId: AlbumsController.CurrentAlbum,
-            albumName: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "",
-            albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
-            loadedAlbum: !!AlbumsController.CurrentAlbumData,
-
-            albumList: [] as PositionedMediaListItem[],
-
-            loading: AlbumsController.CurrentAlbumLoading,
-
-            currentPos: AlbumsController.CurrentAlbumPos,
-
-            loop: false,
-            random: false,
-        };
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
-
-        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
-            get: () => {
-                return this.albumList;
-            },
-            set: (l) => {
-                this.albumList = l;
-            },
-        });
-
-        this.updateAlbumList();
-
-        this.onAlbumPosUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
-
-        this.autoFocus();
-    },
-    beforeUnmount: function () {
-        clearInterval(this.checkContainerTimer);
-    },
-    methods: {
-        onAlbumUpdate: function () {
-            this.albumId = AlbumsController.CurrentAlbum;
-            this.loadedAlbum = !!AlbumsController.CurrentAlbumData;
-            this.albumName = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
-            this.albumListLength = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
-            this.updateAlbumList();
-        },
-
-        updateAlbumList: function () {
-            this.listScroller.reset();
-
-            if (this.loadedAlbum) {
-                let i = 0;
-                this.listScroller.addElements(
-                    AlbumsController.CurrentAlbumData.list.map((m) => {
-                        return {
-                            pos: i++,
-                            id: m.id,
-                            type: m.type,
-                            title: m.title,
-                            thumbnail: m.thumbnail,
-                            duration: m.duration,
-                        };
-                    }),
-                );
-            }
-        },
-
-        onAlbumLoading: function (l: boolean) {
-            if (l) {
-                if (this.albumId !== AlbumsController.CurrentAlbum) {
-                    this.loading = true;
-                }
-            } else {
-                this.loading = false;
-            }
-        },
-
-        toggleLoop: function () {
-            AlbumsController.ToggleLoop();
-        },
-
-        toggleRandom: function () {
-            AlbumsController.ToggleRandom();
-        },
-
-        renderPos: function (p: number) {
-            if (p < 0) {
-                return "?";
-            } else {
-                return "" + (p + 1);
-            }
-        },
-
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        clickMedia: function (item: MediaListItem) {
-            AppStatus.ClickOnMedia(item.id, false);
-            this.$emit("close");
-        },
-
-        close: function () {
-            this.$emit("close");
-        },
-
-        onAlbumPosUpdate: function () {
-            this.loop = AlbumsController.AlbumLoop;
-            this.random = AlbumsController.AlbumRandom;
-            this.currentPos = AlbumsController.CurrentAlbumPos;
-            this.listScroller.moveWindowToElement(this.currentPos);
-            nextTick(() => {
-                this.scrollToSelected();
-            });
-        },
-
-        scrollToSelected: function () {
-            const cont = this.$el.querySelector(".album-body");
-
-            if (!cont) {
-                return;
-            }
-
-            const contBounds = cont.getBoundingClientRect();
-
-            const el = this.$el.querySelector(".album-body-item.current");
-
-            if (!el) {
-                return;
-            }
-
-            const elBounds = el.getBoundingClientRect();
-            const elTopRel = elBounds.top - contBounds.top + cont.scrollTop;
-
-            const expectedTop = contBounds.height / 2 - elBounds.height / 2;
-
-            const scroll = Math.max(0, Math.min(cont.scrollHeight - contBounds.height, elTopRel - expectedTop));
-
-            cont.scrollTop = scroll;
-        },
-
-        onScroll: function (e: Event) {
-            this.listScroller.checkElementScroll(e.target as HTMLElement);
-        },
-
-        checkContainerHeight: function () {
-            const cont = this.$el.querySelector(".album-body");
-
-            if (!cont) {
-                return;
-            }
-
-            const el = this.$el.querySelector(".album-body-item");
-
-            if (!el) {
-                return;
-            }
-
-            const changed = this.listScroller.checkScrollContainerHeight(cont, el);
-
-            if (changed) {
-                this.onAlbumPosUpdate();
-            }
-        },
-
-        autoFocus: function () {
-            nextTick(() => {
-                const focusEl = this.$el.querySelector(".album-body");
-                if (focusEl) {
-                    focusEl.focus();
-                    this.checkContainerHeight();
-                }
-            });
-        },
+    set: (l) => {
+        albumList.value = l;
     },
 });
+
+/**
+ * Handler for 'scroll' on the container
+ * @param e Ths scroll event
+ */
+const onScroll = (e: Event) => {
+    listScroller.checkElementScroll(e.target as HTMLElement);
+};
+
+/**
+ * Updates the album list
+ */
+const updateAlbumList = () => {
+    listScroller.reset();
+
+    if (loadedAlbum.value) {
+        let i = 0;
+        listScroller.addElements(
+            AlbumsController.CurrentAlbumData.list.map((m) => {
+                return {
+                    pos: i++,
+                    id: m.id,
+                    type: m.type,
+                    title: m.title,
+                    thumbnail: m.thumbnail,
+                    duration: m.duration,
+                    tags: m.tags,
+                };
+            }),
+        );
+    }
+};
+
+updateAlbumList();
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
+    albumId.value = AlbumsController.CurrentAlbum;
+    loadedAlbum.value = !!AlbumsController.CurrentAlbumData;
+    albumName.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
+    albumListLength.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
+
+    updateAlbumList();
+});
+
+/**
+ * Called when the album position changes
+ */
+const onAlbumPosUpdate = () => {
+    loop.value = AlbumsController.AlbumLoop;
+    random.value = AlbumsController.AlbumRandom;
+    currentPos.value = AlbumsController.CurrentAlbumPos;
+
+    listScroller.moveWindowToElement(currentPos.value);
+
+    nextTick(scrollToSelected);
+};
+
+onMounted(onAlbumPosUpdate);
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, onAlbumPosUpdate);
+
+// Ref to the album body element
+const albumBody = useTemplateRef("albumBody");
+
+/**
+ * Scrolls to the selected media
+ */
+const scrollToSelected = () => {
+    const cont = albumBody.value;
+
+    if (!cont) {
+        return;
+    }
+
+    const contBounds = cont.getBoundingClientRect();
+
+    const el = cont.querySelector(".album-body-item.current") as HTMLElement;
+
+    if (!el) {
+        return;
+    }
+
+    const elBounds = el.getBoundingClientRect();
+    const elTopRel = elBounds.top - contBounds.top + cont.scrollTop;
+
+    const expectedTop = contBounds.height / 2 - elBounds.height / 2;
+
+    const scroll = Math.max(0, Math.min(cont.scrollHeight - contBounds.height, elTopRel - expectedTop));
+
+    cont.scrollTop = scroll;
+};
+
+/**
+ * Checks container height
+ */
+const checkContainerHeight = () => {
+    const cont = albumBody.value;
+
+    if (!cont) {
+        return;
+    }
+
+    const el = cont.querySelector(".album-body-item") as HTMLElement;
+
+    if (!el) {
+        return;
+    }
+
+    const changed = listScroller.checkScrollContainerHeight(cont, el);
+
+    if (changed) {
+        onAlbumPosUpdate();
+    }
+};
+
+// Delay to check the container periodically
+const CONTAINER_CHECK_DELAY = 1000;
+
+// Interval to check the container
+const checkContainerTimer = useInterval();
+
+onMounted(() => {
+    checkContainerTimer.set(checkContainerHeight, CONTAINER_CHECK_DELAY);
+});
+
+/**
+ * Automatically focuses the container
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        albumBody.value?.focus();
+        checkContainerHeight();
+    });
+};
+
+onMounted(autoFocus);
+
+/**
+ * Toggles the album loop
+ */
+const toggleLoop = () => {
+    AlbumsController.ToggleLoop();
+};
+
+/**
+ * Toggles the album random order
+ */
+const toggleRandom = () => {
+    AlbumsController.ToggleRandom();
+};
+
+/**
+ * Closes the album menu
+ */
+const close = () => {
+    emit("close");
+};
+
+/**
+ * Clicks on media element
+ * @param item The media element
+ */
+const clickMedia = (item: MediaListItem) => {
+    AppStatus.ClickOnMedia(item.id, false);
+    close();
+};
 </script>

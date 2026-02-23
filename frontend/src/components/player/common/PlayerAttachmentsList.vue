@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="player-attachments-list"
         :class="{ hidden: !shown }"
         tabindex="-1"
@@ -9,8 +10,8 @@
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
-        @mouseenter="enterConfig"
-        @mouseleave="leaveConfig"
+        @mouseenter="enter"
+        @mouseleave="leave"
         @keydown="keyDownHandle"
     >
         <a
@@ -18,7 +19,7 @@
             :key="att.id"
             class="player-attachment-link"
             tabindex="0"
-            :href="getAttachmentUrl(att)"
+            :href="getAssetURL(att.url)"
             target="_blank"
             rel="noopener noreferrer"
             @click="clickAttachmentLink"
@@ -34,82 +35,88 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "@/utils/v-model";
-import { FocusTrap } from "@/utils/focus-trap";
+import { useTemplateRef } from "vue";
 import type { MediaAttachment } from "@/api/models";
 import { getAssetURL } from "@/utils/api";
+import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
+import { useFocusTrap } from "@/composables/use-focus-trap";
 
-export default defineComponent({
-    name: "PlayerAttachmentsList",
-    props: {
-        shown: Boolean,
-        attachments: Array as PropType<MediaAttachment[]>,
-    },
-    emits: ["update:shown", "enter", "leave"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            shownState: useVModel(props, "shown"),
-        };
-    },
-    watch: {
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        enterConfig: function () {
-            this.$emit("enter");
-        },
+// Ref to the container element
+const container = useTemplateRef("container");
 
-        leaveConfig: function () {
-            this.$emit("leave");
-        },
+// Shown model
+const shown = defineModel<boolean>("shown");
 
-        focus: function () {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        },
-
-        clickAttachmentLink: function (event: Event) {
-            event.stopPropagation();
-            this.close();
-        },
-
-        getAttachmentUrl: function (att: MediaAttachment): string {
-            return getAssetURL(att.url);
-        },
-
-        close: function () {
-            this.shownState = false;
-        },
-
-        keyDownHandle: function (e: KeyboardEvent) {
-            if (e.ctrlKey) {
-                return;
-            }
-            if (e.key === "Escape") {
-                this.close();
-                e.stopPropagation();
-            }
-        },
+// Props
+defineProps({
+    /**
+     * List of attachments
+     */
+    attachments: {
+        type: Array as PropType<MediaAttachment[]>,
+        required: true,
     },
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The user enters the control
+     */
+    (e: "enter"): void;
+
+    /**
+     * The user leaves the control
+     */
+    (e: "leave"): void;
+}>();
+
+/**
+ * Closes the control
+ */
+const close = () => {
+    shown.value = false;
+};
+
+/**
+ * The user enters the config
+ */
+const enter = () => {
+    emit("enter");
+};
+
+/**
+ * The user leaves the config
+ */
+const leave = () => {
+    emit("leave");
+};
+
+/**
+ * The user clicked on a link
+ * @param event The click event
+ */
+const clickAttachmentLink = (event: Event) => {
+    event.stopPropagation();
+    close();
+};
+
+/**
+ * Event handler for 'keydown'
+ * @param e The keyboard event
+ */
+const keyDownHandle = (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+        return;
+    }
+    if (e.key === "Escape") {
+        close();
+        e.stopPropagation();
+    }
+};
+
+// Focus trap
+useFocusTrap(container, shown, close, "player-settings-no-trap", true);
 </script>
