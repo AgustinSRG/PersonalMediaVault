@@ -1,7 +1,7 @@
 <template>
     <div class="resizable-widget-container">
         <ResizableWidget
-            v-model:display="displayStatus"
+            v-model:display="display"
             :title="$t('Tags')"
             :context-open="contextOpen"
             :position-key="'tags-edit-helper-pos'"
@@ -14,40 +14,48 @@
     </div>
 </template>
 
-<script lang="ts">
-import { useVModel } from "@/utils/v-model";
-import { defineComponent } from "vue";
+<script setup lang="ts">
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "TagsEditHelper",
-    components: {
-        ResizableWidget,
-        MediaTagsEditor,
-    },
-    props: {
-        display: Boolean,
-        contextOpen: Boolean,
-    },
-    emits: ["update:display", "tags-update", "clicked"],
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    methods: {
-        propagateClick: function () {
-            this.$emit("clicked");
-        },
+// Translation
+const { $t } = useI18n();
 
-        onTagUpdate: function () {
-            this.$emit("tags-update");
-        },
+// Display model
+const display = defineModel<boolean>("display");
 
-        close: function () {
-            this.displayStatus = false;
-        },
-    },
+defineProps({
+    /**
+     * True if a context menu is opened
+     */
+    contextOpen: Boolean,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The widget was clicked
+     */
+    (e: "clicked"): void;
+
+    /**
+     * The list of tags was updated
+     */
+    (e: "tags-update"): void;
+}>();
+
+/**
+ * Propagates the click event to the parent element
+ */
+const propagateClick = () => {
+    emit("clicked");
+};
+
+/**
+ * Called when the tags list change
+ */
+const onTagUpdate = () => {
+    emit("tags-update");
+};
 </script>

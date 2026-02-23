@@ -199,8 +199,6 @@
 <script lang="ts">
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
-
-import type { ActionButton } from "@/components/widgets/common/ResizableWidget.vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController } from "@/control/auth";
@@ -231,6 +229,7 @@ import {
 } from "@/control/player-preferences";
 import { getVoiceToSpeak, isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
 import { clone } from "@/utils/objects";
+import type { WidgetActionButton } from "@/utils/widgets";
 
 function elementIsVisibleVertical(elementRect: DOMRect, containerRect: DOMRect) {
     const elementY1 = elementRect.top;
@@ -301,8 +300,8 @@ export default defineComponent({
         };
     },
     computed: {
-        actionButtons: function (): ActionButton[] {
-            const buttons: ActionButton[] = [];
+        actionButtons: function (): WidgetActionButton[] {
+            const buttons: WidgetActionButton[] = [];
 
             if (this.loading) {
                 return [];
