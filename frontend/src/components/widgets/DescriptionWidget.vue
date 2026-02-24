@@ -1,7 +1,7 @@
 <template>
-    <div class="resizable-widget-container">
+    <div ref="container" class="resizable-widget-container">
         <ResizableWidget
-            v-model:display="displayStatus"
+            v-model:display="display"
             :title="$t('Description') + ' | ' + (title || $t('Untitled'))"
             :context-open="contextOpen"
             :position-key="'desc-widget-pos'"
@@ -33,7 +33,7 @@
                                         :min="1"
                                         :max="64"
                                         :step="1"
-                                        @input="onFontSizeChange"
+                                        @input="saveBaseFontSize"
                                     />
                                 </td>
                                 <td>
@@ -44,7 +44,7 @@
                                         :min="1"
                                         :max="128"
                                         :step="1"
-                                        @input="onFontSizeChange"
+                                        @input="saveBaseFontSize"
                                     />
                                 </td>
                             </tr>
@@ -196,20 +196,12 @@
     </div>
 </template>
 
-<script lang="ts">
-import { useVModel } from "@/utils/v-model";
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import {
-    emitAppEvent,
-    EVENT_NAME_AUTH_CHANGED,
-    EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
-    EVENT_NAME_MEDIA_UPDATE,
-    EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -218,7 +210,6 @@ import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiMediaSetDescription } from "@/api/api-media-edit";
 import { escapeHTML, replaceLinks } from "@/utils/html";
-
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import {
@@ -227,758 +218,807 @@ import {
     setDescriptionSize,
     setDescriptionWidgetReadSettings,
 } from "@/control/player-preferences";
-import { getVoiceToSpeak, isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
+import { isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
 import { clone } from "@/utils/objects";
 import type { WidgetActionButton } from "@/utils/widgets";
-
-function elementIsVisibleVertical(elementRect: DOMRect, containerRect: DOMRect) {
-    const elementY1 = elementRect.top;
-    const elementY2 = elementY1 + elementRect.height;
-
-    const containerY1 = containerRect.top;
-    const containerY2 = containerY1 + containerRect.height;
-
-    return !(elementY2 < containerY1 || containerY2 < elementY1);
-}
-
-export default defineComponent({
-    name: "DescriptionWidget",
-    components: {
-        ResizableWidget,
-        LoadingOverlay,
-        ToggleSwitch,
-    },
-    props: {
-        display: Boolean,
-        contextOpen: Boolean,
-        title: String,
-    },
-    emits: ["update:display", "clicked", "update-desc"],
-    setup(props) {
-        return {
-            speechSynthesisAvailable: isSpeechSynthesisAvailable(),
-            voices: isSpeechSynthesisAvailable() ? speechSynthesis.getVoices() : [],
-            loadRequestId: getUniqueStringId(),
-            paragraphIdPrefix: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-            busyTimeout: null as ReturnType<typeof setTimeout> | null,
-
-            voiceReaderSample: null as SpeechSynthesisUtterance | null,
-            voiceReader: null as SpeechSynthesisUtterance | null,
-        };
-    },
-    data: function () {
-        return {
-            mid: AppStatus.CurrentMedia,
-
-            editing: false,
-            configuring: false,
-
-            content: "",
-            contentToChange: "",
-
-            contentLines: [] as string[],
-
-            contentStoredId: -1,
-            contentStored: "",
-
-            reading: false,
-            readingLine: -1,
-
-            loading: true,
-
-            busy: false,
-            busyDisplayLoad: false,
-
-            canWrite: AuthController.CanWrite,
-
-            baseFontSize: getDescriptionSize(),
-            voiceReadingSettings: clone(getDescriptionWidgetReadSettings()),
-
-            sampleVoiceText: this.$t("This is a sample text in order to test the voice reading settings"),
-            playingSample: false,
-        };
-    },
-    computed: {
-        actionButtons: function (): WidgetActionButton[] {
-            const buttons: WidgetActionButton[] = [];
-
-            if (this.loading) {
-                return [];
-            }
-
-            if (!this.editing && !this.configuring) {
-                if (this.reading) {
-                    buttons.push({
-                        id: "read-pause",
-                        name: this.$t("Pause reading"),
-                        icon: "fas fa-pause",
-                        key: "-",
-                    });
-                } else if (this.speechSynthesisAvailable && this.contentLines.length > 0 && this.voiceReadingSettings.enabled) {
-                    buttons.push({
-                        id: "read-play",
-                        name: this.$t("Start reading"),
-                        icon: "fas fa-play",
-                        key: "-",
-                    });
-                }
-
-                buttons.push({
-                    id: "size-minus",
-                    name: this.$t("Smaller font size"),
-                    icon: "fas fa-magnifying-glass-minus",
-                    key: "-",
-                });
-
-                buttons.push({
-                    id: "size-plus",
-                    name: this.$t("Bigger font size"),
-                    icon: "fas fa-magnifying-glass-plus",
-                    key: "+",
-                });
-            }
-
-            if (!this.editing) {
-                if (this.configuring) {
-                    buttons.push({
-                        id: "config-done",
-                        name: this.$t("Done"),
-                        icon: "fas fa-check",
-                        key: "-",
-                    });
-
-                    buttons.push({
-                        id: "config-reset",
-                        name: this.$t("Reset to default values"),
-                        icon: "fas fa-broom",
-                        key: "-",
-                    });
-                } else {
-                    buttons.push({
-                        id: "config",
-                        name: this.$t("Configuration"),
-                        icon: "fas fa-cog",
-                        key: "-",
-                    });
-                }
-            }
-
-            if (this.canWrite && !this.configuring) {
-                if (this.editing) {
-                    buttons.push({
-                        id: "save",
-                        name: this.$t("Save changes"),
-                        icon: this.busyDisplayLoad ? "fa fa-spinner fa-spin" : "fas fa-check",
-                    });
-                } else {
-                    buttons.push({
-                        id: "edit",
-                        name: this.$t("Edit"),
-                        icon: "fas fa-pencil-alt",
-                    });
-                }
-            }
-
-            return buttons;
-        },
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.contentStoredId = -1;
-                this.contentStored = "";
-                this.load();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, this.updateDescription.bind(this));
-
-        if (this.display) {
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.busyTimeout) {
-            clearTimeout(this.busyTimeout);
-            this.busyTimeout = null;
-        }
-
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-
-        if (this.voiceReaderSample) {
-            speechSynthesis.cancel();
-            this.voiceReaderSample = null;
-        }
-
-        if (this.voiceReader) {
-            speechSynthesis.cancel();
-            this.voiceReader = null;
-        }
-    },
-    methods: {
-        load: function () {
-            clearNamedTimeout(this.loadRequestId);
-            abortNamedApiRequest(this.loadRequestId);
-
-            if (!this.display) {
-                return;
-            }
-
-            if (!MediaController.MediaData) {
-                return;
-            }
-
-            const descFilePath = MediaController.MediaData.description_url;
-
-            if (!descFilePath) {
-                this.content = "";
-                this.contentToChange = "";
-                this.contentLines = [];
-                this.readingLine = -1;
-                this.loading = false;
-                this.editing = !!this.canWrite;
-                this.stopReading();
-
-                if (this.contentStoredId === MediaController.MediaData.id) {
-                    this.contentToChange = this.contentStored;
-                } else {
-                    this.contentStoredId = -1;
-                    this.contentStored = "";
-                }
-
-                this.autoFocus();
-                return;
-            }
-
-            this.loading = true;
-
-            makeNamedApiRequest(this.loadRequestId, {
-                method: "GET",
-                url: getAssetURL(descFilePath),
-            })
-                .onSuccess((descriptionText) => {
-                    this.content = descriptionText;
-                    this.contentLines = this.content
-                        .split("\n")
-                        .map((l) => l.trim())
-                        .filter((l) => l.length > 0);
-                    this.readingLine = -1;
-                    this.contentToChange = descriptionText;
-                    this.loading = false;
-                    this.editing = this.canWrite && !this.content;
-                    this.stopReading();
-
-                    if (this.contentStoredId === MediaController.MediaData.id) {
-                        this.contentToChange = this.contentStored;
-                        this.editing = !!this.canWrite;
-                    } else {
-                        this.contentStoredId = -1;
-                        this.contentStored = "";
-                    }
-
-                    this.autoFocus();
-                })
-                .onRequestError((err) => {
-                    new RequestErrorHandler()
-                        .add(401, "*", () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
-                            this.content = "";
-                            this.contentToChange = "";
-                            this.contentLines = [];
-                            this.readingLine = -1;
-                            this.loading = false;
-                            this.editing = !!this.canWrite;
-                            this.stopReading();
-
-                            if (this.contentStoredId === MediaController.MediaData.id) {
-                                this.contentToChange = this.contentStored;
-                            } else {
-                                this.contentStoredId = -1;
-                                this.contentStored = "";
-                            }
-                            this.autoFocus();
-                        })
-                        .add("*", "*", () => {
-                            // Retry
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    // Retry
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
-
-        clickActionButton: function (id: string) {
-            switch (id) {
-                case "save":
-                    this.saveChanges();
-                    break;
-                case "edit":
-                    this.stopReading();
-                    this.startEdit();
-                    break;
-                case "config":
-                    this.stopReading();
-                    this.configuring = true;
-                    break;
-                case "config-done":
-                    this.configuring = false;
-                    this.stopPlayingSample();
-                    break;
-                case "config-reset":
-                    this.resetDefaultValues();
-                    break;
-                case "size-plus":
-                    this.baseFontSize = Math.min(128, this.baseFontSize + 1);
-                    this.saveBaseFontSize();
-                    break;
-                case "size-minus":
-                    this.baseFontSize = Math.max(1, this.baseFontSize - 1);
-                    this.saveBaseFontSize();
-                    break;
-                case "read-play":
-                    this.startReading();
-                    break;
-                case "read-pause":
-                    this.pauseReading();
-                    break;
-            }
-        },
-
-        saveBaseFontSize: function () {
-            setDescriptionSize(this.baseFontSize);
-        },
-
-        propagateClick: function () {
-            this.$emit("clicked");
-        },
-
-        close: function () {
-            this.displayStatus = false;
-        },
-
-        autoFocus: function () {
-            if (!this.display) {
-                return;
-            }
-            nextTick(() => {
-                let elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                } else {
-                    elem = this.$el.querySelector(".media-description-body");
-                    if (elem) {
-                        elem.focus();
-                    }
-                }
-            });
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-            if (!this.canWrite) {
-                this.cancelEdit();
-            }
-        },
-
-        updateMediaData: function () {
-            this.mid = AppStatus.CurrentMedia;
-            this.load();
-        },
-
-        updateDescription: function (source: string) {
-            if (source === "widget") {
-                return;
-            }
-
-            this.updateMediaData();
-        },
-
-        startEdit: function () {
-            if (this.editing) {
-                return;
-            }
-            this.editing = true;
-            this.autoFocus();
-        },
-
-        cancelEdit: function () {
-            if (!this.editing) {
-                return;
-            }
-            this.contentToChange = this.content;
-            this.editing = false;
-            this.autoFocus();
-        },
-
-        renderContent: function (text: string): string {
-            return replaceLinks(escapeHTML(text)).replace(/\n/g, "<br>");
-        },
-
-        saveChanges: function () {
-            if (!this.editing) {
-                return;
-            }
-
-            if (this.busy) {
-                return;
-            }
-
-            this.clearBusyTimeout();
-
-            if (this.content === this.contentToChange) {
-                this.editing = false;
-                this.autoFocus();
-                return;
-            }
-
-            this.busy = true;
-
-            this.setBusyTimeout();
-
-            const mid = this.mid;
-
-            makeApiRequest(apiMediaSetDescription(mid, this.contentToChange))
-                .onSuccess((res) => {
-                    this.busy = false;
-                    this.clearBusyTimeout();
-
-                    PagesController.ShowSnackBar(this.$t("Successfully saved description"));
-                    this.content = this.contentToChange;
-                    this.contentLines = this.content
-                        .split("\n")
-                        .map((l) => l.trim())
-                        .filter((l) => l.length > 0);
-                    this.readingLine = -1;
-                    this.editing = false;
-                    this.stopReading();
-
-                    if (MediaController.MediaData && MediaController.MediaData.id === mid) {
-                        MediaController.MediaData.description_url = res.url || "";
-                    }
-
-                    emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
-
-                    this.$emit("update-desc");
-
-                    this.autoFocus();
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    this.clearBusyTimeout();
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.contentStoredId = this.mid;
-                            this.contentStored = this.contentToChange;
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.busy = false;
-                    this.clearBusyTimeout();
-                    console.error(err);
-                });
-        },
-
-        setBusyTimeout: function () {
-            this.busyTimeout = setTimeout(() => {
-                this.busyDisplayLoad = true;
-                this.busyTimeout = null;
-            }, 333);
-        },
-
-        clearBusyTimeout: function () {
-            if (this.busyTimeout) {
-                clearTimeout(this.busyTimeout);
-                this.busyTimeout = null;
-            }
-
-            this.busyDisplayLoad = false;
-        },
-
-        resetDefaultValues: function () {
-            this.baseFontSize = 18;
-            this.onFontSizeChange();
-            this.voiceReadingSettings.enabled = false;
-            this.voiceReadingSettings.volume = 1;
-            this.voiceReadingSettings.pitch = 1;
-            this.voiceReadingSettings.rate = 1;
-            this.voiceReadingSettings.voice = "";
-        },
-
-        onFontSizeChange: function () {
-            setDescriptionSize(this.baseFontSize);
-        },
-
-        onChangedVoiceReadingSettings: function () {
-            setDescriptionWidgetReadSettings(this.voiceReadingSettings);
-            this.stopPlayingSample();
-        },
-
-        stopPlayingSample: function () {
-            if (this.voiceReaderSample) {
-                speechSynthesis.cancel();
-                this.voiceReaderSample = null;
-            }
-
-            this.playingSample = false;
-        },
-
-        playSample: function () {
-            if (this.voiceReaderSample) {
-                speechSynthesis.cancel();
-                this.voiceReaderSample = null;
-            }
-
-            const voice = getVoiceToSpeak(this.$locale.value, this.voiceReadingSettings.voice);
-
-            if (!voice) {
-                return;
-            }
-
-            const reader = new SpeechSynthesisUtterance(this.sampleVoiceText);
-
-            reader.addEventListener("error", (ev) => {
-                switch (ev.error) {
-                    case "canceled":
-                    case "interrupted":
-                        break;
-                    default:
-                        console.error(ev.error);
-                }
-
-                if (this.voiceReaderSample !== reader) {
-                    return;
-                }
-
-                this.voiceReaderSample = null;
-                this.playingSample = false;
-            });
-
-            reader.addEventListener("end", () => {
-                if (this.voiceReaderSample !== reader) {
-                    return;
-                }
-
-                this.voiceReaderSample = null;
-                this.playingSample = false;
-            });
-
-            reader.voice = voice;
-            reader.volume = this.voiceReadingSettings.volume;
-            reader.pitch = this.voiceReadingSettings.pitch;
-            reader.rate = this.voiceReadingSettings.rate;
-
-            this.voiceReaderSample = reader;
-            this.playingSample = true;
-
-            speechSynthesis.speak(reader);
-        },
-
-        selectCurrentLine: function () {
-            const widgetBody = this.$el.querySelector(".resizable-widget-body") as HTMLElement;
-
-            if (!widgetBody) {
-                if (this.readingLine < 0) {
-                    this.readingLine = 0;
-                }
-                return;
-            }
-
-            const widgetBodyRect = widgetBody.getBoundingClientRect();
-
-            if (this.readingLine >= 0) {
-                const currentElement = document.getElementById(this.paragraphIdPrefix + "-" + this.readingLine) as HTMLElement;
-
-                if (currentElement) {
-                    const currentElementRect = currentElement.getBoundingClientRect();
-
-                    if (elementIsVisibleVertical(currentElementRect, widgetBodyRect)) {
-                        return;
-                    }
-                }
-            }
-
-            const elements = this.$el.querySelectorAll(".media-description-paragraph") as HTMLElement[];
-
-            for (let i = 0; i < elements.length; i++) {
-                const elRect = elements[i].getBoundingClientRect();
-
-                if (elementIsVisibleVertical(elRect, widgetBodyRect)) {
-                    this.readingLine = Math.min(i, this.contentLines.length - 1);
-                    return;
-                }
-            }
-
-            this.readingLine = 0;
-        },
-
-        readNextLine: function () {
-            if (this.readingLine >= this.contentLines.length - 1) {
-                // End
-                this.readingLine = -1;
-                this.reading = false;
-                return;
-            }
-
-            this.readingLine++;
-            this.setupVoiceReader();
-        },
-
-        readSkipToLine: function (i: number) {
-            if (!this.reading) {
-                return;
-            }
-
-            this.readingLine = i;
-            this.setupVoiceReader();
-        },
-
-        setupVoiceReader: function () {
-            if (this.voiceReader) {
-                speechSynthesis.cancel();
-                this.voiceReader = null;
-            }
-
-            const voice = getVoiceToSpeak(this.$locale.value, this.voiceReadingSettings.voice);
-
-            if (!voice) {
-                this.reading = false;
-                return;
-            }
-
-            let text = this.contentLines[this.readingLine] || "";
-
-            while (!text) {
-                if (this.readingLine >= this.contentLines.length - 1) {
-                    // End
-                    this.readingLine = -1;
-                    this.reading = false;
-                    return;
-                }
-
-                this.readingLine++;
-                text = this.contentLines[this.readingLine] || "";
-            }
-
-            const reader = new SpeechSynthesisUtterance(text);
-
-            reader.addEventListener("error", (ev) => {
-                switch (ev.error) {
-                    case "canceled":
-                    case "interrupted":
-                        return;
-                    default:
-                        console.error(ev.error);
-                }
-
-                if (this.voiceReader !== reader) {
-                    return;
-                }
-
-                this.voiceReader = null;
-                this.reading = false;
-            });
-
-            reader.addEventListener("end", () => {
-                if (this.voiceReader !== reader) {
-                    return;
-                }
-
-                this.voiceReader = null;
-                this.readNextLine();
-            });
-
-            reader.voice = voice;
-            reader.volume = this.voiceReadingSettings.volume;
-            reader.pitch = this.voiceReadingSettings.pitch;
-            reader.rate = this.voiceReadingSettings.rate;
-
-            this.voiceReader = reader;
-
-            speechSynthesis.speak(reader);
-
-            this.scrollIntoReadingElement();
-        },
-
-        scrollIntoReadingElement: function () {
-            const el = document.getElementById(this.paragraphIdPrefix + "-" + this.readingLine) as HTMLElement;
-
-            if (!el) {
-                return;
-            }
-
-            el.scrollIntoView();
-        },
-
-        startReading: function () {
-            if (this.voiceReader) {
-                const oldReadingLine = this.readingLine;
-                this.selectCurrentLine();
-
-                if (oldReadingLine === this.readingLine) {
-                    speechSynthesis.resume();
-                    this.reading = true;
-                    return;
-                }
-            }
-
-            if (this.contentLines.length === 0) {
-                return;
-            }
-
-            this.selectCurrentLine();
-
-            this.setupVoiceReader();
-
-            this.reading = true;
-        },
-
-        pauseReading: function () {
-            if (this.voiceReader) {
-                speechSynthesis.pause();
-                this.reading = false;
-                return;
-            }
-
-            this.stopReading();
-        },
-
-        stopReading: function () {
-            if (this.voiceReader) {
-                speechSynthesis.cancel();
-                this.voiceReader = null;
-            }
-            this.reading = false;
-        },
-    },
+import { elementIsVisibleVertical } from "@/utils/dom";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { useRequestId } from "@/composables/use-request-id";
+import { useTimeout } from "@/composables/use-timeout";
+import { useSpeechReader } from "@/composables/use-speech-reader";
+import { onApplicationEvent } from "@/composables/on-app-event";
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Props
+defineProps({
+    /**
+     * A context menu is opened
+     */
+    contextOpen: Boolean,
+
+    /**
+     * The title of the media
+     */
+    title: String,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The user clicked the widget
+     */
+    (e: "clicked"): void;
+
+    /**
+     * The description was updated
+     */
+    (e: "update-desc"): void;
+}>();
+
+// Unique prefix to identify paragraph elements
+const paragraphIdPrefix = getUniqueStringId();
+
+// Description content
+const content = ref("");
+
+// Description content to be changed by the user
+const contentToChange = ref("");
+
+// Lines of content, to separate by paragraphs
+const contentLines = ref<string[]>([]);
+
+// Stored content in case of session expiration
+const contentStored = ref("");
+
+// Id of the media for the content that was stored
+const contentStoredId = ref(-1);
+
+// Busy status
+const busy = ref(false);
+
+// True to display the busy loader
+const busyDisplayLoad = ref(false);
+
+// Current media ID
+const mid = ref(AppStatus.CurrentMedia);
+
+// Loading status
+const loading = ref(true);
+
+// Editing?
+const editing = ref(false);
+
+// Configuring?
+const configuring = ref(false);
+
+// Timeout to display the busy status
+const busyTimeout = useTimeout();
+
+// Speech synthesis available?
+const speechSynthesisAvailable = isSpeechSynthesisAvailable();
+
+// List of voices for speech synthesis
+const voices = shallowRef<SpeechSynthesisVoice[]>([]);
+
+// Voice reading settings
+const voiceReadingSettings = ref(clone(getDescriptionWidgetReadSettings()));
+
+// Speech reader
+const speechReader = useSpeechReader();
+
+// Reading with speech reader?
+const reading = ref(false);
+
+// Index of the line being read
+const readingLine = ref(-1);
+
+// Sample text to play as a voice sample
+const sampleVoiceText = computed(() => $t("This is a sample text in order to test the voice reading settings"));
+
+// True if voice sample is being played
+const playingSample = ref(false);
+
+// Font size for the description
+const baseFontSize = ref(getDescriptionSize());
+
+// List of action buttons for the widget
+const actionButtons = computed<WidgetActionButton[]>(() => {
+    const buttons: WidgetActionButton[] = [];
+
+    if (loading.value) {
+        return [];
+    }
+
+    if (!editing.value && !configuring.value) {
+        if (reading.value) {
+            buttons.push({
+                id: "read-pause",
+                name: $t("Pause reading"),
+                icon: "fas fa-pause",
+            });
+        } else if (speechSynthesisAvailable && contentLines.value.length > 0 && voiceReadingSettings.value.enabled) {
+            buttons.push({
+                id: "read-play",
+                name: $t("Start reading"),
+                icon: "fas fa-play",
+            });
+        }
+
+        buttons.push({
+            id: "size-minus",
+            name: $t("Smaller font size"),
+            icon: "fas fa-magnifying-glass-minus",
+            key: "-",
+        });
+
+        buttons.push({
+            id: "size-plus",
+            name: $t("Bigger font size"),
+            icon: "fas fa-magnifying-glass-plus",
+            key: "+",
+        });
+    }
+
+    if (!editing.value) {
+        if (configuring.value) {
+            buttons.push({
+                id: "config-done",
+                name: $t("Done"),
+                icon: "fas fa-check",
+            });
+
+            buttons.push({
+                id: "config-reset",
+                name: $t("Reset to default values"),
+                icon: "fas fa-broom",
+            });
+        } else {
+            buttons.push({
+                id: "config",
+                name: $t("Configuration"),
+                icon: "fas fa-cog",
+            });
+        }
+    }
+
+    if (canWrite.value && !configuring.value) {
+        if (editing.value) {
+            buttons.push({
+                id: "save",
+                name: $t("Save changes"),
+                icon: busyDisplayLoad.value ? "fa fa-spinner fa-spin" : "fas fa-check",
+            });
+        } else {
+            buttons.push({
+                id: "edit",
+                name: $t("Edit"),
+                icon: "fas fa-pencil-alt",
+            });
+        }
+    }
+
+    return buttons;
+});
+
+// Load request ID
+const loadRequestId = useRequestId();
+
+// Delay to retry loading after error (milliseconds)
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads the content
+ */
+const load = () => {
+    clearNamedTimeout(loadRequestId);
+    abortNamedApiRequest(loadRequestId);
+
+    if (!display.value) {
+        return;
+    }
+
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    const descFilePath = MediaController.MediaData.description_url;
+
+    if (!descFilePath) {
+        content.value = "";
+        contentToChange.value = "";
+        contentLines.value = [];
+        readingLine.value = -1;
+        loading.value = false;
+        editing.value = !!canWrite.value;
+
+        stopReading();
+
+        if (contentStoredId.value === MediaController.MediaData.id) {
+            contentToChange.value = contentStored.value;
+        } else {
+            contentStoredId.value = -1;
+            contentStored.value = "";
+        }
+
+        autoFocus();
+        return;
+    }
+
+    loading.value = true;
+
+    makeNamedApiRequest(loadRequestId, {
+        method: "GET",
+        url: getAssetURL(descFilePath),
+    })
+        .onSuccess((descriptionText) => {
+            content.value = descriptionText;
+            contentLines.value = content.value
+                .split("\n")
+                .map((l) => l.trim())
+                .filter((l) => l.length > 0);
+
+            readingLine.value = -1;
+
+            contentToChange.value = descriptionText;
+
+            loading.value = false;
+
+            editing.value = canWrite.value && !content.value;
+
+            stopReading();
+
+            if (contentStoredId.value === MediaController.MediaData.id) {
+                contentToChange.value = contentStored.value;
+                editing.value = !!canWrite.value;
+            } else {
+                contentStoredId.value = -1;
+                contentStored.value = "";
+            }
+
+            autoFocus();
+        })
+        .onRequestError((err) => {
+            new RequestErrorHandler()
+                .add(401, "*", () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                })
+                .add(404, "*", () => {
+                    content.value = "";
+                    contentToChange.value = "";
+                    contentLines.value = [];
+
+                    readingLine.value = -1;
+
+                    loading.value = false;
+
+                    editing.value = !!canWrite.value;
+
+                    stopReading();
+
+                    if (contentStoredId.value === MediaController.MediaData.id) {
+                        contentToChange.value = contentStored.value;
+                    } else {
+                        contentStoredId.value = -1;
+                        contentStored.value = "";
+                    }
+
+                    autoFocus();
+                })
+                .add("*", "*", () => {
+                    // Retry
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+                })
+                .handle(err);
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, load);
+        });
+};
+
+onMounted(() => {
+    if (display.value) {
+        load();
+    }
+});
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    mid.value = AppStatus.CurrentMedia;
+    load();
+});
+
+watch(display, () => {
+    if (display.value) {
+        contentStoredId.value = -1;
+        contentStored.value = "";
+        load();
+    }
+});
+
+onApplicationEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, (source) => {
+    if (source === "widget") {
+        return;
+    }
+
+    load();
+});
+
+/**
+ * Handler for action buttons
+ * @param id The button ID
+ */
+const clickActionButton = (id: string) => {
+    switch (id) {
+        case "save":
+            saveChanges();
+            break;
+        case "edit":
+            stopReading();
+            startEdit();
+            break;
+        case "config":
+            stopReading();
+            configuring.value = true;
+            if (speechSynthesisAvailable) {
+                voices.value = speechSynthesis.getVoices();
+            }
+            break;
+        case "config-done":
+            configuring.value = false;
+            stopPlayingSample();
+            break;
+        case "config-reset":
+            resetDefaultValues();
+            break;
+        case "size-plus":
+            baseFontSize.value = Math.min(128, baseFontSize.value + 1);
+            saveBaseFontSize();
+            break;
+        case "size-minus":
+            baseFontSize.value = Math.max(1, baseFontSize.value - 1);
+            saveBaseFontSize();
+            break;
+        case "read-play":
+            startReading();
+            break;
+        case "read-pause":
+            pauseReading();
+            break;
+    }
+};
+
+/**
+ * Start editing the description
+ */
+const startEdit = () => {
+    if (editing.value) {
+        return;
+    }
+    editing.value = true;
+    autoFocus();
+};
+
+/**
+ * Stop editing and discards the changes
+ */
+const cancelEdit = () => {
+    if (!editing.value) {
+        return;
+    }
+    contentToChange.value = content.value;
+    editing.value = false;
+    autoFocus();
+};
+
+watch(canWrite, () => {
+    if (!canWrite.value) {
+        cancelEdit();
+    }
+});
+
+/**
+ * Sets the base font size to the settings
+ */
+const saveBaseFontSize = () => {
+    setDescriptionSize(baseFontSize.value);
+};
+
+/**
+ * Resets default settings
+ */
+const resetDefaultValues = () => {
+    baseFontSize.value = 18;
+
+    saveBaseFontSize();
+
+    voiceReadingSettings.value.enabled = false;
+    voiceReadingSettings.value.volume = 1;
+    voiceReadingSettings.value.pitch = 1;
+    voiceReadingSettings.value.rate = 1;
+    voiceReadingSettings.value.voice = "";
+};
+
+// Delay to display the busy loader (milliseconds)
+const BUSY_TIMEOUT_DELAY = 333;
+
+/**
+ * Sets the timeout to display the busy loader
+ */
+const setBusyTimeout = () => {
+    busyTimeout.set(() => {
+        busyDisplayLoad.value = true;
+    }, BUSY_TIMEOUT_DELAY);
+};
+
+/**
+ * Clears busy timeout
+ */
+const clearBusyTimeout = () => {
+    busyTimeout.clear();
+
+    busyDisplayLoad.value = false;
+};
+
+/**
+ * Saves changes to the description
+ */
+const saveChanges = () => {
+    if (!editing.value) {
+        return;
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    clearBusyTimeout();
+
+    if (content.value === contentToChange.value) {
+        editing.value = false;
+        autoFocus();
+        return;
+    }
+
+    busy.value = true;
+
+    setBusyTimeout();
+
+    const mediaId = mid.value;
+
+    makeApiRequest(apiMediaSetDescription(mediaId, contentToChange.value))
+        .onSuccess((res) => {
+            busy.value = false;
+
+            clearBusyTimeout();
+
+            PagesController.ShowSnackBar($t("Successfully saved description"));
+
+            content.value = contentToChange.value;
+            contentLines.value = content.value
+                .split("\n")
+                .map((l) => l.trim())
+                .filter((l) => l.length > 0);
+
+            readingLine.value = -1;
+            editing.value = false;
+
+            stopReading();
+
+            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                MediaController.MediaData.description_url = res.url || "";
+            }
+
+            emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
+
+            emit("update-desc");
+
+            autoFocus();
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            clearBusyTimeout();
+
+            handleErr(err, {
+                unauthorized: () => {
+                    contentStoredId.value = mid.value;
+                    contentStored.value = contentToChange.value;
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                badRequest: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            clearBusyTimeout();
+            console.error(err);
+        });
+};
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    if (!display.value) {
+        return;
+    }
+
+    nextTick(() => {
+        let elem = container.value?.querySelector(".auto-focus") as HTMLElement;
+        if (elem) {
+            elem.focus();
+        } else {
+            elem = container.value?.querySelector(".media-description-body") as HTMLElement;
+            if (elem) {
+                elem.focus();
+            }
+        }
+    });
+};
+
+/**
+ * Renders content in sanitized HTML
+ * @param text The text
+ * @returns The sanitized HTML
+ */
+const renderContent = (text: string): string => {
+    return replaceLinks(escapeHTML(text)).replace(/\n/g, "<br>");
+};
+
+/**
+ * Propagates click event to the parent element
+ */
+const propagateClick = () => {
+    emit("clicked");
+};
+
+/**
+ * Plays the text sample
+ */
+const playSample = () => {
+    speechReader.stop();
+    reading.value = false;
+    playingSample.value = false;
+
+    const success = speechReader.read(
+        sampleVoiceText.value,
+        voiceReadingSettings.value,
+        () => {
+            playingSample.value = false;
+        },
+        (ev: SpeechSynthesisErrorEvent) => {
+            switch (ev.error) {
+                case "canceled":
+                case "interrupted":
+                    return;
+                default:
+                    console.error(ev.error);
+            }
+
+            playingSample.value = false;
+        },
+    );
+
+    if (success) {
+        playingSample.value = true;
+    }
+};
+
+/**
+ * Stops playing sample audio
+ */
+const stopPlayingSample = () => {
+    speechReader.stop();
+    reading.value = false;
+    playingSample.value = false;
+};
+
+/**
+ * Called when the voice reading settings are changed
+ */
+const onChangedVoiceReadingSettings = () => {
+    setDescriptionWidgetReadSettings(voiceReadingSettings.value);
+    stopPlayingSample();
+};
+
+/**
+ * Setups voice reader
+ */
+const setupVoiceReader = () => {
+    speechReader.stop();
+    reading.value = false;
+    playingSample.value = false;
+
+    let text = contentLines.value[readingLine.value] || "";
+
+    while (!text) {
+        if (readingLine.value >= contentLines.value.length - 1) {
+            // End
+            readingLine.value = -1;
+            reading.value = false;
+            return;
+        }
+
+        readingLine.value++;
+
+        text = contentLines.value[readingLine.value] || "";
+    }
+
+    const success = speechReader.read(text, voiceReadingSettings.value, readNextLine, (ev: SpeechSynthesisErrorEvent) => {
+        switch (ev.error) {
+            case "canceled":
+            case "interrupted":
+                return;
+            default:
+                console.error(ev.error);
+        }
+
+        reading.value = false;
+    });
+
+    if (success) {
+        reading.value = true;
+        scrollIntoReadingElement();
+    }
+};
+
+/**
+ * Reads the next line
+ */
+const readNextLine = () => {
+    if (readingLine.value >= contentLines.value.length - 1) {
+        // End
+        readingLine.value = -1;
+        reading.value = false;
+        return;
+    }
+
+    readingLine.value++;
+
+    setupVoiceReader();
+};
+
+/**
+ * Starts reading from a specific line
+ * @param i The line index
+ */
+const readSkipToLine = (i: number) => {
+    if (!reading.value) {
+        return;
+    }
+
+    readingLine.value = i;
+
+    setupVoiceReader();
+};
+
+/**
+ * Scrolls into the current line being read
+ */
+const scrollIntoReadingElement = () => {
+    const el = document.getElementById(paragraphIdPrefix + "-" + readingLine.value) as HTMLElement;
+
+    if (!el) {
+        return;
+    }
+
+    el.scrollIntoView();
+};
+
+/**
+ * Selects a line to read based on the current scroll
+ */
+const selectCurrentLine = () => {
+    const widgetBody = container.value?.querySelector(".resizable-widget-body") as HTMLElement;
+
+    if (!widgetBody) {
+        if (readingLine.value < 0) {
+            readingLine.value = 0;
+        }
+        return;
+    }
+
+    const widgetBodyRect = widgetBody.getBoundingClientRect();
+
+    if (readingLine.value >= 0) {
+        const currentElement = document.getElementById(paragraphIdPrefix + "-" + readingLine.value) as HTMLElement;
+
+        if (currentElement) {
+            const currentElementRect = currentElement.getBoundingClientRect();
+
+            if (elementIsVisibleVertical(currentElementRect, widgetBodyRect)) {
+                return;
+            }
+        }
+    }
+
+    const elements = (container.value?.querySelectorAll(".media-description-paragraph") || []) as HTMLElement[];
+
+    for (let i = 0; i < elements.length; i++) {
+        const elRect = elements[i].getBoundingClientRect();
+
+        if (elementIsVisibleVertical(elRect, widgetBodyRect)) {
+            readingLine.value = Math.min(i, contentLines.value.length - 1);
+            return;
+        }
+    }
+
+    readingLine.value = 0;
+};
+
+/**
+ * Starts reading
+ */
+const startReading = () => {
+    if (speechReader.isPaused()) {
+        const oldReadingLine = readingLine.value;
+        selectCurrentLine();
+
+        if (oldReadingLine === readingLine.value) {
+            speechReader.resume();
+            reading.value = true;
+            return;
+        }
+    }
+
+    if (contentLines.value.length === 0) {
+        return;
+    }
+
+    selectCurrentLine();
+
+    setupVoiceReader();
+
+    reading.value = true;
+};
+
+/**
+ * Pauses the reader
+ */
+const pauseReading = () => {
+    const paused = speechReader.pause();
+
+    if (!paused) {
+        stopReading();
+        return;
+    }
+
+    reading.value = false;
+};
+
+/**
+ * Stops the reader
+ */
+const stopReading = () => {
+    speechReader.stop();
+
+    reading.value = false;
+};
 </script>

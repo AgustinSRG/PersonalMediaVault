@@ -1,13 +1,13 @@
 <template>
     <div class="resizable-widget-container">
         <ResizableWidget
-            v-model:display="displayStatus"
+            v-model:display="display"
             :title="$t('Time slices')"
             :context-open="contextOpen"
             :position-key="'time-slices-helper-pos'"
             @clicked="propagateClick"
         >
-            <div class="table-responsive time-slices-table">
+            <div ref="container" class="table-responsive time-slices-table">
                 <table class="table">
                     <thead>
                         <tr>
@@ -121,71 +121,192 @@
     </div>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+<script setup lang="ts">
+import { emitAppEvent, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
-import { useVModel } from "@/utils/v-model";
-import { defineComponent } from "vue";
-
+import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 import type { MediaTimeSlice } from "@/api/models";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
 
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// Props
+const props = defineProps({
+    /**
+     * A context menu is opened
+     */
+    contextOpen: Boolean,
+
+    /**
+     * The current time of the video (seconds)
+     */
+    currentTime: Number,
+});
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * The user updated the time slices
+     */
+    (e: "update-time-slices"): void;
+
+    /**
+     * The user clicked the widget
+     */
+    (e: "clicked"): void;
+}>();
+
+// Array of time slices
+const timeSlicesArray = ref<EditorTimeSlice[]>([]);
+
+/**
+ * Updates the media data
+ */
+const updateMediaData = () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    reset();
+
+    timeSlicesArray.value = (MediaController.MediaData.time_slices || []).map((s) => {
+        return {
+            time: s.time,
+            timeStr: renderTimeSeconds(s.time),
+            name: s.name,
+            deleted: false,
+        };
+    });
+
+    saveState.value.callback = null;
+
+    saveState.value = {
+        saving: false,
+        pendingSave: false,
+        mid: MediaController.MediaData.id,
+        timeSlices: clone(MediaController.MediaData.time_slices),
+        callback: onSaved,
+    };
+};
+
+onMounted(updateMediaData);
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateMediaData);
+
+/**
+ * Save request state for time slices
+ */
 interface SaveRequestState {
+    /**
+     * True if saving
+     */
     saving: boolean;
+
+    /**
+     * True if a save process is pending
+     */
     pendingSave: boolean;
+
+    /**
+     * The media ID
+     */
     mid: number;
+
+    /**
+     * List of time slices
+     */
     timeSlices: {
         time: number;
         name: string;
     }[];
+
+    /**
+     * Callback
+     */
     callback: () => void;
 }
 
-function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
-    if (state.mid < 0) {
+/**
+ * Called after the time slices are saved
+ */
+const onSaved = () => {
+    PagesController.ShowSnackBar($t("Successfully changed time slices"));
+    emit("update-time-slices");
+};
+
+// Save state
+const saveState = shallowRef<SaveRequestState>({
+    saving: false,
+    pendingSave: false,
+    mid: -1,
+    timeSlices: [] as MediaTimeSlice[],
+    callback: onSaved,
+});
+
+onBeforeUnmount(() => {
+    saveState.value.callback = null;
+});
+
+/**
+ * Saves the time slices
+ * @param ss The save state
+ */
+const saveTimeSlices = (ss: SaveRequestState) => {
+    if (ss.mid < 0) {
         return;
     }
 
-    if (state.saving) {
-        state.pendingSave = true;
+    if (ss.saving) {
+        ss.pendingSave = true;
         return;
     }
 
-    state.saving = true;
+    ss.saving = true;
 
-    makeApiRequest(apiMediaChangeTimeSlices(state.mid, state.timeSlices))
+    makeApiRequest(apiMediaChangeTimeSlices(ss.mid, ss.timeSlices))
         .onSuccess(() => {
-            state.saving = false;
+            ss.saving = false;
 
-            if (MediaController.MediaData && MediaController.MediaData.id === state.mid) {
-                MediaController.MediaData.time_slices = clone(state.timeSlices);
+            if (MediaController.MediaData && MediaController.MediaData.id === ss.mid) {
+                MediaController.MediaData.time_slices = clone(ss.timeSlices);
             }
 
-            if (state.pendingSave) {
-                state.pendingSave = false;
-                saveTimeSlices(state, $t);
-            } else if (state.callback) {
-                state.callback();
+            if (ss.pendingSave) {
+                ss.pendingSave = false;
+                saveTimeSlices(ss);
+            } else if (ss.callback) {
+                ss.callback();
             }
         })
         .onCancel(() => {
-            state.saving = false;
+            ss.saving = false;
 
-            if (state.pendingSave) {
-                state.pendingSave = false;
-                saveTimeSlices(state, $t);
+            if (ss.pendingSave) {
+                ss.pendingSave = false;
+                saveTimeSlices(ss);
             }
         })
         .onRequestError((err, handleErr) => {
-            state.saving = false;
+            ss.saving = false;
             handleErr(err, {
                 unauthorized: () => {
                     emitAppEvent(EVENT_NAME_UNAUTHORIZED);
@@ -207,20 +328,44 @@ function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
                     PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
                 },
             });
-            if (state.pendingSave) {
-                state.pendingSave = false;
-                saveTimeSlices(state, $t);
+            if (ss.pendingSave) {
+                ss.pendingSave = false;
+                saveTimeSlices(ss);
             }
         })
         .onUnexpectedError((err) => {
             console.error(err);
-            state.saving = false;
-            if (state.pendingSave) {
-                state.pendingSave = false;
-                saveTimeSlices(state, $t);
+            ss.saving = false;
+            if (ss.pendingSave) {
+                ss.pendingSave = false;
+                saveTimeSlices(ss);
             }
         });
-}
+};
+
+/**
+ * Requests the time slices to be saved
+ */
+const save = () => {
+    saveState.value.timeSlices = timeSlicesArray.value
+        .filter((s) => {
+            return !s.deleted;
+        })
+        .map((s) => {
+            return {
+                time: s.time,
+                name: s.name,
+            };
+        });
+    saveTimeSlices(saveState.value);
+};
+
+/**
+ * Propagates the click event to the parent element
+ */
+const propagateClick = () => {
+    emit("clicked");
+};
 
 /**
  * Time slice being modified
@@ -239,279 +384,214 @@ export type EditorTimeSlice = {
     deleted: boolean;
 };
 
-export default defineComponent({
-    name: "TimeSlicesEditHelper",
-    components: {
-        ResizableWidget,
+// Timestamp for the time slice to add
+const sliceAddTimestamp = ref(renderTimeSeconds(props.currentTime || 0));
+
+watch(
+    () => props.currentTime,
+    () => {
+        sliceAddTimestamp.value = renderTimeSeconds(props.currentTime || 0);
     },
-    props: {
-        display: Boolean,
-        contextOpen: Boolean,
-        currentTime: Number,
-    },
-    emits: ["update:display", "update-time-slices", "clicked"],
-    setup(props) {
-        return {
-            saveState: {
-                saving: false,
-                pendingSave: false,
-                mid: -1,
-                timeSlices: [] as MediaTimeSlice[],
-                callback: null as (() => void) | null,
-            },
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            timeSlicesArray: [] as EditorTimeSlice[],
+);
 
-            sliceAddTimestamp: "",
-            sliceAddName: "",
+// Name for the time slice to add
+const sliceAddName = ref("");
 
-            sliceEditIndex: -1,
-            sliceEditTimestamp: "",
-            sliceEditName: "",
+/**
+ * Adds a time slice
+ */
+const addSlice = () => {
+    const timeSeconds = parseTimeSeconds(sliceAddTimestamp.value);
 
-            canWrite: AuthController.CanWrite,
-        };
-    },
+    if (isNaN(timeSeconds) || !isFinite(timeSeconds) || timeSeconds < 0) {
+        return;
+    }
 
-    watch: {
-        currentTime: function () {
-            this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
-        },
+    if (!sliceAddName.value) {
+        return;
+    }
 
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    const elem = this.$el.querySelector(".auto-focus");
+    let foundSpace = false;
 
-                    if (elem) {
-                        elem.focus();
-                        elem.select();
-                    }
-                });
-            }
-        },
-    },
+    const newSlice: EditorTimeSlice = {
+        time: timeSeconds,
+        timeStr: renderTimeSeconds(timeSeconds),
+        name: sliceAddName.value,
+        deleted: false,
+    };
 
-    mounted: function () {
-        this.saveState.callback = this.onSaved.bind(this);
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
-
-        this.updateMediaData();
-
-        if (this.display) {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-
-                if (elem) {
-                    elem.focus();
-                    elem.select();
-                }
-            });
+    for (let j = 0; j < timeSlicesArray.value.length; j++) {
+        if (timeSlicesArray.value[j].time > timeSeconds) {
+            foundSpace = true;
+            timeSlicesArray.value.splice(j, 0, newSlice);
+            break;
         }
-    },
+    }
 
-    beforeUnmount: function () {
-        this.saveState.callback = null;
-    },
+    if (!foundSpace) {
+        timeSlicesArray.value.push(newSlice);
+    }
 
-    methods: {
-        propagateClick: function () {
-            this.$emit("clicked");
-        },
+    sliceAddName.value = "";
 
-        reset: function () {
-            this.sliceEditIndex = -1;
-        },
+    save();
+};
 
-        close: function () {
-            this.displayStatus = false;
-        },
+/**
+ * Handler for 'keydown' on add input
+ * @param event The keyboard event
+ */
+const keyDownAdd = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        addSlice();
+    }
+};
 
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
+/**
+ * Deletes a time slice
+ * @param i The time slice index
+ */
+const deleteSlice = (i: number) => {
+    timeSlicesArray.value[i].deleted = true;
 
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
+    for (let j = 0; j < timeSlicesArray.value.length; j++) {
+        if (j === i) {
+            continue;
+        }
+        if (timeSlicesArray.value[j].deleted) {
+            timeSlicesArray.value.splice(i, 1);
+        }
+    }
+
+    save();
+};
+
+/**
+ * Undoes a deletion
+ * @param i The index of the deleted time slice
+ */
+const undoDelete = (i: number) => {
+    timeSlicesArray.value[i].deleted = false;
+
+    save();
+};
+
+// Index of the slice being edited
+const sliceEditIndex = ref(-1);
+
+// Timestamp of the slice being edited
+const sliceEditTimestamp = ref("");
+
+// Name of the slice being edited
+const sliceEditName = ref("");
+
+/**
+ * Resets the edit state
+ */
+const reset = () => {
+    sliceEditIndex.value = -1;
+};
+
+/**
+ * Start editing an slice
+ * @param i The index of the slice
+ */
+const editSlice = (i: number) => {
+    sliceEditIndex.value = i;
+    sliceEditTimestamp.value = timeSlicesArray.value[i].timeStr;
+    sliceEditName.value = timeSlicesArray.value[i].name;
+
+    autoFocus();
+};
+
+/**
+ * Cancels editing
+ */
+const cancelEdit = () => {
+    sliceEditIndex.value = -1;
+};
+
+/**
+ * Finish editing a time slice
+ */
+const finishEdit = () => {
+    if (sliceEditIndex.value < 0) {
+        return;
+    }
+
+    const timeSeconds = parseTimeSeconds(sliceEditTimestamp.value);
+
+    if (isNaN(timeSeconds) || !isFinite(timeSeconds) || timeSeconds < 0) {
+        return;
+    }
+
+    timeSlicesArray.value.splice(sliceEditIndex.value, 1);
+
+    let foundSpace = false;
+
+    const newSlice: EditorTimeSlice = {
+        time: timeSeconds,
+        timeStr: renderTimeSeconds(timeSeconds),
+        name: sliceEditName.value,
+        deleted: false,
+    };
+
+    for (let j = 0; j < timeSlicesArray.value.length; j++) {
+        if (timeSlicesArray.value[j].time > timeSeconds) {
+            foundSpace = true;
+            timeSlicesArray.value.splice(j, 0, newSlice);
+            break;
+        }
+    }
+
+    if (!foundSpace) {
+        timeSlicesArray.value.push(newSlice);
+    }
+
+    sliceEditIndex.value = -1;
+
+    save();
+};
+
+/**
+ * Event handler for 'keydown' on the slice edit input
+ * @param event The keyboard event
+ */
+const keyDownEdit = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        finishEdit();
+    }
+};
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        const elem = container.value?.querySelector(".auto-focus") as HTMLInputElement;
+
+        if (elem) {
+            elem.focus();
+            if (elem.select) {
+                elem.select();
             }
+        }
+    });
+};
 
-            this.reset();
+onMounted(() => {
+    if (display.value) {
+        autoFocus();
+    }
+});
 
-            this.timeSlicesArray = (MediaController.MediaData.time_slices || []).map((s) => {
-                return {
-                    time: s.time,
-                    timeStr: renderTimeSeconds(s.time),
-                    name: s.name,
-                    deleted: false,
-                };
-            });
-
-            this.saveState = {
-                saving: false,
-                pendingSave: false,
-                mid: MediaController.MediaData.id,
-                timeSlices: clone(MediaController.MediaData.time_slices),
-                callback: this.onSaved.bind(this),
-            };
-        },
-
-        save: function () {
-            this.saveState.timeSlices = this.timeSlicesArray
-                .filter((s) => {
-                    return !s.deleted;
-                })
-                .map((s) => {
-                    return {
-                        time: s.time,
-                        name: s.name,
-                    };
-                });
-            saveTimeSlices(this.saveState, this.$t);
-        },
-
-        onSaved: function () {
-            PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
-            this.$emit("update-time-slices");
-        },
-
-        addSlice: function () {
-            const timeSeconds = parseTimeSeconds(this.sliceAddTimestamp);
-
-            if (isNaN(timeSeconds) || !isFinite(timeSeconds) || timeSeconds < 0) {
-                return;
-            }
-
-            if (!this.sliceAddName) {
-                return;
-            }
-
-            let foundSpace = false;
-            const newSlice: EditorTimeSlice = {
-                time: timeSeconds,
-                timeStr: renderTimeSeconds(timeSeconds),
-                name: this.sliceAddName,
-                deleted: false,
-            };
-
-            for (let j = 0; j < this.timeSlicesArray.length; j++) {
-                if (this.timeSlicesArray[j].time > timeSeconds) {
-                    foundSpace = true;
-                    this.timeSlicesArray.splice(j, 0, newSlice);
-                    break;
-                }
-            }
-
-            if (!foundSpace) {
-                this.timeSlicesArray.push(newSlice);
-            }
-
-            this.sliceAddName = "";
-
-            this.save();
-        },
-
-        deleteSlice: function (i: number) {
-            this.timeSlicesArray[i].deleted = true;
-
-            for (let j = 0; j < this.timeSlicesArray.length; j++) {
-                if (j === i) {
-                    continue;
-                }
-                if (this.timeSlicesArray[j].deleted) {
-                    this.timeSlicesArray.splice(i, 1);
-                }
-            }
-
-            this.save();
-        },
-
-        undoDelete: function (i: number) {
-            this.timeSlicesArray[i].deleted = false;
-            this.save();
-        },
-
-        editSlice: function (i: number) {
-            this.sliceEditIndex = i;
-            this.sliceEditTimestamp = this.timeSlicesArray[i].timeStr;
-            this.sliceEditName = this.timeSlicesArray[i].name;
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-
-                if (elem) {
-                    elem.focus();
-                    elem.select();
-                }
-            });
-        },
-
-        cancelEdit: function () {
-            this.sliceEditIndex = -1;
-        },
-
-        finishEdit: function () {
-            if (this.sliceEditIndex < 0) {
-                return;
-            }
-
-            const timeSeconds = parseTimeSeconds(this.sliceEditTimestamp);
-
-            if (isNaN(timeSeconds) || !isFinite(timeSeconds) || timeSeconds < 0) {
-                return;
-            }
-
-            this.timeSlicesArray.splice(this.sliceEditIndex, 1);
-
-            let foundSpace = false;
-
-            const newSlice: EditorTimeSlice = {
-                time: timeSeconds,
-                timeStr: renderTimeSeconds(timeSeconds),
-                name: this.sliceEditName,
-                deleted: false,
-            };
-
-            for (let j = 0; j < this.timeSlicesArray.length; j++) {
-                if (this.timeSlicesArray[j].time > timeSeconds) {
-                    foundSpace = true;
-                    this.timeSlicesArray.splice(j, 0, newSlice);
-                    break;
-                }
-            }
-
-            if (!foundSpace) {
-                this.timeSlicesArray.push(newSlice);
-            }
-
-            this.sliceEditIndex = -1;
-
-            this.save();
-        },
-
-        keyDownAdd: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                this.addSlice();
-            }
-        },
-
-        keyDownEdit: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                this.finishEdit();
-            }
-        },
-    },
+watch(display, () => {
+    if (display.value) {
+        autoFocus();
+    }
 });
 </script>

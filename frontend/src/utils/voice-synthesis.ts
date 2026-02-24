@@ -7,9 +7,17 @@
  * @returns True if available
  */
 export function isSpeechSynthesisAvailable(): boolean {
+    return !!window.speechSynthesis && supportsSpeechSynthesisPausing();
+}
+
+/**
+ * Checks if the navigator supports pausing the speech synthesis
+ * @returns True if supported
+ */
+export function supportsSpeechSynthesisPausing(): boolean {
     const n = navigator as any;
     const isChromium = !!n.userAgentData && n.userAgentData.brands.some((data) => data.brand == "Chromium");
-    return !!window.speechSynthesis && isChromium;
+    return isChromium;
 }
 
 /**
