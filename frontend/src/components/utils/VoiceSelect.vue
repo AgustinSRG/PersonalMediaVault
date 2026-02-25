@@ -1,7 +1,7 @@
 <template>
     <div ref="container" class="big-selector-container" tabindex="0" :class="{ expanded: expanded }" @keydown="onKeyDown">
         <div class="big-selector" :class="{ expanded: expanded, disabled: disabled }" @click="toggleExpand">
-            <div class="big-selector-name">{{ albumName }}</div>
+            <div class="big-selector-name">{{ voice ? voiceName || voice : $t("Default voice") }}</div>
             <div class="big-selector-chevron">
                 <div class="chevron"></div>
             </div>
@@ -21,46 +21,46 @@
                 />
             </div>
             <div ref="suggestionsContainer" class="big-selector-suggestions" @scroll.passive="onSuggestionsScroll">
-                <a
+                <div
                     v-for="s in suggestions"
                     :key="s.id"
                     target="_blank"
                     rel="noopener noreferrer"
-                    :href="getSuggestionURL(s)"
                     class="big-selector-suggestion"
                     tabindex="0"
                     :title="s.name"
                     @click="clickSuggestion(s, $event)"
                     @keydown="onSuggestionKeyDown"
                 >
-                    <span>{{ s.name }}</span>
-                </a>
+                    <span>{{ s.id ? s.name || s.id : $t("Default voice") }}</span>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onApplicationEvent } from "@/composables/on-app-event";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
 import { AlbumsController } from "@/control/albums";
-import { EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
-import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { nextTick, ref, useTemplateRef, watch } from "vue";
+import { isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
+import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+
+// Speech synthesis available?
+const speechSynthesisAvailable = isSpeechSynthesisAvailable();
 
 // Translation function
 const { $t } = useI18n();
 
 /**
- * Filtered album item
+ * Filtered voice item
  */
-interface AlbumItemFiltered {
+interface VoiceItemFiltered {
     // ID
-    id: number;
+    id: string;
 
     // Name
     name: string;
@@ -82,54 +82,53 @@ const props = defineProps({
     disabled: Boolean,
 });
 
-// Album ID model
-const album = defineModel<number>("album", {
-    default: -1,
+// Voice ID model
+const voice = defineModel<string>("voice", {
+    default: "",
 });
-
-/**
- * Gets the name of a selected album
- * @param id Album ID
- * @returns Album name
- */
-const getAlbumName = (id: number): string => {
-    if (id < 0) {
-        return "--";
-    }
-
-    const album = AlbumsController.AlbumsMap.get(id);
-
-    if (!album) {
-        return "";
-    }
-
-    return album.name;
-};
 
 // Album name
-const albumName = ref(getAlbumName(album.value));
+const voiceName = ref(voice.value);
 
-watch(album, () => {
-    albumName.value = getAlbumName(album.value);
+// Map of voices to voice names
+const voicesMap = new Map<string, string>();
+
+/**
+ * Updates voices
+ */
+const updateVoices = () => {
+    const voices = speechSynthesis.getVoices();
+
+    voicesMap.clear();
+
+    for (const voice of voices) {
+        voicesMap.set(voice.voiceURI, voice.name + " (" + voice.lang + ")");
+    }
+
+    const chosenVoice = voicesMap.get(voice.value);
+    voiceName.value = chosenVoice || voice.value;
+};
+
+if (speechSynthesisAvailable) {
+    onMounted(updateVoices);
+
+    speechSynthesis.addEventListener("voiceschanged", updateVoices);
+
+    onBeforeUnmount(() => {
+        speechSynthesis.removeEventListener("voiceschanged", updateVoices);
+    });
+}
+
+watch(voice, () => {
+    const chosenVoice = voicesMap.get(voice.value);
+    voiceName.value = chosenVoice || voice.value;
 });
 
-// Full list of albums
-let albums = AlbumsController.GetAlbumsListMin();
-
-// When the albums list changes, update everything
-onApplicationEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, () => {
-    albums = AlbumsController.GetAlbumsListMin();
-
-    albumName.value = getAlbumName(album.value);
-
-    updateSuggestions();
-});
-
-// Album title filter
+// Voice name filter
 const filter = ref("");
 
-// Album suggestions
-const suggestions = ref<AlbumItemFiltered[]>([]);
+// Voices suggestions
+const suggestions = ref<VoiceItemFiltered[]>([]);
 
 // Max number of items that will fit in the visible section of the scroller
 const LIST_SCROLLER_ITEMS_FIT = 9;
@@ -162,16 +161,16 @@ const suggestionsContainer = useTemplateRef("suggestionsContainer");
 const updateSuggestions = () => {
     filterChangedTimeout.clear();
 
-    const albumFilter = normalizeString(filter.value).trim().toLowerCase();
-    const albumFilterWords = filterToWords(albumFilter);
+    const voiceFilter = normalizeString(filter.value).trim().toLowerCase();
+    const voiceFilterWords = filterToWords(voiceFilter);
 
-    const suggestions: AlbumItemFiltered[] = albums
-        .map((a) => {
-            const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
+    const suggestions: VoiceItemFiltered[] = Array.from(voicesMap.entries())
+        .map(([id, name]) => {
+            const i = voiceFilter ? matchSearchFilter(name, voiceFilter, voiceFilterWords) : 0;
             return {
-                id: a.id,
-                name: a.name,
-                nameLowerCase: a.nameLowerCase,
+                id: id,
+                name: name,
+                nameLowerCase: name.toLowerCase(),
                 starts: i === 0,
                 contains: i >= 0,
             };
@@ -193,7 +192,7 @@ const updateSuggestions = () => {
 
     if (!filter.value) {
         suggestions.unshift({
-            id: -1,
+            id: "",
             name: "--",
             nameLowerCase: "--",
             contains: true,
@@ -286,17 +285,6 @@ const toggleExpand = () => {
     }
 };
 
-/**
- * Gets the URL of a suggestion
- * @param s The suggestion item
- * @returns The URL
- */
-const getSuggestionURL = (s: AlbumItemFiltered): string => {
-    return getFrontendUrl({
-        album: s.id,
-    });
-};
-
 // Main container of the component
 const container = useTemplateRef("container");
 
@@ -308,11 +296,11 @@ useFocusTrap(container, expanded, close);
  * @param s The suggestion item
  * @param e The click event
  */
-const clickSuggestion = (s: AlbumItemFiltered, e: Event) => {
+const clickSuggestion = (s: VoiceItemFiltered, e: Event) => {
     e.preventDefault();
     e.stopPropagation();
 
-    album.value = s.id;
+    voice.value = s.id;
     closeInstantly();
     container.value?.focus();
 };

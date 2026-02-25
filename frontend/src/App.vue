@@ -174,6 +174,7 @@ onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (m: UploadEntryMin) => {
 @import "@/style/content/page-settings.css";
 @import "@/style/content/thumbnail-crop.css";
 @import "@/style/content/tfa.css";
+@import "@/style/content/big-selector.css";
 
 /* Player styles */
 

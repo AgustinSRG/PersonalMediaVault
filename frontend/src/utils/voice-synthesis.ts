@@ -7,7 +7,7 @@
  * @returns True if available
  */
 export function isSpeechSynthesisAvailable(): boolean {
-    return !!window.speechSynthesis && supportsSpeechSynthesisPausing();
+    return !!window.speechSynthesis;
 }
 
 /**

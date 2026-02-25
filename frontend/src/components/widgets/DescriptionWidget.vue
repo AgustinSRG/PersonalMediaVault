@@ -60,16 +60,10 @@
                             <tr v-if="speechSynthesisAvailable">
                                 <td>{{ $t("Preferred voice") }}:</td>
                                 <td colspan="2">
-                                    <select
-                                        v-model="voiceReadingSettings.voice"
-                                        class="form-control form-control-full-width"
-                                        @change="onChangedVoiceReadingSettings"
-                                    >
-                                        <option :value="''">--- {{ $t("Default voice") }} ---</option>
-                                        <option v-for="v in voices" :key="v.voiceURI" :value="v.voiceURI">
-                                            {{ v.name }} ({{ v.lang }})
-                                        </option>
-                                    </select>
+                                    <VoiceSelect
+                                        v-model:voice="voiceReadingSettings.voice"
+                                        @update:voice="onChangedVoiceReadingSettings"
+                                    ></VoiceSelect>
                                 </td>
                             </tr>
                             <tr v-if="speechSynthesisAvailable">
@@ -212,6 +206,7 @@ import { apiMediaSetDescription } from "@/api/api-media-edit";
 import { escapeHTML, replaceLinks } from "@/utils/html";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
+import VoiceSelect from "@/components/utils/VoiceSelect.vue";
 import {
     getDescriptionSize,
     getDescriptionWidgetReadSettings,
