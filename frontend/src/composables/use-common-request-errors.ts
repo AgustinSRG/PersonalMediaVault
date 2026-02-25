@@ -17,6 +17,17 @@ export type CommonRequestErrorsComposable = {
     error: Ref<string>;
 
     /**
+     * True to display the error
+     */
+    errorDisplay: Ref<boolean>;
+
+    /**
+     * Sets the error message
+     * @param errorMessage The error message
+     */
+    setError: (errorMessage: string) => void;
+
+    /**
      * Handler for 'unauthorized' error
      */
     unauthorized: () => void;
@@ -30,6 +41,11 @@ export type CommonRequestErrorsComposable = {
      * Handler for 'access denied' error
      */
     accessDenied: () => void;
+
+    /**
+     * Handler for 'not found' error
+     */
+    notFound: () => void;
 
     /**
      * Handler for internal server errors
@@ -52,37 +68,57 @@ export function useCommonRequestErrors(): CommonRequestErrorsComposable {
     // Error message
     const error = ref("");
 
+    // True to display the error
+    const errorDisplay = ref(false);
+
+    /**
+     * Sets the error message
+     * @param errorMessage The error message
+     */
+    const setError = (errorMessage: string) => {
+        error.value = errorMessage;
+        errorDisplay.value = !!errorMessage;
+    };
+
     // Handler for 'unauthorized' error
     const unauthorized = () => {
-        error.value = $t("Access denied");
+        setError($t("Access denied"));
         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
     };
 
     // Handler for 'bad request' error
     const badRequest = () => {
-        error.value = $t("Bad request");
+        setError($t("Bad request"));
     };
 
     // Handler for 'access denied' error
     const accessDenied = () => {
-        error.value = $t("Access denied");
+        setError($t("Access denied"));
+    };
+
+    // Handler for 'not found' error
+    const notFound = () => {
+        setError($t("Not found"));
     };
 
     // Handler for internal server errors
     const serverError = () => {
-        error.value = $t("Internal server error");
+        setError($t("Internal server error"));
     };
 
     // Handler for network errors
     const networkError = () => {
-        error.value = $t("Could not connect to the server");
+        setError($t("Could not connect to the server"));
     };
 
     return {
         error,
+        errorDisplay,
+        setError,
         unauthorized,
         badRequest,
         accessDenied,
+        notFound,
         serverError,
         networkError,
     };
