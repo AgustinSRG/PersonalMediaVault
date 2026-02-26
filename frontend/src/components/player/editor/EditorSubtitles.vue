@@ -1,12 +1,12 @@
 <template>
-    <div class="player-editor-sub-content" @drop="onDrop">
+    <div ref="container" class="player-editor-sub-content" @drop="onDrop">
         <!--- Subtitles -->
 
         <div class="form-group">
             <label>{{ $t("Subtitles") }}:</label>
         </div>
 
-        <div v-if="type === 2 || type === 3" class="table-responsive">
+        <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -96,36 +96,45 @@
             </table>
         </div>
 
-        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
-            <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
-            <input type="file" class="file-hidden srt-file-hidden" name="srt-upload" accept=".srt" @change="srtFileChanged" />
-            <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
-                <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
-            </button>
+        <div v-if="canWrite">
+            <div class="form-group">
+                <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
+                <input
+                    ref="fileInputHidden"
+                    type="file"
+                    class="file-hidden srt-file-hidden"
+                    name="srt-upload"
+                    accept=".srt"
+                    @change="srtFileChanged"
+                />
+                <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
+                    <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
+                </button>
 
-            <button v-if="srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
-                <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
-            </button>
-        </div>
-        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
-            <label>{{ $t("Subtitles identifier") }}:</label>
-            <input v-model="srtId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
-        </div>
-        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
-            <label>{{ $t("Subtitles name") }}:</label>
-            <input v-model="srtName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
-        </div>
-        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
-            <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile" @click="addSubtitles">
-                <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
-            </button>
-            <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
-                <i class="fa fa-spinner fa-spin"></i>
-                {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
-            </button>
-            <button v-else type="button" class="btn btn-primary" disabled>
-                <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
-            </button>
+                <button v-if="srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
+                    <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
+                </button>
+            </div>
+            <div class="form-group">
+                <label>{{ $t("Subtitles identifier") }}:</label>
+                <input v-model="srtId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>{{ $t("Subtitles name") }}:</label>
+                <input v-model="srtName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
+            </div>
+            <div class="form-group">
+                <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile" @click="addSubtitles">
+                    <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
+                </button>
+                <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
+                    <i class="fa fa-spinner fa-spin"></i>
+                    {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
+                </button>
+                <button v-else type="button" class="btn btn-primary" disabled>
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
+                </button>
+            </div>
         </div>
 
         <SubtitlesDeleteModal
@@ -142,468 +151,523 @@
             :error="authConfirmationError"
             @confirm="removeSubtitlesConfirmInternal"
         ></AuthConfirmationModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { MediaSubtitle } from "@/api/models";
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { clone } from "@/utils/objects";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
-import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useRequestId } from "@/composables/use-request-id";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 
-export default defineComponent({
-    name: "EditorSubtitles",
-    components: {
-        LoadingIcon,
-        SubtitlesDeleteModal,
-        AuthConfirmationModal,
-    },
-    emits: ["changed"],
-    setup() {
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
+
+const SubtitlesDeleteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/SubtitlesDeleteModal.vue"),
+});
+
+const AuthConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AuthConfirmationModal.vue"),
+});
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// List of subtitles
+const subtitles = ref<MediaSubtitle[]>(
+    (MediaController.MediaData?.subtitles || []).map((a) => {
         return {
-            requestIdAdd: getUniqueStringId(),
-            requestIdRename: getUniqueStringId(),
-            requestIdDelete: getUniqueStringId(),
+            id: a.id,
+            name: a.name,
+            url: a.url,
         };
-    },
-    data: function () {
+    }),
+);
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    subtitles.value = (MediaController.MediaData.subtitles || []).map((a) => {
         return {
-            page: "general",
-
-            type: 0,
-
-            subtitles: [] as MediaSubtitle[],
-            srtFile: null as File | null,
-            srtFileName: "",
-            srtId: "",
-            srtName: "",
-
-            busy: false,
-            busyDeleting: false,
-            busyDeletingId: "",
-
-            uploading: false,
-            uploadProgress: 0,
-
-            subtitleRenameSelected: "",
-            subtitleRenameId: "",
-            subtitleRenameName: "",
-            subtitleRenameBusy: false,
-
-            canWrite: AuthController.CanWrite,
-
-            displaySubtitlesDelete: false,
-            subtitleToDelete: null as MediaSubtitle,
-
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
+            id: a.id,
+            name: a.name,
+            url: a.url,
         };
-    },
+    });
+});
 
-    mounted: function () {
-        this.updateMediaData();
+// SRT file
+const srtFile = shallowRef<File | null>(null);
 
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
+// Subtitles file name
+const srtFileName = ref("");
 
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdAdd);
-        abortNamedApiRequest(this.requestIdRename);
-        abortNamedApiRequest(this.requestIdDelete);
-    },
+// Subtitles ID
+const srtId = ref("");
 
-    methods: {
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
+// Subtitles name
+const srtName = ref("");
+
+// Hidden file input
+const fileInputHidden = useTemplateRef("fileInputHidden");
+
+/**
+ * Opens the file selector
+ */
+const selectSRTFile = () => {
+    const fileElem = fileInputHidden.value;
+    if (fileElem) {
+        fileElem.value = null;
+        fileElem.click();
+    }
+};
+
+/**
+ * Sets the subtitles file to be uploaded
+ * @param file The file
+ */
+const setFile = (file: File) => {
+    srtFile.value = file;
+    srtFileName.value = file.name;
+    srtId.value = (file.name.split(".")[0] || "").toLowerCase();
+    srtName.value = srtId.value.toUpperCase();
+};
+
+/**
+ * Event handler for 'change' on the file input
+ * @param e The event
+ */
+const srtFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        setFile(data[0]);
+    }
+};
+
+/**
+ * Event handler for 'drop' of a file
+ * @param e The event
+ */
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.files;
+    if (data && data.length > 0) {
+        setFile(data[0]);
+    }
+};
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+// Busy uploading a new file?
+const busy = ref(false);
+
+// Request ID for adding
+const requestIdAdd = useRequestId();
+
+// True if uploading
+const uploading = ref(false);
+
+// Upload progress
+const uploadProgress = ref(0);
+
+/**
+ * Adds a new subtitles file
+ */
+const addSubtitles = () => {
+    if (!srtFile.value) {
+        setError($t("Please, select a SubRip file first"));
+        return;
+    }
+
+    const id = srtId.value;
+    const name = srtName.value;
+
+    let duped = false;
+    for (const sub of subtitles.value) {
+        if (sub.id === id) {
+            duped = true;
+            break;
+        }
+    }
+
+    if (duped) {
+        setError($t("There is already another subtitles file with the same identifier"));
+        return;
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    uploading.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestIdAdd, apiMediaSetSubtitles(mediaId, id, name, srtFile.value))
+        .onSuccess((res) => {
+            PagesController.ShowSnackBarRight($t("Added subtitles") + ": " + res.name);
+
+            busy.value = false;
+            subtitles.value.push(res);
+
+            if (MediaController.MediaData) {
+                MediaController.MediaData.subtitles = clone(subtitles.value);
             }
 
-            this.type = MediaController.MediaData.type;
+            emit("changed");
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onUploadProgress((loaded, total) => {
+            uploadProgress.value = loaded / Math.max(1, total);
+            uploading.value = loaded < total;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
 
-            this.subtitles = (MediaController.MediaData.subtitles || []).map((a) => {
-                return {
-                    id: a.id,
-                    name: a.name,
-                    url: a.url,
-                };
+            handleErr(err, {
+                unauthorized,
+                invalidSRT: () => {
+                    setError($t("Invalid SubRip file"));
+                },
+                invalidId: () => {
+                    setError($t("Invalid subtitles identifier"));
+                },
+                invalidName: () => {
+                    setError($t("Invalid subtitles name"));
+                },
+                badRequest,
+                accessDenied,
+                notFound,
+                fileTooLarge: () => {
+                    setError(stringMultiReplace($t("Subtitles file too big (max is $MAX)"), { $MAX: "10MB" }));
+                },
+                serverError,
+                networkError,
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busy.value = false;
+        });
+};
 
-        // Subtitles
+// Selected subtitles for rename
+const subtitleRenameSelected = ref("");
 
-        selectSRTFile: function () {
-            this.$el.querySelector(".srt-file-hidden").click();
-        },
+// Id of the subtitles being renamed (new)
+const subtitleRenameId = ref("");
 
-        srtFileChanged: function (e: InputEvent) {
-            const data = (e.target as HTMLInputElement).files;
-            if (data && data.length > 0) {
-                this.setFile(data[0]);
-            }
-        },
+// Name of the subtitles being renamed (new)
+const subtitleRenameName = ref("");
 
-        onDrop: function (e: DragEvent) {
-            e.preventDefault();
-            const data = e.dataTransfer.files;
-            if (data && data.length > 0) {
-                this.setFile(data[0]);
-            }
-        },
+// True if renaming an subtitles
+const subtitleRenameBusy = ref(false);
 
-        setFile: function (file: File) {
-            this.srtFile = file;
-            this.srtFileName = file.name;
-            this.srtId = (file.name.split(".")[0] || "").toLowerCase();
-            this.srtName = this.srtId.toUpperCase();
-        },
+// Request ID for renaming
+const requestIdRename = useRequestId();
 
-        addSubtitles: function () {
-            if (!this.srtFile) {
-                PagesController.ShowSnackBarRight(this.$t("Please, select a SubRip file first"));
+/**
+ * Starts renaming a subtitle
+ * @param sub The subtitle
+ */
+const startRename = (sub: MediaSubtitle) => {
+    subtitleRenameSelected.value = sub.id;
+    subtitleRenameId.value = sub.id;
+    subtitleRenameName.value = sub.name;
+
+    nextTick(() => {
+        const el = container.value?.querySelector(".edit-auto-focus") as HTMLInputElement;
+        if (el) {
+            el.focus();
+            el.select();
+        }
+    });
+};
+
+/**
+ * Cancels renaming
+ */
+const cancelRename = () => {
+    subtitleRenameSelected.value = "";
+};
+
+watch(canWrite, () => {
+    if (!canWrite.value) {
+        cancelRename();
+    }
+});
+
+/**
+ * Event handler for 'keydown' on the rename inputs
+ * @param e The keyboard event
+ */
+const renameInputKeyEventHandler = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        saveRename();
+    }
+};
+
+/**
+ * Performs the request to rename a subtitles file
+ */
+const saveRename = () => {
+    if (subtitleRenameBusy.value) {
+        return;
+    }
+
+    const subtitleId = subtitleRenameSelected.value;
+
+    const newId = subtitleRenameId.value;
+    const newName = subtitleRenameName.value;
+
+    if (!newId) {
+        setError($t("Invalid subtitles identifier"));
+        return;
+    }
+
+    if (newId !== subtitleId) {
+        for (const subtitle of subtitles.value) {
+            if (subtitle.id === newId) {
+                setError($t("Subtitles identifier already in use"));
                 return;
             }
+        }
+    }
 
-            const id = this.srtId;
-            const name = this.srtName;
+    if (!newName) {
+        setError($t("Invalid subtitles name"));
+        return;
+    }
 
-            let duped = false;
-            for (const sub of this.subtitles) {
-                if (sub.id === id) {
-                    duped = true;
+    subtitleRenameBusy.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestIdRename, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
+
+            subtitleRenameBusy.value = false;
+            subtitleRenameSelected.value = "";
+
+            for (let i = 0; i < subtitles.value.length; i++) {
+                if (subtitles.value[i].id === subtitleId) {
+                    subtitles.value[i].id = newId;
+                    subtitles.value[i].name = newName;
                     break;
                 }
             }
 
-            if (duped) {
-                PagesController.ShowSnackBarRight(this.$t("There is already another subtitles file with the same identifier"));
-                return;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.subtitles = clone(subtitles.value);
             }
 
-            if (this.busy) {
-                return;
-            }
+            emit("changed");
+        })
+        .onCancel(() => {
+            subtitleRenameBusy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            subtitleRenameBusy.value = false;
 
-            this.busy = true;
-            this.uploading = true;
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestIdAdd, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
-                .onSuccess((res) => {
-                    PagesController.ShowSnackBarRight(this.$t("Added subtitles") + ": " + res.name);
-                    this.busy = false;
-                    this.subtitles.push(res);
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.subtitles = clone(this.subtitles);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onUploadProgress((loaded, total) => {
-                    this.uploadProgress = loaded / Math.max(1, total);
-                    this.uploading = loaded < total;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidSRT: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid SubRip file"));
-                        },
-                        invalidId: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
-                        },
-                        invalidName: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        fileTooLarge: () => {
-                            PagesController.ShowSnackBarRight(
-                                this.$t("Error") +
-                                    ": " +
-                                    stringMultiReplace(this.$t("Subtitles file too big (max is $MAX)"), { $MAX: "10MB" }),
-                            );
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-
-        removeSubtitles: function (sub: MediaSubtitle) {
-            this.subtitleToDelete = sub;
-            this.displaySubtitlesDelete = true;
-        },
-
-        removeSubtitlesConfirm: function () {
-            this.removeSubtitlesConfirmInternal({});
-        },
-
-        removeSubtitlesConfirmInternal: function (confirmation: ProvidedAuthConfirmation) {
-            const sub = this.subtitleToDelete;
-
-            if (this.busyDeleting || !sub) {
-                return;
-            }
-
-            this.busyDeleting = true;
-            this.busyDeletingId = sub.id;
-
-            const mediaId = AppStatus.CurrentMedia;
-            const id = sub.id;
-
-            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveSubtitles(mediaId, id, confirmation))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Removed subtitles") + ": " + sub.name);
-                    this.busyDeleting = false;
-                    for (let i = 0; i < this.subtitles.length; i++) {
-                        if (this.subtitles[i].id === id) {
-                            this.subtitles.splice(i, 1);
-                            break;
-                        }
-                    }
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.subtitles = clone(this.subtitles);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busyDeleting = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyDeleting = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busyDeleting = false;
-                });
-        },
-
-        downloadSubtitles: function (sub: MediaSubtitle) {
-            const link = document.createElement("a");
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-
-            const url = getAssetURL(sub.url);
-            const titlePart = sub.id ? "&filename=" + encodeURIComponent(sub.id) : "";
-
-            if (url.includes("?")) {
-                link.href = url + "&download=force" + titlePart;
-            } else {
-                link.href = url + "?download=force" + titlePart;
-            }
-
-            link.click();
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        renderProgress: function (p: number): string {
-            return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
-        },
-
-        startRename: function (sub: MediaSubtitle) {
-            this.subtitleRenameSelected = sub.id;
-            this.subtitleRenameId = sub.id;
-            this.subtitleRenameName = sub.name;
-
-            nextTick(() => {
-                const el = this.$el.querySelector(".edit-auto-focus");
-                if (el) {
-                    el.focus();
-                    el.select();
-                }
+            handleErr(err, {
+                unauthorized,
+                invalidId: () => {
+                    setError($t("Invalid subtitles identifier"));
+                },
+                invalidName: () => {
+                    setError($t("Invalid subtitles name"));
+                },
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            subtitleRenameBusy.value = false;
+        });
+};
 
-        cancelRename: function () {
-            this.subtitleRenameSelected = "";
-        },
+// Display deletion confirmation?
+const displaySubtitlesDelete = ref(false);
 
-        renameInputKeyEventHandler: function (e: KeyboardEvent) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                this.saveRename();
-            }
-        },
+// Reference to the subtitle to delete
+const subtitleToDelete = ref<MediaSubtitle | null>(null);
 
-        saveRename: function () {
-            if (this.subtitleRenameBusy) {
-                return;
-            }
+/**
+ * Opens the modal to confirm the deletion of a file
+ * @param sub The subtitles file
+ */
+const removeSubtitles = (sub: MediaSubtitle) => {
+    subtitleToDelete.value = sub;
+    displaySubtitlesDelete.value = true;
+};
 
-            const subtitleId = this.subtitleRenameSelected;
+/**
+ * The user confirmed to delete a subtitles file
+ */
+const removeSubtitlesConfirm = () => {
+    removeSubtitlesConfirmInternal({});
+};
 
-            const newId = this.subtitleRenameId;
-            const newName = this.subtitleRenameName;
+// Request ID to delete an audio
+const requestIdDelete = useRequestId();
 
-            if (!newId) {
-                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
-                return;
-            }
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
 
-            if (newId !== subtitleId) {
-                for (const subtitle of this.subtitles) {
-                    if (subtitle.id === newId) {
-                        PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Subtitles identifier already in use"));
-                        return;
-                    }
+// Deleting in progress
+const busyDeleting = ref(false);
+
+// ID of the attachment being deleted
+const busyDeletingId = ref("");
+
+/**
+ * Performs the request to delete a subtitles file
+ * @param confirmation The auth confirmation
+ */
+const removeSubtitlesConfirmInternal = (confirmation: ProvidedAuthConfirmation) => {
+    const sub = subtitleToDelete.value;
+
+    if (busyDeleting.value || !sub) {
+        return;
+    }
+
+    busyDeleting.value = true;
+    busyDeletingId.value = sub.id;
+
+    const mediaId = AppStatus.CurrentMedia;
+    const id = sub.id;
+
+    makeNamedApiRequest(requestIdDelete, apiMediaRemoveSubtitles(mediaId, id, confirmation))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Removed subtitles") + ": " + sub.name);
+
+            busyDeleting.value = false;
+
+            for (let i = 0; i < subtitles.value.length; i++) {
+                if (subtitles.value[i].id === id) {
+                    subtitles.value.splice(i, 1);
+                    break;
                 }
             }
 
-            if (!newName) {
-                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
-                return;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.subtitles = clone(subtitles.value);
             }
 
-            this.subtitleRenameBusy = true;
+            emit("changed");
+        })
+        .onCancel(() => {
+            busyDeleting.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busyDeleting.value = false;
 
-            const mediaId = AppStatus.CurrentMedia;
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busyDeleting.value = false;
+        });
+};
 
-            makeNamedApiRequest(this.requestIdRename, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
-                    this.subtitleRenameBusy = false;
-                    this.subtitleRenameSelected = "";
-                    for (let i = 0; i < this.subtitles.length; i++) {
-                        if (this.subtitles[i].id === subtitleId) {
-                            this.subtitles[i].id = newId;
-                            this.subtitles[i].name = newName;
-                            break;
-                        }
-                    }
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.subtitles = clone(this.subtitles);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.subtitleRenameBusy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.subtitleRenameBusy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidId: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
-                        },
-                        invalidName: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.subtitleRenameBusy = false;
-                });
-        },
-    },
-});
+/**
+ * Downloads a subtitles file
+ * @param sub The subtitles file
+ */
+const downloadSubtitles = (sub: MediaSubtitle) => {
+    const link = document.createElement("a");
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const url = getAssetURL(sub.url);
+    const titlePart = sub.id ? "&filename=" + encodeURIComponent(sub.id) : "";
+
+    if (url.includes("?")) {
+        link.href = url + "&download=force" + titlePart;
+    } else {
+        link.href = url + "?download=force" + titlePart;
+    }
+
+    link.click();
+};
+
+/**
+ * Renders progress as percentage
+ * @param p The progress (0-1)
+ * @returns The progress as percentage
+ */
+const renderProgress = (p: number): string => {
+    return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
+};
 </script>

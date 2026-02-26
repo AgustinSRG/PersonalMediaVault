@@ -1,12 +1,12 @@
 <template>
-    <div class="player-editor-sub-content" @drop="onDrop">
+    <div ref="container" class="player-editor-sub-content" @drop="onDrop">
         <!--- Audio tracks -->
 
         <div class="form-group">
             <label>{{ $t("Extra audio tracks for the video.") }} {{ $t("You can use this to add multiple audio languages.") }}</label>
         </div>
 
-        <div v-if="type === 2" class="table-responsive">
+        <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -95,36 +95,51 @@
             </table>
         </div>
 
-        <div v-if="canWrite && type === 2" class="form-group">
-            <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
-            <input type="file" class="file-hidden audio-file-hidden" name="mp3-upload" accept=".mp3" @change="audioFileChanged" />
-            <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
-                <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
-            </button>
+        <div v-if="canWrite">
+            <div class="form-group">
+                <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
+                <input
+                    ref="fileInputHidden"
+                    type="file"
+                    class="file-hidden audio-file-hidden"
+                    name="mp3-upload"
+                    accept=".mp3"
+                    @change="audioFileChanged"
+                />
+                <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+                    <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
+                </button>
 
-            <button v-if="audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
-                <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
-            </button>
-        </div>
-        <div v-if="canWrite && type === 2" class="form-group">
-            <label>{{ $t("Audio track identifier") }}:</label>
-            <input v-model="audioId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
-        </div>
-        <div v-if="canWrite && type === 2" class="form-group">
-            <label>{{ $t("Audio track name") }}:</label>
-            <input v-model="audioName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
-        </div>
-        <div v-if="canWrite && type === 2" class="form-group">
-            <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!audioId || !audioName || !audioFile" @click="addAudio">
-                <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
-            </button>
-            <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
-                <i class="fa fa-spinner fa-spin"></i>
-                {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
-            </button>
-            <button v-else type="button" class="btn btn-primary" disabled>
-                <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
-            </button>
+                <button v-if="audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+                    <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
+                </button>
+            </div>
+            <div class="form-group">
+                <label>{{ $t("Audio track identifier") }}:</label>
+                <input v-model="audioId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>{{ $t("Audio track name") }}:</label>
+                <input v-model="audioName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
+            </div>
+            <div class="form-group">
+                <button
+                    v-if="!busy"
+                    type="button"
+                    class="btn btn-primary"
+                    :disabled="!audioId || !audioName || !audioFile"
+                    @click="addAudio"
+                >
+                    <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
+                </button>
+                <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
+                    <i class="fa fa-spinner fa-spin"></i>
+                    {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
+                </button>
+                <button v-else type="button" class="btn btn-primary" disabled>
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
+                </button>
+            </div>
         </div>
 
         <AudioTrackDeleteModal
@@ -141,458 +156,518 @@
             :error="authConfirmationError"
             @confirm="removeAudioConfirmInternal"
         ></AuthConfirmationModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { MediaAudioTrack } from "@/api/models";
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
 import { clone } from "@/utils/objects";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
-import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useRequestId } from "@/composables/use-request-id";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 
-export default defineComponent({
-    name: "EditorAudios",
-    components: {
-        LoadingIcon,
-        AudioTrackDeleteModal,
-        AuthConfirmationModal,
-    },
-    emits: ["changed"],
-    setup() {
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
+
+const AudioTrackDeleteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AudioTrackDeleteModal.vue"),
+});
+
+const AuthConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AuthConfirmationModal.vue"),
+});
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// List of audio tracks
+const audios = ref<MediaAudioTrack[]>(
+    (MediaController.MediaData?.audios || []).map((a) => {
         return {
-            requestIdAdd: getUniqueStringId(),
-            requestIdRename: getUniqueStringId(),
-            requestIdDelete: getUniqueStringId(),
+            id: a.id,
+            name: a.name,
+            url: a.url,
         };
-    },
-    data: function () {
+    }),
+);
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    audios.value = (MediaController.MediaData.audios || []).map((a) => {
         return {
-            type: 0,
-
-            audios: [] as MediaAudioTrack[],
-            audioFile: null as File | null,
-            audioFileName: "",
-            audioId: "",
-            audioName: "",
-
-            busy: false,
-            busyDeleting: false,
-            busyDeletingId: "",
-
-            uploading: false,
-            uploadProgress: 0,
-
-            audioRenameSelected: "",
-            audioRenameId: "",
-            audioRenameName: "",
-            audioRenameBusy: false,
-
-            canWrite: AuthController.CanWrite,
-
-            displayAudioTrackDelete: false,
-            trackToDelete: null as MediaAudioTrack,
-
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
+            id: a.id,
+            name: a.name,
+            url: a.url,
         };
-    },
+    });
+});
 
-    mounted: function () {
-        this.updateMediaData();
+// Audio file
+const audioFile = shallowRef<File | null>(null);
 
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
+// Audio file name
+const audioFileName = ref("");
 
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdAdd);
-        abortNamedApiRequest(this.requestIdRename);
-        abortNamedApiRequest(this.requestIdDelete);
-    },
+// Audio ID
+const audioId = ref("");
 
-    methods: {
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
+// Audio name
+const audioName = ref("");
+
+// Hidden file input
+const fileInputHidden = useTemplateRef("fileInputHidden");
+
+/**
+ * Opens the file selector
+ */
+const selectAudioFile = () => {
+    const fileElem = fileInputHidden.value;
+    if (fileElem) {
+        fileElem.value = null;
+        fileElem.click();
+    }
+};
+
+/**
+ * Sets the audio file to be uploaded
+ * @param file The file
+ */
+const setFile = (file: File) => {
+    audioFile.value = file;
+    audioFileName.value = file.name;
+    audioId.value = (file.name.split(".")[0] || "").toLowerCase();
+    audioName.value = audioId.value.toUpperCase();
+};
+
+/**
+ * Event handler for 'change' on the file input
+ * @param e The event
+ */
+const audioFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        setFile(data[0]);
+    }
+};
+
+/**
+ * Event handler for 'drop' of a file
+ * @param e The event
+ */
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.files;
+    if (data && data.length > 0) {
+        setFile(data[0]);
+    }
+};
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+// Busy uploading a new file?
+const busy = ref(false);
+
+// Request ID for adding
+const requestIdAdd = useRequestId();
+
+// True if uploading
+const uploading = ref(false);
+
+// Upload progress
+const uploadProgress = ref(0);
+
+/**
+ * Adds an audio file
+ */
+const addAudio = () => {
+    if (!audioFile.value) {
+        setError($t("Please, select an audio file first"));
+        return;
+    }
+
+    const id = audioId.value;
+    const name = audioName.value;
+
+    let duped = false;
+    for (const aud of audios.value) {
+        if (aud.id === id) {
+            duped = true;
+            break;
+        }
+    }
+
+    if (duped) {
+        setError($t("There is already another audio track with the same identifier"));
+        return;
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    uploading.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestIdAdd, apiMediaSetAudioTrack(mediaId, id, name, audioFile.value))
+        .onSuccess((res) => {
+            PagesController.ShowSnackBarRight($t("Added audio track") + ": " + res.name);
+
+            busy.value = false;
+            audios.value.push(res);
+
+            if (MediaController.MediaData) {
+                MediaController.MediaData.audios = clone(audios.value);
             }
 
-            this.type = MediaController.MediaData.type;
+            emit("changed");
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onUploadProgress((loaded, total) => {
+            uploadProgress.value = loaded / Math.max(1, total);
+            uploading.value = loaded < total;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
 
-            this.audios = (MediaController.MediaData.audios || []).map((a) => {
-                return {
-                    id: a.id,
-                    name: a.name,
-                    url: a.url,
-                };
+            handleErr(err, {
+                unauthorized,
+                invalidAudio: () => {
+                    setError($t("Invalid audio file"));
+                },
+                invalidId: () => {
+                    setError($t("Invalid audio track identifier"));
+                },
+                invalidName: () => {
+                    setError($t("Invalid audio track name"));
+                },
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busy.value = false;
+        });
+};
 
-        // Audios
+// Selected audio for rename
+const audioRenameSelected = ref("");
 
-        selectAudioFile: function () {
-            this.$el.querySelector(".audio-file-hidden").click();
-        },
+// Id of the audio being renamed (new)
+const audioRenameId = ref("");
 
-        audioFileChanged: function (e: InputEvent) {
-            const data = (e.target as HTMLInputElement).files;
-            if (data && data.length > 0) {
-                this.setFile(data[0]);
-            }
-        },
+// Name of the audio being renamed (new)
+const audioRenameName = ref("");
 
-        onDrop: function (e: DragEvent) {
-            e.preventDefault();
-            const data = e.dataTransfer.files;
-            if (data && data.length > 0) {
-                this.setFile(data[0]);
-            }
-        },
+// True if renaming an audio
+const audioRenameBusy = ref(false);
 
-        setFile: function (file: File) {
-            this.audioFile = file;
-            this.audioFileName = file.name;
-            this.audioId = (file.name.split(".")[0] || "").toLowerCase();
-            this.audioName = this.audioId.toUpperCase();
-        },
+// Request ID for renaming
+const requestIdRename = useRequestId();
 
-        addAudio: function () {
-            if (!this.audioFile) {
-                PagesController.ShowSnackBarRight(this.$t("Please, select an audio file first"));
+/**
+ * Starts renaming an audio file
+ * @param aud The audio file
+ */
+const startRename = (aud: MediaAudioTrack) => {
+    audioRenameSelected.value = aud.id;
+    audioRenameId.value = aud.id;
+    audioRenameName.value = aud.name;
+
+    nextTick(() => {
+        const el = container.value?.querySelector(".edit-auto-focus") as HTMLInputElement;
+        if (el) {
+            el.focus();
+            el.select();
+        }
+    });
+};
+
+/**
+ * Cancels the rename
+ */
+const cancelRename = () => {
+    audioRenameSelected.value = "";
+};
+
+watch(canWrite, () => {
+    if (!canWrite.value) {
+        cancelRename();
+    }
+});
+
+/**
+ * Event handler for 'keydown' on the rename inputs
+ * @param e The keyboard event
+ */
+const renameInputKeyEventHandler = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        saveRename();
+    }
+};
+
+/**
+ * Performs the request to rename an audio file
+ */
+const saveRename = () => {
+    if (audioRenameBusy.value) {
+        return;
+    }
+
+    const audioId = audioRenameSelected.value;
+
+    const newId = audioRenameId.value;
+    const newName = audioRenameName.value;
+
+    if (!newId) {
+        setError($t("Invalid audio track identifier"));
+        return;
+    }
+
+    if (newId !== audioId) {
+        for (const audio of audios.value) {
+            if (audio.id === newId) {
+                setError($t("Audio track identifier already in use"));
                 return;
             }
+        }
+    }
 
-            const id = this.audioId;
-            const name = this.audioName;
+    if (!newName) {
+        setError($t("Invalid audio track name"));
+        return;
+    }
 
-            let duped = false;
-            for (const aud of this.audios) {
-                if (aud.id === id) {
-                    duped = true;
+    audioRenameBusy.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestIdRename, apiMediaRenameAudioTrack(mediaId, audioId, newId, newName))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Renamed audio track") + ": " + newName + " (" + newId + ")");
+
+            audioRenameBusy.value = false;
+            audioRenameSelected.value = "";
+
+            for (let i = 0; i < audios.value.length; i++) {
+                if (audios.value[i].id === audioId) {
+                    audios.value[i].id = newId;
+                    audios.value[i].name = newName;
                     break;
                 }
             }
 
-            if (duped) {
-                PagesController.ShowSnackBarRight(this.$t("There is already another audio track with the same identifier"));
-                return;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.audios = clone(audios.value);
             }
 
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.uploading = true;
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestIdAdd, apiMediaSetAudioTrack(mediaId, id, name, this.audioFile))
-                .onSuccess((res) => {
-                    PagesController.ShowSnackBarRight(this.$t("Added audio track") + ": " + res.name);
-                    this.busy = false;
-                    this.audios.push(res);
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.audios = clone(this.audios);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onUploadProgress((loaded, total) => {
-                    this.uploadProgress = loaded / Math.max(1, total);
-                    this.uploading = loaded < total;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidAudio: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio file"));
-                        },
-                        invalidId: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
-                        },
-                        invalidName: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-
-        removeAudio: function (aud: MediaAudioTrack) {
-            this.trackToDelete = aud;
-            this.displayAudioTrackDelete = true;
-        },
-
-        removeAudioConfirm: function () {
-            this.removeAudioConfirmInternal({});
-        },
-
-        removeAudioConfirmInternal: function (confirmation: ProvidedAuthConfirmation) {
-            const aud = this.trackToDelete;
-
-            if (this.busyDeleting || !aud) {
-                return;
-            }
-
-            this.busyDeleting = true;
-            this.busyDeletingId = aud.id;
-
-            const mediaId = AppStatus.CurrentMedia;
-            const id = aud.id;
-
-            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id, confirmation))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Removed audio track") + ": " + aud.name);
-                    this.busyDeleting = false;
-                    for (let i = 0; i < this.audios.length; i++) {
-                        if (this.audios[i].id === id) {
-                            this.audios.splice(i, 1);
-                            break;
-                        }
-                    }
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.audios = clone(this.audios);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busyDeleting = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyDeleting = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busyDeleting = false;
-                });
-        },
-
-        downloadAudio: function (aud: MediaAudioTrack) {
-            const link = document.createElement("a");
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-
-            const url = getAssetURL(aud.url);
-            const titlePart = aud.id ? "&filename=" + encodeURIComponent(aud.id) : "";
-
-            if (url.includes("?")) {
-                link.href = url + "&download=force" + titlePart;
-            } else {
-                link.href = url + "?download=force" + titlePart;
-            }
-
-            link.click();
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        renderProgress: function (p: number): string {
-            return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
-        },
-
-        startRename: function (aud: MediaAudioTrack) {
-            this.audioRenameSelected = aud.id;
-            this.audioRenameId = aud.id;
-            this.audioRenameName = aud.name;
-
-            nextTick(() => {
-                const el = this.$el.querySelector(".edit-auto-focus");
-                if (el) {
-                    el.focus();
-                    el.select();
-                }
+            emit("changed");
+        })
+        .onCancel(() => {
+            audioRenameBusy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            audioRenameBusy.value = false;
+            handleErr(err, {
+                unauthorized,
+                invalidId: () => {
+                    setError($t("Invalid audio track identifier"));
+                },
+                invalidName: () => {
+                    setError($t("Invalid audio track name"));
+                },
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
             });
-        },
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            audioRenameBusy.value = false;
+        });
+};
 
-        cancelRename: function () {
-            this.audioRenameSelected = "";
-        },
+// True to display the delete confirmation
+const displayAudioTrackDelete = ref(false);
 
-        renameInputKeyEventHandler: function (e: KeyboardEvent) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                this.saveRename();
-            }
-        },
+// The reference to the audio tract to delete
+const trackToDelete = ref<MediaAudioTrack | null>(null);
 
-        saveRename: function () {
-            if (this.audioRenameBusy) {
-                return;
-            }
+/**
+ * Opens confirmation modal to delete
+ * @param aud The audio file
+ */
+const removeAudio = (aud: MediaAudioTrack) => {
+    trackToDelete.value = aud;
+    displayAudioTrackDelete.value = true;
+};
 
-            const audioId = this.audioRenameSelected;
+/**
+ * User confirmed to delete an audio file
+ */
+const removeAudioConfirm = () => {
+    removeAudioConfirmInternal({});
+};
 
-            const newId = this.audioRenameId;
-            const newName = this.audioRenameName;
+// Request ID to delete an audio
+const requestIdDelete = useRequestId();
 
-            if (!newId) {
-                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
-                return;
-            }
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
 
-            if (newId !== audioId) {
-                for (const audio of this.audios) {
-                    if (audio.id === newId) {
-                        PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Audio track identifier already in use"));
-                        return;
-                    }
+// Deleting in progress
+const busyDeleting = ref(false);
+
+// ID of the attachment being deleted
+const busyDeletingId = ref("");
+
+/**
+ * Performs the request to delete an audio track
+ * @param confirmation The auth confirmation
+ */
+const removeAudioConfirmInternal = (confirmation: ProvidedAuthConfirmation) => {
+    const aud = trackToDelete.value;
+
+    if (busyDeleting.value || !aud) {
+        return;
+    }
+
+    busyDeleting.value = true;
+    busyDeletingId.value = aud.id;
+
+    const mediaId = AppStatus.CurrentMedia;
+    const id = aud.id;
+
+    makeNamedApiRequest(requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id, confirmation))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Removed audio track") + ": " + aud.name);
+
+            busyDeleting.value = false;
+
+            for (let i = 0; i < audios.value.length; i++) {
+                if (audios.value[i].id === id) {
+                    audios.value.splice(i, 1);
+                    break;
                 }
             }
 
-            if (!newName) {
-                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
-                return;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.audios = clone(audios.value);
             }
 
-            this.audioRenameBusy = true;
+            emit("changed");
+        })
+        .onCancel(() => {
+            busyDeleting.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busyDeleting.value = false;
 
-            const mediaId = AppStatus.CurrentMedia;
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busyDeleting.value = false;
+        });
+};
 
-            makeNamedApiRequest(this.requestIdRename, apiMediaRenameAudioTrack(mediaId, audioId, newId, newName))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Renamed audio track") + ": " + newName + " (" + newId + ")");
-                    this.audioRenameBusy = false;
-                    this.audioRenameSelected = "";
-                    for (let i = 0; i < this.audios.length; i++) {
-                        if (this.audios[i].id === audioId) {
-                            this.audios[i].id = newId;
-                            this.audios[i].name = newName;
-                            break;
-                        }
-                    }
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.audios = clone(this.audios);
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.audioRenameBusy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.audioRenameBusy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidId: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
-                        },
-                        invalidName: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.audioRenameBusy = false;
-                });
-        },
-    },
-});
+/**
+ * Downloads the audio file
+ * @param aud The audio file
+ */
+const downloadAudio = (aud: MediaAudioTrack) => {
+    const link = document.createElement("a");
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const url = getAssetURL(aud.url);
+    const titlePart = aud.id ? "&filename=" + encodeURIComponent(aud.id) : "";
+
+    if (url.includes("?")) {
+        link.href = url + "&download=force" + titlePart;
+    } else {
+        link.href = url + "?download=force" + titlePart;
+    }
+
+    link.click();
+};
+
+/**
+ * Renders progress as percentage
+ * @param p The progress (0-1)
+ * @returns The progress as percentage
+ */
+const renderProgress = (p: number): string => {
+    return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
+};
 </script>
