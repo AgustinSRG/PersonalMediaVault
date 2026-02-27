@@ -30,7 +30,7 @@
         <EditorTimeSlices v-else-if="page === 'time-slices'" @changed="onChanged"></EditorTimeSlices>
         <EditorImageNotes v-else-if="page === 'image-notes'" @changed="onChanged"></EditorImageNotes>
         <EditorResolutions v-else-if="page === 'resolutions'" @changed="onChanged"></EditorResolutions>
-        <EditorDangerZone v-else-if="page === 'danger'" @changed="onChanged"></EditorDangerZone>
+        <EditorDangerZone v-else-if="page === 'danger'"></EditorDangerZone>
     </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div ref="container" class="player-editor-sub-content">
         <!--- Image notes -->
 
         <div class="form-group">
@@ -16,13 +16,13 @@
                 class="form-control form-control-full-width form-textarea auto-focus"
                 :placeholder="
                     '[50, 100] (240 x 360)\n' +
-                    imageNotesSeparator +
+                    NOTES_TEXT_SEPARATOR +
                     '\n' +
                     $t('Example image note') +
                     '\n' +
                     $t('Another line') +
                     '\n' +
-                    imageNotesSeparator +
+                    NOTES_TEXT_SEPARATOR +
                     '\n'
                 "
                 rows="10"
@@ -32,13 +32,7 @@
         </div>
 
         <div v-if="canWrite" class="form-group">
-            <button
-                v-if="dirty || busy || !saved"
-                type="button"
-                class="btn btn-primary"
-                :disabled="busy || !dirty"
-                @click="changeImageNotes"
-            >
+            <button v-if="dirty || busy || !saved" type="button" class="btn btn-primary" :disabled="busy || !dirty" @click="saveChanges">
                 <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Change image notes") }}
             </button>
             <button v-else type="button" disabled class="btn btn-primary">
@@ -52,183 +46,147 @@
             @yes="onExitSaveChanges"
             @no="onExitDiscardChanges"
         ></SaveChangesAskModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_IMAGE_NOTES_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+<script setup lang="ts">
+import { emitAppEvent, EVENT_NAME_IMAGE_NOTES_UPDATE } from "@/control/app-events";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
 import { ImageNotesController } from "@/control/img-notes";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
-import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { ExitPreventer } from "@/control/exit-prevent";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useRequestId } from "@/composables/use-request-id";
+import { useExitPreventer } from "@/composables/use-exit-preventer";
 
-export default defineComponent({
-    name: "EditorImageNotes",
-    components: {
-        SaveChangesAskModal,
-        LoadingIcon,
-    },
-    emits: ["changed"],
-    setup() {
-        return {
-            requestId: getUniqueStringId(),
-
-            exitCallback: null as () => void,
-        };
-    },
-    data: function () {
-        return {
-            imageNotesSeparator: NOTES_TEXT_SEPARATOR,
-
-            imageNotes: "",
-
-            busy: false,
-            saved: false,
-
-            dirty: false,
-
-            canWrite: AuthController.CanWrite,
-
-            displayExitConfirmation: false,
-            exitOnSave: false,
-        };
-    },
-
-    mounted: function () {
-        this.updateImageNotes();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.updateImageNotes.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.autoFocus();
-
-        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-
-        ExitPreventer.RemoveExitPrevent();
-    },
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        markDirty: function () {
-            this.dirty = true;
-        },
-
-        updateImageNotes: function () {
-            this.imageNotes = imageNotesToText(ImageNotesController.Notes);
-        },
-
-        changeImageNotes: function () {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            const mediaId = ImageNotesController.MediaId;
-
-            const notes = textToImageNotes(this.imageNotes);
-
-            makeNamedApiRequest(this.requestId, apiMediaSetNotes(mediaId, notes))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed image notes"));
-                    this.busy = false;
-                    this.saved = true;
-                    this.dirty = false;
-
-                    ImageNotesController.Notes = notes;
-                    emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
-
-                    this.$emit("changed");
-
-                    if (this.exitOnSave) {
-                        this.exitOnSave = false;
-                        if (this.exitCallback) {
-                            this.exitCallback();
-                        }
-                    }
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        checkExitPrevent: function (): boolean {
-            return this.dirty;
-        },
-
-        onExit: function (callback: () => void) {
-            this.exitCallback = callback;
-            this.displayExitConfirmation = true;
-        },
-
-        onExitSaveChanges: function () {
-            if (this.dirty) {
-                this.exitOnSave = true;
-                this.changeImageNotes();
-            } else {
-                if (this.exitCallback) {
-                    this.exitCallback();
-                }
-            }
-        },
-
-        onExitDiscardChanges: function () {
-            if (this.exitCallback) {
-                this.exitCallback();
-            }
-        },
-    },
+const SaveChangesAskModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
 });
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// Image notes
+const imageNotes = ref(imageNotesToText(ImageNotesController.Notes));
+
+onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, () => {
+    imageNotes.value = imageNotesToText(ImageNotesController.Notes);
+});
+
+// Dirty? (unsaved changes)
+const dirty = ref(false);
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        const elem = container.value?.querySelector(".auto-focus") as HTMLElement;
+        if (elem) {
+            elem.focus();
+        }
+    });
+};
+
+onMounted(autoFocus);
+
+/**
+ * Indicates changes were made
+ */
+const markDirty = () => {
+    dirty.value = true;
+};
+
+// Busy status
+const busy = ref(false);
+
+// True if saved
+const saved = ref(false);
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+// Save request ID
+const saveRequestId = useRequestId();
+
+/**
+ * Saves the changes
+ */
+const saveChanges = () => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    const mediaId = ImageNotesController.MediaId;
+
+    const notes = textToImageNotes(imageNotes.value);
+
+    makeNamedApiRequest(saveRequestId, apiMediaSetNotes(mediaId, notes))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Successfully changed image notes"));
+
+            busy.value = false;
+            saved.value = true;
+            dirty.value = false;
+
+            ImageNotesController.Notes = notes;
+            emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
+
+            emit("changed");
+
+            onSave();
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busy.value = false;
+        });
+};
+
+// Exit preventer
+const { displayExitConfirmation, onSave, onExitSaveChanges, onExitDiscardChanges } = useExitPreventer(dirty, saveChanges);
 </script>

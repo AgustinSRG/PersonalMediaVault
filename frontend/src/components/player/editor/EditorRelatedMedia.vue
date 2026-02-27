@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div ref="container" class="player-editor-sub-content">
         <!--- Related media -->
 
         <div class="form-group">
@@ -17,7 +17,7 @@
                     <div v-if="canWrite" class="editor-related-media-buttons">
                         <button
                             type="button"
-                            :disabled="busyRelated || i === 0"
+                            :disabled="busy || i === 0"
                             class="btn btn-xs btn-mr btn-primary"
                             @click="moveRelatedMediaUp(i)"
                         >
@@ -25,38 +25,37 @@
                         </button>
                         <button
                             type="button"
-                            :disabled="busyRelated || i >= relatedMedia.length - 1"
+                            :disabled="busy || i >= relatedMedia.length - 1"
                             class="btn btn-xs btn-mr btn-primary"
                             @click="moveRelatedMediaDown(i)"
                         >
                             <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
                         </button>
-                        <button type="button" :disabled="busyRelated" class="btn btn-xs btn-mr btn-danger" @click="removeRelatedMedia(i)">
+                        <button type="button" :disabled="busy" class="btn btn-xs btn-mr btn-danger" @click="removeRelatedMedia(i)">
                             <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-if="canWrite && relatedMedia.length < maxRelatedMediaCount" class="form-group">
-            <button type="button" :disabled="busyRelated" class="btn btn-xs btn-primary" @click="addRelatedMedia">
+        <div v-if="canWrite && relatedMedia.length < MAX_RELATED_MEDIA_COUNT" class="form-group">
+            <button type="button" :disabled="busy" class="btn btn-xs btn-primary" @click="addRelatedMedia">
                 <i class="fas fa-plus"></i> {{ $t("Add related media") }}
             </button>
         </div>
         <div v-if="canWrite" class="form-group">
             <button
-                v-if="!compareMediaArrays(originalRelatedMedia, relatedMedia) || busyRelated || !savedRelated"
+                v-if="!compareMediaArrays(originalRelatedMedia, relatedMedia) || busy || !saved"
                 type="button"
                 class="btn btn-primary"
-                :disabled="busyRelated || compareMediaArrays(originalRelatedMedia, relatedMedia)"
-                @click="changeRelatedMedia"
+                :disabled="busy || compareMediaArrays(originalRelatedMedia, relatedMedia)"
+                @click="saveChanges"
             >
-                <LoadingIcon icon="fas fa-pencil-alt" :loading="busyRelated"></LoadingIcon> {{ $t("Change related media") }}
+                <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Change related media") }}
             </button>
             <button v-else type="button" disabled class="btn btn-primary">
                 <i class="fas fa-check"></i> {{ $t("Saved related media") }}
             </button>
-            <div v-if="errorRelated" class="form-error form-error-pt">{{ errorRelated }}</div>
         </div>
 
         <AddRelatedMediaModal
@@ -73,259 +72,245 @@
             @yes="onExitSaveChanges"
             @no="onExitDiscardChanges"
         ></SaveChangesAskModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { AlbumsController } from "@/control/albums";
-import {
-    emitAppEvent,
-    EVENT_NAME_AUTH_CHANGED,
-    EVENT_NAME_MEDIA_METADATA_CHANGE,
-    EVENT_NAME_MEDIA_UPDATE,
-    EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { getAssetURL, getFrontendUrl } from "@/utils/api";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { getFrontendUrl } from "@/utils/api";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
-import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
-
 import type { MediaListItem } from "@/api/models";
-import { ExitPreventer } from "@/control/exit-prevent";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useRequestId } from "@/composables/use-request-id";
+import { useExitPreventer } from "@/composables/use-exit-preventer";
+
+// Limit of related media elements
+const MAX_RELATED_MEDIA_COUNT = 16;
 
 const AddRelatedMediaModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AddRelatedMediaModal.vue"),
 });
 
-export default defineComponent({
-    name: "EditorRelatedMedia",
-    components: {
-        LoadingIcon,
-        AddRelatedMediaModal,
-        SaveChangesAskModal,
-        MediaItemAlbumThumbnail,
-    },
-    emits: ["changed"],
-    setup() {
-        return {
-            maxRelatedMediaCount: 16,
-
-            requestIdRelated: getUniqueStringId(),
-
-            exitCallback: null as () => void,
-        };
-    },
-    data: function () {
-        return {
-            mid: AppStatus.CurrentMedia,
-
-            originalRelatedMedia: [] as MediaListItem[],
-            relatedMedia: [] as MediaListItem[],
-
-            busyRelated: false,
-
-            savedRelated: false,
-
-            errorRelated: "",
-
-            canWrite: AuthController.CanWrite,
-
-            displayAddRelatedMediaModal: false,
-
-            displayExitConfirmation: false,
-            exitOnSave: false,
-        };
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.autoFocus();
-
-        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdRelated);
-
-        ExitPreventer.RemoveExitPrevent();
-    },
-
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
-            }
-
-            this.mid = MediaController.MediaData.id;
-
-            this.originalRelatedMedia = (MediaController.MediaData.related || []).slice();
-            this.relatedMedia = this.originalRelatedMedia.slice();
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        addRelatedMedia: function () {
-            this.displayAddRelatedMediaModal = true;
-        },
-
-        moveRelatedMediaUp: function (i: number) {
-            this.relatedMedia.splice(i - 1, 0, this.relatedMedia.splice(i, 1)[0]);
-        },
-
-        moveRelatedMediaDown: function (i: number) {
-            this.relatedMedia.splice(i + 1, 0, this.relatedMedia.splice(i, 1)[0]);
-        },
-
-        removeRelatedMedia: function (i: number) {
-            this.relatedMedia.splice(i, 1);
-        },
-
-        onAddRelatedMedia: function (m: MediaListItem, callback: () => void) {
-            this.relatedMedia.push(m);
-
-            if (this.relatedMedia.length >= this.maxRelatedMediaCount) {
-                this.displayAddRelatedMediaModal = false;
-            }
-
-            callback();
-        },
-
-        changeRelatedMedia: function (e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            if (this.busyRelated) {
-                return;
-            }
-
-            this.busyRelated = true;
-            this.errorRelated = "";
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(
-                this.requestIdRelated,
-                apiMediaChangeRelatedMedia(
-                    mediaId,
-                    this.relatedMedia.map((m) => m.id),
-                ),
-            )
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed related media"));
-                    this.busyRelated = false;
-                    this.savedRelated = true;
-                    this.originalRelatedMedia = this.relatedMedia.slice();
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.related = this.relatedMedia.slice();
-                    }
-                    this.$emit("changed");
-                    AlbumsController.LoadCurrentAlbum();
-                    emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
-
-                    if (this.exitOnSave) {
-                        this.exitOnSave = false;
-                        if (this.exitCallback) {
-                            this.exitCallback();
-                        }
-                    }
-                })
-                .onCancel(() => {
-                    this.busyRelated = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyRelated = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.errorRelated = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorRelated = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyRelated = false;
-                });
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        compareMediaArrays: function (m1: MediaListItem[], m2: MediaListItem[]): boolean {
-            return m1.map((m) => m.id).join(",") === m2.map((m) => m.id).join(",");
-        },
-
-        getMediaURL: function (mid: number): string {
-            return getFrontendUrl({
-                media: mid,
-            });
-        },
-
-        checkExitPrevent: function (): boolean {
-            return !this.compareMediaArrays(this.relatedMedia, this.originalRelatedMedia);
-        },
-
-        onExit: function (callback: () => void) {
-            this.exitCallback = callback;
-            this.displayExitConfirmation = true;
-        },
-
-        onExitSaveChanges: function () {
-            if (!this.compareMediaArrays(this.relatedMedia, this.originalRelatedMedia)) {
-                this.exitOnSave = true;
-                this.changeRelatedMedia();
-            } else {
-                if (this.exitCallback) {
-                    this.exitCallback();
-                }
-            }
-        },
-
-        onExitDiscardChanges: function () {
-            if (this.exitCallback) {
-                this.exitCallback();
-            }
-        },
-    },
+const SaveChangesAskModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
 });
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
+
+/**
+ * Gets media URL
+ * @param media The ID of the media
+ * @returns The URL
+ */
+const getMediaURL = (media: number): string => {
+    return getFrontendUrl({
+        media,
+    });
+};
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// Current media ID
+const mid = ref(AppStatus.CurrentMedia);
+
+// Original related media list
+const originalRelatedMedia = ref((MediaController.MediaData?.related || []).slice());
+
+// Related media list
+const relatedMedia = ref(originalRelatedMedia.value.slice());
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    mid.value = MediaController.MediaData.id;
+
+    originalRelatedMedia.value = (MediaController.MediaData.related || []).slice();
+    relatedMedia.value = originalRelatedMedia.value.slice();
+});
+
+/**
+ * Compares 2 lists of media elements
+ * @param m1 List 1
+ * @param m2 List 2
+ * @returns True if they are equal
+ */
+function compareMediaArrays(m1: MediaListItem[], m2: MediaListItem[]): boolean {
+    return m1.map((m) => m.id).join(",") === m2.map((m) => m.id).join(",");
+}
+
+// Dirty? (unsaved changes)
+const dirty = computed<boolean>(() => !compareMediaArrays(relatedMedia.value, originalRelatedMedia.value));
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        const elem = container.value?.querySelector(".auto-focus") as HTMLElement;
+        if (elem) {
+            elem.focus();
+        }
+    });
+};
+
+onMounted(autoFocus);
+
+// Display modal to add related media?
+const displayAddRelatedMediaModal = ref(false);
+
+/**
+ * Opens the modal to add media
+ */
+const addRelatedMedia = () => {
+    displayAddRelatedMediaModal.value = true;
+};
+
+/**
+ * Called when media is added through the modal
+ * @param m The media element
+ * @param callback The callback to continue adding media
+ */
+const onAddRelatedMedia = (m: MediaListItem, callback: () => void) => {
+    relatedMedia.value.push(m);
+
+    if (relatedMedia.value.length >= MAX_RELATED_MEDIA_COUNT) {
+        displayAddRelatedMediaModal.value = false;
+    }
+
+    callback();
+};
+
+/**
+ * Moves media up
+ * @param i The index of the element
+ */
+const moveRelatedMediaUp = (i: number) => {
+    relatedMedia.value.splice(i - 1, 0, relatedMedia.value.splice(i, 1)[0]);
+};
+
+/**
+ * Moves media down
+ * @param i The index of the element
+ */
+const moveRelatedMediaDown = (i: number) => {
+    relatedMedia.value.splice(i + 1, 0, relatedMedia.value.splice(i, 1)[0]);
+};
+
+/**
+ * Removes related media
+ * @param i The index of the element
+ */
+const removeRelatedMedia = (i: number) => {
+    relatedMedia.value.splice(i, 1);
+};
+
+// Busy status
+const busy = ref(false);
+
+// True if saved
+const saved = ref(false);
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+// Save request ID
+const saveRequestId = useRequestId();
+
+const saveChanges = (e?: Event) => {
+    if (e) {
+        e.preventDefault();
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(
+        saveRequestId,
+        apiMediaChangeRelatedMedia(
+            mediaId,
+            relatedMedia.value.map((m) => m.id),
+        ),
+    )
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Successfully changed related media"));
+
+            busy.value = false;
+            saved.value = true;
+            originalRelatedMedia.value = relatedMedia.value.slice();
+
+            if (MediaController.MediaData) {
+                MediaController.MediaData.related = relatedMedia.value.slice();
+            }
+
+            emit("changed");
+
+            AlbumsController.LoadCurrentAlbum();
+
+            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
+
+            onSave();
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+
+            setError(err.message);
+            console.error(err);
+        });
+};
+
+// Exit preventer
+const { displayExitConfirmation, onSave, onExitSaveChanges, onExitDiscardChanges } = useExitPreventer(dirty, saveChanges);
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div ref="container" class="player-editor-sub-content">
         <!--- Time slices -->
 
         <div class="form-group">
@@ -19,13 +19,7 @@
         </div>
 
         <div v-if="canWrite" class="form-group">
-            <button
-                v-if="dirty || !saved || busy"
-                type="button"
-                class="btn btn-primary"
-                :disabled="busy || !dirty"
-                @click="changeTimeSlices"
-            >
+            <button v-if="dirty || !saved || busy" type="button" class="btn btn-primary" :disabled="busy || !dirty" @click="saveChanges">
                 <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Change time slices") }}
             </button>
             <button v-else type="button" disabled class="btn btn-primary">
@@ -39,197 +33,161 @@
             @yes="onExitSaveChanges"
             @no="onExitDiscardChanges"
         ></SaveChangesAskModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { clone } from "@/utils/objects";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
-import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { ExitPreventer } from "@/control/exit-prevent";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useRequestId } from "@/composables/use-request-id";
+import { useExitPreventer } from "@/composables/use-exit-preventer";
 
-export default defineComponent({
-    name: "EditorTimeSlices",
-    components: {
-        SaveChangesAskModal,
-        LoadingIcon,
-    },
-    emits: ["changed"],
-    setup() {
-        return {
-            requestId: getUniqueStringId(),
-
-            exitCallback: null as () => void,
-        };
-    },
-    data: function () {
-        return {
-            type: 0,
-
-            timeSlices: "",
-            originalTimeSlices: "",
-
-            busy: false,
-            saved: false,
-
-            dirty: false,
-
-            canWrite: AuthController.CanWrite,
-
-            displayExitConfirmation: false,
-            exitOnSave: false,
-        };
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.autoFocus();
-
-        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-
-        ExitPreventer.RemoveExitPrevent();
-    },
-
-    methods: {
-        autoFocus: function () {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-                if (elem) {
-                    elem.focus();
-                }
-            });
-        },
-
-        markDirty: function () {
-            this.dirty = true;
-        },
-
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
-            }
-
-            this.type = MediaController.MediaData.type;
-
-            this.originalTimeSlices = renderTimeSlices(MediaController.MediaData.time_slices);
-            this.timeSlices = this.originalTimeSlices;
-            this.dirty = false;
-        },
-
-        changeTimeSlices: function () {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            const slices = parseTimeSlices(this.timeSlices);
-
-            makeNamedApiRequest(this.requestId, apiMediaChangeTimeSlices(mediaId, slices))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed time slices"));
-                    this.busy = false;
-                    this.saved = true;
-                    this.dirty = false;
-                    this.originalTimeSlices = renderTimeSlices(slices);
-                    this.timeSlices = this.originalTimeSlices;
-
-                    if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
-                        MediaController.MediaData.time_slices = clone(slices);
-                    }
-
-                    this.$emit("changed");
-
-                    if (this.exitOnSave) {
-                        this.exitOnSave = false;
-                        if (this.exitCallback) {
-                            this.exitCallback();
-                        }
-                    }
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                        },
-                        accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                        },
-                        notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                        },
-                        serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                        },
-                        networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
-                    console.error(err);
-                    this.busy = false;
-                });
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        checkExitPrevent: function (): boolean {
-            return this.dirty;
-        },
-
-        onExit: function (callback: () => void) {
-            this.exitCallback = callback;
-            this.displayExitConfirmation = true;
-        },
-
-        onExitSaveChanges: function () {
-            if (this.dirty) {
-                this.exitOnSave = true;
-                this.changeTimeSlices();
-            } else {
-                if (this.exitCallback) {
-                    this.exitCallback();
-                }
-            }
-        },
-
-        onExitDiscardChanges: function () {
-            if (this.exitCallback) {
-                this.exitCallback();
-            }
-        },
-    },
+const SaveChangesAskModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
 });
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// Original time slices
+const originalTimeSlices = ref(renderTimeSlices(MediaController.MediaData?.time_slices || []));
+
+// New time slices
+const timeSlices = ref(originalTimeSlices.value);
+
+// Dirty? (unsaved changes)
+const dirty = ref(false);
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    originalTimeSlices.value = renderTimeSlices(MediaController.MediaData.time_slices);
+    timeSlices.value = originalTimeSlices.value;
+    dirty.value = false;
+});
+
+/**
+ * Automatically focuses the appropriate element
+ */
+const autoFocus = () => {
+    nextTick(() => {
+        const elem = container.value?.querySelector(".auto-focus") as HTMLElement;
+        if (elem) {
+            elem.focus();
+        }
+    });
+};
+
+onMounted(autoFocus);
+
+/**
+ * Indicates changes were made
+ */
+const markDirty = () => {
+    dirty.value = true;
+};
+
+// Busy status
+const busy = ref(false);
+
+// True if saved
+const saved = ref(false);
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+// Save request ID
+const saveRequestId = useRequestId();
+
+/**
+ * Saves the changes
+ */
+const saveChanges = () => {
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    const slices = parseTimeSlices(timeSlices.value);
+
+    makeNamedApiRequest(saveRequestId, apiMediaChangeTimeSlices(mediaId, slices))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Successfully changed time slices"));
+
+            busy.value = false;
+            saved.value = true;
+            dirty.value = false;
+            originalTimeSlices.value = renderTimeSlices(slices);
+            timeSlices.value = originalTimeSlices.value;
+
+            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                MediaController.MediaData.time_slices = clone(slices);
+            }
+
+            emit("changed");
+
+            onSave();
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
+
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            setError(err.message);
+            console.error(err);
+            busy.value = false;
+        });
+};
+
+// Exit preventer
+const { displayExitConfirmation, onSave, onExitSaveChanges, onExitDiscardChanges } = useExitPreventer(dirty, saveChanges);
 </script>

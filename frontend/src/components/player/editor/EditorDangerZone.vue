@@ -2,29 +2,35 @@
     <div class="player-editor-sub-content">
         <!--- Re-Encode -->
 
-        <div v-if="canWrite" class="form-group">
+        <div class="form-group">
             <label>
                 {{ $t("If the media resource did not encode properly, try using the button below.") }}
                 {{ $t("If it still does not work, try re-uploading the media.") }}
             </label>
         </div>
-        <div v-if="canWrite" class="form-group">
+        <div class="form-group">
             <button type="button" class="btn btn-primary" :disabled="busyReEncode || busyReplace" @click="encodeMedia">
                 <LoadingIcon icon="fas fa-sync-alt" :loading="busyReEncode"></LoadingIcon> {{ $t("Re-Encode") }}
             </button>
-            <div v-if="errorReEncode" class="form-error form-error-pt">{{ errorReEncode }}</div>
+            <div v-if="errorReEncode" class="form-error form-error-pt">{{ $t("Error") }}: {{ errorReEncode }}</div>
         </div>
 
         <!--- Replace -->
 
-        <div v-if="canWrite" class="form-group">
+        <div class="form-group">
             <label>
                 {{ $t("If you want to replace the media file, try using the button below.") }}
                 {{ $t("You can use it to upgrade the media quality or fix any issues it may have.") }}
             </label>
         </div>
-        <div v-if="canWrite" class="form-group">
-            <input type="file" class="file-hidden replace-file-hidden" name="attachment-upload" @change="replaceFileChanged" />
+        <div class="form-group">
+            <input
+                ref="replaceFileHiddenInput"
+                type="file"
+                class="file-hidden replace-file-hidden"
+                name="attachment-upload"
+                @change="replaceFileChanged"
+            />
             <button
                 v-if="!replacing"
                 type="button"
@@ -41,26 +47,28 @@
             <button v-else type="button" class="btn btn-primary" disabled>
                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Encrypting") }}...
             </button>
-            <div v-if="errorReplace" class="form-error form-error-pt">{{ errorReplace }}</div>
+            <div v-if="errorReplace" class="form-error form-error-pt">{{ $t("Error") }}: {{ errorReplace }}</div>
         </div>
 
         <!--- Delete -->
 
-        <div v-if="canWrite" class="form-group">
+        <div class="form-group">
             <label>{{ $t("If you want to delete this media resource, click the button below.") }}</label>
         </div>
-        <div v-if="canWrite" class="form-group">
+        <div class="form-group">
             <button type="button" class="btn btn-danger" :disabled="busyReEncode || busyReplace" @click="deleteMedia">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
             </button>
         </div>
 
         <MediaDeleteModal v-if="displayMediaDelete" v-model:display="displayMediaDelete"></MediaDeleteModal>
+
         <ReEncodeConfirmationModal
             v-if="displayReEncode"
             v-model:display="displayReEncode"
             @confirm="doEncodeMedia"
         ></ReEncodeConfirmationModal>
+
         <ReplaceMediaConfirmationModal
             v-if="displayReplace"
             v-model:display="displayReplace"
@@ -75,308 +83,284 @@
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
-            @confirm="doReplaceMediaInternal"
+            @confirm="performReplaceMediaRequest"
         ></AuthConfirmationModal>
     </div>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, ref, shallowRef, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import MediaDeleteModal from "@/components/modals/MediaDeleteModal.vue";
-import ReEncodeConfirmationModal from "@/components/modals/ReEncodeConfirmationModal.vue";
-import ReplaceMediaConfirmationModal from "@/components/modals/ReplaceMediaConfirmationModal.vue";
-import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
-import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 
-export default defineComponent({
-    name: "EditorDangerZone",
-    components: {
-        MediaDeleteModal,
-        ReEncodeConfirmationModal,
-        ReplaceMediaConfirmationModal,
-        LoadingIcon,
-        AuthConfirmationModal,
-    },
-    emits: ["changed"],
-    setup() {
-        return {
-            requestId: getUniqueStringId(),
-            fileRef: null as File | null,
-        };
-    },
-    data: function () {
-        return {
-            type: 0,
-
-            busyReEncode: false,
-            busyReplace: false,
-
-            canWrite: AuthController.CanWrite,
-
-            displayMediaDelete: false,
-
-            displayReEncode: false,
-
-            displayReplace: false,
-
-            replaceFileName: "",
-            replaceFileSize: 0,
-
-            replacing: false,
-            replaceProgress: 0,
-
-            errorReplace: "",
-            errorReEncode: "",
-
-            displayAuthConfirmation: false,
-            authConfirmationCooldown: 0,
-            authConfirmationTfa: false,
-            authConfirmationError: "",
-        };
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-    },
-
-    methods: {
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
-            }
-
-            this.type = MediaController.MediaData.type;
-        },
-
-        doEncodeMedia: function () {
-            if (this.busyReEncode) {
-                return;
-            }
-
-            this.busyReEncode = true;
-            this.errorReEncode = "";
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestId, apiMediaEncodeMedia(mediaId))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully requested pending encoding tasks"));
-                    this.busyReEncode = false;
-                    MediaController.Load();
-                })
-                .onCancel(() => {
-                    this.busyReEncode = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyReEncode = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorReEncode = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyReEncode = false;
-                });
-        },
-
-        encodeMedia: function () {
-            this.displayReEncode = true;
-        },
-
-        deleteMedia: function () {
-            this.displayMediaDelete = true;
-        },
-
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
-
-        replaceMedia: function () {
-            const fileElem = this.$el.querySelector(".replace-file-hidden");
-            if (fileElem) {
-                fileElem.value = null;
-                fileElem.click();
-            }
-        },
-
-        replaceFileChanged: function (e: InputEvent) {
-            const data = (e.target as HTMLInputElement).files;
-            if (data && data.length > 0) {
-                const file = data[0] as File;
-                this.fileRef = file;
-                this.replaceFileName = file.name;
-                this.replaceFileSize = file.size;
-                this.displayReplace = true;
-            }
-        },
-
-        replaceMediaDrop: function (e: DragEvent) {
-            e.preventDefault();
-
-            if (this.busyReplace) {
-                return;
-            }
-
-            const data = e.dataTransfer.files;
-            if (data && data.length > 0) {
-                const file = data[0] as File;
-                this.fileRef = file;
-                this.replaceFileName = file.name;
-                this.replaceFileSize = file.size;
-                this.displayReplace = true;
-            }
-        },
-
-        doReplaceMedia: function () {
-            this.doReplaceMediaInternal({});
-        },
-
-        doReplaceMediaInternal: function (confirmation: ProvidedAuthConfirmation) {
-            if (this.busyReplace) {
-                return;
-            }
-
-            const file = this.fileRef;
-
-            if (!file) {
-                return;
-            }
-
-            this.busyReplace = true;
-            this.replacing = true;
-            this.replaceProgress = 0;
-            this.errorReplace = "";
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestId, apiMediaReplaceMedia(mediaId, file, confirmation))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully uploaded") + ": " + file.name);
-                    this.busyReplace = false;
-                    this.replacing = false;
-                    this.replaceProgress = 0;
-                    this.fileRef = null;
-
-                    MediaController.Load();
-                })
-                .onUploadProgress((loaded, total) => {
-                    if (total) {
-                        this.replaceProgress = Math.floor(((loaded * 100) / total) * 100) / 100;
-                    }
-                })
-                .onCancel(() => {
-                    this.busyReplace = false;
-                    this.replacing = false;
-                    this.replaceProgress = 0;
-                    this.fileRef = null;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyReplace = false;
-                    this.replacing = false;
-                    this.replaceProgress = 0;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidMedia: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Invalid media file provided");
-                        },
-                        invalidMediaType: () => {
-                            this.fileRef = null;
-                            this.errorReplace =
-                                this.$t("Error") + ": " + this.$t("You must upload a file of the same type in order to replace the media");
-                        },
-                        badRequest: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Bad request");
-                        },
-                        requiredAuthConfirmationPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = false;
-                        },
-                        invalidPassword: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid password");
-                            this.authConfirmationTfa = false;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        requiredAuthConfirmationTfa: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = "";
-                            this.authConfirmationTfa = true;
-                        },
-                        invalidTfaCode: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("Invalid one-time code");
-                            this.authConfirmationTfa = true;
-                            this.authConfirmationCooldown = Date.now() + 5000;
-                        },
-                        cooldown: () => {
-                            this.displayAuthConfirmation = true;
-                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
-                        },
-                        accessDenied: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.fileRef = null;
-                            this.errorReplace = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorReplace = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyReplace = false;
-                    this.replacing = false;
-                    this.replaceProgress = 0;
-                });
-        },
-    },
+const ReEncodeConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ReEncodeConfirmationModal.vue"),
 });
+
+const ReplaceMediaConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ReplaceMediaConfirmationModal.vue"),
+});
+
+const MediaDeleteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/MediaDeleteModal.vue"),
+});
+
+const AuthConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AuthConfirmationModal.vue"),
+});
+
+// Translation
+const { $t } = useI18n();
+
+// Request ID
+const requestId = useRequestId();
+
+// True to display the re-encode confirmation
+const displayReEncode = ref(false);
+
+/**
+ * Displays the modal to confirm re-encoding the media
+ */
+const encodeMedia = () => {
+    displayReEncode.value = true;
+};
+
+// Error for media re-encode
+const commonErrorsReEncode = useCommonRequestErrors();
+const errorReEncode = commonErrorsReEncode.error;
+
+// Busy re-encoding?
+const busyReEncode = ref(false);
+
+/**
+ * Performs the request to re-encode the media
+ */
+const doEncodeMedia = () => {
+    if (busyReEncode.value) {
+        return;
+    }
+
+    busyReEncode.value = true;
+    errorReEncode.value = "";
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestId, apiMediaEncodeMedia(mediaId))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Successfully requested pending encoding tasks"));
+
+            busyReEncode.value = false;
+
+            MediaController.Load();
+        })
+        .onCancel(() => {
+            busyReEncode.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busyReEncode.value = false;
+
+            handleErr(err, commonErrorsReEncode);
+        })
+        .onUnexpectedError((err) => {
+            busyReEncode.value = false;
+            commonErrorsReEncode.setError(err.message);
+            console.error(err);
+        });
+};
+
+// Reference to the file for media replacement
+const fileRef = shallowRef<File | null>(null);
+
+// True to display the modal to replace the media
+const displayReplace = ref(false);
+
+// Name of the file to replace the media
+const replaceFileName = ref("");
+
+// Size of the file to replace the media
+const replaceFileSize = ref(0);
+
+// Reference to the hidden file input to replace media
+const replaceFileHiddenInput = useTemplateRef("replaceFileHiddenInput");
+
+/**
+ * The user clicked in the "Replace media" button.
+ * Open the file selector.
+ */
+const replaceMedia = () => {
+    const fileElem = replaceFileHiddenInput.value;
+    if (fileElem) {
+        fileElem.value = null;
+        fileElem.click();
+    }
+};
+
+/**
+ * Event handler for 'change' on the file input
+ * @param e The event
+ */
+const replaceFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        const file = data[0] as File;
+        fileRef.value = file;
+        replaceFileName.value = file.name;
+        replaceFileSize.value = file.size;
+        displayReplace.value = true;
+    }
+};
+
+/**
+ * Event handler for 'drop' on the 'replace media' option
+ * @param e The event
+ */
+const replaceMediaDrop = (e: DragEvent) => {
+    e.preventDefault();
+
+    if (busyReplace.value) {
+        return;
+    }
+
+    const data = e.dataTransfer.files;
+    if (data && data.length > 0) {
+        const file = data[0] as File;
+        fileRef.value = file;
+        replaceFileName.value = file.name;
+        replaceFileSize.value = file.size;
+        displayReplace.value = true;
+    }
+};
+
+// True if replacing
+const replacing = ref(false);
+
+// Progress uploading the file to replace
+const replaceProgress = ref(0);
+
+// Error for media replace
+const commonErrorsReplace = useCommonRequestErrors();
+const errorReplace = commonErrorsReplace.error;
+
+// Auth confirmation
+const {
+    displayAuthConfirmation,
+    authConfirmationCooldown,
+    authConfirmationTfa,
+    authConfirmationError,
+    requiredAuthConfirmationPassword,
+    invalidPassword,
+    requiredAuthConfirmationTfa,
+    invalidTfaCode,
+    cooldown,
+} = useAuthConfirmation();
+
+// Busy replacing media
+const busyReplace = ref(false);
+
+/**
+ * Replaces the media with the selected file
+ */
+const doReplaceMedia = () => {
+    performReplaceMediaRequest({});
+};
+
+/**
+ * Performs the request to replace the media
+ * @param confirmation The auth confirmation
+ */
+const performReplaceMediaRequest = (confirmation: ProvidedAuthConfirmation) => {
+    if (busyReplace.value) {
+        return;
+    }
+
+    const file = fileRef.value;
+
+    if (!file) {
+        return;
+    }
+
+    busyReplace.value = true;
+    replacing.value = true;
+    replaceProgress.value = 0;
+    errorReplace.value = "";
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(requestId, apiMediaReplaceMedia(mediaId, file, confirmation))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Successfully uploaded") + ": " + file.name);
+
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+            fileRef.value = null;
+
+            MediaController.Load();
+        })
+        .onUploadProgress((loaded, total) => {
+            if (total) {
+                replaceProgress.value = Math.floor(((loaded * 100) / total) * 100) / 100;
+            }
+        })
+        .onCancel(() => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+            fileRef.value = null;
+        })
+        .onRequestError((err, handleErr) => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+
+            handleErr(err, {
+                unauthorized: commonErrorsReplace.unauthorized,
+                invalidMedia: () => {
+                    fileRef.value = null;
+                    commonErrorsReplace.setError($t("Invalid media file provided"));
+                },
+                invalidMediaType: () => {
+                    fileRef.value = null;
+                    commonErrorsReplace.setError($t("You must upload a file of the same type in order to replace the media"));
+                },
+                badRequest: commonErrorsReplace.badRequest,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied: commonErrorsReplace.accessDenied,
+                notFound: commonErrorsReplace.notFound,
+                serverError: commonErrorsReplace.serverError,
+                networkError: commonErrorsReplace.networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+
+            commonErrorsReplace.setError(err.message);
+            console.error(err);
+        });
+};
+
+// True to display the modal to delete the media
+const displayMediaDelete = ref(false);
+
+/**
+ * Displays the modal to delete the media
+ */
+const deleteMedia = () => {
+    displayMediaDelete.value = true;
+};
 </script>
