@@ -155,29 +155,18 @@
             :volume="volume"
         ></PlayerTooltip>
 
-        <div
-            class="player-timeline"
-            :class="{ hidden: !showControls }"
-            @mouseenter="enterControls"
-            @mouseleave="mouseLeaveTimeline"
-            @mousemove="mouseMoveTimeline"
-            @dblclick="stopPropagationEvent"
+        <PlayerTimeline
+            :hidden="!showControls"
+            :duration="duration"
+            :buffered-time="bufferedTime"
+            :current-time="currentTime"
+            :time-slices="timeSlices"
+            @enter="enterControls"
+            @leave="mouseLeaveTimeline"
             @click="clickTimeline"
-            @mousedown="grabTimelineByMouse"
-            @touchstart="grabTimelineByTouch"
-        >
-            <div class="player-timeline-back"></div>
-            <div class="player-timeline-buffer" :style="{ width: getTimelineBarWidth(bufferedTime, duration) }"></div>
-            <div class="player-timeline-current" :style="{ width: getTimelineBarWidth(currentTime, duration) }"></div>
-            <div
-                v-for="(ts, tsi) in timeSlices"
-                :key="tsi"
-                class="player-timeline-split"
-                :class="{ 'start-split': ts.start <= 0 }"
-                :style="{ left: getTimelineBarWidth(ts.start, duration) }"
-            ></div>
-            <div class="player-timeline-thumb" :style="{ left: getTimelineThumbLeft(currentTime, duration) }"></div>
-        </div>
+            @update-tooltip="updateTimelineTooltip"
+            @grab="grabTimeline"
+        ></PlayerTimeline>
 
         <div v-if="tooltipShown" class="player-tooltip" :style="{ left: tooltipX + 'px' }">
             <div class="player-tooltip-text">{{ tooltipText }}</div>
@@ -315,6 +304,7 @@ import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
 import PlayerAutoNextOverlay from "./common/PlayerAutoNextOverlay.vue";
+import PlayerTimeline from "./common/PlayerTimeline.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -371,6 +361,7 @@ export default defineComponent({
         PlayerPlayFeedback,
         PlayerLoader,
         PlayerAutoNextOverlay,
+        PlayerTimeline,
     },
     props: {
         mid: Number,
@@ -1082,41 +1073,11 @@ export default defineComponent({
 
         /* Timeline */
 
-        grabTimelineByMouse: function (e: MouseEvent & TouchEvent) {
-            e.stopPropagation();
-            if (e.button === 0) {
-                this.timelineGrabbed = true;
-                this.onTimelineSkip(e.pageX);
-            }
-        },
-
-        grabTimelineByTouch: function (e: TouchEvent) {
-            e.stopPropagation();
-
-            if (!e.touches[0]) {
-                return;
-            }
-
+        grabTimeline: function (x: number) {
             this.timelineGrabbed = true;
-            this.onTimelineSkip(e.touches[0].pageX);
-
-            this.updateTimelineTooltip(e.touches[0].pageX);
+            this.onTimelineSkip(x);
         },
 
-        getTimelineBarWidth: function (time, duration) {
-            if (duration > 0) {
-                return Math.min((time / duration) * 100, 100) + "%";
-            } else {
-                return "0";
-            }
-        },
-        getTimelineThumbLeft: function (time, duration) {
-            if (duration > 0) {
-                return "calc(" + Math.min((time / duration) * 100, 100) + "% - 7px)";
-            } else {
-                return "-7px";
-            }
-        },
         onTimelineSkip: function (x: number) {
             const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
             const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
@@ -1154,14 +1115,6 @@ export default defineComponent({
             this.tooltipEventX = x;
 
             nextTick(this.tick.bind(this));
-        },
-
-        mouseMoveTimeline: function (event: MouseEvent) {
-            if (isTouchDevice()) {
-                return;
-            }
-
-            this.updateTimelineTooltip(event.pageX);
         },
 
         renderTime: function (s: number): string {
