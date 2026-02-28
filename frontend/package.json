@@ -19,25 +19,26 @@
     },
     "dependencies": {
         "@asanrom/request-browser": "1.0.5",
-        "vue": "3.5.28"
+        "vue": "3.5.29"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
         "@vitejs/plugin-vue": "6.0.4",
         "@vue/tsconfig": "0.8.1",
-        "eslint": "10.0.1",
+        "eslint": "10.0.2",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-vue": "10.8.0",
         "globals": "17.3.0",
         "prettier": "3.8.1",
         "typescript": "5.9.3",
-        "typescript-eslint": "8.56.0",
+        "typescript-eslint": "8.56.1",
         "vite": "7.3.1",
         "vite-plugin-pwa": "1.2.0",
         "vue-tsc": "3.2.5"
     },
     "overrides": {
-        "minimatch": "10.2.2"
+        "minimatch": "10.2.4",
+        "serialize-javascript": "7.0.3"
     },
     "optionalDependencies": {
         "fonteditor-core": "2.6.3",
