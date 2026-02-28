@@ -181,23 +181,13 @@
             @grab="grabTimeline"
         ></PlayerTimeline>
 
-        <div v-if="tooltipShown" class="player-tooltip" :style="{ left: tooltipX + 'px' }">
-            <div v-if="tooltipImage && !tooltipImageInvalid" class="player-tooltip-image">
-                <img :src="tooltipImage" @error="onTooltipImageError" @load="onTooltipImageLoaded" />
-                <div v-if="tooltipImageLoading" class="player-tooltip-image-loading">
-                    <div class="player-tooltip-image-loader">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                    </div>
-                </div>
-            </div>
-            <div class="player-tooltip-text">{{ tooltipText }}</div>
-            <div v-if="tooltipTimeSlice" class="player-tooltip-text">
-                {{ tooltipTimeSlice }}
-            </div>
-        </div>
+        <PlayerTimelineTooltip
+            v-if="tooltipShown"
+            :x="tooltipX"
+            :text="tooltipText"
+            :time-slice="tooltipTimeSlice"
+            :image="tooltipImage"
+        ></PlayerTimelineTooltip>
 
         <PlayerConfig
             v-if="displayConfig"
@@ -326,6 +316,7 @@ import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
 import PlayerAutoNextOverlay from "./common/PlayerAutoNextOverlay.vue";
 import PlayerTimeline from "./common/PlayerTimeline.vue";
+import PlayerTimelineTooltip from "./common/PlayerTimelineTooltip.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -383,6 +374,7 @@ export default defineComponent({
         PlayerLoader,
         PlayerAutoNextOverlay,
         PlayerTimeline,
+        PlayerTimelineTooltip,
     },
     props: {
         mid: Number,
@@ -470,8 +462,6 @@ export default defineComponent({
             tooltipX: 0,
             tooltipEventX: 0,
             tooltipImage: "",
-            tooltipImageLoading: false,
-            tooltipImageInvalid: false,
 
             showControls: true,
             lastControlsInteraction: Date.now(),
@@ -1253,12 +1243,7 @@ export default defineComponent({
             this.tooltipShown = true;
             this.tooltipText = this.renderTime(time);
             this.tooltipTimeSlice = this.findTimeSliceName(time);
-            const oldTooltipImage = this.tooltipImage;
             this.tooltipImage = this.getThumbnailForTime(time);
-            if (oldTooltipImage !== this.tooltipImage) {
-                this.tooltipImageInvalid = false;
-                this.tooltipImageLoading = true;
-            }
             this.tooltipEventX = x;
 
             nextTick(this.tick.bind(this));
@@ -1669,14 +1654,6 @@ export default defineComponent({
                     this.loading = false;
                 }
             }
-        },
-
-        onTooltipImageLoaded: function () {
-            this.tooltipImageLoading = false;
-        },
-
-        onTooltipImageError: function () {
-            this.tooltipImageInvalid = true;
         },
 
         reloadSubtitles: function () {

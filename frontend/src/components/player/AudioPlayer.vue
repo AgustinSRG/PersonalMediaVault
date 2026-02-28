@@ -168,12 +168,7 @@
             @grab="grabTimeline"
         ></PlayerTimeline>
 
-        <div v-if="tooltipShown" class="player-tooltip" :style="{ left: tooltipX + 'px' }">
-            <div class="player-tooltip-text">{{ tooltipText }}</div>
-            <div v-if="tooltipTimeSlice" class="player-tooltip-text">
-                {{ tooltipTimeSlice }}
-            </div>
-        </div>
+        <PlayerTimelineTooltip v-if="tooltipShown" :x="tooltipX" :text="tooltipText" :time-slice="tooltipTimeSlice"></PlayerTimelineTooltip>
 
         <PlayerConfig
             v-if="displayConfig"
@@ -305,6 +300,7 @@ import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
 import PlayerAutoNextOverlay from "./common/PlayerAutoNextOverlay.vue";
 import PlayerTimeline from "./common/PlayerTimeline.vue";
+import PlayerTimelineTooltip from "./common/PlayerTimelineTooltip.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -362,6 +358,7 @@ export default defineComponent({
         PlayerLoader,
         PlayerAutoNextOverlay,
         PlayerTimeline,
+        PlayerTimelineTooltip,
     },
     props: {
         mid: Number,
