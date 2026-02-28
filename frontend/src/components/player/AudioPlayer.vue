@@ -49,35 +49,14 @@
 
         <PlayerLoader v-if="loading && !mediaError"></PlayerLoader>
 
-        <div
+        <PlayerAutoNextOverlay
             v-if="pendingNextEnd"
-            class="player-auto-next-overlay"
-            @click="stopPropagationEvent"
-            @mousedown="stopPropagationEvent"
-            @touchstart="stopPropagationEvent"
-        >
-            <div class="next-end-container">
-                <div class="next-end-wait-msg">
-                    {{ $t("Next media will play in") }} <b>{{ pendingNextEndSeconds }}</b>
-                </div>
-                <div class="next-end-wait-buttons">
-                    <button type="button" class="btn btn-primary" @click="hideNextEnd">
-                        <i class="fas fa-times"></i> {{ $t("Cancel") }}
-                    </button>
-                    <button type="button" class="btn btn-primary" @click="goNext">
-                        <i class="fas fa-forward-step"></i> {{ $t("Next") }}
-                    </button>
-                </div>
-                <div class="next-end-wait-buttons">
-                    <button type="button" class="btn btn-primary" @click="play">
-                        <i class="fas fa-repeat"></i> {{ $t("Play again") }}
-                    </button>
-                    <button type="button" class="btn btn-primary" @click="enableLoopAndPlay">
-                        <i class="fas fa-repeat"></i> {{ $t("Loop") }}
-                    </button>
-                </div>
-            </div>
-        </div>
+            :pending-next-end-seconds="pendingNextEndSeconds"
+            @cancel="hideNextEnd"
+            @next="goNext"
+            @play="play"
+            @loop="enableLoopAndPlay"
+        ></PlayerAutoNextOverlay>
 
         <PlayerEncodingPending
             v-if="(!loading && !audioURL && audioPending) || mediaError"
@@ -335,6 +314,7 @@ import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
+import PlayerAutoNextOverlay from "./common/PlayerAutoNextOverlay.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -390,6 +370,7 @@ export default defineComponent({
         PlayerControls,
         PlayerPlayFeedback,
         PlayerLoader,
+        PlayerAutoNextOverlay,
     },
     props: {
         mid: Number,
