@@ -58,19 +58,7 @@
             @canplay="onAudioCanPlay"
         ></audio>
 
-        <div class="player-feedback-container">
-            <div v-if="feedback === 'play'" key="play" class="player-feedback player-feedback-play" @animationend="onFeedBackAnimationEnd">
-                <div><i class="fas fa-play"></i></div>
-            </div>
-            <div
-                v-if="feedback === 'pause'"
-                key="pause"
-                class="player-feedback player-feedback-pause"
-                @animationend="onFeedBackAnimationEnd"
-            >
-                <div><i class="fas fa-pause"></i></div>
-            </div>
-        </div>
+        <PlayerPlayFeedback v-model:feedback="feedback"></PlayerPlayFeedback>
 
         <div v-if="loading && !mediaError" class="player-loader">
             <div class="player-lds-ring">
@@ -374,6 +362,8 @@ import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
 import type { HelpTooltipType } from "@/utils/player-tooltip";
 import PlayerControls from "./common/PlayerControls.vue";
+import type { PlayerPlayFeedbackType } from "@/utils/player";
+import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -427,6 +417,7 @@ export default defineComponent({
         PlayerRelatedMediaList,
         PlayerTooltip,
         PlayerControls,
+        PlayerPlayFeedback,
     },
     props: {
         mid: Number,
@@ -538,7 +529,7 @@ export default defineComponent({
             speed: 1,
             scale: 1,
 
-            feedback: "",
+            feedback: "" as PlayerPlayFeedbackType,
 
             helpTooltip: "" as HelpTooltipType,
 
@@ -1750,10 +1741,6 @@ export default defineComponent({
                     this.loading = false;
                 }
             }
-        },
-
-        onFeedBackAnimationEnd: function () {
-            this.feedback = "";
         },
 
         onTooltipImageLoaded: function () {
