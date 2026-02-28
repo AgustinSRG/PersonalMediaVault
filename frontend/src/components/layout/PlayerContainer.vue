@@ -12,7 +12,6 @@
             :next="next"
             :in-album="isInAlbum"
             :album-loading="albumLoading"
-            :can-write="canWrite"
             :min="minPlayer"
             @go-next="goNext"
             @go-prev="goPrev"
@@ -124,6 +123,8 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { onDocumentEvent } from "@/composables/on-document-event";
+import type { PlayerLoadStatus } from "@/utils/player";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -236,11 +237,8 @@ onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
     }
 });
 
-// Player statuses
-type PlayerStatus = "loading" | "200" | "none" | "404";
-
 // Current player status
-const status = computed<PlayerStatus>(() => {
+const status = computed<PlayerLoadStatus>(() => {
     if (loading.value) {
         return "loading";
     } else if (mediaData.value) {
@@ -324,6 +322,12 @@ onBeforeUnmount(() => {
 // Is player in full screen
 const fullScreen = ref(false);
 
+onDocumentEvent("fullscreenchange", () => {
+    if (!document.fullscreenElement) {
+        fullScreen.value = false;
+    }
+});
+
 /**
  * Call when focus is lost
  */
@@ -385,6 +389,10 @@ const openStats = () => {
  * Opens the deletion modal
  */
 const openDelete = () => {
+    if (!canWrite.value) {
+        return;
+    }
+
     displayDelete.value = true;
 };
 

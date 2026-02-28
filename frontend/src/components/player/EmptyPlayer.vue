@@ -6,6 +6,7 @@
             'full-screen': fullscreen,
         }"
         @dblclick="toggleFullScreen"
+        @mouseleave="mouseLeavePlayer"
     >
         <div v-if="status === 'loading' || (status === 'none' && albumLoading)" class="player-loader">
             <div class="player-lds-ring">
@@ -16,12 +17,12 @@
             </div>
         </div>
 
-        <div v-if="status === '404'" class="player-error-container">
+        <div v-else-if="status === '404'" class="player-error-container">
             <div class="player-info-icon"><i class="fas fa-ban"></i></div>
             <div class="player-error">{{ $t("Media asset does not exist or was removed from the vault") }}</div>
         </div>
 
-        <div v-if="status === 'none' && !albumLoading" class="player-error-container">
+        <div v-else-if="status === 'none' && !albumLoading" class="player-error-container">
             <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
             <div class="player-info">{{ $t("The album is empty") }}</div>
             <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
@@ -109,175 +110,151 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from "vue";
-import { defineComponent } from "vue";
-import PlayerTopBar from "./common/PlayerTopBar.vue";
-
-import { openFullscreen, closeFullscreen } from "@/utils/full-screen";
-import { useVModel } from "@/utils/v-model";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { isTouchDevice } from "@/utils/touch";
 import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
-import type { HelpTooltipType } from "@/utils/player-tooltip";
+import PlayerTopBar from "./common/PlayerTopBar.vue";
+import { useI18n } from "@/composables/use-i18n";
+import type { PlayerLoadStatus } from "@/utils/player";
+import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { stopPropagationEvent } from "@/utils/events";
 
-export default defineComponent({
-    name: "EmptyPlayer",
-    components: {
-        PlayerTopBar,
-        PlayerTooltip,
+// Translation
+const { $t } = useI18n();
+
+// Full screen model
+const fullscreen = defineModel<boolean>("fullscreen");
+
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: {
+        type: Number,
+        required: true,
     },
-    props: {
-        mid: Number,
-        status: String,
 
-        albumLoading: Boolean,
-
-        fullscreen: Boolean,
-
-        rTick: Number,
-
-        next: Object as PropType<MediaListItem | null>,
-        prev: Object as PropType<MediaListItem | null>,
-        inAlbum: Boolean,
-
-        pageNext: Boolean,
-        pagePrev: Boolean,
-
-        canWrite: Boolean,
-
-        min: Boolean,
+    /**
+     * Load status
+     */
+    status: {
+        type: String as PropType<PlayerLoadStatus>,
+        required: true,
     },
-    emits: ["go-next", "go-prev", "update:fullscreen", "delete"],
-    setup(props) {
-        return {
-            fullScreenState: useVModel(props, "fullscreen"),
-        };
+
+    /**
+     * Loading album?
+     */
+    albumLoading: Boolean,
+
+    /**
+     * Reload tick
+     */
+    rTick: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            helpTooltip: "" as HelpTooltipType,
 
-            expandedTitle: false,
-            expandedAlbum: false,
-        };
-    },
-    watch: {
-        rTick: function () {
-            this.expandedTitle = false;
-        },
-    },
-    mounted: function () {
-        // Load player preferences
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-    },
-    methods: {
-        enterTooltip: function (t: HelpTooltipType) {
-            if (isTouchDevice()) {
-                this.helpTooltip = "";
-                return;
-            }
-            this.helpTooltip = t;
-        },
+    /**
+     * Next element in album
+     */
+    next: Object as PropType<MediaListItem | null>,
 
-        leaveTooltip: function (t: string) {
-            if (t === this.helpTooltip) {
-                this.helpTooltip = "";
-            }
-        },
+    /**
+     * Previous element in album
+     */
+    prev: Object as PropType<MediaListItem | null>,
 
-        goNext: function () {
-            if (this.next || this.pageNext) {
-                this.$emit("go-next");
-            }
-        },
+    /**
+     * True if media is in album
+     */
+    inAlbum: Boolean,
 
-        goPrev: function () {
-            if (this.prev || this.pagePrev) {
-                this.$emit("go-prev");
-            }
-        },
+    /**
+     * Has next element i n page?
+     */
+    pageNext: Boolean,
 
-        mouseLeavePlayer: function () {
-            this.helpTooltip = "";
-        },
+    /**
+     * Has previous element in page?
+     */
+    pagePrev: Boolean,
 
-        leaveControls: function () {
-            this.helpTooltip = "";
-        },
-
-        toggleFullScreen: function () {
-            if (!this.fullscreen) {
-                openFullscreen();
-            } else {
-                closeFullscreen();
-            }
-            this.fullScreenState = !this.fullScreenState;
-        },
-        onExitFullScreen: function () {
-            if (!document.fullscreenElement) {
-                this.fullScreenState = false;
-            }
-        },
-
-        onKeyPress: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
-                return false;
-            }
-            let caught = true;
-            switch (event.key) {
-                case "F":
-                case "f":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else {
-                        this.toggleFullScreen();
-                    }
-                    break;
-                case "ArrowLeft":
-                    if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "PageUp":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "ArrowRight":
-                    if (this.next || this.pageNext) {
-                        this.goNext();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "PageDown":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.next || this.pageNext) {
-                        this.goNext();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "Delete":
-                    this.$emit("delete");
-                    break;
-                default:
-                    caught = false;
-            }
-
-            return caught;
-        },
-    },
+    /**
+     * Miniature mode
+     */
+    min: Boolean,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Go to the next media
+     */
+    (e: "go-next"): void;
+
+    /**
+     * Go to the previous media
+     */
+    (e: "go-prev"): void;
+
+    /**
+     * The user wants to delete the media
+     */
+    (e: "delete"): void;
+}>();
+
+// Player common features
+const { expandedTitle, expandedAlbum, helpTooltip, enterTooltip, leaveTooltip, clearTooltip, goNext, goPrev, toggleFullScreen } =
+    usePlayerCommon(props, emit, fullscreen);
+
+/**
+ * Event handler for 'mouseleave' in the player
+ */
+const mouseLeavePlayer = () => {
+    clearTooltip();
+};
+
+/**
+ * Event handler for 'mouseleave' in the controls
+ */
+const leaveControls = () => {
+    clearTooltip();
+};
+
+// Global keyboard handler
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+        return false;
+    }
+
+    let caught = true;
+
+    switch (event.key) {
+        case "ArrowLeft":
+            if (props.prev || props.pagePrev) {
+                goPrev();
+            } else {
+                caught = false;
+            }
+            break;
+
+        case "ArrowRight":
+            if (props.next || props.pageNext) {
+                goNext();
+            } else {
+                caught = false;
+            }
+            break;
+        default:
+            caught = false;
+    }
+
+    return caught;
+}, PLAYER_KEYBOARD_HANDLER_PRIORITY);
 </script>

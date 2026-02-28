@@ -520,8 +520,6 @@ export default defineComponent({
 
         this.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
 
-        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-
         this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
 
         this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
@@ -906,11 +904,6 @@ export default defineComponent({
                 closeFullscreen();
             }
             this.fullScreenState = !this.fullScreenState;
-        },
-        onExitFullScreen: function () {
-            if (!document.fullscreenElement) {
-                this.fullScreenState = false;
-            }
         },
 
         onMediaError: function () {

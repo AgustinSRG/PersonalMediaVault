@@ -719,8 +719,6 @@ export default defineComponent({
 
         this.timer = setInterval(this.tick.bind(this), 100);
 
-        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-
         this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_UPDATE, this.reloadSubtitles.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.themeUpdated.bind(this));
@@ -1230,11 +1228,6 @@ export default defineComponent({
                 closeFullscreen();
             }
             this.fullScreenState = !this.fullScreenState;
-        },
-        onExitFullScreen: function () {
-            if (!document.fullscreenElement) {
-                this.fullScreenState = false;
-            }
         },
 
         clickTimeline: function (e: Event) {
