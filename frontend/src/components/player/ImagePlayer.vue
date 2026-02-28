@@ -47,14 +47,7 @@
             ></ImageNotes>
         </div>
 
-        <div v-if="loading && !mediaError" class="player-loader">
-            <div class="player-lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-        </div>
+        <PlayerLoader v-if="loading && !mediaError"></PlayerLoader>
 
         <PlayerEncodingPending
             v-if="(!loading && !imageURL && imagePending) || mediaError"
@@ -234,6 +227,7 @@ import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_NEXT_PRE_FETCH } from "@/control/app-events";
 import type { HelpTooltipType } from "@/utils/player-tooltip";
 import PlayerControls from "./common/PlayerControls.vue";
+import PlayerLoader from "./common/PlayerLoader.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -282,6 +276,7 @@ export default defineComponent({
         PlayerRelatedMediaList,
         PlayerTooltip,
         PlayerControls,
+        PlayerLoader,
     },
     props: {
         mid: Number,

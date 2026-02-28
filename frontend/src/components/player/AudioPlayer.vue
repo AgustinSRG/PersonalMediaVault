@@ -47,14 +47,7 @@
 
         <PlayerPlayFeedback v-model:feedback="feedback"></PlayerPlayFeedback>
 
-        <div v-if="loading && !mediaError" class="player-loader">
-            <div class="player-lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-        </div>
+        <PlayerLoader v-if="loading && !mediaError"></PlayerLoader>
 
         <div
             v-if="pendingNextEnd"
@@ -341,6 +334,7 @@ import type { HelpTooltipType } from "@/utils/player-tooltip";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
+import PlayerLoader from "./common/PlayerLoader.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -395,6 +389,7 @@ export default defineComponent({
         PlayerTooltip,
         PlayerControls,
         PlayerPlayFeedback,
+        PlayerLoader,
     },
     props: {
         mid: Number,

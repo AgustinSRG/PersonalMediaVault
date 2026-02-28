@@ -8,14 +8,7 @@
         @dblclick="toggleFullScreen"
         @mouseleave="mouseLeavePlayer"
     >
-        <div v-if="status === 'loading' || (status === 'none' && albumLoading)" class="player-loader">
-            <div class="player-lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-        </div>
+        <PlayerLoader v-if="status === 'loading' || (status === 'none' && albumLoading)"></PlayerLoader>
 
         <div v-else-if="status === '404'" class="player-error-container">
             <div class="player-info-icon"><i class="fas fa-ban"></i></div>
@@ -75,6 +68,7 @@ import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
 import PlayerControls from "./common/PlayerControls.vue";
+import PlayerLoader from "./common/PlayerLoader.vue";
 import { useI18n } from "@/composables/use-i18n";
 import type { PlayerLoadStatus } from "@/utils/player";
 import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
