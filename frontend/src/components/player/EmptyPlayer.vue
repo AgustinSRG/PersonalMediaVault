@@ -28,64 +28,21 @@
             <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
         </div>
 
-        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls" @contextmenu="stopPropagationEvent">
-            <div class="player-controls-left">
-                <button
-                    v-if="!!next || !!prev || pagePrev || pageNext"
-                    :disabled="!prev && !pagePrev"
-                    type="button"
-                    :title="$t('Previous')"
-                    class="player-btn player-btn-action-prev"
-                    @click="goPrev"
-                    @mouseenter="enterTooltip('prev')"
-                    @mouseleave="leaveTooltip('prev')"
-                >
-                    <i class="fas fa-backward-step"></i>
-                </button>
-
-                <button disabled type="button" :title="$t('Play')" class="player-btn">
-                    <i class="fas fa-play"></i>
-                </button>
-
-                <button
-                    v-if="!!next || !!prev || pagePrev || pageNext"
-                    :disabled="!next && !pageNext"
-                    type="button"
-                    :title="$t('Next')"
-                    class="player-btn player-btn-action-next"
-                    @click="goNext"
-                    @mouseenter="enterTooltip('next')"
-                    @mouseleave="leaveTooltip('next')"
-                >
-                    <i class="fas fa-forward-step"></i>
-                </button>
-            </div>
-
-            <div class="player-controls-right">
-                <button
-                    v-if="!fullscreen"
-                    type="button"
-                    :title="$t('Full screen')"
-                    class="player-btn player-expand-btn"
-                    @click="toggleFullScreen"
-                    @mouseenter="enterTooltip('full-screen')"
-                    @mouseleave="leaveTooltip('full-screen')"
-                >
-                    <i class="fas fa-expand"></i>
-                </button>
-                <button
-                    v-if="fullscreen"
-                    type="button"
-                    :title="$t('Exit full screen')"
-                    class="player-btn player-expand-btn"
-                    @click="toggleFullScreen"
-                    @mouseenter="enterTooltip('full-screen-exit')"
-                    @mouseleave="leaveTooltip('full-screen-exit')"
-                >
-                    <i class="fas fa-compress"></i>
-                </button>
-            </div>
-        </div>
+        <PlayerControls
+            :type="'empty'"
+            :show-controls="true"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :fullscreen="fullscreen"
+            @leave="leaveControls"
+            @enter-tooltip="enterTooltip"
+            @leave-tooltip="leaveTooltip"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            @toggle-full-screen="toggleFullScreen"
+        ></PlayerControls>
 
         <PlayerTooltip
             v-if="helpTooltip"
@@ -117,11 +74,11 @@ import { AuthController } from "@/control/auth";
 import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
+import PlayerControls from "./common/PlayerControls.vue";
 import { useI18n } from "@/composables/use-i18n";
 import type { PlayerLoadStatus } from "@/utils/player";
 import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { stopPropagationEvent } from "@/utils/events";
 
 // Translation
 const { $t } = useI18n();

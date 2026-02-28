@@ -136,169 +136,52 @@
             @update-desc="refreshDescription"
         ></DescriptionWidget>
 
-        <div
-            class="player-controls"
-            :class="{ hidden: !showControls }"
+        <PlayerControls
+            :type="'audio'"
+            :show-controls="showControls"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :fullscreen="fullscreen"
+            :playing="playing"
+            :has-description="hasDescription"
+            :has-attachments="hasAttachments"
+            :has-related-media="hasRelatedMedia"
             @click="clickControls"
-            @dblclick="stopPropagationEvent"
-            @mousedown="stopPropagationEvent"
-            @touchstart="stopPropagationEvent"
-            @mouseenter="enterControls"
-            @mouseleave="leaveControls"
-            @contextmenu="stopPropagationEvent"
+            @enter="enterControls"
+            @leave="leaveControls"
+            @enter-tooltip="enterTooltip"
+            @leave-tooltip="leaveTooltip"
+            @go-prev="goPrev"
+            @play="togglePlay"
+            @pause="togglePlay"
+            @go-next="goNext"
+            @open-description="openDescription"
+            @open-attachments="showAttachments"
+            @open-related-media="showRelatedMedia"
+            @open-albums="manageAlbums"
+            @open-config="showConfig"
+            @toggle-full-screen="toggleFullScreen"
         >
-            <div class="player-controls-left">
-                <button
-                    v-if="!!next || !!prev || pagePrev || pageNext"
-                    :disabled="!prev && !pagePrev"
-                    type="button"
-                    :title="$t('Previous')"
-                    class="player-btn player-btn-action-prev"
-                    @click="goPrev"
-                    @mouseenter="enterTooltip('prev')"
-                    @mouseleave="leaveTooltip('prev')"
-                >
-                    <i class="fas fa-backward-step"></i>
-                </button>
+            <VolumeControl
+                ref="volumeControl"
+                v-model:muted="muted"
+                v-model:volume="volume"
+                v-model:expanded="volumeShown"
+                :min="min"
+                :width="min ? 50 : 80"
+                @update:volume="onUserVolumeUpdated"
+                @update:muted="onUserMutedUpdated"
+                @enter="enterTooltip('volume')"
+                @leave="leaveTooltip('volume')"
+            ></VolumeControl>
 
-                <button
-                    v-if="!playing"
-                    type="button"
-                    :title="$t('Play')"
-                    class="player-btn player-play-btn"
-                    @click="togglePlay"
-                    @mouseenter="enterTooltip('play')"
-                    @mouseleave="leaveTooltip('play')"
-                >
-                    <i class="fas fa-play"></i>
-                </button>
-                <button
-                    v-if="playing"
-                    type="button"
-                    :title="$t('Pause')"
-                    class="player-btn player-play-btn"
-                    @click="togglePlay"
-                    @mouseenter="enterTooltip('pause')"
-                    @mouseleave="leaveTooltip('pause')"
-                >
-                    <i class="fas fa-pause"></i>
-                </button>
-
-                <button
-                    v-if="!!next || !!prev || pagePrev || pageNext"
-                    :disabled="!next && !pageNext"
-                    type="button"
-                    :title="$t('Next')"
-                    class="player-btn player-btn-action-next"
-                    @click="goNext"
-                    @mouseenter="enterTooltip('next')"
-                    @mouseleave="leaveTooltip('next')"
-                >
-                    <i class="fas fa-forward-step"></i>
-                </button>
-
-                <VolumeControl
-                    ref="volumeControl"
-                    v-model:muted="muted"
-                    v-model:volume="volume"
-                    v-model:expanded="volumeShown"
-                    :min="min"
-                    :width="min ? 50 : 80"
-                    @update:volume="onUserVolumeUpdated"
-                    @update:muted="onUserMutedUpdated"
-                    @enter="enterTooltip('volume')"
-                    @leave="leaveTooltip('volume')"
-                ></VolumeControl>
-
-                <div v-if="!min" class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }">
-                    <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
-                    <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{ currentTimeSliceName }}</span>
-                </div>
+            <div v-if="!min" class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }">
+                <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
+                <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{ currentTimeSliceName }}</span>
             </div>
-
-            <div class="player-controls-right">
-                <button
-                    v-if="hasDescription"
-                    type="button"
-                    :title="$t('Description')"
-                    class="player-btn player-btn-hide-mobile"
-                    @click="openDescription"
-                    @mouseenter="enterTooltip('desc')"
-                    @mouseleave="leaveTooltip('desc')"
-                >
-                    <i class="fas fa-file-lines"></i>
-                </button>
-
-                <button
-                    v-if="hasAttachments"
-                    type="button"
-                    :title="$t('Attachments')"
-                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
-                    @click="showAttachments"
-                    @mouseenter="enterTooltip('attachments')"
-                    @mouseleave="leaveTooltip('attachments')"
-                >
-                    <i class="fas fa-paperclip"></i>
-                </button>
-
-                <button
-                    v-if="hasRelatedMedia"
-                    type="button"
-                    :title="$t('Related media')"
-                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
-                    @click="showRelatedMedia"
-                    @mouseenter="enterTooltip('related-media')"
-                    @mouseleave="leaveTooltip('related-media')"
-                >
-                    <i class="fas fa-photo-film"></i>
-                </button>
-
-                <button
-                    type="button"
-                    :title="$t('Manage albums')"
-                    class="player-btn"
-                    @click="manageAlbums"
-                    @mouseenter="enterTooltip('albums')"
-                    @mouseleave="leaveTooltip('albums')"
-                >
-                    <i class="fas fa-list-ol"></i>
-                </button>
-
-                <button
-                    type="button"
-                    :title="$t('Player Configuration')"
-                    class="player-btn player-settings-no-trap"
-                    @click="showConfig"
-                    @mouseenter="enterTooltip('config')"
-                    @mouseleave="leaveTooltip('config')"
-                >
-                    <i class="fas fa-cog"></i>
-                </button>
-
-                <button
-                    v-if="!fullscreen"
-                    type="button"
-                    :title="$t('Full screen')"
-                    class="player-btn player-expand-btn"
-                    @click="toggleFullScreen"
-                    @mouseenter="enterTooltip('full-screen')"
-                    @mouseleave="leaveTooltip('full-screen')"
-                >
-                    <i class="fas fa-expand"></i>
-                </button>
-                <button
-                    v-if="fullscreen"
-                    type="button"
-                    :title="$t('Exit full screen')"
-                    class="player-btn player-expand-btn"
-                    @click="toggleFullScreen"
-                    @mouseenter="enterTooltip('full-screen-exit')"
-                    @mouseleave="leaveTooltip('full-screen-exit')"
-                >
-                    <i class="fas fa-compress"></i>
-                </button>
-            </div>
-        </div>
+        </PlayerControls>
 
         <PlayerTooltip
             v-if="helpTooltip"
@@ -467,6 +350,7 @@ import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE, EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
 import type { HelpTooltipType } from "@/utils/player-tooltip";
+import PlayerControls from "./common/PlayerControls.vue";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -519,6 +403,7 @@ export default defineComponent({
         PlayerSubtitles,
         PlayerRelatedMediaList,
         PlayerTooltip,
+        PlayerControls,
     },
     props: {
         mid: Number,
@@ -789,20 +674,13 @@ export default defineComponent({
             this.displayDescriptionStatus = true;
         },
 
-        showAttachments: function (e?: Event) {
-            if (e) {
-                e.stopPropagation();
-            }
+        showAttachments: function () {
             this.displayAttachments = !this.displayAttachments;
             this.displayRelatedMedia = false;
             this.displayConfig = false;
         },
 
-        showRelatedMedia: function (e?: Event) {
-            if (e) {
-                e.stopPropagation();
-            }
-
+        showRelatedMedia: function () {
             this.displayRelatedMedia = !this.displayRelatedMedia;
             this.displayAttachments = false;
             this.displayConfig = false;
@@ -822,13 +700,10 @@ export default defineComponent({
             }
         },
 
-        showConfig: function (e?: Event) {
+        showConfig: function () {
             this.displayConfig = !this.displayConfig;
             this.displayAttachments = false;
             this.displayRelatedMedia = false;
-            if (e) {
-                e.stopPropagation();
-            }
         },
 
         clickControls: function (e?: Event) {
