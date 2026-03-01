@@ -31,7 +31,6 @@
             :page-prev="hasPagePrev"
             :page-next="hasPageNext"
             :in-album="isInAlbum"
-            :can-write="canWrite"
             :min="minPlayer"
             @go-next="goNext"
             @go-prev="goPrev"

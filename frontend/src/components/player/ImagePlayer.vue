@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="image-player player-settings-no-trap"
         :class="{
             'player-min': min,
@@ -19,7 +20,7 @@
         <div class="image-prefetch-container">
             <img v-if="prefetchURL" decoding="async" :src="prefetchURL" />
         </div>
-        <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
+        <div ref="imageScroller" class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScrollWithMouse">
             <img
                 v-if="imageURL"
                 :key="rTick"
@@ -61,14 +62,14 @@
 
         <TagsEditHelper
             v-if="displayTagList"
-            v-model:display="displayTagListStatus"
+            v-model:display="displayTagList"
             :context-open="contextMenuShown"
             @clicked="clickControls"
         ></TagsEditHelper>
 
         <DescriptionWidget
             v-if="displayDescription"
-            v-model:display="displayDescriptionStatus"
+            v-model:display="displayDescription"
             :context-open="contextMenuShown"
             :title="title"
             @clicked="clickControls"
@@ -106,7 +107,7 @@
                 v-model:scale="scale"
                 v-model:expanded="scaleShown"
                 :min="min"
-                :width="min ? 70 : 100"
+                :width="min ? SCALE_CONTROL_WIDTH_MIN : SCALE_CONTROL_WIDTH"
                 @update:scale="onUserScaleUpdated"
                 @update:fit="onUserFitUpdated"
                 @enter="enterTooltip('scale')"
@@ -124,7 +125,7 @@
             :page-prev="pagePrev"
             :fit="fit"
             :scale="scale"
-            :scale-range-percent="scaleRangePercent"
+            :scale-range-percent="SCALE_RANGE_PERCENT"
         ></PlayerTooltip>
 
         <PlayerConfig
@@ -177,7 +178,7 @@
             ref="contextMenu"
             v-model:shown="contextMenuShown"
             v-model:fit="fit"
-            v-model:controls="showControlsState"
+            v-model:controls="showControls"
             v-model:notes-edit="notesEditMode"
             type="image"
             :x="contextMenuX"
@@ -193,7 +194,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     getAutoNextTime,
     getImageBackgroundStyle,
@@ -207,27 +208,31 @@ import {
     setUserSelectedResolutionImage,
 } from "@/control/player-preferences";
 import type { PropType } from "vue";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import ScaleControl from "./common/ScaleControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
 import ImageNotes from "./common/ImageNotes.vue";
-import { openFullscreen, closeFullscreen } from "@/utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { useVModel } from "@/utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { AlbumsController } from "@/control/albums";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/api/models";
-import { MediaController } from "@/control/media";
-import { getUniqueStringId } from "@/utils/unique-id";
-import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_NEXT_PRE_FETCH } from "@/control/app-events";
-import type { HelpTooltipType } from "@/utils/player-tooltip";
 import PlayerControls from "./common/PlayerControls.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
+import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
+import { useInterval } from "@/composables/use-interval";
+import { useTimeout } from "@/composables/use-timeout";
+import { usePlayerMediaSession } from "@/composables/use-player-media-session";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent } from "@/utils/position-event";
+import { onDocumentEvent } from "@/composables/on-document-event";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -257,932 +262,1061 @@ const PlayerAttachmentsList = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerAttachmentsList.vue"),
 });
 
+// True if it is a touch device
+const IS_TOUCH_DEVICE = isTouchDevice();
+
+// Scale control width (px)
+const SCALE_CONTROL_WIDTH = 100;
+
+// Scale control width when miniature mode (px)
+const SCALE_CONTROL_WIDTH_MIN = 70;
+
+// Scale range
 const SCALE_RANGE = 2;
+
+// Scale range (%)
+const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
+
+// Scale step
 const SCALE_STEP = 0.1 / SCALE_RANGE;
+
+// Scale step (small increments)
 const SCALE_STEP_MIN = 0.01 / SCALE_RANGE;
 
-export default defineComponent({
-    name: "ImagePlayer",
-    components: {
-        ScaleControl,
-        PlayerConfig,
-        PlayerTopBar,
-        PlayerContextMenu,
-        PlayerEncodingPending,
-        ImageNotes,
-        TagsEditHelper,
-        DescriptionWidget,
-        PlayerAttachmentsList,
-        PlayerRelatedMediaList,
-        PlayerTooltip,
-        PlayerControls,
-        PlayerLoader,
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Ref to the image scroller element
+const imageScroller = useTemplateRef("imageScroller");
+
+// Ref to the context menu
+const contextMenu = useTemplateRef("contextMenu");
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Full screen model
+const fullscreen = defineModel<boolean>("fullscreen");
+
+// Show controls?
+const showControls = defineModel<boolean>("showControls");
+
+// Display tag list widget?
+const displayTagList = defineModel<boolean>("displayTagList");
+
+// Display description widget
+const displayDescription = defineModel<boolean>("displayDescription");
+
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: {
+        type: Number,
+        required: true,
     },
-    props: {
-        mid: Number,
-        metadata: Object as PropType<MediaData>,
-        rTick: Number,
 
-        showControls: Boolean,
-
-        fullscreen: Boolean,
-
-        next: Object as PropType<MediaListItem | null>,
-        prev: Object as PropType<MediaListItem | null>,
-        inAlbum: Boolean,
-
-        pageNext: Boolean,
-        pagePrev: Boolean,
-
-        canWrite: Boolean,
-
-        min: Boolean,
-
-        displayTagList: Boolean,
-        displayDescription: Boolean,
+    /**
+     * Media metadata
+     */
+    metadata: {
+        type: Object as PropType<MediaData>,
+        required: true,
     },
-    emits: [
-        "go-next",
-        "go-prev",
-        "update:fullscreen",
-        "update:showControls",
-        "albums-open",
-        "stats-open",
-        "delete",
-        "update:displayTagList",
-        "update:displayDescription",
-    ],
-    setup(props) {
-        return {
-            scaleRangePercent: SCALE_RANGE * 100,
-            timer: null as ReturnType<typeof setInterval> | null,
-            autoNextTimer: null as ReturnType<typeof setInterval> | null,
-            mediaSessionId: getUniqueStringId(),
-            fullScreenState: useVModel(props, "fullscreen"),
-            showControlsState: useVModel(props, "showControls"),
-            displayTagListStatus: useVModel(props, "displayTagList"),
-            displayDescriptionStatus: useVModel(props, "displayDescription"),
-        };
+
+    /**
+     * Reload tick
+     */
+    rTick: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            loading: true,
 
-            title: "",
-
-            imageURL: "",
-            imagePending: false,
-            imagePendingTask: 0,
-            imageEncodeError: "",
-
-            currentResolution: -1,
-            width: 0,
-            height: 0,
-
-            displayConfig: false,
-
-            imageTop: "0",
-            imageLeft: "0",
-            imageWidth: "auto",
-            imageHeight: "auto",
-
-            lastControlsInteraction: Date.now(),
-            mouseInControls: false,
-
-            scale: 0,
-            fit: true,
-            scaleShown: isTouchDevice(),
-
-            background: "default",
-
-            internalTick: 0,
-
-            helpTooltip: "" as HelpTooltipType,
-
-            expandedTitle: false,
-            expandedAlbum: false,
-
-            contextMenuX: 0,
-            contextMenuY: 0,
-            contextMenuShown: false,
-
-            scrollGrabbed: false,
-            scrollGrabX: 0,
-            scrollGrabY: 0,
-            scrollGrabTop: 0,
-            scrollGrabLeft: 0,
-
-            cursorShown: false,
-
-            prefetchURL: "",
-
-            notesEditMode: false,
-            notesVisible: getImageNotesVisible(),
-
-            hasDescription: false,
-
-            hasAttachments: false,
-            displayAttachments: false,
-
-            hasRelatedMedia: false,
-            displayRelatedMedia: false,
-
-            mediaError: false,
-        };
-    },
-    watch: {
-        rTick: function () {
-            this.internalTick++;
-            this.expandedTitle = false;
-            this.initializeImage();
-        },
-        imageURL: function () {
-            if (this.imageURL) {
-                this.loading = true;
-            }
-        },
-        next: function () {
-            this.setupAutoNextTimer();
-        },
-        pageNext: function () {
-            this.setupAutoNextTimer();
-        },
-    },
-    mounted: function () {
-        // Load player preferences
-        this.fit = getImageFit();
-        this.scale = getImageScale();
-        this.background = getImageBackgroundStyle();
-
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-
-        this.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
-
-        this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_NEXT_PRE_FETCH, this.onAlbumPrefetch.bind(this));
-
-        this.initializeImage();
-
-        if (window.navigator && window.navigator.mediaSession) {
-            MediaController.MediaSessionId = this.mediaSessionId;
-            clearMediaSessionActionHandlers();
-
-            addMediaSessionActionHandler(["nexttrack", "previoustrack"], this.handleMediaSessionEvent.bind(this));
-
-            navigator.mediaSession.playbackState = "none";
-        }
-    },
-    beforeUnmount: function () {
-        this.imageURL = "";
-        clearInterval(this.timer);
-
-        if (this.autoNextTimer) {
-            clearTimeout(this.autoNextTimer);
-            this.autoNextTimer = null;
-        }
-
-        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            clearMediaSessionActionHandlers();
-            navigator.mediaSession.playbackState = "none";
-            MediaController.MediaSessionId = "";
-        }
-    },
-    methods: {
-        onContextMenu: function (e: MouseEvent) {
-            this.contextMenuX = e.pageX;
-            this.contextMenuY = e.pageY;
-            this.contextMenuShown = true;
-            this.$refs.contextMenu?.show();
-            e.preventDefault();
-        },
-
-        manageAlbums: function () {
-            this.$emit("albums-open");
-        },
-
-        openStats: function () {
-            this.$emit("stats-open");
-        },
-
-        openTags: function () {
-            this.displayTagListStatus = true;
-        },
-
-        openDescription: function () {
-            if (!this.hasDescription && !this.canWrite) {
-                return;
-            }
-            this.displayDescriptionStatus = true;
-        },
-
-        showAttachments: function () {
-            this.displayAttachments = !this.displayAttachments;
-            this.displayRelatedMedia = false;
-            this.displayConfig = false;
-        },
-
-        showRelatedMedia: function () {
-            this.displayRelatedMedia = !this.displayRelatedMedia;
-            this.displayAttachments = false;
-            this.displayConfig = false;
-        },
-
-        grabScroll: function (e: TouchEvent | MouseEvent) {
-            if ("button" in e && e.button !== 0) {
-                return;
-            }
-
-            if (e.target) {
-                const target = e.target as HTMLElement;
-                if (target.classList && target.classList.contains("image-scroller")) {
-                    return;
-                }
-            }
-
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
-                this.displayConfig = false;
-                this.$refs.contextMenu?.hide();
-                this.displayAttachments = false;
-                this.displayRelatedMedia = false;
-                e.stopPropagation();
-                return;
-            }
-
-            const scroller = this.$el.querySelector(".image-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            this.scrollGrabTop = scroller.scrollTop;
-            this.scrollGrabLeft = scroller.scrollLeft;
-
-            this.scrollGrabbed = true;
-            if ("touches" in e && e.touches.length > 0) {
-                this.scrollGrabX = e.touches[0].pageX;
-                this.scrollGrabY = e.touches[0].pageY;
-            } else if ("pageX" in e) {
-                this.scrollGrabX = e.pageX;
-                this.scrollGrabY = e.pageY;
-            }
-        },
-
-        moveScrollByMouse: function (x: number, y: number) {
-            const scroller = this.$el.querySelector(".image-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            const rect = scroller.getBoundingClientRect();
-
-            const maxScrollLeft = scroller.scrollWidth - rect.width;
-            const maxScrollTop = scroller.scrollHeight - rect.height;
-
-            const diffX = x - this.scrollGrabX;
-            const diffY = y - this.scrollGrabY;
-
-            scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
-            scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
-        },
-
-        dropScroll: function (e: MouseEvent | TouchEvent) {
-            if ("button" in e && e.button !== 0) {
-                return;
-            }
-
-            if (!this.scrollGrabbed) {
-                return;
-            }
-            this.scrollGrabbed = false;
-
-            if ("touches" in e && e.touches.length > 0) {
-                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else if ("pageX" in e) {
-                this.moveScrollByMouse(e.pageX, e.pageY);
-            }
-        },
-
-        moveScroll: function (e: MouseEvent | TouchEvent) {
-            if (!this.scrollGrabbed) {
-                return;
-            }
-
-            if ("touches" in e && e.touches.length > 0) {
-                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else if ("pageX" in e) {
-                this.moveScrollByMouse(e.pageX, e.pageY);
-            }
-        },
-
-        centerScroll: function () {
-            const scroller = this.$el.querySelector(".image-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
-            scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
-        },
-
-        computeImageDimensions() {
-            if (!this.imageURL) {
-                return;
-            }
-
-            const scroller = this.$el.querySelector(".image-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            const scrollerDimensions = scroller.getBoundingClientRect();
-
-            const fitDimensions = {
-                width: this.width,
-                height: this.height,
-                fitWidth: true,
-            };
-
-            if (scrollerDimensions.width > scrollerDimensions.height) {
-                fitDimensions.fitWidth = true;
-                fitDimensions.height = scrollerDimensions.height;
-                fitDimensions.width = (scrollerDimensions.height * this.width) / this.height;
-
-                if (fitDimensions.width > scrollerDimensions.width) {
-                    fitDimensions.fitWidth = false;
-                    fitDimensions.width = scrollerDimensions.width;
-                    fitDimensions.height = (scrollerDimensions.width * this.height) / this.width;
-                }
-            } else {
-                fitDimensions.fitWidth = false;
-                fitDimensions.width = scrollerDimensions.width;
-                fitDimensions.height = (scrollerDimensions.width * this.height) / this.width;
-
-                if (fitDimensions.height > scrollerDimensions.height) {
-                    fitDimensions.fitWidth = true;
-                    fitDimensions.height = scrollerDimensions.height;
-                    fitDimensions.width = (scrollerDimensions.height * this.width) / this.height;
-                }
-            }
-
-            if (this.fit) {
-                const top = Math.max(0, (scrollerDimensions.height - fitDimensions.height) / 2);
-                const left = Math.max(0, (scrollerDimensions.width - fitDimensions.width) / 2);
-
-                this.imageTop = Math.floor(top) + "px";
-                this.imageLeft = Math.floor(left) + "px";
-                this.imageWidth = Math.floor(fitDimensions.width) + "px";
-                this.imageHeight = Math.floor(fitDimensions.height) + "px";
-            } else {
-                let width: number;
-                let height: number;
-
-                if (fitDimensions.fitWidth) {
-                    width = scrollerDimensions.width * (0.5 + this.scale * SCALE_RANGE);
-                    height = (width * this.height) / this.width;
-                } else {
-                    height = scrollerDimensions.height * (0.5 + this.scale * SCALE_RANGE);
-                    width = (height * this.width) / this.height;
-                }
-
-                const top = Math.max(0, (scrollerDimensions.height - height) / 2);
-                const left = Math.max(0, (scrollerDimensions.width - width) / 2);
-
-                this.imageTop = Math.floor(top) + "px";
-                this.imageLeft = Math.floor(left) + "px";
-                this.imageWidth = Math.floor(width) + "px";
-                this.imageHeight = Math.floor(height) + "px";
-            }
-        },
-
-        enterTooltip: function (t: HelpTooltipType) {
-            if (isTouchDevice()) {
-                this.helpTooltip = "";
-                return;
-            }
-            this.helpTooltip = t;
-        },
-
-        leaveTooltip: function (t: string) {
-            if (t === this.helpTooltip) {
-                this.helpTooltip = "";
-            }
-        },
-
-        showConfig: function () {
-            this.displayConfig = !this.displayConfig;
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-        },
-
-        clickControls: function (e?: Event) {
-            this.displayConfig = false;
-            this.$refs.contextMenu?.hide();
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-            if (e) {
-                e.stopPropagation();
-            }
-        },
-
-        goNext: function () {
-            if (this.next || this.pageNext) {
-                this.$emit("go-next");
-            }
-        },
-
-        goPrev: function () {
-            if (this.prev || this.pagePrev) {
-                this.$emit("go-prev");
-            }
-        },
-
-        onUserScaleUpdated() {
-            setImageScale(this.scale);
-            this.computeImageDimensions();
-            nextTick(this.centerScroll.bind(this));
-        },
-
-        changeScale: function (s: number) {
-            this.scale = s;
-            this.onUserScaleUpdated();
-        },
-
-        onUserFitUpdated() {
-            setImageFit(this.fit);
-            this.computeImageDimensions();
-        },
-
-        toggleFit: function () {
-            this.fit = !this.fit;
-            this.onUserFitUpdated();
-        },
-
-        onBackgroundChanged() {
-            setImageBackgroundStyle(this.background);
-        },
-
-        /* Player events */
-
-        onImageLoaded: function () {
-            this.loading = false;
-        },
-
-        playerMouseMove: function () {
-            this.interactWithControls();
-        },
-        mouseLeavePlayer: function () {
-            this.helpTooltip = "";
-        },
-
-        tick() {
-            this.computeImageDimensions();
-            if (!this.mouseInControls && this.helpTooltip && Date.now() - this.lastControlsInteraction > 2000) {
-                this.helpTooltip = "";
-            }
-            if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
-                this.scaleShown = isTouchDevice();
-            }
-            if (!this.mouseInControls && this.cursorShown && Date.now() - this.lastControlsInteraction > 2000) {
-                this.cursorShown = false;
-            }
-            if (this.helpTooltip && !this.showControls) {
-                this.helpTooltip = "";
-            }
-        },
-
-        interactWithControls() {
-            this.lastControlsInteraction = Date.now();
-            this.cursorShown = true;
-        },
-
-        enterControls: function () {
-            this.mouseInControls = true;
-        },
-
-        leaveControls: function () {
-            this.mouseInControls = false;
-            this.helpTooltip = "";
-            this.scaleShown = isTouchDevice();
-        },
-
-        clickPlayer: function () {
-            if (this.displayConfig) {
-                this.displayConfig = false;
-            }
-            if (this.displayAttachments) {
-                this.displayAttachments = false;
-            }
-            if (this.displayRelatedMedia) {
-                this.displayRelatedMedia = false;
-            }
-            this.interactWithControls();
-        },
-
-        toggleFullScreen: function () {
-            if (!this.fullscreen) {
-                openFullscreen();
-            } else {
-                closeFullscreen();
-            }
-            this.fullScreenState = !this.fullScreenState;
-        },
-
-        onMediaError: function () {
-            if (!AuthController.RefreshAuthStatus()) {
-                this.mediaError = true;
-                this.loading = false;
-                AuthController.CheckAuthStatusSilent();
-            }
-        },
-
-        incrementImageScroll: function (a: number | string): boolean {
-            if (this.fit) {
-                return false;
-            }
-
-            const el = this.$el.querySelector(".image-scroller");
-
-            if (!el) {
-                return false;
-            }
-
-            const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
-
-            if (maxScroll <= 0) {
-                return false;
-            }
-
-            if (typeof a === "number") {
-                el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
-            } else if (a === "home") {
-                el.scrollTop = 0;
-            } else if (a === "end") {
-                el.scrollTop = maxScroll;
-            }
-
-            return true;
-        },
-
-        tryHorizontalScroll: function (a: number | string): boolean {
-            if (this.fit) {
-                return false;
-            }
-            const el = this.$el.querySelector(".image-scroller");
-
-            if (!el) {
-                return false;
-            }
-
-            const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
-
-            if (maxScroll <= 0) {
-                return false;
-            }
-
-            if (typeof a === "number") {
-                el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
-            } else if (a === "home") {
-                el.scrollLeft = 0;
-            } else if (a === "end") {
-                el.scrollLeft = maxScroll;
-            }
-
-            return true;
-        },
-
-        onKeyPress: function (event: KeyboardEvent) {
-            if (
-                AuthController.Locked ||
-                !AppStatus.IsPlayerVisible() ||
-                !event.key ||
-                (event.ctrlKey && event.key !== "+" && event.key !== "-")
-            ) {
-                return false;
-            }
-            let caught = true;
-            const shifting = event.shiftKey;
-            switch (event.key) {
-                case "A":
-                case "a":
-                    this.manageAlbums();
-                    break;
-                case "i":
-                case "I":
-                    this.openDescription();
-                    break;
-                case "t":
-                case "T":
-                    this.openTags();
-                    break;
-                case "S":
-                case "s":
-                    this.showConfig();
-                    break;
-                case "ArrowUp":
-                    this.incrementImageScroll(-40);
-                    break;
-                case "ArrowDown":
-                    this.incrementImageScroll(40);
-                    break;
-                case "ArrowLeft":
-                    if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
-                        if (this.prev || this.pagePrev) {
-                            this.goPrev();
-                        } else {
-                            caught = false;
-                        }
-                    }
-                    break;
-                case "PageUp":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "ArrowRight":
-                    if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
-                        if (this.next || this.pageNext) {
-                            this.goNext();
-                        } else {
-                            caught = false;
-                        }
-                    }
-                    break;
-                case "PageDown":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.next || this.pageNext) {
-                        this.goNext();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "Home":
-                    if (event.altKey) {
-                        caught = false;
-                    } else if (shifting) {
-                        if (!this.tryHorizontalScroll("home")) {
-                            caught = false;
-                        }
-                    } else {
-                        if (!this.incrementImageScroll("home")) {
-                            caught = false;
-                        }
-                    }
-                    break;
-                case "End":
-                    if (event.altKey) {
-                        caught = false;
-                    } else if (shifting) {
-                        if (!this.tryHorizontalScroll("end")) {
-                            caught = false;
-                        }
-                    } else {
-                        if (!this.incrementImageScroll("end")) {
-                            caught = false;
-                        }
-                    }
-                    break;
-                case " ":
-                case "K":
-                case "k":
-                case "Enter":
-                    this.toggleFit();
-                    this.scaleShown = true;
-                    this.helpTooltip = "scale";
-                    break;
-                case "+":
-                    this.changeScale(Math.min(1, this.scale + (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
-                    this.scaleShown = true;
-                    this.helpTooltip = "scale";
-                    this.fit = false;
-                    this.onUserFitUpdated();
-                    break;
-                case "-":
-                    this.changeScale(Math.max(0, this.scale - (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
-                    this.scaleShown = true;
-                    this.helpTooltip = "scale";
-                    this.fit = false;
-                    this.onUserFitUpdated();
-                    break;
-                case "F":
-                case "f":
-                    if (event.altKey || shifting) {
-                        caught = false;
-                    } else {
-                        this.toggleFullScreen();
-                    }
-                    break;
-                case "C":
-                case "c":
-                    this.showControlsState = !this.showControlsState;
-                    break;
-                case "n":
-                case "N":
-                    if (this.canWrite) {
-                        this.notesEditMode = !this.notesEditMode;
-                    }
-                    break;
-                case "Delete":
-                    this.$emit("delete");
-                    break;
-                default:
-                    caught = false;
-            }
-
-            if (caught) {
-                this.interactWithControls();
-            }
-
-            return caught;
-        },
-
-        initializeImage() {
-            if (!this.metadata) {
-                return;
-            }
-            this.hasDescription = !!this.metadata.description_url;
-            this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
-            this.hasRelatedMedia = this.metadata.related && this.metadata.related.length > 0;
-            this.loading = true;
-            this.currentResolution = getUserSelectedResolutionImage(this.metadata);
-            this.setImageURL();
-        },
-
-        onResolutionUpdated: function () {
-            setUserSelectedResolutionImage(this.metadata, this.currentResolution);
-            this.setImageURL();
-        },
-
-        setImageURL() {
-            if (this.autoNextTimer) {
-                clearTimeout(this.autoNextTimer);
-                this.autoNextTimer = null;
-            }
-
-            this.mediaError = false;
-
-            if (!this.metadata) {
-                this.imageURL = "";
-                this.title = "";
-                this.loading = false;
-                return;
-            }
-
-            this.title = this.metadata.title;
-
-            if (this.currentResolution < 0) {
-                if (this.metadata.encoded) {
-                    this.imageURL = getAssetURL(this.metadata.url);
-                    this.imagePending = false;
-                    this.imagePendingTask = 0;
-                    this.imageEncodeError = "";
-                    this.width = this.metadata.width;
-                    this.height = this.metadata.height;
-                    this.setupAutoNextTimer();
-                } else {
-                    this.imageURL = "";
-                    this.imagePending = true;
-                    this.imagePendingTask = this.metadata.task;
-                    this.imageEncodeError = this.metadata.error || "";
-                    this.loading = false;
-                }
-            } else {
-                if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
-                    const res = this.metadata.resolutions[this.currentResolution];
-                    if (res.ready) {
-                        this.imageURL = getAssetURL(res.url);
-                        this.imagePending = false;
-                        this.imagePendingTask = 0;
-                        this.imageEncodeError = "";
-                        this.width = this.metadata.width;
-                        this.height = this.metadata.height;
-                        this.setupAutoNextTimer();
-                    } else {
-                        this.imageURL = "";
-                        this.imagePending = true;
-                        this.imagePendingTask = res.task;
-                        this.imageEncodeError = res.error || "";
-                        this.loading = false;
-                    }
-                } else {
-                    this.imageURL = "";
-                    this.imagePending = true;
-                    this.imagePendingTask = 0;
-                    this.imageEncodeError = "";
-                    this.loading = false;
-                }
-            }
-
-            this.computeImageDimensions();
-            this.incrementImageScroll("home");
-            this.tryHorizontalScroll("home");
-        },
-
-        setupAutoNextTimer: function () {
-            if (this.autoNextTimer) {
-                clearTimeout(this.autoNextTimer);
-                this.autoNextTimer = null;
-            }
-            const timerS = getAutoNextTime();
-
-            if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
-                return;
-            }
-
-            if (!this.next && !this.pageNext) {
-                return;
-            }
-
-            const ms = timerS * 1000;
-
-            this.autoNextTimer = setTimeout(() => {
-                this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle || this.displayAttachments || this.displayRelatedMedia) {
-                    this.setupAutoNextTimer();
-                } else {
-                    this.goNext();
-                }
-            }, ms);
-        },
-
-        onMouseWheel: function (e: WheelEvent) {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.deltaY > 0) {
-                    this.changeScale(Math.max(0, this.scale - SCALE_STEP));
-                    this.scaleShown = true;
-                    this.helpTooltip = "scale";
-                    this.fit = false;
-                    this.onUserFitUpdated();
-                } else {
-                    this.changeScale(Math.min(1, this.scale + SCALE_STEP));
-                    this.scaleShown = true;
-                    this.helpTooltip = "scale";
-                    this.fit = false;
-                    this.onUserFitUpdated();
-                }
-            }
-        },
-
-        onAlbumPrefetch: function () {
-            if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
-                if (this.currentResolution < 0) {
-                    if (AlbumsController.NextMediaData.encoded) {
-                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.url);
-                    } else {
-                        this.prefetchURL = "";
-                    }
-                } else {
-                    if (
-                        AlbumsController.NextMediaData.resolutions[this.currentResolution] &&
-                        AlbumsController.NextMediaData.resolutions[this.currentResolution].ready
-                    ) {
-                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
-                    } else {
-                        this.prefetchURL = "";
-                    }
-                }
-            } else {
-                this.prefetchURL = "";
-            }
-        },
-
-        handleMediaSessionEvent: function (event: MediaSessionActionDetails) {
-            if (!event || !event.action) {
-                return;
-            }
-            switch (event.action) {
-                case "nexttrack":
-                    if (this.next || this.pageNext) {
-                        this.goNext();
-                    }
-                    break;
-                case "previoustrack":
-                    if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    }
-                    break;
-            }
-        },
-
-        imageNotesVisibleUpdated: function (v: boolean) {
-            this.notesVisible = v;
-        },
-
-        refreshDescription: function () {
-            this.hasDescription = !!this.metadata.description_url;
-        },
-    },
+    /**
+     * Next element in album
+     */
+    next: Object as PropType<MediaListItem | null>,
+
+    /**
+     * Previous element in album
+     */
+    prev: Object as PropType<MediaListItem | null>,
+
+    /**
+     * True if media is in album
+     */
+    inAlbum: Boolean,
+
+    /**
+     * Has next element i n page?
+     */
+    pageNext: Boolean,
+
+    /**
+     * Has previous element in page?
+     */
+    pagePrev: Boolean,
+
+    /**
+     * Miniature mode
+     */
+    min: Boolean,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Go to the next media
+     */
+    (e: "go-next"): void;
+
+    /**
+     * Go to the previous media
+     */
+    (e: "go-prev"): void;
+
+    /**
+     * The user wants to delete the media
+     */
+    (e: "delete"): void;
+
+    /**
+     * The user wants to open the albums list modal
+     */
+    (e: "albums-open"): void;
+
+    /**
+     * The user wants to upen the size stats modal
+     */
+    (e: "stats-open"): void;
+}>();
+
+// Player common features
+const { expandedTitle, expandedAlbum, helpTooltip, enterTooltip, leaveTooltip, clearTooltip, goNext, goPrev, toggleFullScreen } =
+    usePlayerCommon(props, emit, fullscreen);
+
+// Interval to check for auto-next
+const autoNextTimer = useTimeout();
+
+// Loading status
+const loading = ref(true);
+
+// Title
+const title = ref("");
+
+// Image URL
+const imageURL = ref("");
+
+// Image pending of encoding
+const imagePending = ref(false);
+
+// If the image is pending of encoding, ID of the task
+const imagePendingTask = ref(0);
+
+// Error message of the image encoding failed
+const imageEncodeError = ref("");
+
+// Index of the current selected resolution
+const currentResolution = ref(-1);
+
+// Image width
+const width = ref(0);
+
+// Image height
+const height = ref(0);
+
+// Display player config?
+const displayConfig = ref(false);
+
+// Image coordinates (scroll & scale)
+const imageTop = ref("0");
+const imageLeft = ref("0");
+const imageWidth = ref("auto");
+const imageHeight = ref("auto");
+
+// Timestamp of the last interaction with the player controls
+const lastControlsInteraction = ref(Date.now());
+
+// True if the mouse is in the player controls
+const mouseInControls = ref(false);
+
+// Image scale
+const scale = ref(getImageScale());
+
+// Fit image
+const fit = ref(getImageFit());
+
+// True to show the scale control
+const scaleShown = ref(IS_TOUCH_DEVICE);
+
+// Image background
+const background = ref(getImageBackgroundStyle());
+
+// Internal tick for player config
+const internalTick = ref(0);
+
+// Display context menu?
+const contextMenuShown = ref(false);
+
+// Context menu coordinates
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+
+// Grabbed scroll?
+const scrollGrabbed = ref(false);
+
+// Grabbed image scroll coordinates
+const scrollGrabX = ref(0);
+const scrollGrabY = ref(0);
+const scrollGrabTop = ref(0);
+const scrollGrabLeft = ref(0);
+
+// Show cursor?
+const cursorShown = ref(false);
+
+// URL of the next image to pre-fetch it
+const prefetchURL = ref("");
+
+// Image notes visible?
+const notesVisible = ref(getImageNotesVisible());
+
+// Editing image notes?
+const notesEditMode = ref(false);
+
+// Does the media has a description?
+const hasDescription = ref(false);
+
+// Does the media have attachments
+const hasAttachments = ref(false);
+
+// Display the attachments list
+const displayAttachments = ref(false);
+
+// Does the media has related media?
+const hasRelatedMedia = ref(false);
+
+// Display related media list?
+const displayRelatedMedia = ref(false);
+
+// Does the media could not load due to an error?
+const mediaError = ref(false);
+
+/**
+ * Initializes the image
+ */
+const initializeImage = () => {
+    if (!props.metadata) {
+        return;
+    }
+    hasDescription.value = !!props.metadata.description_url;
+    hasAttachments.value = props.metadata.attachments && props.metadata.attachments.length > 0;
+    hasRelatedMedia.value = props.metadata.related && props.metadata.related.length > 0;
+    loading.value = true;
+    currentResolution.value = getUserSelectedResolutionImage(props.metadata);
+    setImageURL();
+};
+
+// Reload image when reload tick changes
+watch(
+    () => props.rTick,
+    () => {
+        internalTick.value++;
+        expandedTitle.value = false;
+        initializeImage();
+    },
+);
+
+// Initialize on mounted
+onMounted(initializeImage);
+
+// Set the loading status of the image when the URL changes
+watch(imageURL, () => {
+    if (imageURL.value) {
+        loading.value = true;
+    }
+});
+
+// Reset image URL if unmounted to prevent load / error events
+onBeforeUnmount(() => {
+    imageURL.value = "";
+});
+
+/**
+ * Sets the image URL and other parameters
+ * from the image metadata
+ */
+const setImageURL = () => {
+    autoNextTimer.clear();
+
+    mediaError.value = false;
+
+    if (!props.metadata) {
+        imageURL.value = "";
+        title.value = "";
+        loading.value = false;
+        return;
+    }
+
+    title.value = props.metadata.title;
+
+    if (currentResolution.value < 0) {
+        if (props.metadata.encoded) {
+            imageURL.value = getAssetURL(props.metadata.url);
+            imagePending.value = false;
+            imagePendingTask.value = 0;
+            imageEncodeError.value = "";
+            width.value = props.metadata.width;
+            height.value = props.metadata.height;
+            setupAutoNextTimer();
+        } else {
+            imageURL.value = "";
+            imagePending.value = true;
+            imagePendingTask.value = props.metadata.task;
+            imageEncodeError.value = props.metadata.error || "";
+            loading.value = false;
+        }
+    } else {
+        if (props.metadata.resolutions && props.metadata.resolutions.length > currentResolution.value) {
+            const res = props.metadata.resolutions[currentResolution.value];
+            if (res.ready) {
+                imageURL.value = getAssetURL(res.url);
+                imagePending.value = false;
+                imagePendingTask.value = 0;
+                imageEncodeError.value = "";
+                width.value = props.metadata.width;
+                height.value = props.metadata.height;
+                setupAutoNextTimer();
+            } else {
+                imageURL.value = "";
+                imagePending.value = true;
+                imagePendingTask.value = res.task;
+                imageEncodeError.value = res.error || "";
+                loading.value = false;
+            }
+        } else {
+            imageURL.value = "";
+            imagePending.value = true;
+            imagePendingTask.value = 0;
+            imageEncodeError.value = "";
+            loading.value = false;
+        }
+    }
+
+    computeImageDimensions();
+    incrementImageScroll("home");
+    tryHorizontalScroll("home");
+};
+
+/**
+ * Sets up auto-next timer
+ */
+const setupAutoNextTimer = () => {
+    autoNextTimer.clear();
+
+    const timerS = getAutoNextTime();
+
+    if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
+        return;
+    }
+
+    if (!props.next && !props.pageNext) {
+        return;
+    }
+
+    const ms = timerS * 1000;
+
+    autoNextTimer.set(() => {
+        if (displayConfig.value || expandedTitle.value || displayAttachments.value || displayRelatedMedia.value) {
+            setupAutoNextTimer();
+        } else {
+            goNext();
+        }
+    }, ms);
+};
+
+// Reset auto-next timer if next state changes
+watch([() => props.next, () => props.pageNext], setupAutoNextTimer);
+
+/**
+ * Computes the image dimensions
+ */
+const computeImageDimensions = () => {
+    if (!imageURL.value) {
+        return;
+    }
+
+    const scroller = imageScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    const scrollerDimensions = scroller.getBoundingClientRect();
+
+    const fitDimensions = {
+        width: width.value,
+        height: height.value,
+        fitWidth: true,
+    };
+
+    if (scrollerDimensions.width > scrollerDimensions.height) {
+        fitDimensions.fitWidth = true;
+        fitDimensions.height = scrollerDimensions.height;
+        fitDimensions.width = (scrollerDimensions.height * width.value) / height.value;
+
+        if (fitDimensions.width > scrollerDimensions.width) {
+            fitDimensions.fitWidth = false;
+            fitDimensions.width = scrollerDimensions.width;
+            fitDimensions.height = (scrollerDimensions.width * height.value) / width.value;
+        }
+    } else {
+        fitDimensions.fitWidth = false;
+        fitDimensions.width = scrollerDimensions.width;
+        fitDimensions.height = (scrollerDimensions.width * height.value) / width.value;
+
+        if (fitDimensions.height > scrollerDimensions.height) {
+            fitDimensions.fitWidth = true;
+            fitDimensions.height = scrollerDimensions.height;
+            fitDimensions.width = (scrollerDimensions.height * width.value) / height.value;
+        }
+    }
+
+    if (fit.value) {
+        const top = Math.max(0, (scrollerDimensions.height - fitDimensions.height) / 2);
+        const left = Math.max(0, (scrollerDimensions.width - fitDimensions.width) / 2);
+
+        imageTop.value = Math.floor(top) + "px";
+        imageLeft.value = Math.floor(left) + "px";
+        imageWidth.value = Math.floor(fitDimensions.width) + "px";
+        imageHeight.value = Math.floor(fitDimensions.height) + "px";
+    } else {
+        let w: number;
+        let h: number;
+
+        if (fitDimensions.fitWidth) {
+            w = scrollerDimensions.width * (0.5 + scale.value * SCALE_RANGE);
+            h = (w * height.value) / width.value;
+        } else {
+            h = scrollerDimensions.height * (0.5 + scale.value * SCALE_RANGE);
+            w = (h * width.value) / height.value;
+        }
+
+        const top = Math.max(0, (scrollerDimensions.height - h) / 2);
+        const left = Math.max(0, (scrollerDimensions.width - w) / 2);
+
+        imageTop.value = Math.floor(top) + "px";
+        imageLeft.value = Math.floor(left) + "px";
+        imageWidth.value = Math.floor(w) + "px";
+        imageHeight.value = Math.floor(h) + "px";
+    }
+};
+
+/**
+ * Called when image successfully loaded
+ */
+const onImageLoaded = () => {
+    loading.value = false;
+};
+
+/**
+ * Called when the media cannot be loaded
+ */
+const onMediaError = () => {
+    if (!AuthController.RefreshAuthStatus()) {
+        mediaError.value = true;
+        loading.value = false;
+        AuthController.CheckAuthStatusSilent();
+    }
+};
+
+/**
+ * Called when the selected resolution updates
+ */
+const onResolutionUpdated = () => {
+    setUserSelectedResolutionImage(props.metadata, currentResolution.value);
+    setImageURL();
+};
+
+/**
+ * Increments image vertical scroll
+ * @param a An increment, 'home' to set it to the beginning, 'end' to set it to the end
+ * @returns True if applied, false if it cannot be applied
+ */
+const incrementImageScroll = (a: number | "home" | "end"): boolean => {
+    if (fit.value) {
+        return false;
+    }
+
+    const el = imageScroller.value;
+
+    if (!el) {
+        return false;
+    }
+
+    const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+
+    if (maxScroll <= 0) {
+        return false;
+    }
+
+    if (typeof a === "number") {
+        el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
+    } else if (a === "home") {
+        el.scrollTop = 0;
+    } else if (a === "end") {
+        el.scrollTop = maxScroll;
+    }
+
+    return true;
+};
+
+/**
+ * Tries to increment the horizontal scroll of the image
+ * @param a An increment, 'home' to set it to the beginning, 'end' to set it to the end
+ * @returns True if applied, false if it cannot be applied
+ */
+const tryHorizontalScroll = (a: number | "home" | "end"): boolean => {
+    if (fit.value) {
+        return false;
+    }
+
+    const el = imageScroller.value;
+
+    if (!el) {
+        return false;
+    }
+
+    const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
+
+    if (maxScroll <= 0) {
+        return false;
+    }
+
+    if (typeof a === "number") {
+        el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
+    } else if (a === "home") {
+        el.scrollLeft = 0;
+    } else if (a === "end") {
+        el.scrollLeft = maxScroll;
+    }
+
+    return true;
+};
+
+/**
+ * Called when the user clicks the player
+ */
+const clickPlayer = () => {
+    if (displayConfig.value) {
+        displayConfig.value = false;
+    }
+
+    if (displayAttachments.value) {
+        displayAttachments.value = false;
+    }
+
+    if (displayRelatedMedia.value) {
+        displayRelatedMedia.value = false;
+    }
+
+    interactWithControls();
+};
+
+/**
+ * Called when the user clicked the controls
+ * @param e The click event
+ */
+const clickControls = (e?: Event) => {
+    displayConfig.value = false;
+    contextMenu.value?.hide();
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+    if (e) {
+        e.stopPropagation();
+    }
+};
+
+/**
+ * Called when the user interacted with the player controls
+ */
+const interactWithControls = () => {
+    lastControlsInteraction.value = Date.now();
+    cursorShown.value = true;
+};
+
+/**
+ * Called when the user enters the controls
+ */
+const enterControls = () => {
+    mouseInControls.value = true;
+};
+
+/**
+ * Called when the user leaves the controls
+ */
+const leaveControls = () => {
+    mouseInControls.value = false;
+    clearTooltip();
+    scaleShown.value = IS_TOUCH_DEVICE;
+};
+
+/**
+ * Context menu event handler
+ * @param e The event
+ */
+const onContextMenu = (e: MouseEvent) => {
+    contextMenuX.value = e.pageX;
+    contextMenuY.value = e.pageY;
+    contextMenuShown.value = true;
+    contextMenu.value?.show();
+    e.preventDefault();
+};
+
+/**
+ * Opens the albums modal
+ */
+const manageAlbums = () => {
+    emit("albums-open");
+};
+
+/**
+ * Opens the size stats modal
+ */
+const openStats = () => {
+    emit("stats-open");
+};
+
+/**
+ * Opens the tags widget
+ */
+const openTags = () => {
+    displayTagList.value = true;
+};
+
+/**
+ * Opens the description widget
+ */
+const openDescription = () => {
+    if (!hasDescription.value && !canWrite.value) {
+        return;
+    }
+    displayDescription.value = true;
+};
+
+/**
+ * Refreshes the description from the media metadata
+ */
+const refreshDescription = () => {
+    hasDescription.value = !!props.metadata?.description_url;
+};
+
+/**
+ * Opens the attachments list
+ */
+const showAttachments = () => {
+    displayAttachments.value = !displayAttachments.value;
+    displayRelatedMedia.value = false;
+    displayConfig.value = false;
+};
+
+/**
+ * Opens the player configuration
+ */
+const showConfig = () => {
+    displayConfig.value = !displayConfig.value;
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+};
+
+/**
+ * Opens the related media list
+ */
+const showRelatedMedia = () => {
+    displayRelatedMedia.value = !displayRelatedMedia.value;
+    displayAttachments.value = false;
+    displayConfig.value = false;
+};
+
+/**
+ * Called when image scale is updated by the user
+ */
+const onUserScaleUpdated = () => {
+    setImageScale(scale.value);
+    computeImageDimensions();
+    nextTick(centerScroll);
+};
+
+/**
+ * Sets the scale
+ * @param s The scale
+ */
+const changeScale = (s: number) => {
+    scale.value = s;
+    onUserScaleUpdated();
+};
+
+/**
+ * Called when the image fit option is changed by the user
+ */
+const onUserFitUpdated = () => {
+    setImageFit(fit.value);
+    computeImageDimensions();
+};
+
+/**
+ * Toggles the fit image option
+ */
+const toggleFit = () => {
+    fit.value = !fit.value;
+    onUserFitUpdated();
+};
+
+/**
+ * Called when the background option is changed
+ */
+const onBackgroundChanged = () => {
+    setImageBackgroundStyle(background.value);
+};
+
+/**
+ * Called when the image notes visibility changes
+ * @param v The image notes visibility
+ */
+const imageNotesVisibleUpdated = (v: boolean) => {
+    notesVisible.value = v;
+};
+
+/**
+ * Centers the scroll
+ */
+const centerScroll = () => {
+    const scroller = imageScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
+    scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
+};
+
+const grabScroll = (e: PositionEvent) => {
+    if (e.target) {
+        const target = e.target;
+        if (target.classList && target.classList.contains("image-scroller")) {
+            return;
+        }
+    }
+
+    if (displayConfig.value || contextMenuShown.value || displayAttachments.value || displayRelatedMedia.value) {
+        displayConfig.value = false;
+        contextMenu.value?.hide();
+        displayAttachments.value = false;
+        displayRelatedMedia.value = false;
+        e.e.stopPropagation();
+        return;
+    }
+
+    const scroller = imageScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    scrollGrabTop.value = scroller.scrollTop;
+    scrollGrabLeft.value = scroller.scrollLeft;
+
+    scrollGrabbed.value = true;
+
+    scrollGrabX.value = e.x;
+    scrollGrabY.value = e.y;
+};
+
+/**
+ * Grabs scroll with the mouse
+ * @param e The mouse event
+ */
+const grabScrollWithMouse = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return;
+    }
+
+    grabScroll(positionEventFromMouseEvent(e));
+};
+
+/**
+ * Moves scroll using the mouse
+ * @param x The X coordinate
+ * @param y The Y coordinate
+ */
+const moveScrollByMouse = (x: number, y: number) => {
+    const scroller = imageScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    const rect = scroller.getBoundingClientRect();
+
+    const maxScrollLeft = scroller.scrollWidth - rect.width;
+    const maxScrollTop = scroller.scrollHeight - rect.height;
+
+    const diffX = x - scrollGrabX.value;
+    const diffY = y - scrollGrabY.value;
+
+    scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, scrollGrabTop.value - diffY));
+    scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, scrollGrabLeft.value - diffX));
+};
+
+onDocumentEvent("mousemove", (e: MouseEvent) => {
+    if (!scrollGrabbed.value) {
+        return;
+    }
+
+    moveScrollByMouse(e.pageX, e.pageY);
+});
+
+onDocumentEvent("mouseup", (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return;
+    }
+
+    if (!scrollGrabbed.value) {
+        return;
+    }
+
+    scrollGrabbed.value = false;
+
+    moveScrollByMouse(e.pageX, e.pageY);
+});
+
+/**
+ * Event handler for "mousemove" on the player
+ */
+const playerMouseMove = () => {
+    interactWithControls();
+};
+
+/**
+ * Event handler for "mouseleave" on the player
+ */
+const mouseLeavePlayer = () => {
+    clearTooltip();
+};
+
+/**
+ * Mouse wheel event handler for the player
+ * @param e The mouse wheel event
+ */
+const onMouseWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.deltaY > 0) {
+            changeScale(Math.max(0, scale.value - SCALE_STEP));
+            scaleShown.value = true;
+            helpTooltip.value = "scale";
+            fit.value = false;
+            onUserFitUpdated();
+        } else {
+            changeScale(Math.min(1, scale.value + SCALE_STEP));
+            scaleShown.value = true;
+            helpTooltip.value = "scale";
+            fit.value = false;
+            onUserFitUpdated();
+        }
+    }
+};
+
+// Delay for ticks (30 ticks/sec)
+const TICK_DELAY = Math.floor(1000 / 30);
+
+// Ticks
+useInterval().set(() => {
+    computeImageDimensions();
+
+    const now = Date.now();
+
+    if (!mouseInControls.value && helpTooltip.value && now - lastControlsInteraction.value > 2000) {
+        clearTooltip();
+    }
+
+    if (!mouseInControls.value && scaleShown.value && now - lastControlsInteraction.value > 2000 && scaleShown.value !== IS_TOUCH_DEVICE) {
+        scaleShown.value = IS_TOUCH_DEVICE;
+    }
+
+    if (!mouseInControls.value && cursorShown.value && now - lastControlsInteraction.value > 2000) {
+        cursorShown.value = false;
+    }
+
+    if (helpTooltip.value && !showControls.value) {
+        clearTooltip();
+    }
+}, TICK_DELAY);
+
+// MediaSession actions handler
+usePlayerMediaSession(["nexttrack", "previoustrack"], (event: MediaSessionActionDetails) => {
+    if (!event || !event.action) {
+        return;
+    }
+    switch (event.action) {
+        case "nexttrack":
+            goNext();
+            break;
+        case "previoustrack":
+            goPrev();
+            break;
+    }
+});
+
+useGlobalKeyboardHandler((event: KeyboardEvent) => {
+    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+        return false;
+    }
+
+    let caught = true;
+
+    const shifting = event.shiftKey;
+
+    switch (event.key) {
+        case "A":
+        case "a":
+            manageAlbums();
+            break;
+        case "i":
+        case "I":
+            openDescription();
+            break;
+        case "t":
+        case "T":
+            openTags();
+            break;
+        case "S":
+        case "s":
+            showConfig();
+            break;
+        case "ArrowUp":
+            incrementImageScroll(-40);
+            break;
+        case "ArrowDown":
+            incrementImageScroll(40);
+            break;
+        case "ArrowLeft":
+            if (shifting || event.altKey || !tryHorizontalScroll(-40)) {
+                if (props.prev || props.pagePrev) {
+                    goPrev();
+                } else {
+                    caught = false;
+                }
+            }
+            break;
+        case "ArrowRight":
+            if (shifting || event.altKey || !tryHorizontalScroll(40)) {
+                if (props.next || props.pageNext) {
+                    goNext();
+                } else {
+                    caught = false;
+                }
+            }
+            break;
+        case "Home":
+            if (event.altKey) {
+                caught = false;
+            } else if (shifting) {
+                if (!tryHorizontalScroll("home")) {
+                    caught = false;
+                }
+            } else {
+                if (!incrementImageScroll("home")) {
+                    caught = false;
+                }
+            }
+            break;
+        case "End":
+            if (event.altKey) {
+                caught = false;
+            } else if (shifting) {
+                if (!tryHorizontalScroll("end")) {
+                    caught = false;
+                }
+            } else {
+                if (!incrementImageScroll("end")) {
+                    caught = false;
+                }
+            }
+            break;
+        case " ":
+        case "K":
+        case "k":
+        case "Enter":
+            toggleFit();
+            scaleShown.value = true;
+            helpTooltip.value = "scale";
+            break;
+        case "+":
+            changeScale(Math.min(1, scale.value + (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
+            scaleShown.value = true;
+            helpTooltip.value = "scale";
+            fit.value = false;
+            onUserFitUpdated();
+            break;
+        case "-":
+            changeScale(Math.max(0, scale.value - (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
+            scaleShown.value = true;
+            helpTooltip.value = "scale";
+            fit.value = false;
+            onUserFitUpdated();
+            break;
+        case "C":
+        case "c":
+            showControls.value = !showControls.value;
+            break;
+        case "n":
+        case "N":
+            if (canWrite.value) {
+                notesEditMode.value = !notesEditMode.value;
+            } else {
+                notesEditMode.value = false;
+            }
+            break;
+        default:
+            caught = false;
+    }
+
+    if (caught) {
+        interactWithControls();
+    }
+
+    return caught;
+}, PLAYER_KEYBOARD_HANDLER_PRIORITY);
+
+/**
+ * Called to pre-fetch the next image in an album, for faster load times
+ */
+const onAlbumPrefetch = () => {
+    if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
+        if (currentResolution.value < 0) {
+            if (AlbumsController.NextMediaData.encoded) {
+                prefetchURL.value = getAssetURL(AlbumsController.NextMediaData.url);
+            } else {
+                prefetchURL.value = "";
+            }
+        } else {
+            if (
+                AlbumsController.NextMediaData.resolutions[currentResolution.value] &&
+                AlbumsController.NextMediaData.resolutions[currentResolution.value].ready
+            ) {
+                prefetchURL.value = getAssetURL(AlbumsController.NextMediaData.resolutions[currentResolution.value].url);
+            } else {
+                prefetchURL.value = "";
+            }
+        }
+    } else {
+        prefetchURL.value = "";
+    }
+};
+
+onApplicationEvent(EVENT_NAME_NEXT_PRE_FETCH, onAlbumPrefetch);
+onMounted(onAlbumPrefetch);
 </script>
