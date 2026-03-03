@@ -1,6 +1,5 @@
 <template>
     <div
-        ref="container"
         class="image-player player-settings-no-trap"
         :class="{
             'player-min': min,
@@ -196,7 +195,6 @@
 
 <script setup lang="ts">
 import {
-    getAutoNextTime,
     getImageBackgroundStyle,
     getImageFit,
     getImageNotesVisible,
@@ -225,7 +223,6 @@ import PlayerControls from "./common/PlayerControls.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
 import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
 import { useInterval } from "@/composables/use-interval";
-import { useTimeout } from "@/composables/use-timeout";
 import { usePlayerMediaSession } from "@/composables/use-player-media-session";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
@@ -233,6 +230,8 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
+import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
+import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -282,9 +281,6 @@ const SCALE_STEP = 0.1 / SCALE_RANGE;
 
 // Scale step (small increments)
 const SCALE_STEP_MIN = 0.01 / SCALE_RANGE;
-
-// Ref to the container element
-const container = useTemplateRef("container");
 
 // Ref to the image scroller element
 const imageScroller = useTemplateRef("imageScroller");
@@ -396,8 +392,45 @@ const emit = defineEmits<{
 const { expandedTitle, expandedAlbum, helpTooltip, enterTooltip, leaveTooltip, clearTooltip, goNext, goPrev, toggleFullScreen } =
     usePlayerCommon(props, emit, fullscreen);
 
-// Interval to check for auto-next
-const autoNextTimer = useTimeout();
+// Player common controls
+const {
+    hasAttachments,
+    displayAttachments,
+    hasDescription,
+    hasRelatedMedia,
+    displayRelatedMedia,
+    displayConfig,
+    contextMenuShown,
+    contextMenuX,
+    contextMenuY,
+    onContextMenu,
+    openDescription,
+    openStats,
+    openTags,
+    showAttachments,
+    showRelatedMedia,
+    showConfig,
+    manageAlbums,
+    refreshDescription,
+    clickControls,
+} = usePlayerCommonControls(props, emit, {
+    displayTagList,
+    displayDescription,
+    contextMenu,
+});
+
+// Auto-next
+const { clearAutoNextTimer, setupAutoNextTimer } = usePlayerAutoNext(
+    props,
+    ref(true),
+    {
+        displayConfig,
+        expandedTitle,
+        displayAttachments,
+        displayRelatedMedia,
+    },
+    goNext,
+);
 
 // Loading status
 const loading = ref(true);
@@ -426,9 +459,6 @@ const width = ref(0);
 // Image height
 const height = ref(0);
 
-// Display player config?
-const displayConfig = ref(false);
-
 // Image coordinates (scroll & scale)
 const imageTop = ref("0");
 const imageLeft = ref("0");
@@ -456,13 +486,6 @@ const background = ref(getImageBackgroundStyle());
 // Internal tick for player config
 const internalTick = ref(0);
 
-// Display context menu?
-const contextMenuShown = ref(false);
-
-// Context menu coordinates
-const contextMenuX = ref(0);
-const contextMenuY = ref(0);
-
 // Grabbed scroll?
 const scrollGrabbed = ref(false);
 
@@ -484,21 +507,6 @@ const notesVisible = ref(getImageNotesVisible());
 // Editing image notes?
 const notesEditMode = ref(false);
 
-// Does the media has a description?
-const hasDescription = ref(false);
-
-// Does the media have attachments
-const hasAttachments = ref(false);
-
-// Display the attachments list
-const displayAttachments = ref(false);
-
-// Does the media has related media?
-const hasRelatedMedia = ref(false);
-
-// Display related media list?
-const displayRelatedMedia = ref(false);
-
 // Does the media could not load due to an error?
 const mediaError = ref(false);
 
@@ -509,9 +517,7 @@ const initializeImage = () => {
     if (!props.metadata) {
         return;
     }
-    hasDescription.value = !!props.metadata.description_url;
-    hasAttachments.value = props.metadata.attachments && props.metadata.attachments.length > 0;
-    hasRelatedMedia.value = props.metadata.related && props.metadata.related.length > 0;
+
     loading.value = true;
     currentResolution.value = getUserSelectedResolutionImage(props.metadata);
     setImageURL();
@@ -547,7 +553,7 @@ onBeforeUnmount(() => {
  * from the image metadata
  */
 const setImageURL = () => {
-    autoNextTimer.clear();
+    clearAutoNextTimer();
 
     mediaError.value = false;
 
@@ -607,36 +613,6 @@ const setImageURL = () => {
     incrementImageScroll("home");
     tryHorizontalScroll("home");
 };
-
-/**
- * Sets up auto-next timer
- */
-const setupAutoNextTimer = () => {
-    autoNextTimer.clear();
-
-    const timerS = getAutoNextTime();
-
-    if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
-        return;
-    }
-
-    if (!props.next && !props.pageNext) {
-        return;
-    }
-
-    const ms = timerS * 1000;
-
-    autoNextTimer.set(() => {
-        if (displayConfig.value || expandedTitle.value || displayAttachments.value || displayRelatedMedia.value) {
-            setupAutoNextTimer();
-        } else {
-            goNext();
-        }
-    }, ms);
-};
-
-// Reset auto-next timer if next state changes
-watch([() => props.next, () => props.pageNext], setupAutoNextTimer);
 
 /**
  * Computes the image dimensions
@@ -824,20 +800,6 @@ const clickPlayer = () => {
 };
 
 /**
- * Called when the user clicked the controls
- * @param e The click event
- */
-const clickControls = (e?: Event) => {
-    displayConfig.value = false;
-    contextMenu.value?.hide();
-    displayAttachments.value = false;
-    displayRelatedMedia.value = false;
-    if (e) {
-        e.stopPropagation();
-    }
-};
-
-/**
  * Called when the user interacted with the player controls
  */
 const interactWithControls = () => {
@@ -859,83 +821,6 @@ const leaveControls = () => {
     mouseInControls.value = false;
     clearTooltip();
     scaleShown.value = IS_TOUCH_DEVICE;
-};
-
-/**
- * Context menu event handler
- * @param e The event
- */
-const onContextMenu = (e: MouseEvent) => {
-    contextMenuX.value = e.pageX;
-    contextMenuY.value = e.pageY;
-    contextMenuShown.value = true;
-    contextMenu.value?.show();
-    e.preventDefault();
-};
-
-/**
- * Opens the albums modal
- */
-const manageAlbums = () => {
-    emit("albums-open");
-};
-
-/**
- * Opens the size stats modal
- */
-const openStats = () => {
-    emit("stats-open");
-};
-
-/**
- * Opens the tags widget
- */
-const openTags = () => {
-    displayTagList.value = true;
-};
-
-/**
- * Opens the description widget
- */
-const openDescription = () => {
-    if (!hasDescription.value && !canWrite.value) {
-        return;
-    }
-    displayDescription.value = true;
-};
-
-/**
- * Refreshes the description from the media metadata
- */
-const refreshDescription = () => {
-    hasDescription.value = !!props.metadata?.description_url;
-};
-
-/**
- * Opens the attachments list
- */
-const showAttachments = () => {
-    displayAttachments.value = !displayAttachments.value;
-    displayRelatedMedia.value = false;
-    displayConfig.value = false;
-};
-
-/**
- * Opens the player configuration
- */
-const showConfig = () => {
-    displayConfig.value = !displayConfig.value;
-    displayAttachments.value = false;
-    displayRelatedMedia.value = false;
-};
-
-/**
- * Opens the related media list
- */
-const showRelatedMedia = () => {
-    displayRelatedMedia.value = !displayRelatedMedia.value;
-    displayAttachments.value = false;
-    displayConfig.value = false;
 };
 
 /**
