@@ -26,9 +26,6 @@ BusyStateController.Initialize();
 
 import { createApp } from "vue";
 
-import { i18n } from "./i18n";
-import { appEventsPlugin } from "./app-events-plugin";
-
 import App from "./App.vue";
 
 document.addEventListener("drop", function (e: DragEvent) {
@@ -43,7 +40,7 @@ document.addEventListener("dragover", function (e: DragEvent) {
 
 // Create app
 
-createApp(App).use(i18n).use(appEventsPlugin).mount("#app");
+createApp(App).mount("#app");
 
 // Register service worker
 

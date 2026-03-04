@@ -167,6 +167,7 @@ import {
 } from "@/control/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { clickOnEnter } from "@/utils/events";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),

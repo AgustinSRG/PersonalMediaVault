@@ -40,6 +40,10 @@ import { getFrontendUrl } from "@/utils/api";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { stopPropagationEvent, clickOnEnter } from "@/utils/events";
+import { useI18n } from "@/composables/use-i18n";
+
+// Translation
+const { $t } = useI18n();
 
 // Ref to the container element
 const container = useTemplateRef("container");

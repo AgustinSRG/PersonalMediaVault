@@ -145,6 +145,7 @@ import { useModal } from "@/composables/use-modal";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
+import { clickOnEnter } from "@/utils/events";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),

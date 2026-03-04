@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { onDocumentEvent } from "@/composables/on-document-event";
+import { useI18n } from "@/composables/use-i18n";
 import { useInterval } from "@/composables/use-interval";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
 import type { PositionEvent } from "@/utils/position-event";
@@ -94,6 +95,7 @@ import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/util
 import type { WidgetActionButton } from "@/utils/widgets";
 import type { PropType } from "vue";
 import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import { stopPropagationEvent } from "@/utils/events";
 
 // Initial widget width
 const INITIAL_WIDTH = 480;
@@ -106,6 +108,9 @@ const MIN_WIDTH = 250;
 
 // Min widget width
 const MIN_HEIGHT = 250;
+
+// Translation
+const { $t } = useI18n();
 
 // Ref to the container element
 const container = useTemplateRef("container");

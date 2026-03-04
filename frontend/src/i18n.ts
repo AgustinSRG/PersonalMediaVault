@@ -2,26 +2,9 @@
 
 "use strict";
 
-import type { App, Ref } from "vue";
 import { nextTick, ref } from "vue";
 import { addAppEventListener, emitAppEvent, EVENT_NAME_LOADED_LOCALE, EVENT_NAME_LOCALE_CHANGED } from "@/control/app-events";
 import { clearLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
-
-declare module "vue" {
-    interface ComponentCustomProperties {
-        /**
-         * Current locale
-         */
-        $locale: Ref<string>;
-
-        /**
-         * Translates text
-         * @param key The text to translate
-         * @returns The translated text
-         */
-        $t: (key: string) => string;
-    }
-}
 
 /**
  * Available languages
@@ -233,19 +216,6 @@ export function translate(key: string, locale: string): string {
         return key;
     }
 }
-
-/**
- * Internationalization plugin
- */
-export const i18n = {
-    install: (app: App) => {
-        app.config.globalProperties.$locale = localeRef;
-
-        app.config.globalProperties.$t = (key) => {
-            return translate(key, localeRef.value);
-        };
-    },
-};
 
 /**
  * Sets page language

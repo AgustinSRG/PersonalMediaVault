@@ -60,14 +60,13 @@ import type { HomePageElement } from "@/api/api-home";
 import type { PropType } from "vue";
 import AlbumItemThumbnail from "@/components/utils/AlbumItemThumbnail.vue";
 import MediaItemThumbnail from "@/components/utils/MediaItemThumbnail.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { stopPropagationEvent } from "@/utils/events";
 
-const emit = defineEmits<{
-    /**
-     * Event triggered when the user clicks the menu button
-     */
-    (e: "open-options", position: number, event: MouseEvent): void;
-}>();
+// Translation
+const { $t } = useI18n();
 
+// Props
 const props = defineProps({
     /**
      * The album item
@@ -87,6 +86,14 @@ const props = defineProps({
      */
     position: Number,
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Event triggered when the user clicks the menu button
+     */
+    (e: "open-options", position: number, event: MouseEvent): void;
+}>();
 
 /**
  * Handler for 'click' event on the menu button

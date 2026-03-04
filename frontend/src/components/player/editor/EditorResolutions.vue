@@ -70,381 +70,416 @@
             :deleting="resolutionToConfirmDeleting"
             @confirm="onResolutionConfirm"
         ></ResolutionConfirmationModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
-<script lang="ts">
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+<script setup lang="ts">
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { defineAsyncComponent, onMounted, ref } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
-import { getUniqueStringId } from "@/utils/unique-id";
 import type { MediaResolution, MediaType, NamedResolution } from "@/api/models";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 import { STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { useRequestId } from "@/composables/use-request-id";
 
-export default defineComponent({
-    name: "EditorResolutions",
-    components: {
-        LoadingIcon,
-        ResolutionConfirmationModal,
-    },
-    emits: ["changed"],
-    setup() {
-        const standardResolutions = STANDARD_VIDEO_RESOLUTIONS;
+const ResolutionConfirmationModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ResolutionConfirmationModal.vue"),
+});
 
-        const standardResolutionsMap = new Map<string, string>();
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
-        standardResolutions.forEach((sr) => {
-            standardResolutionsMap.set(`${sr.width}x${sr.height}-${sr.fps}`, sr.name);
-            standardResolutionsMap.set(`${sr.height}x${sr.width}-${sr.fps}`, sr.name);
+// Translation
+const { $t } = useI18n();
 
-            if (sr.fps === 30) {
-                standardResolutionsMap.set(`${sr.width}x${sr.height}`, sr.name);
-                standardResolutionsMap.set(`${sr.height}x${sr.width}`, sr.name);
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Media changed
+     */
+    (e: "changed"): void;
+}>();
+
+// Map of standard resolutions
+const standardResolutionsMap = new Map<string, string>();
+
+// Initialize map of standard resolutions
+STANDARD_VIDEO_RESOLUTIONS.forEach((sr) => {
+    standardResolutionsMap.set(`${sr.width}x${sr.height}-${sr.fps}`, sr.name);
+    standardResolutionsMap.set(`${sr.height}x${sr.width}-${sr.fps}`, sr.name);
+
+    if (sr.fps === 30) {
+        standardResolutionsMap.set(`${sr.width}x${sr.height}`, sr.name);
+        standardResolutionsMap.set(`${sr.height}x${sr.width}`, sr.name);
+    }
+});
+
+// Media type
+const type = ref<MediaType>(0);
+
+// Media original resolution
+const width = ref(0);
+const height = ref(0);
+const fps = ref(0);
+
+// Available media resolutions
+const resolutions = ref<NamedResolution[]>([]);
+
+/**
+ * Updates media metadata
+ */
+const updateMediaData = () => {
+    if (!MediaController.MediaData) {
+        return;
+    }
+
+    type.value = MediaController.MediaData.type;
+
+    width.value = MediaController.MediaData.width;
+    height.value = MediaController.MediaData.height;
+    fps.value = MediaController.MediaData.fps;
+
+    updateResolutions(MediaController.MediaData.resolutions || []);
+};
+
+onMounted(updateMediaData);
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateMediaData);
+
+/**
+ * Updates resolutions
+ * @param newResolutions The resolutions from the media metadata
+ */
+const updateResolutions = (newResolutions: MediaResolution[]) => {
+    const totalPixels = width.value * height.value;
+    const totalFps = fps.value;
+
+    const resolutionsLeft = newResolutions.slice();
+
+    resolutions.value = STANDARD_VIDEO_RESOLUTIONS.filter((r) => {
+        if (type.value === MEDIA_TYPE_IMAGE) {
+            return r.fps === 30 && r.width * r.height < totalPixels;
+        } else if (type.value === MEDIA_TYPE_VIDEO) {
+            const pixels = r.width * r.height;
+            return pixels < totalPixels || (pixels === totalPixels && r.fps < totalFps);
+        } else {
+            return false;
+        }
+    })
+        .map((r) => {
+            if ((r.width >= r.height && width.value >= height.value) || (r.width <= r.height && width.value <= height.value)) {
+                return r;
+            } else {
+                // Rotate the resolution for vertical videos or images
+                return {
+                    name: r.name,
+                    width: r.height,
+                    height: r.width,
+                    fps: r.fps,
+                };
+            }
+        })
+        .map((r) => {
+            let enabled = false;
+            let fps = r.fps;
+            for (let i = 0; i < resolutionsLeft.length; i++) {
+                const res = resolutionsLeft[i];
+                if (res.width === r.width && res.height === r.height && (type.value === MEDIA_TYPE_IMAGE || res.fps === r.fps)) {
+                    enabled = true;
+                    fps = res.fps;
+                    resolutionsLeft.splice(i, 1);
+                    break;
+                }
+            }
+            return {
+                enabled: enabled,
+                name: r.name,
+                width: r.width,
+                height: r.height,
+                fps: fps,
+            };
+        })
+        .concat(
+            resolutionsLeft.map((rl) => {
+                const customName = type.value === MEDIA_TYPE_IMAGE ? `${rl.width}x${rl.height}` : `${rl.width}x${rl.height}-${rl.fps}`;
+                return {
+                    enabled: true,
+                    name: standardResolutionsMap.get(customName) || customName,
+                    width: rl.width,
+                    height: rl.height,
+                    fps: rl.fps,
+                };
+            }),
+        )
+        .sort((a, b) => {
+            const aPixels = a.width * a.height;
+            const bPixels = b.width * b.height;
+
+            if (aPixels > bPixels) {
+                return -1;
+            } else if (aPixels < bPixels) {
+                return 1;
+            } else if (a.fps > b.fps) {
+                return -1;
+            } else {
+                return 1;
             }
         });
+};
 
-        return {
-            standardResolutions: standardResolutions,
-            standardResolutionsMap: standardResolutionsMap,
-            requestId: getUniqueStringId(),
-        };
-    },
-    data: function () {
-        return {
-            type: 0 as MediaType,
+/**
+ * Renders resolution properties
+ * @param resWidth The resolution width
+ * @param resHeight The resolution height
+ * @param originalWidth The original width
+ * @param originalHeight The original height
+ * @returns The resolution properties
+ */
+const renderResolutionProperties = (resWidth: number, resHeight: number, originalWidth: number, originalHeight: number): string => {
+    let width = originalWidth;
+    let height = originalHeight;
 
-            width: 0,
-            height: 0,
-            fps: 0,
+    if (width > height) {
+        const proportionalHeight = Math.round((height * resWidth) / width);
 
-            resolutions: [] as NamedResolution[],
+        if (proportionalHeight > resHeight) {
+            width = Math.round((width * resHeight) / height);
+            height = resHeight;
+        } else {
+            width = resWidth;
+            height = proportionalHeight;
+        }
+    } else {
+        const proportionalWidth = Math.round((width * resHeight) / height);
 
-            busy: false,
-            busyTarget: "",
+        if (proportionalWidth > resWidth) {
+            height = Math.round((height * resWidth) / width);
+            width = resWidth;
+        } else {
+            width = proportionalWidth;
+            height = resHeight;
+        }
+    }
 
-            canWrite: AuthController.CanWrite,
+    return width + "x" + height;
+};
 
-            displayResolutionConfirmation: false,
+// Display resolution confirmation?
+const displayResolutionConfirmation = ref(false);
 
-            resolutionToConfirm: null as NamedResolution,
-            resolutionToConfirmDeleting: false,
-        };
-    },
+// Selected resolution for confirmation
+const resolutionToConfirm = ref<NamedResolution | null>(null);
 
-    mounted: function () {
-        this.updateMediaData();
+// Deleting the resolution?
+const resolutionToConfirmDeleting = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
+/**
+ * Asks the user to add a resolution
+ * @param r The resolution
+ */
+const addResolution = (r: NamedResolution) => {
+    resolutionToConfirm.value = r;
+    resolutionToConfirmDeleting.value = false;
+    displayResolutionConfirmation.value = true;
+};
 
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-    },
+/**
+ * Asks the user to delete a resolution
+ * @param r The resolution
+ */
+const deleteResolution = (r: NamedResolution) => {
+    resolutionToConfirm.value = r;
+    resolutionToConfirmDeleting.value = true;
+    displayResolutionConfirmation.value = true;
+};
 
-    methods: {
-        updateMediaData: function () {
-            if (!MediaController.MediaData) {
-                return;
-            }
+// Busy status
+const busy = ref(false);
 
-            this.type = MediaController.MediaData.type;
+// Target for the busy request
+const busyTarget = ref("");
 
-            this.width = MediaController.MediaData.width;
-            this.height = MediaController.MediaData.height;
-            this.fps = MediaController.MediaData.fps;
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
 
-            this.updateResolutions(MediaController.MediaData.resolutions || []);
-        },
+// Save request ID
+const saveRequestId = useRequestId();
 
-        updateResolutions: function (resolutions: MediaResolution[]) {
-            const totalPixels = this.width * this.height;
-            const totalFps = this.fps;
+/**
+ * The user confirmed to add or delete a resolution
+ */
+const onResolutionConfirm = () => {
+    if (!resolutionToConfirmDeleting.value) {
+        performAddResolution();
+    } else {
+        performDeleteResolution();
+    }
+};
 
-            const resolutionsLeft = resolutions.slice();
+/**
+ * Performs the request to add a resolution
+ */
+const performAddResolution = () => {
+    const r = resolutionToConfirm.value;
 
-            this.resolutions = this.standardResolutions
-                .filter((r) => {
-                    if (this.type === MEDIA_TYPE_IMAGE) {
-                        return r.fps === 30 && r.width * r.height < totalPixels;
-                    } else if (this.type === MEDIA_TYPE_VIDEO) {
-                        const pixels = r.width * r.height;
-                        return pixels < totalPixels || (pixels === totalPixels && r.fps < totalFps);
-                    } else {
-                        return false;
-                    }
-                })
-                .map((r) => {
-                    if ((r.width >= r.height && this.width >= this.height) || (r.width <= r.height && this.width <= this.height)) {
-                        return r;
-                    } else {
-                        // Rotate the resolution for vertical videos or images
+    if (!r) {
+        return;
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+    busyTarget.value = r.name;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(saveRequestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
+        .onSuccess((result) => {
+            PagesController.ShowSnackBarRight($t("Added resolution") + ": " + r.name);
+            busy.value = false;
+            r.enabled = true;
+            r.fps = result.fps;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.resolutions = resolutions.value
+                    .filter((re) => {
+                        return re.enabled;
+                    })
+                    .map((re) => {
                         return {
-                            name: r.name,
-                            width: r.height,
-                            height: r.width,
-                            fps: r.fps,
+                            width: re.width,
+                            height: re.height,
+                            fps: re.fps,
+                            ready: false,
+                            task: 0,
+                            url: "",
                         };
-                    }
-                })
-                .map((r) => {
-                    let enabled = false;
-                    let fps = r.fps;
-                    for (let i = 0; i < resolutionsLeft.length; i++) {
-                        const res = resolutionsLeft[i];
-                        if (res.width === r.width && res.height === r.height && (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)) {
-                            enabled = true;
-                            fps = res.fps;
-                            resolutionsLeft.splice(i, 1);
-                            break;
-                        }
-                    }
-                    return {
-                        enabled: enabled,
-                        name: r.name,
-                        width: r.width,
-                        height: r.height,
-                        fps: fps,
-                    };
-                })
-                .concat(
-                    resolutionsLeft.map((rl) => {
-                        const customName =
-                            this.type === MEDIA_TYPE_IMAGE ? `${rl.width}x${rl.height}` : `${rl.width}x${rl.height}-${rl.fps}`;
-                        return {
-                            enabled: true,
-                            name: this.standardResolutionsMap.get(customName) || customName,
-                            width: rl.width,
-                            height: rl.height,
-                            fps: rl.fps,
-                        };
-                    }),
-                )
-                .sort((a, b) => {
-                    const aPixels = a.width * a.height;
-                    const bPixels = b.width * b.height;
-
-                    if (aPixels > bPixels) {
-                        return -1;
-                    } else if (aPixels < bPixels) {
-                        return 1;
-                    } else if (a.fps > b.fps) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-        },
-
-        addResolution: function (r: NamedResolution) {
-            this.resolutionToConfirm = r;
-            this.resolutionToConfirmDeleting = false;
-            this.displayResolutionConfirmation = true;
-        },
-
-        deleteResolution: function (r: NamedResolution) {
-            this.resolutionToConfirm = r;
-            this.resolutionToConfirmDeleting = true;
-            this.displayResolutionConfirmation = true;
-        },
-
-        onResolutionConfirm: function () {
-            const r = this.resolutionToConfirm;
-
-            if (!r) {
-                return;
-            }
-
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.busyTarget = r.name;
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            if (!this.resolutionToConfirmDeleting) {
-                // Add resolution
-                makeNamedApiRequest(this.requestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
-                    .onSuccess((result) => {
-                        PagesController.ShowSnackBarRight(this.$t("Added resolution") + ": " + r.name);
-                        this.busy = false;
-                        r.enabled = true;
-                        r.fps = result.fps;
-                        if (MediaController.MediaData) {
-                            MediaController.MediaData.resolutions = this.resolutions
-                                .filter((re) => {
-                                    return re.enabled;
-                                })
-                                .map((re) => {
-                                    return {
-                                        width: re.width,
-                                        height: re.height,
-                                        fps: re.fps,
-                                        ready: false,
-                                        task: 0,
-                                        url: "",
-                                    };
-                                });
-                        }
-                        this.$emit("changed");
-                    })
-                    .onCancel(() => {
-                        this.busy = false;
-                    })
-                    .onRequestError((err, handleErr) => {
-                        this.busy = false;
-                        handleErr(err, {
-                            unauthorized: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            },
-                            duplicatedResolution: () => {
-                                // Already added
-                                PagesController.ShowSnackBarRight(this.$t("Added resolution") + ": " + r.name);
-                                this.busy = false;
-                                r.enabled = true;
-                                if (MediaController.MediaData) {
-                                    MediaController.MediaData.resolutions = this.resolutions
-                                        .filter((re) => {
-                                            return re.enabled;
-                                        })
-                                        .map((re) => {
-                                            return {
-                                                width: re.width,
-                                                height: re.height,
-                                                fps: re.fps,
-                                                ready: false,
-                                                task: 0,
-                                                url: "",
-                                            };
-                                        });
-                                }
-                                this.$emit("changed");
-                            },
-                            badRequest: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                            },
-                            accessDenied: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            },
-                            notFound: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                            },
-                            serverError: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                            },
-                            networkError: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                            },
-                        });
-                    })
-                    .onUnexpectedError((err) => {
-                        PagesController.ShowSnackBarRight(err.message);
-                        console.error(err);
-                        this.busy = false;
-                    });
-            } else {
-                // Remove resolution
-                makeNamedApiRequest(this.requestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
-                    .onSuccess(() => {
-                        PagesController.ShowSnackBarRight(this.$t("Removed resolution") + ": " + r.name);
-                        this.busy = false;
-                        r.enabled = false;
-                        if (MediaController.MediaData) {
-                            MediaController.MediaData.resolutions = this.resolutions
-                                .filter((re) => {
-                                    return re.enabled;
-                                })
-                                .map((re) => {
-                                    return {
-                                        width: re.width,
-                                        height: re.height,
-                                        fps: re.fps,
-                                        ready: false,
-                                        task: 0,
-                                        url: "",
-                                    };
-                                });
-                        }
-                        this.$emit("changed");
-                    })
-                    .onCancel(() => {
-                        this.busy = false;
-                    })
-                    .onRequestError((err, handleErr) => {
-                        this.busy = false;
-                        handleErr(err, {
-                            unauthorized: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                            },
-                            badRequest: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
-                            },
-                            accessDenied: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            },
-                            notFound: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
-                            },
-                            serverError: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
-                            },
-                            networkError: () => {
-                                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                            },
-                        });
-                    })
-                    .onUnexpectedError((err) => {
-                        PagesController.ShowSnackBarRight(err.message);
-                        console.error(err);
-                        this.busy = false;
                     });
             }
-        },
+            emit("changed");
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
 
-        updateAuthInfo: function () {
-            this.canWrite = AuthController.CanWrite;
-        },
+            handleErr(err, {
+                unauthorized,
+                duplicatedResolution: () => {
+                    // Already added
+                    PagesController.ShowSnackBarRight($t("Added resolution") + ": " + r.name);
+                    busy.value = false;
+                    r.enabled = true;
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.resolutions = resolutions.value
+                            .filter((re) => {
+                                return re.enabled;
+                            })
+                            .map((re) => {
+                                return {
+                                    width: re.width,
+                                    height: re.height,
+                                    fps: re.fps,
+                                    ready: false,
+                                    task: 0,
+                                    url: "",
+                                };
+                            });
+                    }
+                    emit("changed");
+                },
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            setError(err.message);
+            console.error(err);
+        });
+};
 
-        renderResolutionProperties: function (resWidth: number, resHeight: number, originalWidth: number, originalHeight: number): string {
-            let width = originalWidth;
-            let height = originalHeight;
+/**
+ * Performs request to delete a resolution
+ */
+const performDeleteResolution = () => {
+    const r = resolutionToConfirm.value;
 
-            if (width > height) {
-                const proportionalHeight = Math.round((height * resWidth) / width);
+    if (!r) {
+        return;
+    }
 
-                if (proportionalHeight > resHeight) {
-                    width = Math.round((width * resHeight) / height);
-                    height = resHeight;
-                } else {
-                    width = resWidth;
-                    height = proportionalHeight;
-                }
-            } else {
-                const proportionalWidth = Math.round((width * resHeight) / height);
+    if (busy.value) {
+        return;
+    }
 
-                if (proportionalWidth > resWidth) {
-                    height = Math.round((height * resWidth) / width);
-                    width = resWidth;
-                } else {
-                    width = proportionalWidth;
-                    height = resHeight;
-                }
+    busy.value = true;
+    busyTarget.value = r.name;
+
+    const mediaId = AppStatus.CurrentMedia;
+
+    makeNamedApiRequest(saveRequestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
+        .onSuccess(() => {
+            PagesController.ShowSnackBarRight($t("Removed resolution") + ": " + r.name);
+            busy.value = false;
+            r.enabled = false;
+            if (MediaController.MediaData) {
+                MediaController.MediaData.resolutions = resolutions.value
+                    .filter((re) => {
+                        return re.enabled;
+                    })
+                    .map((re) => {
+                        return {
+                            width: re.width,
+                            height: re.height,
+                            fps: re.fps,
+                            ready: false,
+                            task: 0,
+                            url: "",
+                        };
+                    });
             }
+            emit("changed");
+        })
+        .onCancel(() => {
+            busy.value = false;
+        })
+        .onRequestError((err, handleErr) => {
+            busy.value = false;
 
-            return width + "x" + height;
-        },
-    },
-});
+            handleErr(err, {
+                unauthorized,
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busy.value = false;
+            setError(err.message);
+            console.error(err);
+        });
+};
 </script>
