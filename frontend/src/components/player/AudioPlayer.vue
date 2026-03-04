@@ -273,8 +273,6 @@ import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallo
 import VolumeControl from "./common/VolumeControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
 import { renderTimeSeconds } from "@/utils/time";
-import type { NormalizedTimeSlice } from "@/utils/time-slices";
-import { findTimeSlice, normalizeTimeSlices } from "@/utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, MediaController } from "@/control/media";
@@ -304,6 +302,7 @@ import { usePlayerNextOnEnd } from "@/composables/use-player-next-on-end";
 import { usePlayerMediaSession } from "@/composables/use-player-media-session";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { useI18n } from "@/composables/use-i18n";
+import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -621,9 +620,6 @@ const mouseInControls = ref(false);
 // Loop audio when ended?
 const loop = ref(false);
 
-// True to enable loop for the current time slice
-const sliceLoop = ref(false);
-
 // Current volume
 const volume = ref(getPlayerVolume());
 
@@ -631,7 +627,7 @@ const volume = ref(getPlayerVolume());
 const muted = ref(getPlayerMuted());
 
 // Volume control shown?
-const volumeShown = ref(isTouchDevice());
+const volumeShown = ref(IS_TOUCH_DEVICE);
 
 // Internal tick for player config
 const internalTick = ref(0);
@@ -660,18 +656,6 @@ const subtitles = ref("");
 // Subtitles range
 const subtitlesStart = ref(-1);
 const subtitlesEnd = ref(-1);
-
-// List of time slices
-const timeSlices = ref<NormalizedTimeSlice[]>([]);
-
-// Current time slice (based on current time)
-const currentTimeSlice = ref<NormalizedTimeSlice | null>(null);
-const currentTimeSliceName = ref("");
-const currentTimeSliceStart = ref(0);
-const currentTimeSliceEnd = ref(0);
-
-// True if edit mode for time slices is enabled
-const timeSlicesEdit = ref(false);
 
 // Current theme
 const theme = ref(getTheme());
@@ -715,26 +699,11 @@ const initializeAudio = () => {
     isShort.value = props.metadata.duration <= AUTO_LOOP_MIN_DURATION;
     canSaveTime.value = !props.metadata.force_start_beginning;
 
-    timeSlices.value = normalizeTimeSlices(
-        (props.metadata.time_slices || []).sort((a, b) => {
-            if (a.time < b.time) {
-                return -1;
-            } else if (a.time > b.time) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }),
-        props.metadata.duration,
-    );
+    initializeTimeSlices();
 
-    currentTimeSlice.value = null;
-    currentTimeSliceName.value = "";
-    currentTimeSliceStart.value = 0;
-    currentTimeSliceEnd.value = 0;
-    sliceLoop.value = false;
     currentTime.value = canSaveTime.value ? getCachedInitialTime(props.mid) : 0;
     duration.value = props.metadata.duration || 0;
+
     speed.value = 1;
 
     setDefaultLoop();
@@ -752,7 +721,6 @@ watch(
     () => props.rTick,
     () => {
         internalTick.value++;
-        expandedTitle.value = false;
         resetSubtitles();
         autoPlayApplied.value = false;
         initializeAudio();
@@ -875,80 +843,6 @@ onApplicationEvent(EVENT_NAME_SUBTITLES_UPDATE, () => {
     resetSubtitles();
     updateSubtitles();
 });
-
-/* Time slices */
-
-/**
- * Find the time slice by the current time
- * @param time The current time
- */
-const findTimeSliceName = (time: number) => {
-    const slice = findTimeSlice(timeSlices.value, time);
-    if (slice) {
-        return slice.name + " (" + renderTimeSeconds(slice.end - slice.start) + ")";
-    } else {
-        return "";
-    }
-};
-
-/**
- * Updates the current time slice based on the current time
- */
-const updateCurrentTimeSlice = () => {
-    if (
-        currentTimeSlice.value &&
-        sliceLoop.value &&
-        currentTime.value >= currentTimeSlice.value.end &&
-        currentTimeSlice.value.end > currentTimeSlice.value.start
-    ) {
-        setTime(currentTimeSlice.value.start, false);
-        return;
-    }
-
-    const slice = findTimeSlice(timeSlices.value, currentTime.value);
-    if (slice) {
-        currentTimeSlice.value = slice;
-        currentTimeSliceName.value = slice.name;
-        currentTimeSliceStart.value = slice.start;
-        currentTimeSliceEnd.value = slice.end;
-    } else {
-        currentTimeSlice.value = null;
-        currentTimeSliceName.value = "";
-        currentTimeSliceStart.value = 0;
-        currentTimeSliceEnd.value = 0;
-    }
-};
-
-/**
- * Called when time slices need to be refreshed
- */
-const refreshTimeSlices = () => {
-    const metadata = MediaController.MediaData;
-
-    if (!metadata) {
-        return;
-    }
-
-    timeSlices.value = normalizeTimeSlices(
-        (metadata.time_slices || []).sort((a, b) => {
-            if (a.time < b.time) {
-                return -1;
-            } else if (a.time > b.time) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }),
-        metadata.duration,
-    );
-
-    currentTimeSlice.value = null;
-    currentTimeSliceName.value = "";
-    currentTimeSliceStart.value = 0;
-    currentTimeSliceEnd.value = 0;
-
-    updateCurrentTimeSlice();
-};
 
 /* Controls */
 
@@ -1152,8 +1046,8 @@ const toggleMuted = () => {
  * @param e The click event
  */
 const clickTimeline = (e: Event) => {
-    displayConfig.value = false;
     contextMenu.value?.hide();
+    displayConfig.value = false;
     displayAttachments.value = false;
     displayRelatedMedia.value = false;
     e.stopPropagation();
@@ -1232,6 +1126,20 @@ const updateTimelineTooltip = (x: number) => {
 
     nextTick(tick);
 };
+
+/* Time slices */
+
+const {
+    timeSlices,
+    currentTimeSlice,
+    currentTimeSliceName,
+    timeSlicesEdit,
+    sliceLoop,
+    initializeTimeSlices,
+    findTimeSliceName,
+    updateCurrentTimeSlice,
+    refreshTimeSlices,
+} = usePlayerTimeSlices(props, currentTime, setTime);
 
 /* Audio renderer */
 
@@ -1556,7 +1464,7 @@ const onPlayerTouchEnd = (e: TouchEvent) => {
 
 /**
  * Event handler for 'loadedmetadata'
- * @param ev
+ * @param ev The event
  */
 const onLoadMetaData = (ev: Event) => {
     const audioElement = ev.target as HTMLAudioElement;
@@ -1585,7 +1493,9 @@ const onLoadMetaData = (ev: Event) => {
 const onAudioTimeUpdate = (ev: Event) => {
     hideNextEnd();
 
-    if (loading.value) return;
+    if (loading.value) {
+        return;
+    }
 
     const audioElement = ev.target as HTMLAudioElement;
 
@@ -1761,13 +1671,16 @@ const updateMediaErrorMessage = () => {
 
 /* Ticks */
 
+// Delay to hide controls (milliseconds)
+const CONTROLS_HIDE_DELAY = 200;
+
 /**
  * Checks the player status.
  * Ran every tick.
  */
 const tick = () => {
     if (showControls.value && !mouseInControls.value && playing.value && !expandedTitle.value && !expandedAlbum.value) {
-        if (Date.now() - lastControlsInteraction.value > 2000) {
+        if (Date.now() - lastControlsInteraction.value > CONTROLS_HIDE_DELAY) {
             showControls.value = false;
             volumeShown.value = IS_TOUCH_DEVICE;
             helpTooltip.value = "";

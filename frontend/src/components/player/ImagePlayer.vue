@@ -528,7 +528,6 @@ watch(
     () => props.rTick,
     () => {
         internalTick.value++;
-        expandedTitle.value = false;
         initializeImage();
     },
 );
@@ -886,6 +885,10 @@ const centerScroll = () => {
     scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
 };
 
+/**
+ * Grabs scroll
+ * @param e The position event
+ */
 const grabScroll = (e: PositionEvent) => {
     if (e.target) {
         const target = e.target;

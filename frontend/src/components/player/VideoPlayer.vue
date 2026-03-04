@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="container"
         class="video-player player-settings-no-trap"
         :class="{
             'player-min': min,
@@ -17,9 +18,10 @@
         @contextmenu="onContextMenu"
         @wheel="onMouseWheel"
     >
-        <div class="video-scroller" @mousedown="grabScroll" @touchstart="onScrollerTouchStart">
+        <div ref="videoScroller" class="video-scroller" @mousedown="grabScrollWithMouse" @touchstart="onScrollerTouchStart">
             <video
                 v-if="videoURL"
+                ref="videoElement"
                 :key="rTick"
                 class="player-video-element"
                 :src="videoURL"
@@ -46,6 +48,7 @@
 
         <audio
             v-if="audioTrackURL"
+            ref="audioTrackElement"
             :key="rTick"
             :src="audioTrackURL"
             crossorigin="use-credentials"
@@ -54,7 +57,7 @@
             :muted="muted || !audioTrackURL"
             :volume.prop="volume"
             :playbackRate.prop="speed"
-            @loadedmetadata="onAudioLoadMetadata"
+            @loadedmetadata="onAudioTrackLoadMetadata"
             @canplay="onAudioCanPlay"
         ></audio>
 
@@ -95,14 +98,14 @@
 
         <TagsEditHelper
             v-if="displayTagList"
-            v-model:display="displayTagListStatus"
+            v-model:display="displayTagList"
             :context-open="contextMenuShown"
             @clicked="clickControls"
         ></TagsEditHelper>
 
         <DescriptionWidget
             v-if="displayDescription"
-            v-model:display="displayDescriptionStatus"
+            v-model:display="displayDescription"
             :context-open="contextMenuShown"
             :title="title"
             @clicked="clickControls"
@@ -143,7 +146,7 @@
                 v-model:volume="volume"
                 v-model:expanded="volumeShown"
                 :min="min"
-                :width="min ? 50 : 80"
+                :width="min ? VOLUME_CONTROL_WIDTH_MIN : VOLUME_CONTROL_WIDTH"
                 @update:volume="onUserVolumeUpdated"
                 @update:muted="onUserMutedUpdated"
                 @enter="enterTooltip('volume')"
@@ -151,7 +154,7 @@
             ></VolumeControl>
 
             <div v-if="!min" class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }">
-                <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
+                <span>{{ renderTimeSeconds(currentTime) }} / {{ renderTimeSeconds(duration) }}</span>
                 <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{ currentTimeSliceName }}</span>
             </div>
         </PlayerControls>
@@ -251,7 +254,7 @@
             v-model:shown="contextMenuShown"
             v-model:loop="loop"
             v-model:slice-loop="sliceLoop"
-            v-model:controls="userControlsState"
+            v-model:controls="userControls"
             v-model:time-slices-edit="timeSlicesEdit"
             type="video"
             :x="contextMenuX"
@@ -269,47 +272,35 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
     CURRENT_TIME_UPDATE_DELAY,
-    getAutoNextOnEnd,
-    getAutoNextPageDelay,
-    getAutoNextTime,
     getCachedInitialTime,
     getPlayerMuted,
     getPlayerVolume,
     getSelectedAudioTrack,
     getTogglePlayDelay,
     getUserSelectedResolutionVideo,
-    setAutoNextOnEnd,
-    setAutoNextPageDelay,
     setCachedInitialTime,
     setPlayerMuted,
     setPlayerVolume,
     setUserSelectedResolutionVideo,
 } from "@/control/player-preferences";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
-import { openFullscreen, closeFullscreen } from "@/utils/full-screen";
 import { renderTimeSeconds } from "@/utils/time";
-import type { NormalizedTimeSlice } from "@/utils/time-slices";
-import { findTimeSlice, normalizeTimeSlices } from "@/utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { useVModel } from "@/utils/v-model";
-import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
+import { AUTO_LOOP_MIN_DURATION, MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { PropType } from "vue";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
-import { getUniqueStringId } from "@/utils/unique-id";
-import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
-import type { HelpTooltipType } from "@/utils/player-tooltip";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
@@ -317,6 +308,21 @@ import PlayerLoader from "./common/PlayerLoader.vue";
 import PlayerAutoNextOverlay from "./common/PlayerAutoNextOverlay.vue";
 import PlayerTimeline from "./common/PlayerTimeline.vue";
 import PlayerTimelineTooltip from "./common/PlayerTimelineTooltip.vue";
+import { useUserPermissions } from "@/composables/use-user-permissions";
+import { useI18n } from "@/composables/use-i18n";
+import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
+import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
+import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
+import { usePlayerNextOnEnd } from "@/composables/use-player-next-on-end";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
+import { useTimeout } from "@/composables/use-timeout";
+import { useInterval } from "@/composables/use-interval";
+import { usePlayerMediaSession } from "@/composables/use-player-media-session";
+import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent } from "@/utils/position-event";
+import { onDocumentEvent } from "@/composables/on-document-event";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -354,1793 +360,1920 @@ const PlayerRelatedMediaList = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerRelatedMediaList.vue"),
 });
 
-export default defineComponent({
-    name: "VideoPlayer",
-    components: {
-        VolumeControl,
-        PlayerConfig,
-        PlayerTopBar,
-        PlayerContextMenu,
-        PlayerEncodingPending,
-        TimeSlicesEditHelper,
-        TagsEditHelper,
-        DescriptionWidget,
-        PlayerAttachmentsList,
-        PlayerSubtitles,
-        PlayerRelatedMediaList,
-        PlayerTooltip,
-        PlayerControls,
-        PlayerPlayFeedback,
-        PlayerLoader,
-        PlayerAutoNextOverlay,
-        PlayerTimeline,
-        PlayerTimelineTooltip,
+// True if it is a touch device
+const IS_TOUCH_DEVICE = isTouchDevice();
+
+// Volume control width (px)
+const VOLUME_CONTROL_WIDTH = 80;
+
+// Volume control width when miniature mode (px)
+const VOLUME_CONTROL_WIDTH_MIN = 50;
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Ref to the video element
+const videoElement = useTemplateRef("videoElement");
+
+// Ref to the audio track element
+const audioTrackElement = useTemplateRef("audioTrackElement");
+
+// Ref to the context menu
+const contextMenu = useTemplateRef("contextMenu");
+
+// Ref to the video scroller component
+const videoScroller = useTemplateRef("videoScroller");
+
+// Translation
+const { $t } = useI18n();
+
+// User permissions
+const { canWrite } = useUserPermissions();
+
+// Full screen model
+const fullscreen = defineModel<boolean>("fullscreen");
+
+// Display tag list widget?
+const displayTagList = defineModel<boolean>("displayTagList");
+
+// Display description widget
+const displayDescription = defineModel<boolean>("displayDescription");
+
+// Display controls? (user setting)
+const userControls = defineModel<boolean>("userControls");
+
+// Props
+const props = defineProps({
+    /**
+     * Media ID
+     */
+    mid: {
+        type: Number,
+        required: true,
     },
-    props: {
-        mid: Number,
-        metadata: Object as PropType<MediaData>,
-        rTick: Number,
 
-        fullscreen: Boolean,
-
-        next: Object as PropType<MediaListItem | null>,
-        prev: Object as PropType<MediaListItem | null>,
-        inAlbum: Boolean,
-
-        pageNext: Boolean,
-        pagePrev: Boolean,
-
-        canWrite: Boolean,
-
-        userControls: Boolean,
-
-        min: Boolean,
-
-        loopForced: Boolean,
-        loopForcedValue: Boolean,
-
-        autoPlay: Boolean,
-
-        displayTagList: Boolean,
-        displayDescription: Boolean,
+    /**
+     * Media metadata
+     */
+    metadata: {
+        type: Object as PropType<MediaData>,
+        required: true,
     },
-    emits: [
-        "go-next",
-        "go-prev",
-        "ended",
-        "update:fullscreen",
-        "albums-open",
-        "stats-open",
-        "force-loop",
-        "delete",
-        "update:displayTagList",
-        "update:displayDescription",
-    ],
-    setup(props) {
-        return {
-            togglePlayDelayTimeout: null as ReturnType<typeof setTimeout> | null,
-            autoNextTimer: null as ReturnType<typeof setInterval> | null,
-            subTag: "",
-            nextEndTimer: null as ReturnType<typeof setInterval> | null,
-            timer: null as ReturnType<typeof setInterval> | null,
-            mediaSessionId: getUniqueStringId(),
-            fullScreenState: useVModel(props, "fullscreen"),
-            userControlsState: useVModel(props, "userControls"),
-            displayTagListStatus: useVModel(props, "displayTagList"),
-            displayDescriptionStatus: useVModel(props, "displayDescription"),
-        };
+
+    /**
+     * Reload tick
+     */
+    rTick: {
+        type: Number,
+        required: true,
     },
-    data: function () {
-        return {
-            playing: false,
-            loading: true,
 
-            title: "",
+    /**
+     * Next element in album
+     */
+    next: Object as PropType<MediaListItem | null>,
 
-            autoPlayApplied: false,
+    /**
+     * Previous element in album
+     */
+    prev: Object as PropType<MediaListItem | null>,
 
-            videoURL: "",
-            videoPending: false,
-            videoPendingTask: 0,
-            videoEncodeError: "",
+    /**
+     * True if media is in album
+     */
+    inAlbum: Boolean,
 
-            canSaveTime: true,
+    /**
+     * Has next element in page?
+     */
+    pageNext: Boolean,
 
-            displayConfig: false,
+    /**
+     * Has previous element in page?
+     */
+    pagePrev: Boolean,
 
-            currentTime: 0,
-            duration: 0,
-            bufferedTime: 0,
-            ended: false,
-            timelineGrabbed: false,
-            lastTimeChangedEvent: 0,
+    /**
+     * Miniature mode
+     */
+    min: Boolean,
 
-            // Timeline tooltip
-            tooltipShown: false,
-            tooltipText: "",
-            tooltipTimeSlice: "",
-            tooltipX: 0,
-            tooltipEventX: 0,
-            tooltipImage: "",
+    /**
+     * Forced loop?
+     */
+    loopForced: Boolean,
 
-            showControls: true,
-            lastControlsInteraction: Date.now(),
-            mouseInControls: false,
+    /**
+     * Value of the loop if forced
+     */
+    loopForcedValue: Boolean,
 
-            loop: false,
-            nextEnd: false,
-            autoNextPageDelay: false,
-            sliceLoop: false,
+    /**
+     * Auto play?
+     */
+    autoPlay: Boolean,
+});
 
-            isShort: false,
+// Emits
+const emit = defineEmits<{
+    /**
+     * Go to the next media
+     */
+    (e: "go-next"): void;
 
-            currentResolution: -1,
+    /**
+     * Go to the previous media
+     */
+    (e: "go-prev"): void;
 
-            volume: 1,
-            muted: false,
-            volumeShown: isTouchDevice(),
-            internalTick: 0,
+    /**
+     * The user wants to delete the media
+     */
+    (e: "delete"): void;
 
-            speed: 1,
-            scale: 1,
+    /**
+     * The user wants to open the albums list modal
+     */
+    (e: "albums-open"): void;
 
-            feedback: "" as PlayerPlayFeedbackType,
+    /**
+     * The user wants to upen the size stats modal
+     */
+    (e: "stats-open"): void;
 
-            helpTooltip: "" as HelpTooltipType,
+    /**
+     * The audio ended
+     */
+    (e: "ended"): void;
 
-            expandedTitle: false,
-            expandedAlbum: false,
+    /**
+     * The audio ended
+     */
+    (e: "force-loop", loopVal: boolean): void;
+}>();
 
-            contextMenuX: 0,
-            contextMenuY: 0,
-            contextMenuShown: false,
+// Player common features
+const { expandedTitle, expandedAlbum, helpTooltip, enterTooltip, leaveTooltip, clearTooltip, goNext, goPrev, toggleFullScreen } =
+    usePlayerCommon(props, emit, fullscreen);
 
-            requiresRefresh: false,
+// Player common controls
+const {
+    hasAttachments,
+    displayAttachments,
+    hasDescription,
+    hasRelatedMedia,
+    displayRelatedMedia,
+    displayConfig,
+    contextMenuShown,
+    contextMenuX,
+    contextMenuY,
+    onContextMenu,
+    openDescription,
+    openStats,
+    openTags,
+    showAttachments,
+    showRelatedMedia,
+    showConfig,
+    manageAlbums,
+    refreshDescription,
+    clickControls,
+} = usePlayerCommonControls(props, emit, {
+    displayTagList,
+    displayDescription,
+    contextMenu,
+});
 
-            subtitles: "",
-            subtitlesStart: -1,
-            subtitlesEnd: -1,
+// Is a short audio? (forced loop, auto-next)
+const isShort = ref(false);
 
-            audioTrack: getSelectedAudioTrack(),
-            audioTrackURL: "",
-
-            timeSlices: [] as NormalizedTimeSlice[],
-            currentTimeSlice: null as NormalizedTimeSlice | null,
-            currentTimeSliceName: "",
-            currentTimeSliceStart: 0,
-            currentTimeSliceEnd: 0,
-
-            timeSlicesEdit: false,
-
-            waitingTimestamp: 0,
-            isWaiting: false,
-
-            mediaError: false,
-            mediaErrorMessage: "",
-
-            hasDescription: false,
-
-            hasAttachments: false,
-            displayAttachments: false,
-
-            hasRelatedMedia: false,
-            displayRelatedMedia: false,
-
-            pendingNextEnd: false,
-            pendingNextEndSeconds: 0,
-
-            scrollGrabbed: false,
-            scrollGrabX: 0,
-            scrollGrabY: 0,
-            scrollGrabTop: 0,
-            scrollGrabLeft: 0,
-            scrollMoved: false,
-
-            timeStartTap: 0,
-        };
+// Auto-next
+const { clearAutoNextTimer, setupAutoNextTimer } = usePlayerAutoNext(
+    props,
+    isShort,
+    {
+        displayConfig,
+        expandedTitle,
+        displayAttachments,
+        displayRelatedMedia,
     },
-    watch: {
-        rTick: function () {
-            this.internalTick++;
-            this.expandedTitle = false;
-            this.subtitles = "";
-            this.subtitlesStart = -1;
-            this.subtitlesEnd = -1;
-            this.autoPlayApplied = false;
-            this.initializeVideo();
-        },
-        videoURL: function () {
-            if (this.videoURL) {
-                this.loading = true;
-            }
-        },
-        next: function () {
-            this.setDefaultLoop();
-            this.setupAutoNextTimer();
-            if (!this.next && !this.pageNext) {
-                this.hideNextEnd();
-            }
-        },
-        pageNext: function () {
-            this.setDefaultLoop();
-            this.setupAutoNextTimer();
-            if (!this.next && !this.pageNext) {
-                this.hideNextEnd();
-            }
-        },
+    goNext,
+);
+
+// Next-on-end
+const {
+    nextEnd,
+    autoNextPageDelay,
+    pendingNextEnd,
+    pendingNextEndSeconds,
+    showNextEnd,
+    hideNextEnd,
+    onUpdateNextEnd,
+    onUpdateAutoNextPageDelay,
+} = usePlayerNextOnEnd(props, goNext);
+
+// Loading status
+const loading = ref(true);
+
+// Playing status
+const playing = ref(true);
+
+// Timeout to delay the play/pause action
+const togglePlayDelayTimeout = useTimeout();
+
+// True if auto-play was applied
+const autoPlayApplied = ref(false);
+
+// Title
+const title = ref("");
+
+// Video URL
+const videoURL = ref("");
+
+// True if video is pending of being encoded
+const videoPending = ref(false);
+
+// If pending of encoding, the ID of the encoding task
+const videoPendingTask = ref(0);
+
+// If the task resulted in an error, the error message
+const videoEncodeError = ref("");
+
+// True if the audio current time can be saved
+const canSaveTime = ref(true);
+
+// The current time (seconds)
+const currentTime = ref(0);
+
+// The duration (seconds)
+const duration = ref(0);
+
+// The total buffered time (seconds)
+const bufferedTime = ref(0);
+
+// True if ended
+const ended = ref(false);
+
+// True if timeline is being grabbed
+const timelineGrabbed = ref(false);
+
+// Timestamp of the last event that changed the timeline
+const lastTimeChangedEvent = ref(0);
+
+// Timeline tooltip shown?
+const tooltipShown = ref(false);
+
+// Timeline tooltip text
+const tooltipText = ref("");
+
+// Time slice for the timeline tooltip
+const tooltipTimeSlice = ref("");
+
+// Position of the timeline tooltip
+const tooltipX = ref(0);
+
+// X position after updating the timeline
+const tooltipEventX = ref(0);
+
+// Image to display for the timeline tooltip
+const tooltipImage = ref("");
+
+// True to show controls
+const showControls = ref(true);
+
+// Timestamp of the last interaction with the controls
+const lastControlsInteraction = ref(Date.now());
+
+// True if the mouse is on the controls
+const mouseInControls = ref(false);
+
+// Loop audio when ended?
+const loop = ref(false);
+
+// Index of the current selected resolution
+const currentResolution = ref(-1);
+
+// Current volume
+const volume = ref(getPlayerVolume());
+
+// Muted?
+const muted = ref(getPlayerMuted());
+
+// Volume control shown?
+const volumeShown = ref(IS_TOUCH_DEVICE);
+
+// Internal tick for player config
+const internalTick = ref(0);
+
+// Playback speed
+const speed = ref(1);
+
+// Video scale
+const scale = ref(1);
+
+// Play / Pause feedback
+const feedback = ref<PlayerPlayFeedbackType>("");
+
+// True if refresh of the audio is required to play it
+const requiresRefresh = ref(false);
+
+// Current subtitles
+const subtitles = ref("");
+
+// Subtitles range
+const subtitlesStart = ref(-1);
+const subtitlesEnd = ref(-1);
+
+// Selected audio track
+const audioTrack = ref(getSelectedAudioTrack());
+
+// URL of the audio track file
+const audioTrackURL = ref("");
+
+// True if waiting to load data into buffer
+const isWaiting = ref(false);
+
+// Timestamp of the 'waiting' event reception in the video element
+const waitingTimestamp = ref(0);
+
+// True if media could not be loaded and resulted in an error
+const mediaError = ref(false);
+
+// The error message for the media load process
+const mediaErrorMessage = ref("");
+
+// Timestamp for player tap detection
+const timeStartTap = ref(0);
+
+// True if scroll has been grabbed
+const scrollGrabbed = ref(false);
+
+// Scroll grab coordinates
+const scrollGrabX = ref(0);
+const scrollGrabY = ref(0);
+const scrollGrabTop = ref(0);
+const scrollGrabLeft = ref(0);
+
+// True if the scroll has been moved
+const scrollMoved = ref(false);
+
+/**
+ * Initializes the video
+ */
+const initializeVideo = () => {
+    if (!props.metadata) {
+        return;
+    }
+
+    isShort.value = props.metadata.is_anim || props.metadata.duration <= AUTO_LOOP_MIN_DURATION;
+    canSaveTime.value = !props.metadata.force_start_beginning;
+
+    initializeTimeSlices();
+
+    currentTime.value = canSaveTime.value ? getCachedInitialTime(props.mid) : 0;
+    duration.value = props.metadata.duration || 0;
+
+    speed.value = 1;
+    scale.value = 1;
+
+    setDefaultLoop();
+
+    currentResolution.value = getUserSelectedResolutionVideo(props.metadata);
+
+    loading.value = true;
+    playing.value = true;
+
+    setVideoURL();
+    onUpdateAudioTrack();
+};
+
+onMounted(initializeVideo);
+
+watch(
+    () => props.rTick,
+    () => {
+        internalTick.value++;
+        resetSubtitles();
+        autoPlayApplied.value = false;
+        initializeVideo();
     },
-    mounted: function () {
-        // Load player preferences
-        this.muted = getPlayerMuted();
-        this.volume = getPlayerVolume();
-        this.nextEnd = getAutoNextOnEnd();
-        this.autoNextPageDelay = getAutoNextPageDelay();
+);
 
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
+// Clear video URL before the component unmounts
+onBeforeUnmount(() => {
+    videoURL.value = "";
+    onClearURL();
+});
 
-        this.timer = setInterval(this.tick.bind(this), 100);
+/**
+ * Called to clear the video URL
+ */
+const onClearURL = () => {
+    const videoElem = videoElement.value;
+    if (videoElem) {
+        videoElem.src = "";
+    }
+};
 
-        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_UPDATE, this.reloadSubtitles.bind(this));
+/**
+ * Sets the video URL
+ */
+const setVideoURL = () => {
+    hideNextEnd();
 
-        this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
+    clearAutoNextTimer();
 
-        this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
+    mediaError.value = false;
+    mediaErrorMessage.value = "";
 
-        this.initializeVideo();
+    if (!props.metadata) {
+        videoURL.value = "";
+        title.value = "";
+        onClearURL();
+        duration.value = 0;
+        loading.value = false;
+        return;
+    }
 
-        if (window.navigator && window.navigator.mediaSession) {
-            MediaController.MediaSessionId = this.mediaSessionId;
-            clearMediaSessionActionHandlers();
+    title.value = props.metadata.title;
 
-            addMediaSessionActionHandler(
-                ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"],
-                this.handleMediaSessionEvent.bind(this),
-            );
-
-            this.updateMediaSessionPlaybackState();
+    if (currentResolution.value < 0) {
+        if (props.metadata.encoded) {
+            videoURL.value = getAssetURL(props.metadata.url);
+            videoPending.value = false;
+            videoPendingTask.value = 0;
+            videoEncodeError.value = "";
+            setupAutoNextTimer();
+        } else {
+            videoURL.value = "";
+            onClearURL();
+            videoPending.value = true;
+            videoPendingTask.value = props.metadata.task;
+            videoEncodeError.value = props.metadata.error || "";
+            duration.value = 0;
+            loading.value = false;
         }
-    },
-    beforeUnmount: function () {
-        this.videoURL = "";
-        this.onClearURL();
-
-        clearInterval(this.timer);
-
-        if (this.togglePlayDelayTimeout) {
-            clearTimeout(this.togglePlayDelayTimeout);
-            this.togglePlayDelayTimeout = null;
-        }
-
-        if (this.autoNextTimer) {
-            clearTimeout(this.autoNextTimer);
-            this.autoNextTimer = null;
-        }
-
-        if (this.nextEndTimer) {
-            clearTimeout(this.nextEndTimer);
-            this.nextEndTimer = null;
-        }
-
-        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            clearMediaSessionActionHandlers();
-            navigator.mediaSession.playbackState = "none";
-            MediaController.MediaSessionId = "";
-        }
-    },
-    methods: {
-        onContextMenu: function (e: MouseEvent) {
-            this.contextMenuX = e.pageX;
-            this.contextMenuY = e.pageY;
-            this.contextMenuShown = true;
-            this.$refs.contextMenu?.show();
-            e.preventDefault();
-        },
-
-        manageAlbums: function () {
-            this.$emit("albums-open");
-        },
-
-        openStats: function () {
-            this.$emit("stats-open");
-        },
-
-        openTags: function () {
-            this.displayTagListStatus = true;
-        },
-
-        openDescription: function () {
-            if (!this.hasDescription && !this.canWrite) {
-                return;
-            }
-            this.displayDescriptionStatus = true;
-        },
-
-        showAttachments: function () {
-            this.displayAttachments = !this.displayAttachments;
-            this.displayRelatedMedia = false;
-            this.displayConfig = false;
-        },
-
-        showRelatedMedia: function () {
-            this.displayRelatedMedia = !this.displayRelatedMedia;
-            this.displayAttachments = false;
-            this.displayConfig = false;
-        },
-
-        onPlayerMouseDown: function (e: MouseEvent) {
-            if (isTouchDevice()) {
-                return;
-            }
-            if (e.button !== 0) {
-                return;
-            }
-            if (this.contextMenuShown) {
-                e.stopPropagation();
-            }
-            this.clickPlayer();
-        },
-
-        onPlayerTouchStart: function (e: TouchEvent) {
-            if (this.contextMenuShown) {
-                e.stopPropagation();
-            }
-            this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
-                this.displayConfig = false;
-                this.$refs.contextMenu?.hide();
-                this.displayAttachments = false;
-                this.displayRelatedMedia = false;
+    } else {
+        if (props.metadata.resolutions && props.metadata.resolutions.length > currentResolution.value) {
+            const res = props.metadata.resolutions[currentResolution.value];
+            if (res.ready) {
+                videoURL.value = getAssetURL(res.url);
+                videoPending.value = false;
+                videoPendingTask.value = 0;
+                videoEncodeError.value = "";
+                setupAutoNextTimer();
             } else {
-                this.timeStartTap = Date.now();
+                videoURL.value = "";
+                onClearURL();
+                videoPending.value = true;
+                videoPendingTask.value = res.task;
+                videoEncodeError.value = res.error || "";
+                duration.value = 0;
+                loading.value = false;
             }
-            this.interactWithControls();
-        },
+        } else {
+            videoURL.value = "";
+            onClearURL();
+            videoPending.value = true;
+            videoPendingTask.value = 0;
+            videoEncodeError.value = "";
+            duration.value = 0;
+            loading.value = false;
+        }
+    }
+};
 
-        onPlayerTouchEnd: function (e: TouchEvent) {
-            if (this.timelineGrabbed) {
-                this.timelineGrabbed = false;
-                if (e.touches[0]) {
-                    this.onTimelineSkip(e.touches[0].pageX);
+watch(videoURL, () => {
+    if (videoURL.value) {
+        loading.value = true;
+    }
+});
+
+/**
+ * Called when the selected resolution changes
+ */
+const onResolutionUpdated = () => {
+    setUserSelectedResolutionVideo(props.metadata, currentResolution.value);
+    setVideoURL();
+};
+
+/**
+ * Called to update the audio track file
+ */
+const onUpdateAudioTrack = () => {
+    if (!audioTrack.value || !props.metadata || !props.metadata.audios) {
+        audioTrackURL.value = "";
+        return;
+    }
+
+    for (const audio of props.metadata.audios) {
+        if (audio.id === audioTrack.value) {
+            audioTrackURL.value = getAssetURL(audio.url);
+            return;
+        }
+    }
+
+    audioTrackURL.value = "";
+};
+
+/**
+ * Sets the default state for the loop
+ */
+const setDefaultLoop = () => {
+    if (props.loopForced) {
+        loop.value = props.loopForcedValue;
+    } else {
+        loop.value = (!props.next && !props.pageNext && !props.inAlbum) || !nextEnd.value;
+    }
+};
+
+// Reset default loop when next media changes
+watch([() => props.next, () => props.pageNext], setDefaultLoop);
+
+/* Subtitles */
+
+/**
+ * Resets subtitles
+ */
+const resetSubtitles = () => {
+    subtitles.value = "";
+    subtitlesStart.value = -1;
+    subtitlesEnd.value = -1;
+};
+
+/**
+ * Updates subtitles based on the current time
+ */
+const updateSubtitles = () => {
+    if (currentTime.value >= subtitlesStart.value && currentTime.value <= subtitlesEnd.value) {
+        return;
+    }
+    const sub = SubtitlesController.GetSubtitlesLine(currentTime.value);
+    if (sub) {
+        subtitles.value = sub.text;
+        subtitlesStart.value = sub.start;
+        subtitlesEnd.value = sub.end;
+    } else {
+        subtitles.value = "";
+        subtitlesStart.value = 0;
+        subtitlesEnd.value = 0;
+    }
+};
+
+onApplicationEvent(EVENT_NAME_SUBTITLES_UPDATE, () => {
+    resetSubtitles();
+    updateSubtitles();
+});
+
+/* Controls */
+
+/**
+ * Toggles play/pause without delay
+ */
+const togglePlayImmediate = () => {
+    togglePlayDelayTimeout.clear();
+
+    if (playing.value) {
+        feedback.value = "pause";
+        pause();
+    } else {
+        feedback.value = "play";
+        play();
+    }
+
+    displayConfig.value = false;
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+};
+
+/**
+ * Toggles play/pause with delay
+ */
+const togglePlay = () => {
+    const delay = getTogglePlayDelay();
+
+    if (playing.value) {
+        if (togglePlayDelayTimeout.isSet()) {
+            togglePlayDelayTimeout.clear();
+            feedback.value = "";
+        } else if (delay > 0) {
+            feedback.value = "pause";
+            togglePlayDelayTimeout.set(pause, delay);
+        } else {
+            feedback.value = "pause";
+            pause();
+        }
+    } else {
+        if (togglePlayDelayTimeout.isSet()) {
+            togglePlayDelayTimeout.clear();
+            feedback.value = "";
+        } else if (delay > 0) {
+            feedback.value = "play";
+            togglePlayDelayTimeout.set(play, delay);
+        } else {
+            feedback.value = "play";
+            play();
+        }
+    }
+
+    displayConfig.value = false;
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+};
+
+/**
+ * Enables loop and replays the media
+ */
+const enableLoopAndPlay = () => {
+    loop.value = true;
+    emit("force-loop", loop.value);
+    play();
+};
+
+/**
+ * Plays the media
+ */
+const play = () => {
+    hideNextEnd();
+
+    if (requiresRefresh.value) {
+        requiresRefresh.value = false;
+        MediaController.Load();
+        return;
+    }
+
+    playing.value = true;
+
+    const video = videoElement.value;
+
+    if (video) {
+        video.play();
+    }
+};
+
+/**
+ * Pauses the media
+ */
+const pause = () => {
+    playing.value = false;
+
+    const video = videoElement.value;
+
+    if (video) {
+        video.pause();
+    }
+
+    if (!loading.value && canSaveTime.value && video && !video.ended) {
+        setCachedInitialTime(props.mid, currentTime.value);
+    }
+
+    lastTimeChangedEvent.value = Date.now();
+
+    interactWithControls();
+};
+
+/**
+ * Sets the current time
+ * @param time The current time
+ * @param save True to save the current time
+ */
+const setTime = (time: number, save?: boolean) => {
+    currentTimeSlice.value = null;
+
+    time = Math.max(0, time);
+    time = Math.min(time, duration.value);
+
+    if (isNaN(time) || !isFinite(time) || time < 0) {
+        return;
+    }
+
+    currentTime.value = time;
+
+    const video = videoElement.value;
+
+    if (video) {
+        video.currentTime = time;
+    }
+
+    if (save && canSaveTime.value) {
+        setCachedInitialTime(props.mid, currentTime.value);
+        lastTimeChangedEvent.value = Date.now();
+    }
+
+    if (time < duration.value) {
+        ended.value = false;
+    }
+
+    updateSubtitles();
+    updateCurrentTimeSlice();
+};
+
+/**
+ * Called when the top-bar expand status changes
+ */
+const onTopBarExpand = () => {
+    if (expandedTitle.value) {
+        hideNextEnd();
+        pause();
+    } else if (!expandedAlbum.value) {
+        play();
+    }
+};
+
+/**
+ * Called when the user interacts with the controls
+ */
+const interactWithControls = () => {
+    showControls.value = true;
+    lastControlsInteraction.value = Date.now();
+};
+
+/**
+ * Called when the mouse enters the controls
+ */
+const enterControls = () => {
+    mouseInControls.value = true;
+};
+
+/**
+ * Called when the mouse  leaves the controls
+ */
+const leaveControls = () => {
+    mouseInControls.value = false;
+    volumeShown.value = IS_TOUCH_DEVICE;
+    clearTooltip();
+};
+
+/**
+ * Called when the volume is updated by the user
+ */
+const onUserVolumeUpdated = () => {
+    setPlayerVolume(volume.value);
+};
+
+/**
+ * Changes the volume
+ * @param v The new volume
+ */
+const changeVolume = (v: number) => {
+    volume.value = v;
+    onUserVolumeUpdated();
+};
+
+/**
+ * Called when the muted state is changed by the user
+ */
+const onUserMutedUpdated = () => {
+    setPlayerMuted(muted.value);
+};
+
+/**
+ * Toggles the muted state
+ */
+const toggleMuted = () => {
+    muted.value = !muted.value;
+    onUserMutedUpdated();
+};
+
+/* Timeline */
+
+/**
+ * Click event handler for the timeline
+ * @param e The click event
+ */
+const clickTimeline = (e: Event) => {
+    contextMenu.value?.hide();
+    displayConfig.value = false;
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+    e.stopPropagation();
+};
+
+/**
+ * Grabs the timeline
+ * @param x The X coordinate
+ */
+const grabTimeline = (x: number) => {
+    timelineGrabbed.value = true;
+    onTimelineSkip(x);
+};
+
+/**
+ * Skips time based on the timeline click position
+ * @param x The X coordinate
+ */
+const onTimelineSkip = (x: number) => {
+    const bounds = (container.value?.querySelector(".player-timeline-back") as HTMLElement)?.getBoundingClientRect();
+
+    if (!bounds) {
+        return;
+    }
+
+    const offset = bounds.left;
+    const width = bounds.width || 1;
+
+    if (x < offset) {
+        setTime(0);
+    } else {
+        const p = x - offset;
+        const tP = Math.min(1, p / width);
+        setTime(tP * duration.value);
+    }
+};
+
+/**
+ * Called when the mouse leaves the timeline
+ */
+const mouseLeaveTimeline = () => {
+    if (!IS_TOUCH_DEVICE) {
+        tooltipShown.value = false;
+    }
+    leaveControls();
+};
+
+/**
+ * Gets the URL of a video preview for a specific time
+ * @param time The time
+ * @returns The URL of the image, or an empty string
+ */
+const getThumbnailForTime = (time: number): string => {
+    if (duration.value <= 0 || !props.metadata || !props.metadata.video_previews || !props.metadata.video_previews_interval) {
+        return "";
+    }
+    const thumbCount = Math.floor(duration.value / props.metadata.video_previews_interval);
+
+    if (thumbCount <= 0) {
+        return "";
+    }
+
+    let part = Math.floor(time / props.metadata.video_previews_interval);
+    if (part > thumbCount) {
+        part = thumbCount;
+    }
+
+    return getAssetURL(props.metadata.video_previews.replace("{INDEX}", "" + part));
+};
+
+/**
+ * Updates the timeline tooltip
+ * @param x The X coordinate
+ */
+const updateTimelineTooltip = (x: number) => {
+    const bounds = (container.value?.querySelector(".player-timeline-back") as HTMLElement)?.getBoundingClientRect();
+
+    if (!bounds) {
+        return;
+    }
+
+    const offset = bounds.left;
+    const width = bounds.width || 1;
+
+    let time: number;
+
+    if (x < offset) {
+        time = 0;
+    } else {
+        const p = x - offset;
+        const tP = Math.min(1, p / width);
+        time = tP * duration.value;
+    }
+
+    tooltipShown.value = true;
+    tooltipText.value = renderTimeSeconds(time);
+    tooltipImage.value = getThumbnailForTime(time);
+    tooltipTimeSlice.value = findTimeSliceName(time);
+    tooltipEventX.value = x;
+
+    nextTick(tick);
+};
+
+/* Time slices */
+
+const {
+    timeSlices,
+    currentTimeSlice,
+    currentTimeSliceName,
+    timeSlicesEdit,
+    sliceLoop,
+    initializeTimeSlices,
+    findTimeSliceName,
+    updateCurrentTimeSlice,
+    refreshTimeSlices,
+} = usePlayerTimeSlices(props, currentTime, setTime);
+
+/* Video scale */
+
+/**
+ * Renders scale
+ * @param scale The scale
+ * @returns The rendered value
+ */
+const renderScale = (scale: number): string => {
+    if (scale > 1) {
+        return Math.floor(scale * 100) + "%";
+    } else if (scale < 1) {
+        return Math.floor(scale * 100) + "%";
+    } else {
+        return $t("Normal");
+    }
+};
+
+/**
+ * Gets scale CSS style
+ * @param scale The scale
+ * @returns The value as percent
+ */
+const getScaleCss = (scale: number): string => {
+    return Math.floor(scale * 100) + "%";
+};
+
+/**
+ * Called wne scale value is updated by the user
+ */
+const onScaleUpdated = () => {
+    if (scale.value > 1) {
+        nextTick(centerScroll);
+    }
+};
+
+/**
+ * Mouse wheel event handler to change the player scale
+ * @param e The mouse wheel event
+ */
+const onMouseWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.deltaY > 0) {
+            scale.value = Math.max(1, scale.value - 0.1);
+        } else {
+            scale.value = Math.min(8, scale.value + 0.1);
+        }
+
+        PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+        onScaleUpdated();
+    }
+};
+
+/**
+ * Centers the scroller
+ */
+const centerScroll = () => {
+    const scroller = videoScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
+    scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
+};
+
+/**
+ * Grabs scroll
+ * @param e The position event
+ */
+const grabScroll = (e: PositionEvent) => {
+    if (scale.value <= 1) {
+        return; // Not scaled
+    }
+
+    leaveControls();
+
+    if (displayConfig.value || contextMenuShown.value || displayAttachments.value || displayRelatedMedia.value) {
+        displayConfig.value = false;
+        contextMenu.value?.hide();
+        displayAttachments.value = false;
+        displayRelatedMedia.value = false;
+        e.e.stopPropagation();
+        return;
+    }
+
+    const scroller = videoScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    scrollGrabTop.value = scroller.scrollTop;
+    scrollGrabLeft.value = scroller.scrollLeft;
+
+    scrollGrabbed.value = true;
+    scrollMoved.value = false;
+
+    scrollGrabX.value = e.x;
+    scrollGrabY.value = e.y;
+
+    e.e.stopPropagation();
+};
+
+/**
+ * Grabs scroll with the mouse
+ * @param e The mouse event
+ */
+const grabScrollWithMouse = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return;
+    }
+
+    grabScroll(positionEventFromMouseEvent(e));
+};
+
+/**
+ * Moves scroll using the mouse position
+ * @param x The X coordinate
+ * @param y The Y coordinate
+ */
+const moveScrollByMouse = (x: number, y: number) => {
+    const scroller = videoScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    const rect = scroller.getBoundingClientRect();
+
+    const maxScrollLeft = scroller.scrollWidth - rect.width;
+    const maxScrollTop = scroller.scrollHeight - rect.height;
+
+    const diffX = x - scrollGrabX.value;
+    const diffY = y - scrollGrabY.value;
+
+    scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, scrollGrabTop.value - diffY));
+    scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, scrollGrabLeft.value - diffX));
+
+    scrollMoved.value = true;
+};
+
+onDocumentEvent("mousemove", (e: MouseEvent) => {
+    if (!scrollGrabbed.value) {
+        return;
+    }
+
+    moveScrollByMouse(e.pageX, e.pageY);
+});
+
+onDocumentEvent("mouseup", (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return;
+    }
+
+    if (!scrollGrabbed.value) {
+        return;
+    }
+
+    scrollGrabbed.value = false;
+
+    if (!scrollMoved.value) {
+        clickPlayer();
+        return;
+    }
+
+    scrollMoved.value = false;
+
+    moveScrollByMouse(e.pageX, e.pageY);
+});
+
+/**
+ * Event handler for 'touchstart' on the player
+ * @param e The event
+ */
+const onScrollerTouchStart = (e: Event) => {
+    if (scale.value <= 1) {
+        return;
+    }
+
+    e.stopPropagation();
+};
+
+/**
+ * Increments the vertical scroll
+ * @param a An increment, 'home' to set it to the beginning, 'end' to set it to the end
+ * @returns True if applied, false if it cannot be applied
+ */
+const incrementVerticalScroll = (a: number | "home" | "end"): boolean => {
+    if (scale.value <= 1) {
+        return false;
+    }
+
+    const el = videoScroller.value;
+
+    if (!el) {
+        return false;
+    }
+
+    const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+
+    if (maxScroll <= 0) {
+        return false;
+    }
+
+    if (typeof a === "number") {
+        el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
+    } else if (a === "home") {
+        el.scrollTop = 0;
+    } else if (a === "end") {
+        el.scrollTop = maxScroll;
+    }
+
+    return true;
+};
+
+/**
+ * Increments the horizontal scroll
+ * @param a An increment, 'home' to set it to the beginning, 'end' to set it to the end
+ * @returns True if applied, false if it cannot be applied
+ */
+const incrementHorizontalScroll = (a: number | "home" | "end"): boolean => {
+    if (scale.value <= 1) {
+        return false;
+    }
+
+    const el = videoScroller.value;
+
+    if (!el) {
+        return false;
+    }
+
+    const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
+
+    if (maxScroll <= 0) {
+        return false;
+    }
+
+    if (typeof a === "number") {
+        el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
+    } else if (a === "home") {
+        el.scrollLeft = 0;
+    } else if (a === "end") {
+        el.scrollLeft = maxScroll;
+    }
+
+    return true;
+};
+
+/* Player mouse / touch events */
+
+/**
+ * Called when the mouse leaves the player
+ */
+const mouseLeavePlayer = () => {
+    timelineGrabbed.value = false;
+
+    if (
+        !playing.value ||
+        expandedTitle.value ||
+        expandedAlbum.value ||
+        displayConfig.value ||
+        displayAttachments.value ||
+        displayRelatedMedia.value
+    ) {
+        return;
+    }
+
+    showControls.value = false;
+    volumeShown.value = IS_TOUCH_DEVICE;
+    clearTooltip();
+};
+
+/**
+ * Event handler for 'mouseup'
+ * @param e The mouse event
+ */
+const playerMouseUp = (e: MouseEvent) => {
+    if (timelineGrabbed.value) {
+        timelineGrabbed.value = false;
+        onTimelineSkip(e.pageX);
+
+        if (IS_TOUCH_DEVICE) {
+            tooltipShown.value = false;
+        }
+    }
+};
+
+/**
+ * Event handler for 'mousemove'
+ * @param e The mouse event
+ */
+const playerMouseMove = (e: MouseEvent) => {
+    interactWithControls();
+
+    if (timelineGrabbed.value) {
+        onTimelineSkip(e.pageX);
+    }
+};
+
+/**
+ * Event handler for 'touchmove'
+ * @param e The touch event
+ */
+const playerTouchMove = (e: TouchEvent) => {
+    interactWithControls();
+
+    if (timelineGrabbed.value && e.touches[0]) {
+        onTimelineSkip(e.touches[0].pageX);
+        updateTimelineTooltip(e.touches[0].pageX);
+    }
+};
+
+/**
+ * Event handler for 'click'
+ */
+const clickPlayer = () => {
+    leaveControls();
+
+    if (displayConfig.value || contextMenuShown.value || displayAttachments.value || displayRelatedMedia.value) {
+        displayConfig.value = false;
+        contextMenu.value?.hide();
+        displayAttachments.value = false;
+        displayRelatedMedia.value = false;
+    } else {
+        togglePlay();
+    }
+
+    interactWithControls();
+};
+
+/**
+ * Event handler for 'mousedown'
+ * @param e The mouse event
+ */
+const onPlayerMouseDown = (e: MouseEvent) => {
+    if (IS_TOUCH_DEVICE) {
+        return;
+    }
+
+    if (e.button !== 0) {
+        return;
+    }
+
+    if (contextMenuShown.value) {
+        e.stopPropagation();
+    }
+
+    clickPlayer();
+};
+
+/**
+ * Event handler for 'touchstart'
+ * @param e The touch event
+ */
+const onPlayerTouchStart = (e: TouchEvent) => {
+    if (contextMenuShown.value) {
+        e.stopPropagation();
+    }
+
+    leaveControls();
+
+    if (displayConfig.value || contextMenuShown.value || displayAttachments.value || displayRelatedMedia.value) {
+        displayConfig.value = false;
+        contextMenu.value?.hide();
+        displayAttachments.value = false;
+        displayRelatedMedia.value = false;
+    } else {
+        timeStartTap.value = Date.now();
+    }
+
+    interactWithControls();
+};
+
+// Max duration of a tap
+const MAX_TIME_TAP = 500;
+
+/**
+ * Event handler for 'touchend'
+ * @param e The touch event
+ */
+const onPlayerTouchEnd = (e: TouchEvent) => {
+    if (timelineGrabbed.value) {
+        timelineGrabbed.value = false;
+        if (e.touches[0]) {
+            onTimelineSkip(e.touches[0].pageX);
+        }
+    }
+
+    tooltipShown.value = false;
+
+    if (timeStartTap.value && Date.now() - timeStartTap.value < MAX_TIME_TAP) {
+        togglePlay();
+        timeStartTap.value = 0;
+    }
+};
+
+/* Player media events */
+
+/**
+ * Event handler for 'loadedmetadata' on the audio track element
+ */
+const onAudioTrackLoadMetadata = () => {
+    const audioElement = audioTrackElement.value;
+
+    if (!audioElement) {
+        return;
+    }
+
+    if (typeof audioElement.duration !== "number" || isNaN(audioElement.duration) || !isFinite(audioElement.duration)) {
+        return;
+    }
+
+    const duration = audioElement.duration;
+
+    if (typeof currentTime.value === "number" && !isNaN(currentTime.value) && isFinite(currentTime.value) && currentTime.value >= 0) {
+        audioElement.currentTime = Math.min(currentTime.value, duration);
+    }
+};
+
+/**
+ * Event handler for 'loadedmetadata' on the video element
+ * @param ev The event
+ */
+const onLoadMetaData = (ev: Event) => {
+    const videoElement = ev.target as HTMLVideoElement;
+
+    if (!videoElement) {
+        return;
+    }
+
+    if (typeof videoElement.duration !== "number" || isNaN(videoElement.duration) || !isFinite(videoElement.duration)) {
+        return;
+    }
+
+    duration.value = videoElement.duration;
+
+    if (typeof currentTime.value === "number" && !isNaN(currentTime.value) && isFinite(currentTime.value) && currentTime.value >= 0) {
+        videoElement.currentTime = Math.min(currentTime.value, duration.value);
+        updateSubtitles();
+        updateCurrentTimeSlice();
+    }
+};
+
+/**
+ * Event handler for 'timeupdate' on the video element
+ * @param ev The event
+ */
+const onVideoTimeUpdate = (ev: Event) => {
+    hideNextEnd();
+
+    if (loading.value) {
+        return;
+    }
+
+    const videoElement = ev.target as HTMLVideoElement;
+
+    if (
+        !videoElement ||
+        typeof videoElement.currentTime !== "number" ||
+        isNaN(videoElement.currentTime) ||
+        !isFinite(videoElement.currentTime) ||
+        typeof videoElement.duration !== "number" ||
+        isNaN(videoElement.duration) ||
+        !isFinite(videoElement.duration)
+    ) {
+        return;
+    }
+
+    currentTime.value = videoElement.currentTime;
+    duration.value = videoElement.duration;
+
+    if (!loading.value && canSaveTime.value && Date.now() - lastTimeChangedEvent.value > CURRENT_TIME_UPDATE_DELAY) {
+        setCachedInitialTime(props.mid, currentTime.value);
+        lastTimeChangedEvent.value = Date.now();
+    }
+
+    updateSubtitles();
+    updateCurrentTimeSlice();
+
+    if (audioTrackURL.value) {
+        const audio = audioTrackElement.value;
+        if (audio) {
+            const correspondingTime = Math.min(videoElement.currentTime, audio.duration);
+
+            if (Math.abs(correspondingTime - audio.currentTime) > speed.value / 10) {
+                audio.currentTime = Math.min(videoElement.currentTime, audio.duration);
+            }
+
+            if (audio.paused !== videoElement.paused && videoElement.currentTime <= audio.duration) {
+                if (videoElement.paused) {
+                    audio.pause();
+                } else {
+                    audio.play();
                 }
             }
+        }
+    }
+};
 
-            this.tooltipShown = false;
+/**
+ * Event handler for 'canplay' on the video element
+ */
+const onCanPlay = () => {
+    loading.value = false;
 
-            if (this.timeStartTap && Date.now() - this.timeStartTap < 500) {
-                this.togglePlay();
-                this.timeStartTap = 0;
-            }
-        },
+    if (autoPlayApplied.value) {
+        if (playing.value) {
+            const player = videoElement.value;
 
-        clickPlayer: function () {
-            this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
-                this.displayConfig = false;
-                this.$refs.contextMenu?.hide();
-                this.displayAttachments = false;
-                this.displayRelatedMedia = false;
-            } else {
-                this.togglePlay();
-            }
-            this.interactWithControls();
-        },
-
-        enterTooltip: function (t: HelpTooltipType) {
-            if (isTouchDevice()) {
-                this.helpTooltip = "";
-                return;
-            }
-            this.helpTooltip = t;
-        },
-
-        leaveTooltip: function (t: string) {
-            if (t === this.helpTooltip) {
-                this.helpTooltip = "";
-            }
-        },
-
-        showConfig: function () {
-            this.displayConfig = !this.displayConfig;
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-        },
-
-        getThumbnailForTime: function (time: number) {
-            if (this.duration <= 0 || !this.metadata || !this.metadata.video_previews || !this.metadata.video_previews_interval) {
-                return "";
-            }
-            const thumbCount = Math.floor(this.duration / this.metadata.video_previews_interval);
-
-            if (thumbCount <= 0) {
-                return "";
-            }
-
-            let part = Math.floor(time / this.metadata.video_previews_interval);
-            if (part > thumbCount) {
-                part = thumbCount;
-            }
-
-            return getAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
-        },
-
-        onResolutionUpdated: function () {
-            setUserSelectedResolutionVideo(this.metadata, this.currentResolution);
-            this.setVideoURL();
-        },
-
-        clickControls: function (e?: Event) {
-            this.displayConfig = false;
-            this.$refs.contextMenu?.hide();
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-            if (e) {
-                e.stopPropagation();
-            }
-        },
-
-        goNext: function () {
-            if (this.next || this.pageNext) {
-                this.$emit("go-next");
-            }
-        },
-
-        goPrev: function () {
-            if (this.prev || this.pagePrev) {
-                this.$emit("go-prev");
-            }
-        },
-
-        onUserVolumeUpdated() {
-            setPlayerVolume(this.volume);
-        },
-
-        changeVolume: function (v: number) {
-            this.volume = v;
-            this.onUserVolumeUpdated();
-        },
-
-        onUserMutedUpdated() {
-            setPlayerMuted(this.muted);
-        },
-
-        toggleMuted: function () {
-            this.muted = !this.muted;
-            this.onUserMutedUpdated();
-        },
-
-        /* Player events */
-
-        onAudioLoadMetadata: function () {
-            const audioElement = this.$el.querySelector("audio") as HTMLAudioElement;
-            if (!audioElement) {
-                return;
-            }
-
-            if (typeof audioElement.duration !== "number" || isNaN(audioElement.duration) || !isFinite(audioElement.duration)) {
-                return;
-            }
-
-            const duration = audioElement.duration;
-
-            if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
-                audioElement.currentTime = Math.min(this.currentTime, duration);
-            }
-        },
-
-        onLoadMetaData: function (ev: Event) {
-            const videoElement = ev.target as HTMLVideoElement;
-
-            if (!videoElement) {
-                return;
-            }
-
-            if (typeof videoElement.duration !== "number" || isNaN(videoElement.duration) || !isFinite(videoElement.duration)) {
-                return;
-            }
-
-            this.duration = videoElement.duration;
-
-            if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
-                videoElement.currentTime = Math.min(this.currentTime, this.duration);
-                this.updateSubtitles();
-                this.updateCurrentTimeSlice();
-            }
-        },
-        onVideoTimeUpdate: function (ev: Event) {
-            this.hideNextEnd();
-            if (this.loading) return;
-            const videoElement = ev.target as HTMLVideoElement;
-            if (
-                !videoElement ||
-                typeof videoElement.currentTime !== "number" ||
-                isNaN(videoElement.currentTime) ||
-                !isFinite(videoElement.currentTime) ||
-                typeof videoElement.duration !== "number" ||
-                isNaN(videoElement.duration) ||
-                !isFinite(videoElement.duration)
-            ) {
-                return;
-            }
-            this.currentTime = videoElement.currentTime;
-            this.duration = videoElement.duration;
-            if (!this.loading && this.canSaveTime && Date.now() - this.lastTimeChangedEvent > CURRENT_TIME_UPDATE_DELAY) {
-                setCachedInitialTime(this.mid, this.currentTime);
-                this.lastTimeChangedEvent = Date.now();
-            }
-            this.updateSubtitles();
-            this.updateCurrentTimeSlice();
-
-            if (this.audioTrackURL) {
-                const audioElement = this.$el.querySelector("audio");
-                if (audioElement) {
-                    const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
-
-                    if (Math.abs(correspondingTime - audioElement.currentTime) > this.speed / 10) {
-                        audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
-                    }
-
-                    if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
-                        if (videoElement.paused) {
-                            audioElement.pause();
-                        } else {
-                            audioElement.play();
-                        }
-                    }
-                }
-            }
-        },
-        onCanPlay: function () {
-            this.loading = false;
-            if (this.autoPlayApplied) {
-                if (this.playing) {
-                    const player = this.getVideoElement();
-                    if (!player) {
-                        return;
-                    }
-                    const promise = player.play();
-                    if (promise) {
-                        promise.catch(() => {
-                            this.playing = false;
-                            this.requiresRefresh = true;
-                            this.updateMediaSessionPlaybackState();
-                        });
-                    }
-                }
-                return;
-            }
-            if (!this.autoPlay || this.expandedTitle) {
-                this.autoPlayApplied = true;
-                this.playing = false;
-                this.updateMediaSessionPlaybackState();
-                return;
-            }
-            const player = this.getVideoElement();
             if (!player) {
                 return;
             }
+
             const promise = player.play();
+
             if (promise) {
                 promise.catch(() => {
-                    this.playing = false;
-                    this.requiresRefresh = true;
-                    this.updateMediaSessionPlaybackState();
+                    playing.value = false;
+                    requiresRefresh.value = true;
                 });
             }
-            this.autoPlayApplied = true;
-        },
+        }
+        return;
+    }
 
-        onAudioCanPlay: function () {
-            const audioElement = this.$el.querySelector("audio");
-            if (!audioElement) {
-                return;
+    if (!props.autoPlay || expandedTitle.value) {
+        autoPlayApplied.value = true;
+        playing.value = false;
+        return;
+    }
+
+    const player = videoElement.value;
+
+    if (!player) {
+        return;
+    }
+
+    const promise = player.play();
+
+    if (promise) {
+        promise.catch(() => {
+            playing.value = false;
+            requiresRefresh.value = true;
+        });
+    }
+
+    autoPlayApplied.value = true;
+};
+
+/**
+ * Event handler for 'canplay' on the audio track element
+ */
+const onAudioCanPlay = () => {
+    const audio = audioTrackElement.value;
+
+    if (!audio) {
+        return;
+    }
+
+    const video = videoElement.value;
+
+    if (!video) {
+        return;
+    }
+
+    const correspondingTime = Math.min(video.currentTime, audio.duration);
+
+    if (Math.abs(correspondingTime - audio.currentTime) > speed.value / 10) {
+        audio.currentTime = Math.min(video.currentTime, audio.duration);
+    }
+
+    if (audio.paused !== video.paused && video.currentTime <= audio.duration) {
+        if (video.paused) {
+            audio.pause();
+        } else {
+            const promise = audio.play();
+
+            if (promise) {
+                promise.catch(() => {
+                    pause();
+                });
             }
-            const videoElement = this.getVideoElement();
-            if (!videoElement) {
-                return;
-            }
+        }
+    }
+};
 
-            const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
+/**
+ * Handler for 'waiting' or 'playing'
+ * @param b True if waiting, false if playing
+ */
+const onWaitForBuffer = (b: boolean) => {
+    if (b) {
+        isWaiting.value = true;
+        waitingTimestamp.value = Date.now();
+    } else {
+        loading.value = false;
+        isWaiting.value = false;
+    }
+};
 
-            if (Math.abs(correspondingTime - audioElement.currentTime) > this.speed / 10) {
-                audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
-            }
+/**
+ * Event handler for 'ended'
+ */
+const onEnded = () => {
+    loading.value = false;
 
-            if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
-                if (videoElement.paused) {
-                    audioElement.pause();
+    if (currentTimeSlice.value && sliceLoop.value) {
+        setTime(currentTimeSlice.value.start, false);
+        play();
+        return;
+    }
+
+    if (canSaveTime.value) {
+        setCachedInitialTime(props.mid, 0);
+    }
+
+    if (!loop.value && !isShort.value) {
+        pause();
+
+        ended.value = true;
+
+        if (nextEnd.value) {
+            if (props.next) {
+                goNext();
+            } else if (props.pageNext) {
+                if (autoNextPageDelay.value) {
+                    showNextEnd();
                 } else {
-                    const promise = audioElement.play();
-
-                    if (promise) {
-                        promise.catch(() => {
-                            this.pause();
-                        });
-                    }
+                    goNext();
                 }
             }
-        },
+        }
+    }
+};
 
-        onWaitForBuffer: function (b: boolean) {
-            if (b) {
-                this.isWaiting = true;
-                this.waitingTimestamp = Date.now();
-            } else {
-                this.loading = false;
-                this.isWaiting = false;
+/**
+ * Event handler for 'play'
+ */
+const onPlay = () => {
+    playing.value = true;
+};
+
+/**
+ * Event handler for 'pause'
+ */
+const onPause = () => {
+    playing.value = false;
+};
+
+/**
+ * Handler for the 'error' event
+ */
+const onMediaError = () => {
+    if (!videoURL.value) {
+        return;
+    }
+    if (!AuthController.RefreshAuthStatus()) {
+        mediaError.value = true;
+        updateMediaErrorMessage();
+        loading.value = false;
+        AuthController.CheckAuthStatusSilent();
+    }
+};
+
+/**
+ * Updates the media error message
+ */
+const updateMediaErrorMessage = () => {
+    mediaErrorMessage.value = "";
+
+    const mediaElem = videoElement.value;
+
+    if (!mediaElem) {
+        return;
+    }
+
+    const err = mediaElem.error;
+
+    if (!err) {
+        return;
+    }
+
+    mediaErrorMessage.value = err.message || "";
+
+    if (mediaErrorMessage.value) {
+        console.error(mediaErrorMessage.value);
+    }
+};
+
+/* Ticks */
+
+// Delay to change the loading status after the 'waiting' event is received
+const WAITING_LOAD_DELAY = 1000;
+
+// Delay to hide controls (milliseconds)
+const CONTROLS_HIDE_DELAY = 2000;
+
+/**
+ * Checks the player status.
+ * Ran every tick.
+ */
+const tick = () => {
+    if (!loading.value && isWaiting.value && Date.now() - waitingTimestamp.value > WAITING_LOAD_DELAY) {
+        loading.value = true;
+    }
+
+    if (showControls.value && !mouseInControls.value && playing.value && !expandedTitle.value && !expandedAlbum.value) {
+        if (Date.now() - lastControlsInteraction.value > CONTROLS_HIDE_DELAY) {
+            showControls.value = false;
+            volumeShown.value = IS_TOUCH_DEVICE;
+            helpTooltip.value = "";
+            displayConfig.value = false;
+            displayAttachments.value = false;
+            displayRelatedMedia.value = false;
+        }
+    }
+
+    const video = videoElement.value;
+
+    if (video && video.buffered.length > 0) {
+        bufferedTime.value = video.buffered.end(video.buffered.length - 1);
+    } else {
+        bufferedTime.value = 0;
+    }
+
+    if (tooltipShown.value) {
+        const tooltip = container.value?.querySelector(".player-tooltip");
+        const containerBounds = container.value?.getBoundingClientRect();
+
+        if (tooltip && containerBounds) {
+            let x = tooltipEventX.value;
+
+            const toolTipWidth = tooltip.getBoundingClientRect().width;
+            const leftPlayer = containerBounds.left;
+            const widthPlayer = containerBounds.width;
+
+            x = x - Math.floor(toolTipWidth / 2);
+
+            if (x + toolTipWidth > leftPlayer + widthPlayer - 20) {
+                x = leftPlayer + widthPlayer - 20 - toolTipWidth;
             }
-        },
-        onEnded: function () {
-            this.loading = false;
-            if (this.currentTimeSlice && this.sliceLoop) {
-                this.setTime(this.currentTimeSlice.start, false);
-                this.play();
-                return;
+
+            if (x < leftPlayer + 10) {
+                x = leftPlayer + 10;
             }
-            if (this.canSaveTime) {
-                setCachedInitialTime(this.mid, 0);
-            }
-            if (!this.loop && !this.isShort) {
-                this.pause();
-                this.ended = true;
-                if (this.nextEnd) {
-                    if (this.next) {
-                        this.goNext();
-                    } else if (this.pageNext) {
-                        if (this.autoNextPageDelay) {
-                            this.showNextEnd();
-                        } else {
-                            this.goNext();
-                        }
-                    }
+
+            tooltipX.value = x - leftPlayer;
+        }
+    }
+};
+
+// Tick delay (milliseconds)
+const TICK_DELAY = 100;
+
+// Run ticks continuously
+useInterval().set(tick, TICK_DELAY);
+
+/* Media session */
+
+usePlayerMediaSession(
+    ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"],
+    (event: MediaSessionActionDetails) => {
+        if (!event || !event.action) {
+            return;
+        }
+        switch (event.action) {
+            case "play":
+                play();
+                break;
+            case "pause":
+                pause();
+                break;
+            case "nexttrack":
+                goNext();
+                break;
+            case "previoustrack":
+                goPrev();
+                break;
+            case "seekbackward":
+                setTime(currentTime.value - Math.max(1, Math.abs(event.seekOffset || 5)), true);
+                break;
+            case "seekforward":
+                setTime(currentTime.value + Math.max(1, Math.abs(event.seekOffset || 5)), true);
+                break;
+            case "seekto":
+                if (typeof event.seekTime === "number" && !isNaN(event.seekTime) && isFinite(event.seekTime)) {
+                    setTime(event.seekTime, !event.fastSeek);
                 }
-            }
-        },
-
-        playerMouseUp: function (e: MouseEvent) {
-            if (this.timelineGrabbed) {
-                this.timelineGrabbed = false;
-                this.onTimelineSkip(e.pageX);
-
-                if (isTouchDevice()) {
-                    this.tooltipShown = false;
-                }
-            }
-        },
-
-        playerMouseMove: function (e: MouseEvent) {
-            this.interactWithControls();
-
-            if (this.timelineGrabbed) {
-                this.onTimelineSkip(e.pageX);
-            }
-        },
-
-        playerTouchMove: function (e: TouchEvent) {
-            this.interactWithControls();
-
-            if (this.timelineGrabbed && e.touches[0]) {
-                this.onTimelineSkip(e.touches[0].pageX);
-                this.updateTimelineTooltip(e.touches[0].pageX);
-            }
-        },
-
-        mouseLeavePlayer: function () {
-            this.timelineGrabbed = false;
-            if (
-                !this.playing ||
-                this.expandedTitle ||
-                this.expandedAlbum ||
-                this.displayConfig ||
-                this.displayAttachments ||
-                this.displayRelatedMedia
-            )
-                return;
-            this.showControls = false;
-            this.volumeShown = isTouchDevice();
-            this.helpTooltip = "";
-        },
-
-        tick() {
-            if (!this.loading && this.isWaiting && Date.now() - this.waitingTimestamp > 1000) {
-                this.loading = true;
-            }
-
-            if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
-                if (Date.now() - this.lastControlsInteraction > 2000) {
-                    this.showControls = false;
-                    this.volumeShown = isTouchDevice();
-                    this.helpTooltip = "";
-                    this.displayConfig = false;
-                    this.displayAttachments = false;
-                    this.displayRelatedMedia = false;
-                }
-            }
-
-            const video = this.getVideoElement();
-
-            if (video && video.buffered.length > 0) {
-                this.bufferedTime = video.buffered.end(video.buffered.length - 1);
-            } else {
-                this.bufferedTime = 0;
-            }
-
-            if (this.tooltipShown) {
-                const tooltip = this.$el.querySelector(".player-tooltip");
-                if (tooltip) {
-                    let x = this.tooltipEventX;
-                    const toolTipWidth = tooltip.getBoundingClientRect().width;
-                    const leftPlayer = this.$el.getBoundingClientRect().left;
-                    const widthPlayer = this.$el.getBoundingClientRect().width;
-
-                    x = x - Math.floor(toolTipWidth / 2);
-                    if (x + toolTipWidth > leftPlayer + widthPlayer - 20) {
-                        x = leftPlayer + widthPlayer - 20 - toolTipWidth;
-                    }
-                    if (x < leftPlayer + 10) {
-                        x = leftPlayer + 10;
-                    }
-                    this.tooltipX = x - leftPlayer;
-                }
-            }
-        },
-
-        getVideoElement() {
-            return this.$el.querySelector("video");
-        },
-
-        interactWithControls() {
-            this.showControls = true;
-            this.lastControlsInteraction = Date.now();
-        },
-
-        enterControls: function () {
-            this.mouseInControls = true;
-        },
-
-        leaveControls: function () {
-            this.mouseInControls = false;
-            this.volumeShown = isTouchDevice();
-            this.helpTooltip = "";
-        },
-
-        togglePlayImmediate() {
-            if (this.togglePlayDelayTimeout) {
-                clearTimeout(this.togglePlayDelayTimeout);
-                this.togglePlayDelayTimeout = null;
-            }
-            if (this.playing) {
-                this.feedback = "pause";
-                this.pause();
-            } else {
-                this.feedback = "play";
-                this.play();
-            }
-
-            this.displayConfig = false;
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-        },
-
-        togglePlay() {
-            const delay = getTogglePlayDelay();
-            if (this.playing) {
-                if (this.togglePlayDelayTimeout) {
-                    clearTimeout(this.togglePlayDelayTimeout);
-                    this.togglePlayDelayTimeout = null;
-                    this.feedback = "";
-                } else if (delay > 0) {
-                    this.feedback = "pause";
-                    this.togglePlayDelayTimeout = setTimeout(() => {
-                        this.togglePlayDelayTimeout = null;
-                        this.pause();
-                    }, delay);
-                } else {
-                    this.feedback = "pause";
-                    this.pause();
-                }
-            } else {
-                if (this.togglePlayDelayTimeout) {
-                    clearTimeout(this.togglePlayDelayTimeout);
-                    this.togglePlayDelayTimeout = null;
-                    this.feedback = "";
-                } else if (delay > 0) {
-                    this.feedback = "play";
-                    this.togglePlayDelayTimeout = setTimeout(() => {
-                        this.togglePlayDelayTimeout = null;
-                        this.play();
-                    }, delay);
-                } else {
-                    this.feedback = "play";
-                    this.play();
-                }
-            }
-
-            this.displayConfig = false;
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-        },
-
-        play: function () {
-            this.hideNextEnd();
-            if (this.requiresRefresh) {
-                this.requiresRefresh = false;
-                MediaController.Load();
-                return;
-            }
-            const video = this.getVideoElement();
-            this.playing = true;
-            if (video) {
-                video.play();
-            }
-            this.updateMediaSessionPlaybackState();
-        },
-        pause: function () {
-            const video = this.getVideoElement();
-            this.playing = false;
-
-            if (video) {
-                video.pause();
-            }
-
-            this.updateMediaSessionPlaybackState();
-
-            if (!this.loading && this.canSaveTime && video && !video.ended) {
-                setCachedInitialTime(this.mid, this.currentTime);
-            }
-
-            this.lastTimeChangedEvent = Date.now();
-
-            this.interactWithControls();
-        },
-
-        onPlay: function () {
-            this.playing = true;
-            this.updateMediaSessionPlaybackState();
-        },
-
-        onPause: function () {
-            this.playing = false;
-            this.updateMediaSessionPlaybackState();
-        },
-
-        toggleFullScreen: function () {
-            if (!this.fullscreen) {
-                openFullscreen();
-            } else {
-                closeFullscreen();
-            }
-            this.fullScreenState = !this.fullScreenState;
-        },
-
-        clickTimeline: function (e: Event) {
-            this.displayConfig = false;
-            this.$refs.contextMenu?.hide();
-            this.displayAttachments = false;
-            this.displayRelatedMedia = false;
-            e.stopPropagation();
-        },
-
-        /* Timeline */
-
-        grabTimeline: function (x: number) {
-            this.timelineGrabbed = true;
-            this.onTimelineSkip(x);
-        },
-
-        updateTimelineTooltip: function (x: number) {
-            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
-            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
-
-            let time: number;
-            if (x < offset) {
-                time = 0;
-            } else {
-                const p = x - offset;
-                const tP = Math.min(1, p / width);
-                time = tP * this.duration;
-            }
-
-            this.tooltipShown = true;
-            this.tooltipText = this.renderTime(time);
-            this.tooltipTimeSlice = this.findTimeSliceName(time);
-            this.tooltipImage = this.getThumbnailForTime(time);
-            this.tooltipEventX = x;
-
-            nextTick(this.tick.bind(this));
-        },
-
-        onTimelineSkip: function (x: number) {
-            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
-            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
-            if (x < offset) {
-                this.setTime(0);
-            } else {
-                const p = x - offset;
-                const tP = Math.min(1, p / width);
-                this.setTime(tP * this.duration);
-            }
-        },
-        mouseLeaveTimeline: function () {
-            if (!isTouchDevice()) {
-                this.tooltipShown = false;
-            }
-            this.leaveControls();
-        },
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
-        },
-
-        setTime: function (time: number, save?: boolean) {
-            this.currentTimeSlice = null;
-            time = Math.max(0, time);
-            time = Math.min(time, this.duration);
-
-            if (isNaN(time) || !isFinite(time) || time < 0) {
-                return;
-            }
-
-            this.currentTime = time;
-
-            const video = this.getVideoElement();
-
-            if (video) {
-                video.currentTime = time;
-            }
-
-            if (save && this.canSaveTime) {
-                setCachedInitialTime(this.mid, this.currentTime);
-                this.lastTimeChangedEvent = Date.now();
-            }
-
-            if (time < this.duration) {
-                this.ended = false;
-            }
-
-            this.updateSubtitles();
-            this.updateCurrentTimeSlice();
-        },
-
-        onKeyPress: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-                !AppStatus.IsPlayerVisible() ||
-                !event.key ||
-                (event.ctrlKey && event.key !== "+" && event.key !== "-")
-            ) {
-                return false;
-            }
-            let caught = true;
-            const shifting = event.shiftKey;
-            switch (event.key) {
-                case "A":
-                case "a":
-                    this.manageAlbums();
-                    break;
-                case "i":
-                case "I":
-                    this.openDescription();
-                    break;
-                case "t":
-                case "T":
-                    this.openTags();
-                    break;
-                case "S":
-                case "s":
-                    this.showConfig();
-                    break;
-                case "M":
-                case "m":
-                    this.toggleMuted();
-                    this.volumeShown = true;
-                    this.helpTooltip = "volume";
-                    break;
-                case " ":
-                case "K":
-                case "k":
-                case "Enter":
-                    this.togglePlayImmediate();
-                    break;
-                case "ArrowUp":
-                    if (!shifting) {
-                        if (this.incrementVerticalScroll(-40)) {
-                            break;
-                        }
-                        this.changeVolume(Math.min(1, this.volume + 0.05));
-                    } else {
-                        this.changeVolume(Math.min(1, this.volume + 0.01));
-                    }
-                    if (this.muted) {
-                        this.muted = false;
-                        this.onUserMutedUpdated();
-                    }
-                    this.volumeShown = true;
-                    this.helpTooltip = "volume";
-                    break;
-                case "ArrowDown":
-                    if (!shifting) {
-                        if (this.incrementVerticalScroll(40)) {
-                            break;
-                        }
-                        this.changeVolume(Math.max(0, this.volume - 0.05));
-                    } else {
-                        this.changeVolume(Math.max(0, this.volume - 0.01));
-                    }
-                    if (this.muted) {
-                        this.muted = false;
-                        this.onUserMutedUpdated();
-                    }
-                    this.volumeShown = true;
-                    this.helpTooltip = "volume";
-                    break;
-                case "F":
-                case "f":
-                    if (event.altKey || shifting) {
-                        caught = false;
-                    } else {
-                        this.toggleFullScreen();
-                    }
-                    break;
-                case "ArrowLeft":
-                    if (shifting || event.altKey) {
-                        if (this.prev || this.pagePrev) {
-                            this.goPrev();
-                        } else {
-                            caught = false;
-                        }
-                    } else if (!this.incrementHorizontalScroll(-40)) {
-                        if (this.isShort) {
-                            if (this.prev || this.pagePrev) {
-                                this.goPrev();
-                            } else {
-                                caught = false;
-                            }
-                        } else {
-                            this.setTime(this.currentTime - 5, true);
-                        }
-                    }
-                    break;
-                case "PageUp":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case "ArrowRight":
-                    if (shifting || event.altKey) {
-                        if (this.next || this.pageNext) {
-                            this.goNext();
-                        } else {
-                            caught = false;
-                        }
-                    } else if (!this.incrementHorizontalScroll(40)) {
-                        if (this.isShort) {
-                            if (this.next || this.pageNext) {
-                                this.goNext();
-                            } else {
-                                caught = false;
-                            }
-                        } else {
-                            this.setTime(this.currentTime + 5, true);
-                        }
-                    }
-                    break;
-                case "PageDown":
-                    if (event.altKey || event.shiftKey) {
-                        caught = false;
-                    } else if (this.next || this.pageNext) {
-                        this.goNext();
-                    } else {
-                        caught = false;
-                    }
-                    break;
-                case ".":
-                    if (!this.playing) {
-                        this.setTime(this.currentTime - 1 / 30);
-                    }
-                    break;
-                case ",":
-                    if (!this.playing) {
-                        this.setTime(this.currentTime + 1 / 30);
-                    }
-                    break;
-                case "Home":
-                    if (event.altKey) {
-                        caught = false;
-                    } else if (shifting) {
-                        if (!this.incrementVerticalScroll("home")) {
-                            caught = false;
-                        }
-                    } else if (!this.incrementHorizontalScroll("home")) {
-                        this.setTime(0, true);
-                    }
-                    break;
-                case "End":
-                    if (event.altKey) {
-                        caught = false;
-                    } else if (shifting) {
-                        if (!this.incrementVerticalScroll("end")) {
-                            caught = false;
-                        }
-                    } else if (!this.incrementHorizontalScroll("end")) {
-                        this.setTime(this.duration, true);
-                    }
-                    break;
-                case "X":
-                case "x":
-                    this.sliceLoop = !this.sliceLoop;
-                    if (this.sliceLoop) {
-                        PagesController.ShowSnackBar(this.$t("Slice loop enabled"));
-                    } else {
-                        PagesController.ShowSnackBar(this.$t("Slice loop disabled"));
-                    }
-                    break;
-                case "l":
-                case "L":
-                    if (event.altKey || shifting || this.isShort) {
-                        caught = false;
-                    } else {
-                        this.loop = !this.loop;
-                        if (this.loop) {
-                            PagesController.ShowSnackBar(this.$t("Loop enabled"));
-                        } else {
-                            PagesController.ShowSnackBar(this.$t("Loop disabled"));
-                        }
-                        this.$emit("force-loop", this.loop);
-                    }
-                    break;
-                case "b":
-                case "B":
-                    if (this.currentTimeSlice) {
-                        this.setTime(this.currentTimeSlice.start, true);
-                    }
-                    break;
-                case "j":
-                case "J":
-                    if (this.currentTimeSlice) {
-                        this.setTime(this.currentTimeSlice.end, true);
-                    }
-                    break;
-                case "C":
-                case "c":
-                    this.userControlsState = !this.userControlsState;
-                    break;
-                case "+":
-                    this.scale = Math.min(8, this.scale + (shifting ? 0.01 : 0.1));
-                    PagesController.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
-                    this.onScaleUpdated();
-                    break;
-                case "-":
-                    this.scale = Math.max(1, this.scale - (shifting ? 0.01 : 0.1));
-                    PagesController.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
-                    this.onScaleUpdated();
-                    break;
-                case "n":
-                case "N":
-                    if (this.canWrite) {
-                        this.timeSlicesEdit = true;
-                    }
-                    break;
-                case "z":
-                case "Z":
-                    this.scale = 1;
-                    PagesController.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
-                    this.onScaleUpdated();
-                    break;
-                case "Delete":
-                    this.$emit("delete");
-                    break;
-                default:
-                    caught = false;
-            }
-
-            if (caught) {
-                this.interactWithControls();
-            }
-
-            return caught;
-        },
-
-        initializeVideo() {
-            if (!this.metadata) {
-                return;
-            }
-            this.isShort = this.metadata.is_anim || this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
-            this.canSaveTime = !this.metadata.force_start_beginning;
-            this.hasDescription = !!this.metadata.description_url;
-            this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
-            this.hasRelatedMedia = this.metadata.related && this.metadata.related.length > 0;
-            this.timeSlices = normalizeTimeSlices(
-                (this.metadata.time_slices || []).sort((a, b) => {
-                    if (a.time < b.time) {
-                        return -1;
-                    } else if (a.time > b.time) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                }),
-                this.metadata.duration,
-            );
-            this.currentTimeSlice = null;
-            this.currentTimeSliceName = "";
-            this.currentTimeSliceStart = 0;
-            this.currentTimeSliceEnd = 0;
-            this.sliceLoop = false;
-            this.currentTime = this.canSaveTime ? getCachedInitialTime(this.mid) : 0;
-            this.duration = this.metadata.duration || 0;
-            this.speed = 1;
-            this.scale = 1;
-            this.setDefaultLoop();
-            this.currentResolution = getUserSelectedResolutionVideo(this.metadata);
-            this.loading = true;
-            this.playing = true;
-            this.updateMediaSessionPlaybackState();
-            this.setVideoURL();
-            this.onUpdateAudioTrack();
-        },
-
-        onClearURL: function () {
-            const videoElem = this.$el.querySelector("video");
-            if (videoElem) {
-                videoElem.src = "";
-            }
-        },
-
-        setVideoURL() {
-            this.hideNextEnd();
-
-            if (this.autoNextTimer) {
-                clearTimeout(this.autoNextTimer);
-                this.autoNextTimer = null;
-            }
-
-            this.mediaError = false;
-            this.mediaErrorMessage = "";
-            if (!this.metadata) {
-                this.videoURL = "";
-                this.title = "";
-                this.onClearURL();
-                this.duration = 0;
-                this.loading = false;
-                return;
-            }
-
-            this.title = this.metadata.title;
-
-            if (this.currentResolution < 0) {
-                if (this.metadata.encoded) {
-                    this.videoURL = getAssetURL(this.metadata.url);
-                    this.videoPending = false;
-                    this.videoPendingTask = 0;
-                    this.videoEncodeError = "";
-                    this.setupAutoNextTimer();
-                } else {
-                    this.videoURL = "";
-                    this.onClearURL();
-                    this.videoPending = true;
-                    this.videoPendingTask = this.metadata.task;
-                    this.videoEncodeError = this.metadata.error || "";
-                    this.duration = 0;
-                    this.loading = false;
-                }
-            } else {
-                if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
-                    const res = this.metadata.resolutions[this.currentResolution];
-                    if (res.ready) {
-                        this.videoURL = getAssetURL(res.url);
-                        this.videoPending = false;
-                        this.videoPendingTask = 0;
-                        this.videoEncodeError = "";
-                        this.setupAutoNextTimer();
-                    } else {
-                        this.videoURL = "";
-                        this.onClearURL();
-                        this.videoPending = true;
-                        this.videoPendingTask = res.task;
-                        this.videoEncodeError = res.error || "";
-                        this.duration = 0;
-                        this.loading = false;
-                    }
-                } else {
-                    this.videoURL = "";
-                    this.onClearURL();
-                    this.videoPending = true;
-                    this.videoPendingTask = 0;
-                    this.videoEncodeError = "";
-                    this.duration = 0;
-                    this.loading = false;
-                }
-            }
-        },
-
-        reloadSubtitles: function () {
-            this.subtitles = "";
-            this.subtitlesStart = -1;
-            this.subtitlesEnd = -1;
-            this.updateSubtitles();
-        },
-
-        updateSubtitles: function () {
-            if (this.currentTime >= this.subtitlesStart && this.currentTime <= this.subtitlesEnd) {
-                return;
-            }
-            const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
-            if (sub) {
-                this.subtitles = sub.text;
-                this.subtitlesStart = sub.start;
-                this.subtitlesEnd = sub.end;
-            } else {
-                this.subTag = "";
-                this.subtitles = "";
-                this.subtitlesStart = 0;
-                this.subtitlesEnd = 0;
-            }
-        },
-
-        findTimeSliceName: function (time: number) {
-            const slice = findTimeSlice(this.timeSlices, time);
-            if (slice) {
-                return slice.name + " (" + renderTimeSeconds(slice.end - slice.start) + ")";
-            } else {
-                return "";
-            }
-        },
-
-        updateCurrentTimeSlice: function () {
-            if (this.currentTimeSlice && this.sliceLoop && this.currentTime >= this.currentTimeSlice.end) {
-                this.setTime(this.currentTimeSlice.start, false);
-                return;
-            }
-            const slice = findTimeSlice(this.timeSlices, this.currentTime);
-            if (slice) {
-                this.currentTimeSlice = slice;
-                this.currentTimeSliceName = slice.name;
-                this.currentTimeSliceStart = slice.start;
-                this.currentTimeSliceEnd = slice.end;
-            } else {
-                this.currentTimeSlice = null;
-                this.currentTimeSliceName = "";
-                this.currentTimeSliceStart = 0;
-                this.currentTimeSliceEnd = 0;
-            }
-        },
-
-        onUpdateAudioTrack: function () {
-            if (!this.audioTrack || !this.metadata || !this.metadata.audios) {
-                this.audioTrackURL = "";
-                return;
-            }
-
-            for (const audio of this.metadata.audios) {
-                if (audio.id === this.audioTrack) {
-                    this.audioTrackURL = getAssetURL(audio.url);
-                    return;
-                }
-            }
-
-            this.audioTrackURL = "";
-        },
-
-        onUpdateNextEnd: function () {
-            setAutoNextOnEnd(this.nextEnd);
-        },
-
-        onUpdateAutoNextPageDelay: function () {
-            setAutoNextPageDelay(this.autoNextPageDelay);
-        },
-
-        handleMediaSessionEvent: function (event: MediaSessionActionDetails) {
-            if (!event || !event.action) {
-                return;
-            }
-            switch (event.action) {
-                case "play":
-                    this.play();
-                    break;
-                case "pause":
-                    this.pause();
-                    break;
-                case "nexttrack":
-                    if (this.next || this.pageNext) {
-                        this.goNext();
-                    }
-                    break;
-                case "previoustrack":
-                    if (this.prev || this.pagePrev) {
-                        this.goPrev();
-                    }
-                    break;
-                case "seekbackward":
-                    this.setTime(this.currentTime - Math.max(1, Math.abs(event.seekOffset || 5)), true);
-                    break;
-                case "seekforward":
-                    this.setTime(this.currentTime + Math.max(1, Math.abs(event.seekOffset || 5)), true);
-                    break;
-                case "seekto":
-                    if (typeof event.seekTime === "number" && !isNaN(event.seekTime) && isFinite(event.seekTime)) {
-                        this.setTime(event.seekTime, !event.fastSeek);
-                    }
-                    break;
-            }
-        },
-
-        onMediaError: function () {
-            if (!this.videoURL) {
-                return;
-            }
-            if (!AuthController.RefreshAuthStatus()) {
-                this.mediaError = true;
-                this.updateMediaErrorMessage();
-                this.loading = false;
-                AuthController.CheckAuthStatusSilent();
-            }
-        },
-
-        updateMediaErrorMessage: function () {
-            this.mediaErrorMessage = "";
-
-            const mediaElem = this.getVideoElement();
-
-            if (!mediaElem) {
-                return;
-            }
-
-            const err = mediaElem.error;
-
-            if (!err) {
-                return;
-            }
-
-            this.mediaErrorMessage = err.message || "";
-            if (this.mediaErrorMessage) {
-                console.error(this.mediaErrorMessage);
-            }
-        },
-
-        setDefaultLoop: function () {
-            if (this.loopForced) {
-                this.loop = this.loopForcedValue;
-            } else {
-                this.loop = (!this.next && !this.pageNext && !this.inAlbum) || !this.nextEnd;
-            }
-        },
-
-        onTopBarExpand: function () {
-            if (this.expandedTitle) {
-                this.hideNextEnd();
-                this.pause();
-            } else if (!this.expandedAlbum) {
-                this.play();
-            }
-        },
-
-        setupAutoNextTimer: function () {
-            if (this.autoNextTimer) {
-                clearTimeout(this.autoNextTimer);
-                this.autoNextTimer = null;
-            }
-
-            if (!this.isShort) {
-                return;
-            }
-
-            const timerS = getAutoNextTime();
-
-            if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
-                return;
-            }
-
-            if (!this.next && !this.pageNext) {
-                return;
-            }
-
-            const ms = timerS * 1000;
-
-            this.autoNextTimer = setTimeout(() => {
-                this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle || this.displayAttachments || this.displayRelatedMedia || !this.playing) {
-                    this.setupAutoNextTimer();
-                } else {
-                    this.goNext();
-                }
-            }, ms);
-        },
-
-        showNextEnd: function () {
-            this.pendingNextEnd = true;
-            this.pendingNextEndSeconds = NEXT_END_WAIT_DURATION;
-
-            if (this.nextEndTimer) {
-                clearTimeout(this.nextEndTimer);
-                this.nextEndTimer = null;
-            }
-
-            this.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
-        },
-
-        tickNextEnd: function () {
-            this.nextEndTimer = null;
-
-            this.pendingNextEndSeconds = Math.max(0, this.pendingNextEndSeconds - 1);
-
-            if (this.pendingNextEndSeconds <= 0) {
-                this.pendingNextEnd = false;
-                this.goNext();
-                return;
-            }
-
-            this.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
-        },
-
-        hideNextEnd: function () {
-            this.pendingNextEnd = false;
-
-            if (this.nextEndTimer) {
-                clearTimeout(this.nextEndTimer);
-                this.nextEndTimer = null;
-            }
-        },
-
-        enableLoopAndPlay: function () {
-            this.loop = true;
-            this.$emit("force-loop", this.loop);
-            this.play();
-        },
-
-        refreshTimeSlices: function () {
-            const metadata = MediaController.MediaData;
-
-            if (!metadata) {
-                return;
-            }
-
-            this.timeSlices = normalizeTimeSlices(
-                (metadata.time_slices || []).sort((a, b) => {
-                    if (a.time < b.time) {
-                        return -1;
-                    } else if (a.time > b.time) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                }),
-                metadata.duration,
-            );
-            this.currentTimeSlice = null;
-            this.currentTimeSliceName = "";
-            this.currentTimeSliceStart = 0;
-            this.currentTimeSliceEnd = 0;
-            this.updateCurrentTimeSlice();
-        },
-
-        refreshDescription: function () {
-            this.hasDescription = !!this.metadata.description_url;
-        },
-
-        renderScale: function (scale: number) {
-            if (scale > 1) {
-                return Math.floor(scale * 100) + "%";
-            } else if (scale < 1) {
-                return Math.floor(scale * 100) + "%";
-            } else {
-                return this.$t("Normal");
-            }
-        },
-
-        getScaleCss: function (scale: number) {
-            return Math.floor(scale * 100) + "%";
-        },
-
-        onScaleUpdated: function () {
-            if (this.scale > 1) {
-                nextTick(this.centerScroll.bind(this));
-            }
-        },
-
-        grabScroll: function (e: TouchEvent | MouseEvent) {
-            if ("button" in e && e.button !== 0) {
-                return;
-            }
-
-            if (this.scale <= 1) {
-                return; // Not scaled
-            }
-
-            this.leaveControls();
-
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
-                this.displayConfig = false;
-                this.$refs.contextMenu?.hide();
-                this.displayAttachments = false;
-                this.displayRelatedMedia = false;
-                e.stopPropagation();
-                return;
-            }
-
-            const scroller = this.$el.querySelector(".video-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            this.scrollGrabTop = scroller.scrollTop;
-            this.scrollGrabLeft = scroller.scrollLeft;
-
-            this.scrollGrabbed = true;
-            this.scrollMoved = false;
-
-            if ("touches" in e && e.touches.length > 0) {
-                this.scrollGrabX = e.touches[0].pageX;
-                this.scrollGrabY = e.touches[0].pageY;
-            } else if ("pageX" in e) {
-                this.scrollGrabX = e.pageX;
-                this.scrollGrabY = e.pageY;
-            }
-
-            e.stopPropagation();
-        },
-
-        moveScrollByMouse: function (x: number, y: number) {
-            const scroller = this.$el.querySelector(".video-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            const rect = scroller.getBoundingClientRect();
-
-            const maxScrollLeft = scroller.scrollWidth - rect.width;
-            const maxScrollTop = scroller.scrollHeight - rect.height;
-
-            const diffX = x - this.scrollGrabX;
-            const diffY = y - this.scrollGrabY;
-
-            scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
-            scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
-            this.scrollMoved = true;
-        },
-
-        dropScroll: function (e: TouchEvent | MouseEvent) {
-            if ("button" in e && e.button !== 0) {
-                return;
-            }
-
-            if (!this.scrollGrabbed) {
-                return;
-            }
-
-            this.scrollGrabbed = false;
-
-            if (!this.scrollMoved) {
-                this.clickPlayer();
-                return;
-            }
-
-            this.scrollMoved = false;
-
-            if ("touches" in e && e.touches.length > 0) {
-                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else if ("pageX" in e) {
-                this.moveScrollByMouse(e.pageX, e.pageY);
-            }
-        },
-
-        moveScroll: function (e: MouseEvent | TouchEvent) {
-            if (!this.scrollGrabbed) {
-                return;
-            }
-
-            if ("touches" in e && e.touches.length > 0) {
-                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else if ("pageX" in e) {
-                this.moveScrollByMouse(e.pageX, e.pageY);
-            }
-        },
-
-        centerScroll: function () {
-            const scroller = this.$el.querySelector(".video-scroller");
-
-            if (!scroller) {
-                return;
-            }
-
-            scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
-            scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
-        },
-
-        onMouseWheel: function (e: WheelEvent) {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.deltaY > 0) {
-                    this.scale = Math.max(1, this.scale - 0.1);
-                } else {
-                    this.scale = Math.min(8, this.scale + 0.1);
-                }
-
-                PagesController.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
-                this.onScaleUpdated();
-            }
-        },
-
-        incrementVerticalScroll: function (a: number | string): boolean {
-            if (this.scale <= 1) {
-                return false;
-            }
-
-            const el = this.$el.querySelector(".video-scroller");
-
-            if (!el) {
-                return false;
-            }
-
-            const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
-
-            if (maxScroll <= 0) {
-                return false;
-            }
-
-            if (typeof a === "number") {
-                el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
-            } else if (a === "home") {
-                el.scrollTop = 0;
-            } else if (a === "end") {
-                el.scrollTop = maxScroll;
-            }
-
-            return true;
-        },
-
-        incrementHorizontalScroll: function (a: number | string): boolean {
-            if (this.scale <= 1) {
-                return false;
-            }
-
-            const el = this.$el.querySelector(".video-scroller");
-
-            if (!el) {
-                return false;
-            }
-
-            const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
-
-            if (maxScroll <= 0) {
-                return false;
-            }
-
-            if (typeof a === "number") {
-                el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
-            } else if (a === "home") {
-                el.scrollLeft = 0;
-            } else if (a === "end") {
-                el.scrollLeft = maxScroll;
-            }
-
-            return true;
-        },
-
-        onScrollerTouchStart: function (e: Event) {
-            if (this.scale <= 1) {
-                return;
-            }
-
-            e.stopPropagation();
-        },
-
-        updateMediaSessionPlaybackState: function () {
-            if (!window.navigator || !window.navigator.mediaSession) {
-                return;
-            }
-
-            if (MediaController.MediaSessionId !== this.mediaSessionId) {
-                return;
-            }
-
-            navigator.mediaSession.playbackState = this.playing ? "playing" : "paused";
-        },
+                break;
+        }
     },
-});
+    playing,
+);
+
+/* Keyboard handler */
+
+useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
+    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+        return false;
+    }
+    let caught = true;
+    const shifting = event.shiftKey;
+    switch (event.key) {
+        case "A":
+        case "a":
+            manageAlbums();
+            break;
+        case "i":
+        case "I":
+            openDescription();
+            break;
+        case "t":
+        case "T":
+            openTags();
+            break;
+        case "S":
+        case "s":
+            showConfig();
+            break;
+        case "M":
+        case "m":
+            toggleMuted();
+            volumeShown.value = true;
+            helpTooltip.value = "volume";
+            break;
+        case " ":
+        case "K":
+        case "k":
+        case "Enter":
+            togglePlayImmediate();
+            break;
+        case "ArrowUp":
+            if (!shifting) {
+                if (incrementVerticalScroll(-40)) {
+                    break;
+                }
+                changeVolume(Math.min(1, volume.value + 0.05));
+            } else {
+                changeVolume(Math.min(1, volume.value + 0.01));
+            }
+            if (muted.value) {
+                muted.value = false;
+                onUserMutedUpdated();
+            }
+            volumeShown.value = true;
+            helpTooltip.value = "volume";
+            break;
+        case "ArrowDown":
+            if (!shifting) {
+                if (incrementVerticalScroll(40)) {
+                    break;
+                }
+                changeVolume(Math.max(0, volume.value - 0.05));
+            } else {
+                changeVolume(Math.max(0, volume.value - 0.01));
+            }
+            if (muted.value) {
+                muted.value = false;
+                onUserMutedUpdated();
+            }
+            volumeShown.value = true;
+            helpTooltip.value = "volume";
+            break;
+        case "ArrowLeft":
+            if (shifting || event.altKey) {
+                if (props.prev || props.pagePrev) {
+                    goPrev();
+                } else {
+                    caught = false;
+                }
+            } else if (!incrementHorizontalScroll(-40)) {
+                if (isShort.value) {
+                    if (props.prev || props.pagePrev) {
+                        goPrev();
+                    } else {
+                        caught = false;
+                    }
+                } else {
+                    setTime(currentTime.value - 5, true);
+                }
+            }
+            break;
+
+        case "ArrowRight":
+            if (shifting || event.altKey) {
+                if (props.next || props.pageNext) {
+                    goNext();
+                } else {
+                    caught = false;
+                }
+            } else if (!incrementHorizontalScroll(40)) {
+                if (isShort.value) {
+                    if (props.next || props.pageNext) {
+                        goNext();
+                    } else {
+                        caught = false;
+                    }
+                } else {
+                    setTime(currentTime.value + 5, true);
+                }
+            }
+            break;
+
+        case ".":
+            if (!playing.value) {
+                setTime(currentTime.value - 1 / 30);
+            }
+            break;
+        case ",":
+            if (!playing.value) {
+                setTime(currentTime.value + 1 / 30);
+            }
+            break;
+        case "Home":
+            if (event.altKey) {
+                caught = false;
+            } else if (shifting) {
+                if (!incrementVerticalScroll("home")) {
+                    caught = false;
+                }
+            } else if (!incrementHorizontalScroll("home")) {
+                setTime(0, true);
+            }
+            break;
+        case "End":
+            if (event.altKey) {
+                caught = false;
+            } else if (shifting) {
+                if (!incrementVerticalScroll("end")) {
+                    caught = false;
+                }
+            } else if (!incrementHorizontalScroll("end")) {
+                setTime(duration.value, true);
+            }
+            break;
+        case "X":
+        case "x":
+            sliceLoop.value = !sliceLoop.value;
+
+            if (sliceLoop.value) {
+                PagesController.ShowSnackBar($t("Slice loop enabled"));
+            } else {
+                PagesController.ShowSnackBar($t("Slice loop disabled"));
+            }
+            break;
+        case "l":
+        case "L":
+            if (event.altKey || shifting || isShort.value) {
+                caught = false;
+            } else {
+                loop.value = !loop.value;
+
+                if (loop.value) {
+                    PagesController.ShowSnackBar($t("Loop enabled"));
+                } else {
+                    PagesController.ShowSnackBar($t("Loop disabled"));
+                }
+
+                emit("force-loop", loop.value);
+            }
+            break;
+        case "b":
+        case "B":
+            if (currentTimeSlice.value) {
+                setTime(currentTimeSlice.value.start, true);
+            }
+            break;
+        case "j":
+        case "J":
+            if (currentTimeSlice.value) {
+                setTime(currentTimeSlice.value.end, true);
+            }
+            break;
+        case "C":
+        case "c":
+            userControls.value = !userControls.value;
+            break;
+        case "+":
+            scale.value = Math.min(8, scale.value + (shifting ? 0.01 : 0.1));
+
+            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+
+            onScaleUpdated();
+            break;
+        case "-":
+            scale.value = Math.max(1, scale.value - (shifting ? 0.01 : 0.1));
+
+            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+
+            onScaleUpdated();
+            break;
+        case "n":
+        case "N":
+            if (canWrite.value) {
+                timeSlicesEdit.value = true;
+            }
+            break;
+        case "z":
+        case "Z":
+            scale.value = 1;
+            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+            onScaleUpdated();
+            break;
+        default:
+            caught = false;
+    }
+
+    if (caught) {
+        interactWithControls();
+    }
+
+    return caught;
+}, PLAYER_KEYBOARD_HANDLER_PRIORITY);
 </script>
