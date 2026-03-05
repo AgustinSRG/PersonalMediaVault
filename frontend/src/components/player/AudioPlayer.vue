@@ -117,8 +117,8 @@
             @enter-tooltip="enterTooltip"
             @leave-tooltip="leaveTooltip"
             @go-prev="goPrev"
-            @play="togglePlay"
-            @pause="togglePlay"
+            @play="togglePlayImmediate"
+            @pause="togglePlayImmediate"
             @go-next="goNext"
             @open-description="openDescription"
             @open-attachments="showAttachments"
@@ -261,6 +261,7 @@ import {
     getPlayerVolume,
     getShowAudioThumbnail,
     getShowAudioTitle,
+    getTogglePlayDelay,
     setAudioAnimationStyle,
     setCachedInitialTime,
     setPlayerMuted,
@@ -303,6 +304,7 @@ import { usePlayerMediaSession } from "@/composables/use-player-media-session";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { useI18n } from "@/composables/use-i18n";
 import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
+import { useTimeout } from "@/composables/use-timeout";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -550,6 +552,9 @@ const loading = ref(true);
 
 // Playing status
 const playing = ref(true);
+
+// Timeout to delay the play/pause action
+const togglePlayDelayTimeout = useTimeout();
 
 // True if auto-play was applied
 const autoPlayApplied = ref(false);
@@ -847,15 +852,52 @@ onApplicationEvent(EVENT_NAME_SUBTITLES_UPDATE, () => {
 /* Controls */
 
 /**
- * Toggles play / pause
+ * Toggles play/pause without delay
+ */
+const togglePlayImmediate = () => {
+    togglePlayDelayTimeout.clear();
+
+    if (playing.value) {
+        feedback.value = "pause";
+        pause();
+    } else {
+        feedback.value = "play";
+        play();
+    }
+
+    displayConfig.value = false;
+    displayAttachments.value = false;
+    displayRelatedMedia.value = false;
+};
+
+/**
+ * Toggles play/pause with delay
  */
 const togglePlay = () => {
+    const delay = getTogglePlayDelay();
+
     if (playing.value) {
-        pause();
-        feedback.value = "pause";
+        if (togglePlayDelayTimeout.isSet()) {
+            togglePlayDelayTimeout.clear();
+            feedback.value = "";
+        } else if (delay > 0) {
+            feedback.value = "pause";
+            togglePlayDelayTimeout.set(pause, delay);
+        } else {
+            feedback.value = "pause";
+            pause();
+        }
     } else {
-        play();
-        feedback.value = "play";
+        if (togglePlayDelayTimeout.isSet()) {
+            togglePlayDelayTimeout.clear();
+            feedback.value = "";
+        } else if (delay > 0) {
+            feedback.value = "play";
+            togglePlayDelayTimeout.set(play, delay);
+        } else {
+            feedback.value = "play";
+            play();
+        }
     }
 
     displayConfig.value = false;
@@ -1802,7 +1844,7 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
         case "K":
         case "k":
         case "Enter":
-            togglePlay();
+            togglePlayImmediate();
             break;
         case "ArrowUp":
             if (!shifting) {

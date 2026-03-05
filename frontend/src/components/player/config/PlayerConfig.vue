@@ -176,7 +176,7 @@
                 </td>
             </tr>
 
-            <tr v-if="isVideo" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('time-delays')">
+            <tr v-if="mediaHasDuration" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('time-delays')">
                 <td>
                     <i class="fas fa-clock icon-config"></i>
                     <b>{{ $t("Toggle play delay") }}</b>
