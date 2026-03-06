@@ -82,33 +82,40 @@ export function useCommonRequestErrors(): CommonRequestErrorsComposable {
 
     // Handler for 'unauthorized' error
     const unauthorized = () => {
-        setError($t("Access denied"));
+        setError($t("Your session token expired") + ". " + $t("Please re-login in order to continue") + ".");
         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
     };
 
     // Handler for 'bad request' error
     const badRequest = () => {
-        setError($t("Bad request"));
+        setError(
+            $t("The server unexpectedly rejected the request") +
+                " " +
+                $t("This may indicate you are using an outdated client version") +
+                ". " +
+                $t("Try refreshing the page") +
+                ".",
+        );
     };
 
     // Handler for 'access denied' error
     const accessDenied = () => {
-        setError($t("Access denied"));
+        setError($t("Access denied") + ". " + $t("Try refreshing the page to refresh your permissions") + ".");
     };
 
     // Handler for 'not found' error
     const notFound = () => {
-        setError($t("Not found"));
+        setError($t("The target resource was not found") + ". " + $t("Try refreshing the page to re-synchronize with the server") + ".");
     };
 
     // Handler for internal server errors
     const serverError = () => {
-        setError($t("Internal server error"));
+        setError($t("Internal server error") + ".");
     };
 
     // Handler for network errors
     const networkError = () => {
-        setError($t("Could not connect to the server"));
+        setError($t("Could not connect to the server") + ".");
     };
 
     return {

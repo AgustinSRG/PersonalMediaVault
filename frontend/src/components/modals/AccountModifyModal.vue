@@ -141,7 +141,7 @@ const {
 const busy = ref(false);
 
 // Request error
-const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+const { error, unauthorized, badRequest, notFound, accessDenied, serverError, networkError } = useCommonRequestErrors();
 
 // Other errors
 const accountUsernameError = ref("");
@@ -204,9 +204,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
                 invalidTfaCode,
                 cooldown,
                 accessDenied,
-                accountNotFound: () => {
-                    error.value = $t("Not found");
-                },
+                accountNotFound: notFound,
                 serverError,
                 networkError,
             });

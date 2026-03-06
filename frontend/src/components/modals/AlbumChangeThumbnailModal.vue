@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
 const busy = ref(false);
 
 // Request error
-const { error, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+const { error, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } = useCommonRequestErrors();
 
 // Resets the error messages
 const resetErrors = () => {
@@ -187,9 +187,7 @@ const changeThumbnail = (file: File) => {
                 },
                 badRequest,
                 accessDenied,
-                notFound: () => {
-                    error.value = $t("Not found");
-                },
+                notFound,
                 serverError,
                 networkError,
             });
