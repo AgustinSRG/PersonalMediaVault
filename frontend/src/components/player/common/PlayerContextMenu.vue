@@ -67,13 +67,7 @@
                     </td>
                 </tr>
 
-                <tr
-                    v-if="type === 'image' || type === 'video'"
-                    class="tr-button"
-                    tabindex="0"
-                    @keydown="clickOnEnter"
-                    @click="toggleControls"
-                >
+                <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="toggleControls">
                     <td>
                         <i class="fas fa-eye-slash icon-config"></i>
                         <span class="context-entry-title">{{ $t("Hide controls") }}</span>

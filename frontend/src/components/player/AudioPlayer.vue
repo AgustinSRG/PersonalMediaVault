@@ -4,7 +4,7 @@
         class="audio-player player-settings-no-trap"
         :class="{
             'player-min': min,
-            'no-controls': !showControls,
+            'no-controls': !showControls || !userControls,
             'full-screen': fullscreen,
         }"
         @mousemove="playerMouseMove"
@@ -72,7 +72,7 @@
             :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
-        <PlayerSubtitles :show-controls="showControls" :subtitles="subtitles"></PlayerSubtitles>
+        <PlayerSubtitles :show-controls="showControls && userControls" :subtitles="subtitles"></PlayerSubtitles>
 
         <TimeSlicesEditHelper
             v-if="timeSlicesEdit"
@@ -101,7 +101,7 @@
 
         <PlayerControls
             :type="'audio'"
-            :show-controls="showControls"
+            :show-controls="showControls && userControls"
             :next="next"
             :prev="prev"
             :page-next="pageNext"
@@ -159,7 +159,7 @@
         ></PlayerTooltip>
 
         <PlayerTimeline
-            :hidden="!showControls"
+            :hidden="!showControls || !userControls"
             :duration="duration"
             :buffered-time="bufferedTime"
             :current-time="currentTime"
@@ -222,7 +222,7 @@
             v-model:album-expanded="expandedAlbum"
             :mid="mid"
             :metadata="metadata"
-            :shown="showControls"
+            :shown="showControls && userControls"
             :fullscreen="fullscreen"
             :in-album="inAlbum"
             @update:expanded="onTopBarExpand"
@@ -235,6 +235,7 @@
             v-model:shown="contextMenuShown"
             v-model:loop="loop"
             v-model:slice-loop="sliceLoop"
+            v-model:controls="userControls"
             v-model:time-slices-edit="timeSlicesEdit"
             type="audio"
             :x="contextMenuX"
@@ -377,6 +378,9 @@ const displayTagList = defineModel<boolean>("displayTagList");
 
 // Display description widget
 const displayDescription = defineModel<boolean>("displayDescription");
+
+// Display controls? (user setting)
+const userControls = defineModel<boolean>("userControls");
 
 // Props
 const props = defineProps({
@@ -1714,7 +1718,7 @@ const updateMediaErrorMessage = () => {
 /* Ticks */
 
 // Delay to hide controls (milliseconds)
-const CONTROLS_HIDE_DELAY = 200;
+const CONTROLS_HIDE_DELAY = 2000;
 
 /**
  * Checks the player status.
@@ -1959,6 +1963,10 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
             if (currentTimeSlice.value) {
                 setTime(currentTimeSlice.value.end, true);
             }
+            break;
+        case "C":
+        case "c":
+            userControls.value = !userControls.value;
             break;
         case "n":
         case "N":

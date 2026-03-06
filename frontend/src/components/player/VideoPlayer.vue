@@ -114,7 +114,7 @@
 
         <PlayerControls
             :type="'video'"
-            :show-controls="showControls"
+            :show-controls="showControls && userControls"
             :next="next"
             :prev="prev"
             :page-next="pageNext"
