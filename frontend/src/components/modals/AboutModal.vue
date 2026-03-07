@@ -96,16 +96,16 @@ const container = useTemplateRef("container");
 const { close } = useModal(display, container);
 
 // Client version
-const version = import.meta.env.VITE__VERSION || "-";
+const version = (import.meta.env.VITE__VERSION || "-") + "";
 
 // Home page URL
-const homePage = import.meta.env.VITE__HOME_URL || "#";
+const homePage = (import.meta.env.VITE__HOME_URL || "#") + "";
 
 // Git repository URL
-const gitRepo = import.meta.env.VITE__GIT_URL || "#";
+const gitRepo = (import.meta.env.VITE__GIT_URL || "#") + "";
 
 // License URL
-const license = import.meta.env.VITE__LICENSE_URL || "#";
+const license = (import.meta.env.VITE__LICENSE_URL || "#") + "";
 
 // Server version
 const serverVersion = ref("");
@@ -118,7 +118,7 @@ const ffmpegVersion = ref("");
 
 // Last release URL
 const lastReleaseUrl = computed(() => {
-    return gitRepo.value + "/releases/tag/v" + lastRelease.value;
+    return gitRepo + "/releases/tag/v" + lastRelease.value;
 });
 
 // Request ID

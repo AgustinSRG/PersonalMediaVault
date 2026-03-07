@@ -40,7 +40,7 @@ export function getApiURL(path: string): string {
  */
 export function getAssetURL(path: string): string {
     if (import.meta.env.DEV) {
-        const assetUrl = new URL(resolveUrl(path, import.meta.env.VITE_DEV_TEST_HOST || "http://localhost"));
+        const assetUrl = new URL(resolveUrl(path, (import.meta.env.VITE_DEV_TEST_HOST || "http://localhost") + ""));
         assetUrl.searchParams.set("session_token", AuthController.Session);
         return assetUrl.toString();
     } else {

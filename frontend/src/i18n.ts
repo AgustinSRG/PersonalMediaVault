@@ -74,7 +74,7 @@ const BASE_LOCALE = "en";
 /**
  * Fallback locale
  */
-const FALLBACK_LOCALE = import.meta.env.VITE__I18N_LOCALE || BASE_LOCALE;
+const FALLBACK_LOCALE = (import.meta.env.VITE__I18N_LOCALE || BASE_LOCALE) + "";
 
 /**
  * Finds locale by comparing the prefix
