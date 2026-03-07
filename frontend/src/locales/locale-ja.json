@@ -614,6 +614,7 @@
     "To confirm the operation, type your account password": "操作を確認するには、アカウントのパスワードを入力してください",
     "Toggle album loop": "アルバムループの切り替え",
     "Toggle album shuffle": "アルバムシャッフルの切り替え",
+    "Toggle auto next": "次の自動遷移を有効/無効にする",
     "Toggle full screen": "フルスクリーン切り替え",
     "Toggle loop": "トグルループ",
     "Toggle play delay": "再生遅延の切り替え",

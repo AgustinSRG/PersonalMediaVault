@@ -2,11 +2,14 @@
 
 "use strict";
 
-import { getAutoNextTime } from "@/control/player-preferences";
+import { getAutoNextTime, setAutoNextTime } from "@/control/player-preferences";
 import type { Ref } from "vue";
 import { watch } from "vue";
 import { useTimeout } from "./use-timeout";
 import type { MediaListItem } from "@/api/models";
+import { useI18n } from "./use-i18n";
+import { PagesController } from "@/control/pages";
+import { renderAutoNext } from "@/utils/player-config";
 
 /**
  * Required props for player auto-next
@@ -36,6 +39,11 @@ export type PlayerAutoNextComposable = {
      * Starts auto-next timer
      */
     setupAutoNextTimer: () => void;
+
+    /**
+     * Toggles auto next
+     */
+    toggleAutoNext: () => void;
 };
 
 /**
@@ -52,6 +60,9 @@ export function usePlayerAutoNext(
     refs: { displayConfig: Ref<boolean>; expandedTitle: Ref<boolean>; displayAttachments: Ref<boolean>; displayRelatedMedia: Ref<boolean> },
     goNext: () => void,
 ): PlayerAutoNextComposable {
+    // Translation
+    const { $t } = useI18n();
+
     // Interval to check for auto-next
     const autoNextTimer = useTimeout();
 
@@ -96,8 +107,39 @@ export function usePlayerAutoNext(
     // Reset auto-next timer if next state changes
     watch([() => props.next, () => props.pageNext], setupAutoNextTimer);
 
+    // Default value for active auto next
+    const DEFAULT_ACTIVE_AUTO_NEXT = 10;
+
+    /**
+     * Toggles auto next
+     */
+    const toggleAutoNext = () => {
+        let oldTime = getAutoNextTime(true);
+
+        if (oldTime <= 0) {
+            oldTime = DEFAULT_ACTIVE_AUTO_NEXT;
+        }
+
+        let newTime = getAutoNextTime();
+
+        if (newTime <= 0) {
+            // Enable
+            newTime = oldTime;
+        } else {
+            setAutoNextTime(newTime, true); // Store to re-enable later
+            newTime = 0;
+        }
+
+        setAutoNextTime(newTime);
+
+        PagesController.ShowSnackBar($t("Auto next") + ": " + renderAutoNext(newTime, $t));
+
+        setupAutoNextTimer();
+    };
+
     return {
         clearAutoNextTimer,
         setupAutoNextTimer,
+        toggleAutoNext,
     };
 }

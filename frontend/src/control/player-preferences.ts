@@ -478,21 +478,24 @@ export function setAutoNextPageDelay(autoNextDelay: boolean) {
 }
 
 const LS_KEY_AUTO_NEXT_TIME = "player-pref-img-auto-next";
+const LS_KEY_AUTO_NEXT_TIME_OLD = "player-pref-img-auto-next-old";
 
 /**
  * Gets auto next option for images or short videos
+ * @param old True to get the old value
  * @returns Number of seconds to wait for auto next, 0 = disabled
  */
-export function getAutoNextTime(): number {
-    return Number(fetchFromLocalStorageCache(LS_KEY_AUTO_NEXT_TIME, 0)) || 0;
+export function getAutoNextTime(old?: boolean): number {
+    return Number(fetchFromLocalStorageCache(old ? LS_KEY_AUTO_NEXT_TIME_OLD : LS_KEY_AUTO_NEXT_TIME, 0)) || 0;
 }
 
 /**
  * Sets auto next option for images or short videos
  * @param autoNextSeconds Number of seconds to wait for auto next, 0 = disabled
+ * @param old True to store the old value
  */
-export function setAutoNextTime(autoNextSeconds: number) {
-    saveIntoLocalStorage(LS_KEY_AUTO_NEXT_TIME, autoNextSeconds);
+export function setAutoNextTime(autoNextSeconds: number, old?: boolean) {
+    saveIntoLocalStorage(old ? LS_KEY_AUTO_NEXT_TIME_OLD : LS_KEY_AUTO_NEXT_TIME, autoNextSeconds);
 }
 
 const LS_KEY_IMAGE_NOTES_VISIBLE = "player-pref-img-notes-v";

@@ -157,6 +157,12 @@
                         <tr>
                             <td>{{ $t("Toggle slice loop") }}</td>
                             <td>
+                                <span class="key-shortcut">V</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{{ $t("Toggle auto next") }}</td>
+                            <td>
                                 <span class="key-shortcut">X</span>
                             </td>
                         </tr>

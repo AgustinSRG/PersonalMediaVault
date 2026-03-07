@@ -547,7 +547,7 @@ const {
 const isShort = ref(false);
 
 // Auto-next
-const { clearAutoNextTimer, setupAutoNextTimer } = usePlayerAutoNext(
+const { clearAutoNextTimer, setupAutoNextTimer, toggleAutoNext } = usePlayerAutoNext(
     props,
     isShort,
     {
@@ -2198,8 +2198,8 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
                 setTime(duration.value, true);
             }
             break;
-        case "X":
-        case "x":
+        case "V":
+        case "v":
             sliceLoop.value = !sliceLoop.value;
 
             if (sliceLoop.value) {
@@ -2259,6 +2259,10 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
             if (canWrite.value) {
                 timeSlicesEdit.value = true;
             }
+            break;
+        case "x":
+        case "X":
+            toggleAutoNext();
             break;
         case "z":
         case "Z":

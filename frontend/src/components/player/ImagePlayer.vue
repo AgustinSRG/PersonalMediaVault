@@ -420,7 +420,7 @@ const {
 });
 
 // Auto-next
-const { clearAutoNextTimer, setupAutoNextTimer } = usePlayerAutoNext(
+const { clearAutoNextTimer, setupAutoNextTimer, toggleAutoNext } = usePlayerAutoNext(
     props,
     ref(true),
     {
@@ -1167,6 +1167,10 @@ useGlobalKeyboardHandler((event: KeyboardEvent) => {
             } else {
                 notesEditMode.value = false;
             }
+            break;
+        case "x":
+        case "X":
+            toggleAutoNext();
             break;
         default:
             caught = false;
