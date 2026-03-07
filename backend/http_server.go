@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/handlers"
+	handlers "github.com/AgustinSRG/gorilla-handlers"
 	"github.com/gorilla/mux"
 )
 
