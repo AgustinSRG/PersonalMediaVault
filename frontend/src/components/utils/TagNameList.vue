@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { useI18n } from "@/composables/use-i18n";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
+import { setLastUsedTag } from "@/control/app-preferences";
 import type { MatchingTag } from "@/control/tags";
 import { parseTagName } from "@/utils/tags";
 import { useTemplateRef } from "vue";
@@ -117,6 +118,8 @@ const addTagSuggestion = (tag: MatchingTag) => {
 
     emit("changed");
 
+    setLastUsedTag(tag.id, "edit");
+
     updateTagSuggestions();
 
     tagFilterInput.value?.focus();
@@ -128,7 +131,12 @@ const addTagSuggestion = (tag: MatchingTag) => {
  * @param tag The tag name
  */
 const removeTag = (tag: string) => {
-    tags.value = tags.value.filter((t) => tag !== t);
+    for (let i = 0; i < tags.value.length; i++) {
+        if (tags.value[i] === tag) {
+            tags.value.splice(i, 1);
+            break;
+        }
+    }
 
     emit("changed");
 

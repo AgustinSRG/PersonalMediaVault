@@ -111,7 +111,12 @@ const addTag = (tag: MatchingTag) => {
  * @param tag The tag ID
  */
 const removeTag = (tag: number) => {
-    tags.value = tags.value.filter((t) => tag !== t);
+    for (let i = 0; i < tags.value.length; i++) {
+        if (tags.value[i] === tag) {
+            tags.value.splice(i, 1);
+            break;
+        }
+    }
 
     emit("changed");
 
