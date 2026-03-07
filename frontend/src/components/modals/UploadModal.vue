@@ -125,7 +125,14 @@ const emit = defineEmits<{
 const tags = ref<string[]>([]);
 
 // Album for the uploaded media to be added
-const album = ref(-1);
+const album = ref(props.fixedAlbum >= 0 ? props.fixedAlbum : -1);
+
+watch(
+    () => props.fixedAlbum,
+    () => {
+        album.value = props.fixedAlbum >= 0 ? props.fixedAlbum : -1;
+    },
+);
 
 // Displays the modal to create an album
 const displayAlbumCreate = ref(false);
