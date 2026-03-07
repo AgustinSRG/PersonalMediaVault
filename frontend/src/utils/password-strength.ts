@@ -88,12 +88,17 @@ function removeRepeatedParts(password: string, n: number): string {
 
     let result = "";
     let previousPart = "";
+    let previousPartRepeated = false;
 
     for (let i = 0; i < cycles; i++) {
         const part = password.substring(n * i, n * (i + 1));
 
         if (previousPart !== part) {
             previousPart = part;
+            result += part;
+            previousPartRepeated = false;
+        } else if (!previousPartRepeated) {
+            previousPartRepeated = true;
             result += part;
         }
     }
@@ -205,11 +210,16 @@ function removeIncrementalSequences(password: string, n: number): string {
 
     let result = "";
     let previousPart = "";
+    let twoPartsSequence = false;
 
     for (let i = 0; i < cycles; i++) {
         const part = password.substring(n * i, n * (i + 1));
 
         if (!partsAreSequence(previousPart, part)) {
+            result += part;
+            twoPartsSequence = false;
+        } else if (!twoPartsSequence) {
+            twoPartsSequence = true;
             result += part;
         }
 
