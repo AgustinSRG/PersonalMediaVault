@@ -1,54 +1,48 @@
-// Busy state controller
+// Global busy state
 
 "use strict";
 
 import { UploadController } from "./upload";
 
+// Set to store the busy statuses
+const BusySet = new Set();
+
 /**
- * Management object to warn the user before closing when in busy state.
+ * Initializes the global busy state
  */
-export class BusyStateController {
-    /**
-     * Set to store the busy statuses
-     */
-    private static BusySet = new Set();
+export function initializeGlobalBusyState() {
+    // Add listener for window close
+    window.addEventListener("beforeunload", function (e: BeforeUnloadEvent) {
+        if (BusySet.size > 0 || UploadController.GetPendingEntries().length > 0) {
+            // Cancel the event
+            e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+            // Chrome requires returnValue to be set
+            e.returnValue = "";
+        }
+    });
+}
 
-    /**
-     * Initialization logic
-     */
-    public static Initialize() {
-        window.addEventListener("beforeunload", function (e: BeforeUnloadEvent) {
-            if (BusyStateController.BusySet.size > 0 || UploadController.GetPendingEntries().length > 0) {
-                // Cancel the event
-                e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
-                // Chrome requires returnValue to be set
-                e.returnValue = "";
-            }
-        });
-    }
+/**
+ * Checks a global busy state
+ * @param key Status key
+ * @returns True if busy
+ */
+export function isGlobalBusyState(key: string): boolean {
+    return BusySet.has(key);
+}
 
-    /**
-     * Checks if a status is busy
-     * @param key Status key
-     * @returns True if busy
-     */
-    public static IsBusy(key: string): boolean {
-        return BusyStateController.BusySet.has(key);
-    }
+/**
+ * Set a global busy state
+ * @param key Status key
+ */
+export function setGlobalBusyState(key: string) {
+    BusySet.add(key);
+}
 
-    /**
-     * Set a status as busy
-     * @param key Status key
-     */
-    public static SetBusy(key: string) {
-        BusyStateController.BusySet.add(key);
-    }
-
-    /**
-     * Sets a status as free (no longer busy)
-     * @param key Status key
-     */
-    public static RemoveBusy(key: string) {
-        BusyStateController.BusySet.delete(key);
-    }
+/**
+ * Sets a global busy state as free (no longer busy)
+ * @param key Status key
+ */
+export function removeGlobalBusyState(key: string) {
+    BusySet.delete(key);
 }

@@ -10,7 +10,7 @@ import { TagsController } from "./control/tags";
 import { AlbumsController } from "./control/albums";
 import { MediaController } from "./control/media";
 import { KeyboardManager } from "./control/keyboard";
-import { BusyStateController } from "./control/busy-state";
+import { initializeGlobalBusyState } from "./control/busy-state";
 
 KeyboardManager.Initialize();
 
@@ -20,7 +20,7 @@ AuthController.Initialize();
 TagsController.Initialize();
 MediaController.Initialize();
 AlbumsController.Initialize();
-BusyStateController.Initialize();
+initializeGlobalBusyState();
 
 // Setup App
 

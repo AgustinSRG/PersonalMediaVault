@@ -5,7 +5,6 @@
 import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
-import { BusyStateController } from "./busy-state";
 import { MediaController } from "./media";
 import type { ImageNote } from "@/utils/notes-format";
 import { parseImageNotes } from "@/utils/notes-format";
@@ -23,6 +22,7 @@ import {
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
+import { removeGlobalBusyState, setGlobalBusyState } from "./busy-state";
 
 /**
  * The change type for the image nodes
@@ -192,14 +192,14 @@ export class ImageNotesController {
         }
 
         ImageNotesController.Saving = true;
-        BusyStateController.SetBusy(BUSY_KEY);
+        setGlobalBusyState(BUSY_KEY);
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
         makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess((res) => {
                 ImageNotesController.Saving = false;
-                BusyStateController.RemoveBusy(BUSY_KEY);
+                removeGlobalBusyState(BUSY_KEY);
 
                 if (ImageNotesController.MediaId === mediaId) {
                     ImageNotesController.NotesFileURL = res.url || "";
@@ -219,11 +219,11 @@ export class ImageNotesController {
             .onCancel(() => {
                 ImageNotesController.Saving = false;
                 ImageNotesController.PendingSave = false;
-                BusyStateController.RemoveBusy(BUSY_KEY);
+                removeGlobalBusyState(BUSY_KEY);
             })
             .onRequestError((err, handleErr) => {
                 ImageNotesController.Saving = false;
-                BusyStateController.RemoveBusy(BUSY_KEY);
+                removeGlobalBusyState(BUSY_KEY);
                 handleErr(err, {
                     unauthorized: () => {
                         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
@@ -246,7 +246,7 @@ export class ImageNotesController {
                 console.error(err);
                 ImageNotesController.Saving = false;
                 ImageNotesController.PendingSave = false;
-                BusyStateController.RemoveBusy(BUSY_KEY);
+                removeGlobalBusyState(BUSY_KEY);
             });
     }
 
