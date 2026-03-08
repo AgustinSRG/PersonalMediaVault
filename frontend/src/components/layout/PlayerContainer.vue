@@ -115,7 +115,6 @@ import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTem
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { closeFullscreen } from "@/utils/full-screen";
-import { PagesController } from "@/control/pages";
 import { isTouchDevice } from "@/utils/touch";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { useFocusTrap } from "@/composables/use-focus-trap";
@@ -123,6 +122,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import type { PlayerLoadStatus } from "@/utils/player";
+import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -271,10 +271,10 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
 });
 
 // Does the media has a previous element within the current page?
-const hasPagePrev = ref(PagesController.HasPagePrev);
+const hasPagePrev = ref(getPageHasPrevGlobalState());
 
 // Does the media has a next element within the current page?
-const hasPageNext = ref(PagesController.HasPageNext);
+const hasPageNext = ref(getPageHasNextGlobalState());
 
 onApplicationEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, (pageHasPrev: boolean, pageHasNext: boolean) => {
     hasPagePrev.value = pageHasPrev;

@@ -143,7 +143,6 @@ import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
@@ -156,6 +155,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useInterval } from "@/composables/use-interval";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { onHomeGroupLoad, onPageUnload } from "@/control/pages";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -362,7 +362,7 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
         currentGroupNext.value = -1;
         currentGroupFirst.value = -1;
         currentGroupLast.value = -1;
-        PagesController.OnHomeGroupLoad(false, false);
+        onHomeGroupLoad(false, false);
 
         scrollToCurrentRow();
     }
@@ -386,12 +386,12 @@ const onPrevNextUpdated = (
     currentGroupFirst.value = newCurrentGroupFirst;
     currentGroupLast.value = newCurrentGroupLast;
 
-    PagesController.OnHomeGroupLoad(currentGroupPrev.value >= 0, currentGroupNext.value >= 0);
+    onHomeGroupLoad(currentGroupPrev.value >= 0, currentGroupNext.value >= 0);
 };
 
 // Make sure to unload the page context before unmounting
 onBeforeUnmount(() => {
-    PagesController.OnPageUnload();
+    onPageUnload();
 });
 
 /**

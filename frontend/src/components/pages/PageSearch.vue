@@ -214,7 +214,6 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiAdvancedSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
@@ -235,6 +234,7 @@ import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { onPageLoad, onPageUnload } from "@/control/pages";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -1495,14 +1495,14 @@ const onCurrentMediaChanged = () => {
     if (!props.inModal) {
         const completePageList = listScroller.list;
         const i = findCurrentMediaIndex();
-        PagesController.OnPageLoad(i, completePageList.length, 0, 1);
+        onPageLoad(i, completePageList.length, 0, 1);
     }
 };
 
 // Make sure to unload the page context before the component unmounts
 onBeforeUnmount(() => {
     if (!props.inModal) {
-        PagesController.OnPageUnload();
+        onPageUnload();
     }
 });
 

@@ -62,7 +62,6 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import { MediaController } from "@/control/media";
-import { PagesController } from "@/control/pages";
 import { apiSearchRandom } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
 import PageLoaderFiller from "./common/PageLoaderFiller.vue";
@@ -71,6 +70,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { onPageLoad, onPageUnload } from "@/control/pages";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -348,12 +348,12 @@ onApplicationEvent(EVENT_NAME_PAGE_NAV_NEXT, nextMedia);
  */
 const onCurrentMediaChanged = () => {
     const i = findCurrentMediaIndex();
-    PagesController.OnPageLoad(i, pageItems.value.length, 1, 3);
+    onPageLoad(i, pageItems.value.length, 1, 3);
 };
 
 // Make sure to unload the page context when the component unmounts
 onBeforeUnmount(() => {
-    PagesController.OnPageUnload();
+    onPageUnload();
 });
 
 /**

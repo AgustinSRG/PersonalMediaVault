@@ -76,7 +76,6 @@ import PageMenu from "@/components/pages/common/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import { PagesController } from "@/control/pages";
 import { apiSearch } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
 import PageLoaderFiller from "./common/PageLoaderFiller.vue";
@@ -85,6 +84,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useRequestId } from "@/composables/use-request-id";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { onPageLoad, onPageUnload } from "@/control/pages";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -405,12 +405,12 @@ onApplicationEvent(EVENT_NAME_PAGE_NAV_NEXT, nextMedia);
  */
 const onCurrentMediaChanged = () => {
     const i = findCurrentMediaIndex();
-    PagesController.OnPageLoad(i, pageItems.value.length, page.value, totalPages.value);
+    onPageLoad(i, pageItems.value.length, page.value, totalPages.value);
 };
 
 // Make sure to unload the page context when the component unmounts
 onBeforeUnmount(() => {
-    PagesController.OnPageUnload();
+    onPageUnload();
 });
 
 /**

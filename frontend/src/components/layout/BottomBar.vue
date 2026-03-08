@@ -52,7 +52,7 @@ import {
     EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { PagesController } from "@/control/pages";
+import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
 import { clickOnEnter } from "@/utils/events";
 import { ref } from "vue";
 
@@ -76,8 +76,8 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, () => {
 });
 
 // Previous and next element in page
-const hasPagePrev = ref(PagesController.HasPagePrev);
-const hasPageNext = ref(PagesController.HasPageNext);
+const hasPagePrev = ref(getPageHasPrevGlobalState());
+const hasPageNext = ref(getPageHasNextGlobalState());
 
 onApplicationEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, (p, n) => {
     hasPagePrev.value = p;
