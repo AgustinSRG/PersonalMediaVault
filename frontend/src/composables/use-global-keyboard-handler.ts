@@ -2,8 +2,7 @@
 
 "use strict";
 
-import type { KeyboardEventHandler } from "@/control/keyboard";
-import { KeyboardManager } from "@/control/keyboard";
+import { addGlobalKeyboardHandler, removeGlobalKeyboardHandler, type KeyboardEventHandler } from "@/control/keyboard";
 import { onBeforeUnmount } from "vue";
 
 /**
@@ -13,9 +12,9 @@ import { onBeforeUnmount } from "vue";
  * @param priority The priority
  */
 export function useGlobalKeyboardHandler(handler: KeyboardEventHandler, priority?: number) {
-    KeyboardManager.AddHandler(handler, priority);
+    addGlobalKeyboardHandler(handler, priority);
 
     onBeforeUnmount(() => {
-        KeyboardManager.RemoveHandler(handler);
+        removeGlobalKeyboardHandler(handler);
     });
 }
