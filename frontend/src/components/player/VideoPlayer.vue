@@ -293,14 +293,12 @@ import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, MediaController } from "@/control/media";
-import { SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { PropType } from "vue";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
-import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
@@ -314,7 +312,6 @@ import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables
 import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
 import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
 import { usePlayerNextOnEnd } from "@/composables/use-player-next-on-end";
-import { onApplicationEvent } from "@/composables/on-app-event";
 import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 import { useTimeout } from "@/composables/use-timeout";
 import { useInterval } from "@/composables/use-interval";
@@ -323,6 +320,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
+import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -676,13 +674,6 @@ const feedback = ref<PlayerPlayFeedbackType>("");
 // True if refresh of the audio is required to play it
 const requiresRefresh = ref(false);
 
-// Current subtitles
-const subtitles = ref("");
-
-// Subtitles range
-const subtitlesStart = ref(-1);
-const subtitlesEnd = ref(-1);
-
 // Selected audio track
 const audioTrack = ref(getSelectedAudioTrack());
 
@@ -891,38 +882,7 @@ watch([() => props.next, () => props.pageNext], setDefaultLoop);
 
 /* Subtitles */
 
-/**
- * Resets subtitles
- */
-const resetSubtitles = () => {
-    subtitles.value = "";
-    subtitlesStart.value = -1;
-    subtitlesEnd.value = -1;
-};
-
-/**
- * Updates subtitles based on the current time
- */
-const updateSubtitles = () => {
-    if (currentTime.value >= subtitlesStart.value && currentTime.value <= subtitlesEnd.value) {
-        return;
-    }
-    const sub = SubtitlesController.GetSubtitlesLine(currentTime.value);
-    if (sub) {
-        subtitles.value = sub.text;
-        subtitlesStart.value = sub.start;
-        subtitlesEnd.value = sub.end;
-    } else {
-        subtitles.value = "";
-        subtitlesStart.value = 0;
-        subtitlesEnd.value = 0;
-    }
-};
-
-onApplicationEvent(EVENT_NAME_SUBTITLES_UPDATE, () => {
-    resetSubtitles();
-    updateSubtitles();
-});
+const { subtitles, resetSubtitles, updateSubtitles } = usePlayerSubtitles(currentTime);
 
 /* Controls */
 

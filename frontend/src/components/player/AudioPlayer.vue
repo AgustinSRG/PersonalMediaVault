@@ -278,7 +278,6 @@ import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, MediaController } from "@/control/media";
-import { SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { ColorThemeName } from "@/control/app-preferences";
@@ -286,7 +285,7 @@ import { getTheme } from "@/control/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
-import { EVENT_NAME_SUBTITLES_UPDATE, EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
+import { EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
@@ -306,6 +305,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { useI18n } from "@/composables/use-i18n";
 import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 import { useTimeout } from "@/composables/use-timeout";
+import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -659,13 +659,6 @@ const showThumbnail = ref(getShowAudioThumbnail());
 // True if refresh of the audio is required to play it
 const requiresRefresh = ref(false);
 
-// Current subtitles
-const subtitles = ref("");
-
-// Subtitles range
-const subtitlesStart = ref(-1);
-const subtitlesEnd = ref(-1);
-
 // Current theme
 const theme = ref(getTheme());
 
@@ -820,38 +813,7 @@ watch([() => props.next, () => props.pageNext], setDefaultLoop);
 
 /* Subtitles */
 
-/**
- * Resets subtitles
- */
-const resetSubtitles = () => {
-    subtitles.value = "";
-    subtitlesStart.value = -1;
-    subtitlesEnd.value = -1;
-};
-
-/**
- * Updates subtitles based on the current time
- */
-const updateSubtitles = () => {
-    if (currentTime.value >= subtitlesStart.value && currentTime.value <= subtitlesEnd.value) {
-        return;
-    }
-    const sub = SubtitlesController.GetSubtitlesLine(currentTime.value);
-    if (sub) {
-        subtitles.value = sub.text;
-        subtitlesStart.value = sub.start;
-        subtitlesEnd.value = sub.end;
-    } else {
-        subtitles.value = "";
-        subtitlesStart.value = 0;
-        subtitlesEnd.value = 0;
-    }
-};
-
-onApplicationEvent(EVENT_NAME_SUBTITLES_UPDATE, () => {
-    resetSubtitles();
-    updateSubtitles();
-});
+const { subtitles, resetSubtitles, updateSubtitles } = usePlayerSubtitles(currentTime);
 
 /* Controls */
 
