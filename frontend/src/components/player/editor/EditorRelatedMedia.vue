@@ -86,7 +86,6 @@ import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
 import type { MediaListItem } from "@/api/models";
@@ -96,6 +95,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 // Limit of related media elements
 const MAX_RELATED_MEDIA_COUNT = 16;
@@ -270,7 +270,7 @@ const saveChanges = (e?: Event) => {
         ),
     )
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully changed related media"));
+            showSnackBarRight($t("Successfully changed related media"));
 
             busy.value = false;
             saved.value = true;

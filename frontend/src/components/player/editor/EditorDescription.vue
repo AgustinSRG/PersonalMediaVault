@@ -48,7 +48,6 @@
 import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaSetDescription } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
@@ -60,6 +59,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
+import { showSnackBar } from "@/control/snack-bar";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -231,7 +231,7 @@ const saveChanges = () => {
 
             dirty.value = false;
 
-            PagesController.ShowSnackBar($t("Successfully saved description"));
+            showSnackBar($t("Successfully saved description"));
 
             if (MediaController.MediaData && MediaController.MediaData.id === mid) {
                 MediaController.MediaData.description_url = res.url || "";

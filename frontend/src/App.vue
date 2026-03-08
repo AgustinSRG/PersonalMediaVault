@@ -10,7 +10,6 @@ import { MediaController } from "./control/media";
 import { type UploadEntryMin } from "./control/upload";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
-import { PagesController } from "./control/pages";
 import {
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
@@ -20,6 +19,7 @@ import {
 } from "./control/app-events";
 import { useI18n } from "./composables/use-i18n";
 import { onApplicationEvent } from "./composables/on-app-event";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -116,12 +116,12 @@ onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateAppStatus);
 
 // Notify when upload is ready
 onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (m: UploadEntryMin) => {
-    PagesController.ShowSnackBar($t("Successfully uploaded") + ": " + m.name);
+    showSnackBar($t("Successfully uploaded") + ": " + m.name);
 });
 
 // Notify when upload fails
 onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (m: UploadEntryMin) => {
-    PagesController.ShowSnackBar($t("Error uploading file") + ": " + m.name);
+    showSnackBar($t("Error uploading file") + ": " + m.name);
 });
 </script>
 

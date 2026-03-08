@@ -171,7 +171,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { clone } from "@/utils/objects";
-import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { useI18n } from "@/composables/use-i18n";
@@ -180,6 +179,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -347,7 +347,7 @@ const addAudio = () => {
 
     makeNamedApiRequest(requestIdAdd, apiMediaSetAudioTrack(mediaId, id, name, audioFile.value))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Added audio track") + ": " + res.name);
+            showSnackBarRight($t("Added audio track") + ": " + res.name);
 
             busy.value = false;
             audios.value.push(res);
@@ -488,7 +488,7 @@ const saveRename = () => {
 
     makeNamedApiRequest(requestIdRename, apiMediaRenameAudioTrack(mediaId, audioId, newId, newName))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Renamed audio track") + ": " + newName + " (" + newId + ")");
+            showSnackBarRight($t("Renamed audio track") + ": " + newName + " (" + newId + ")");
 
             audioRenameBusy.value = false;
             audioRenameSelected.value = "";
@@ -597,7 +597,7 @@ const removeAudioConfirmInternal = (confirmation: ProvidedAuthConfirmation) => {
 
     makeNamedApiRequest(requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id, confirmation))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Removed audio track") + ": " + aud.name);
+            showSnackBarRight($t("Removed audio track") + ": " + aud.name);
 
             busyDeleting.value = false;
 

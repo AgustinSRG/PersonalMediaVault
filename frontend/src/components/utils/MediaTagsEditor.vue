@@ -69,10 +69,10 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { setLastUsedTag } from "@/control/app-preferences";
 import { MediaController } from "@/control/media";
-import { PagesController } from "@/control/pages";
 import { TagsController } from "@/control/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
+import { showSnackBar } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -176,7 +176,7 @@ const addTag = (tag: string, resetTagInput: boolean) => {
 
             setLastUsedTag(res.id, "edit");
 
-            PagesController.ShowSnackBar($t("Added tag") + ": " + res.name);
+            showSnackBar($t("Added tag") + ": " + res.name);
 
             if (resetTagInput) {
                 tagFilter.value = "";
@@ -247,7 +247,7 @@ const removeTag = (tag: number) => {
         .onSuccess(({ removed }) => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Removed tag") + ": " + tagName);
+            showSnackBar($t("Removed tag") + ": " + tagName);
 
             for (let i = 0; i < mediaTags.value.length; i++) {
                 if (mediaTags.value[i] === tag) {

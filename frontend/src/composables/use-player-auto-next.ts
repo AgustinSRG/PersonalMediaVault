@@ -8,8 +8,8 @@ import { watch } from "vue";
 import { useTimeout } from "./use-timeout";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "./use-i18n";
-import { PagesController } from "@/control/pages";
 import { renderAutoNext } from "@/utils/player-config";
+import { showSnackBar } from "@/control/snack-bar";
 
 /**
  * Required props for player auto-next
@@ -132,7 +132,7 @@ export function usePlayerAutoNext(
 
         setAutoNextTime(newTime);
 
-        PagesController.ShowSnackBar($t("Auto next") + ": " + renderAutoNext(newTime, $t));
+        showSnackBar($t("Auto next") + ": " + renderAutoNext(newTime, $t));
 
         setupAutoNextTimer();
     };

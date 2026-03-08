@@ -87,7 +87,6 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
@@ -98,6 +97,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -207,7 +207,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Account created") + ": " + username);
+            showSnackBar($t("Account created") + ": " + username);
 
             accountUsername.value = "";
             accountPassword.value = "";

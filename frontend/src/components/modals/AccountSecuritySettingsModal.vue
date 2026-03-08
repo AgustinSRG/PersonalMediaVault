@@ -116,7 +116,6 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -129,6 +128,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { showSnackBar } from "@/control/snack-bar";
 
 const AccountTfaEnableModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaEnableModal.vue"),
@@ -320,7 +320,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             dirty.value = false;
 
-            PagesController.ShowSnackBar($t("Saved security settings"));
+            showSnackBar($t("Saved security settings"));
 
             forceClose();
         })

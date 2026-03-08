@@ -115,7 +115,6 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import type { InviteSession } from "@/api/api-invites";
 import {
     apiInvitesClearCode,
@@ -135,6 +134,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -475,7 +475,7 @@ const closeSession = () => {
         .onSuccess(() => {
             busyClosing.value = false;
 
-            PagesController.ShowSnackBar($t("Session closed"));
+            showSnackBar($t("Session closed"));
 
             for (let i = 0; i < sessions.value.length; i++) {
                 if (sessions.value[i].index === sessionIndex) {

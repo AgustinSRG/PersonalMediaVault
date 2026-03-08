@@ -66,7 +66,6 @@ import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
@@ -76,6 +75,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -167,7 +167,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             resetForm();
 
-            PagesController.ShowSnackBar($t("Vault username changed!"));
+            showSnackBar($t("Vault username changed!"));
 
             forceClose();
         })

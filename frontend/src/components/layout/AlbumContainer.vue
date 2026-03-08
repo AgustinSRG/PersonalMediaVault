@@ -183,7 +183,6 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsMoveMediaInAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
 import type { PositionedMediaListItem } from "@/api/models";
@@ -195,6 +194,7 @@ import { stopPropagationEvent } from "@/utils/events";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
@@ -457,9 +457,9 @@ const closePage = () => {
 const toggleLoop = () => {
     AlbumsController.ToggleLoop();
     if (AlbumsController.AlbumLoop) {
-        PagesController.ShowSnackBar($t("Album loop enabled"));
+        showSnackBar($t("Album loop enabled"));
     } else {
-        PagesController.ShowSnackBar($t("Album loop disabled"));
+        showSnackBar($t("Album loop disabled"));
     }
 };
 
@@ -469,9 +469,9 @@ const toggleLoop = () => {
 const toggleRandom = () => {
     AlbumsController.ToggleRandom();
     if (AlbumsController.AlbumRandom) {
-        PagesController.ShowSnackBar($t("Album shuffle enabled"));
+        showSnackBar($t("Album shuffle enabled"));
     } else {
-        PagesController.ShowSnackBar($t("Album shuffle disabled"));
+        showSnackBar($t("Album shuffle disabled"));
     }
 };
 
@@ -482,11 +482,11 @@ const toggleFav = () => {
     if (isFav.value) {
         isFav.value = false;
         albumRemoveFav(AlbumsController.CurrentAlbum);
-        PagesController.ShowSnackBar($t("Album removed from favorites"));
+        showSnackBar($t("Album removed from favorites"));
     } else {
         isFav.value = true;
         albumAddFav(AlbumsController.CurrentAlbum);
-        PagesController.ShowSnackBar($t("Album added to favorites"));
+        showSnackBar($t("Album added to favorites"));
     }
 };
 
@@ -723,7 +723,7 @@ const removeMedia = (i: number) => {
 
     makeApiRequest(apiAlbumsRemoveMediaFromAlbum(aid, media.id))
         .onSuccess(() => {
-            PagesController.ShowSnackBar($t("Successfully removed from album"));
+            showSnackBar($t("Successfully removed from album"));
             AlbumsController.OnChangedAlbum(aid, true);
             emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
         })

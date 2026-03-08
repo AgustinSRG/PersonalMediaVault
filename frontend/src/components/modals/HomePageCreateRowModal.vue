@@ -50,7 +50,6 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import type { HomePageGroup } from "@/api/api-home";
 import { apiHomeAddGroup } from "@/api/api-home";
@@ -58,6 +57,7 @@ import { getDefaultGroupName, HomePageGroupTypes } from "@/utils/home";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -146,7 +146,7 @@ const submit = (e: Event) => {
         }),
     )
         .onSuccess((response) => {
-            PagesController.ShowSnackBar($t("Row added") + ": " + (response.name || getDefaultGroupName(response.type, $t)));
+            showSnackBar($t("Row added") + ": " + (response.name || getDefaultGroupName(response.type, $t)));
 
             busy.value = false;
             name.value = "";

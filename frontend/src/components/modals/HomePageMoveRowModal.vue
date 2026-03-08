@@ -43,13 +43,13 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { getDefaultGroupName } from "@/utils/home";
 import { apiHomeGroupMove } from "@/api/api-home";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -167,9 +167,7 @@ const submit = (e: Event) => {
 
     makeApiRequest(apiHomeGroupMove(rowId, position))
         .onSuccess(() => {
-            PagesController.ShowSnackBar(
-                $t("Row moved") + ": " + (props.selectedRowName || getDefaultGroupName(props.selectedRowType, $t)),
-            );
+            showSnackBar($t("Row moved") + ": " + (props.selectedRowName || getDefaultGroupName(props.selectedRowType, $t)));
 
             busy.value = false;
 

@@ -135,7 +135,6 @@ import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
 import { getFrontendUrl } from "@/utils/api";
@@ -150,6 +149,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { clickOnEnter } from "@/utils/events";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -446,7 +446,7 @@ const removeFromAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
 
             album.added = false;
 
-            PagesController.ShowSnackBar($t("Successfully removed from album"));
+            showSnackBar($t("Successfully removed from album"));
 
             if (mediaAlbums.value.indexOf(album.id) >= 0) {
                 mediaAlbums.value.splice(mediaAlbums.value.indexOf(album.id), 1);
@@ -498,7 +498,7 @@ const addIntoAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
 
             album.added = true;
 
-            PagesController.ShowSnackBar($t("Successfully added to album"));
+            showSnackBar($t("Successfully added to album"));
 
             if (mediaAlbums.value.indexOf(album.id) === -1) {
                 mediaAlbums.value.push(album.id);

@@ -201,7 +201,6 @@ import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPD
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiMediaSetDescription } from "@/api/api-media-edit";
@@ -227,6 +226,7 @@ import { useSpeechReader } from "@/composables/use-speech-reader";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { getStoredDescription, setStoredDescription } from "@/control/description-store";
+import { showSnackBar } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -707,7 +707,7 @@ const saveChanges = () => {
 
             clearBusyTimeout();
 
-            PagesController.ShowSnackBar($t("Successfully saved description"));
+            showSnackBar($t("Successfully saved description"));
 
             content.value = contentToChange.value;
             contentLines.value = content.value

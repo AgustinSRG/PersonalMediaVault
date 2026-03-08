@@ -52,7 +52,6 @@ import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -63,6 +62,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -145,7 +145,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Media deleted") + ": " + mediaName);
+            showSnackBar($t("Media deleted") + ": " + mediaName);
 
             deleteConfirmation.value = false;
 
@@ -171,7 +171,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
                 notFound: () => {
                     // Already deleted
 
-                    PagesController.ShowSnackBar($t("Media deleted") + ": " + mediaName);
+                    showSnackBar($t("Media deleted") + ": " + mediaName);
 
                     deleteConfirmation.value = false;
 

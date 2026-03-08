@@ -283,7 +283,6 @@ import { AuthController } from "@/control/auth";
 import type { ColorThemeName } from "@/control/app-preferences";
 import { getTheme } from "@/control/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
-import { PagesController } from "@/control/pages";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
 import PlayerControls from "./common/PlayerControls.vue";
@@ -306,6 +305,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 import { useTimeout } from "@/composables/use-timeout";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
+import { showSnackBar } from "@/control/snack-bar";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1893,9 +1893,9 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
             sliceLoop.value = !sliceLoop.value;
 
             if (sliceLoop.value) {
-                PagesController.ShowSnackBar($t("Slice loop enabled"));
+                showSnackBar($t("Slice loop enabled"));
             } else {
-                PagesController.ShowSnackBar($t("Slice loop disabled"));
+                showSnackBar($t("Slice loop disabled"));
             }
             break;
         case "l":
@@ -1906,9 +1906,9 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
                 loop.value = !loop.value;
 
                 if (loop.value) {
-                    PagesController.ShowSnackBar($t("Loop enabled"));
+                    showSnackBar($t("Loop enabled"));
                 } else {
-                    PagesController.ShowSnackBar($t("Loop disabled"));
+                    showSnackBar($t("Loop disabled"));
                 }
 
                 emit("force-loop", loop.value);

@@ -39,12 +39,12 @@ import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsCreateAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -103,7 +103,7 @@ const submit = (e: Event) => {
 
     makeApiRequest(apiAlbumsCreateAlbum(albumName))
         .onSuccess((response) => {
-            PagesController.ShowSnackBar($t("Album created") + ": " + albumName);
+            showSnackBar($t("Album created") + ": " + albumName);
 
             busy.value = false;
             name.value = "";

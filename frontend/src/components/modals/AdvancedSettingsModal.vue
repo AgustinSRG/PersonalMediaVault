@@ -245,7 +245,6 @@ import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { AuthController } from "@/control/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
-import { PagesController } from "@/control/pages";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 import type { ImageResolutionStandardToggleable, VideoResolutionStandardToggleable } from "@/utils/resolutions";
 import { STANDARD_IMAGE_RESOLUTIONS, STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
@@ -257,6 +256,7 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -507,7 +507,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
             busy.value = false;
             dirty.value = false;
 
-            PagesController.ShowSnackBar($t("Vault configuration updated!"));
+            showSnackBar($t("Vault configuration updated!"));
 
             AuthController.CheckAuthStatus();
 

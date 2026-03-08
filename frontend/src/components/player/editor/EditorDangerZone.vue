@@ -94,13 +94,13 @@ import { MediaController } from "@/control/media";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, ref, shallowRef, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const ReEncodeConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ReEncodeConfirmationModal.vue"),
@@ -156,7 +156,7 @@ const doEncodeMedia = () => {
 
     makeNamedApiRequest(requestId, apiMediaEncodeMedia(mediaId))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully requested pending encoding tasks"));
+            showSnackBarRight($t("Successfully requested pending encoding tasks"));
 
             busyReEncode.value = false;
 
@@ -297,7 +297,7 @@ const performReplaceMediaRequest = (confirmation: ProvidedAuthConfirmation) => {
 
     makeNamedApiRequest(requestId, apiMediaReplaceMedia(mediaId, file, confirmation))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully uploaded") + ": " + file.name);
+            showSnackBarRight($t("Successfully uploaded") + ": " + file.name);
 
             busyReplace.value = false;
             replacing.value = false;

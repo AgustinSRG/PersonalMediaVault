@@ -297,7 +297,6 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { PropType } from "vue";
 import type { MediaData, MediaListItem } from "@/api/models";
-import { PagesController } from "@/control/pages";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
@@ -321,6 +320,7 @@ import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
+import { showSnackBar } from "@/control/snack-bar";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1269,7 +1269,7 @@ const onMouseWheel = (e: WheelEvent) => {
             scale.value = Math.min(8, scale.value + 0.1);
         }
 
-        PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+        showSnackBar($t("Scale") + ": " + renderScale(scale.value));
         onScaleUpdated();
     }
 };
@@ -2163,9 +2163,9 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
             sliceLoop.value = !sliceLoop.value;
 
             if (sliceLoop.value) {
-                PagesController.ShowSnackBar($t("Slice loop enabled"));
+                showSnackBar($t("Slice loop enabled"));
             } else {
-                PagesController.ShowSnackBar($t("Slice loop disabled"));
+                showSnackBar($t("Slice loop disabled"));
             }
             break;
         case "l":
@@ -2176,9 +2176,9 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
                 loop.value = !loop.value;
 
                 if (loop.value) {
-                    PagesController.ShowSnackBar($t("Loop enabled"));
+                    showSnackBar($t("Loop enabled"));
                 } else {
-                    PagesController.ShowSnackBar($t("Loop disabled"));
+                    showSnackBar($t("Loop disabled"));
                 }
 
                 emit("force-loop", loop.value);
@@ -2203,14 +2203,14 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
         case "+":
             scale.value = Math.min(8, scale.value + (shifting ? 0.01 : 0.1));
 
-            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+            showSnackBar($t("Scale") + ": " + renderScale(scale.value));
 
             onScaleUpdated();
             break;
         case "-":
             scale.value = Math.max(1, scale.value - (shifting ? 0.01 : 0.1));
 
-            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+            showSnackBar($t("Scale") + ": " + renderScale(scale.value));
 
             onScaleUpdated();
             break;
@@ -2227,7 +2227,7 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
         case "z":
         case "Z":
             scale.value = 1;
-            PagesController.ShowSnackBar($t("Scale") + ": " + renderScale(scale.value));
+            showSnackBar($t("Scale") + ": " + renderScale(scale.value));
             onScaleUpdated();
             break;
         default:

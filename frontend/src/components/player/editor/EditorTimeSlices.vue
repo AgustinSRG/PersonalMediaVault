@@ -46,7 +46,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { clone } from "@/utils/objects";
-import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
@@ -55,6 +54,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -150,7 +150,7 @@ const saveChanges = () => {
 
     makeNamedApiRequest(saveRequestId, apiMediaChangeTimeSlices(mediaId, slices))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully changed time slices"));
+            showSnackBarRight($t("Successfully changed time slices"));
 
             busy.value = false;
             saved.value = true;

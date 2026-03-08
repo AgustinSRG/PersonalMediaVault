@@ -50,7 +50,6 @@ import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -61,6 +60,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -124,7 +124,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
     makeApiRequest(apiAlbumsDeleteAlbum(albumId, confirmation))
         .onSuccess(() => {
-            PagesController.ShowSnackBar($t("Album deleted") + ": " + albumName);
+            showSnackBar($t("Album deleted") + ": " + albumName);
 
             busy.value = false;
             deleteConfirmation.value = false;
@@ -149,7 +149,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
                 accessDenied,
                 notFound: () => {
                     // Already deleted
-                    PagesController.ShowSnackBar($t("Album deleted") + ": " + albumName);
+                    showSnackBar($t("Album deleted") + ": " + albumName);
 
                     deleteConfirmation.value = false;
 

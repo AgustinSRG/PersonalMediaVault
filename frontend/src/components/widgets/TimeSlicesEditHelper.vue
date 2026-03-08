@@ -133,13 +133,13 @@ import { parseTimeSeconds } from "@/utils/time-slices";
 import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 import type { MediaTimeSlice } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -256,7 +256,7 @@ interface SaveRequestState {
  * Called after the time slices are saved
  */
 const onSaved = () => {
-    PagesController.ShowSnackBar($t("Successfully changed time slices"));
+    showSnackBar($t("Successfully changed time slices"));
     emit("update-time-slices");
 };
 

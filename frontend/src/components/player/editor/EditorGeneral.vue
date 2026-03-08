@@ -165,7 +165,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { PagesController } from "@/control/pages";
 import { apiMediaChangeExtraParams, apiMediaChangeMediaThumbnail, apiMediaChangeMediaTitle } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
@@ -178,6 +177,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { useTimeout } from "@/composables/use-timeout";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -300,7 +300,7 @@ const changeTitle = (e?: Event) => {
 
     makeNamedApiRequest(requestIdTitle, apiMediaChangeMediaTitle(mediaId, title.value))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully changed title"));
+            showSnackBarRight($t("Successfully changed title"));
 
             busyTitle.value = false;
             savedTitle.value = true;
@@ -370,7 +370,7 @@ const changeExtraParams = () => {
 
     makeNamedApiRequest(requestIdExtra, apiMediaChangeExtraParams(mediaId, startBeginning.value, isAnimation.value))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully changed media extra params"));
+            showSnackBarRight($t("Successfully changed media extra params"));
 
             busyExtra.value = false;
             originalStartBeginning.value = startBeginning.value;
@@ -566,7 +566,7 @@ const changeThumbnail = (file: File) => {
 
     makeNamedApiRequest(requestIdThumbnail, apiMediaChangeMediaThumbnail(mediaId, file))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Successfully changed thumbnail"));
+            showSnackBarRight($t("Successfully changed thumbnail"));
 
             busyThumbnail.value = false;
             thumbnail.value = res.url;

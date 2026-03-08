@@ -39,13 +39,13 @@ import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsRenameAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -117,7 +117,7 @@ const submit = (e: Event) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Album renamed") + ": " + name.value);
+            showSnackBar($t("Album renamed") + ": " + name.value);
 
             forceClose();
 

@@ -57,7 +57,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
 import { ImageNotesController } from "@/control/img-notes";
-import { PagesController } from "@/control/pages";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
@@ -66,6 +65,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -152,7 +152,7 @@ const saveChanges = () => {
 
     makeNamedApiRequest(saveRequestId, apiMediaSetNotes(mediaId, notes))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Successfully changed image notes"));
+            showSnackBarRight($t("Successfully changed image notes"));
 
             busy.value = false;
             saved.value = true;

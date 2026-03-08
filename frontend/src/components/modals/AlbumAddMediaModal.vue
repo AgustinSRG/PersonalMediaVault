@@ -77,13 +77,13 @@ import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -154,7 +154,7 @@ const selectMedia = (m: MediaListItem, callback: () => void) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Successfully added to album"));
+            showSnackBar($t("Successfully added to album"));
 
             AlbumsController.OnChangedAlbum(albumId, true);
 

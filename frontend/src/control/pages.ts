@@ -2,12 +2,7 @@
 
 "use strict";
 
-import { emitAppEvent, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, EVENT_NAME_SNACK_BAR } from "./app-events";
-
-/**
- * Snackbar position
- */
-export type SnackBarPosition = "left" | "right" | "center";
+import { emitAppEvent, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE } from "./app-events";
 
 /**
  * Management object for pages
@@ -22,6 +17,11 @@ export class PagesController {
      * True if the current media has a next element
      */
     public static HasPageNext = false;
+
+    /**
+     * Search query for the albums page
+     */
+    public static AlbumsPageSearch = "";
 
     /**
      * Call when a page is loaded
@@ -59,35 +59,5 @@ export class PagesController {
         PagesController.HasPagePrev = false;
         PagesController.HasPageNext = false;
         emitAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, PagesController.HasPagePrev, PagesController.HasPageNext);
-    }
-
-    /**
-     * Search query for the albums page
-     */
-    public static AlbumsPageSearch = "";
-
-    /**
-     * Emits event to show a snackbar
-     * @param message The message to show
-     * @param position The position of the snackbar
-     */
-    public static ShowSnackBar(message: string, position?: SnackBarPosition) {
-        emitAppEvent(EVENT_NAME_SNACK_BAR, message, position);
-    }
-
-    /**
-     * Emits event to show a snackbar (Right position)
-     * @param message The message to show
-     */
-    public static ShowSnackBarRight(message: string) {
-        PagesController.ShowSnackBar(message, "right");
-    }
-
-    /**
-     * Emits event to show a snackbar (Center position)
-     * @param message The message to show
-     */
-    public static ShowSnackBarCenter(message: string) {
-        PagesController.ShowSnackBar(message, "center");
     }
 }

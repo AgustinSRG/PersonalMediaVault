@@ -74,7 +74,6 @@ import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
 import { AuthController } from "@/control/auth";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
@@ -85,6 +84,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -190,7 +190,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             resetForm();
 
-            PagesController.ShowSnackBar($t("Vault password changed!"));
+            showSnackBar($t("Vault password changed!"));
 
             forceClose();
         })

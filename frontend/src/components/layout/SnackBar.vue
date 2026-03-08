@@ -8,7 +8,7 @@
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useTimeout } from "@/composables/use-timeout";
 import { EVENT_NAME_SNACK_BAR } from "@/control/app-events";
-import type { SnackBarPosition } from "@/control/pages";
+import type { SnackBarPosition } from "@/control/snack-bar";
 import { ref } from "vue";
 
 // Timeout to hide

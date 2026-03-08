@@ -55,7 +55,6 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { apiAdminUpdateAccount } from "@/api/api-admin";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
@@ -64,6 +63,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -177,7 +177,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Account updated") + ": " + accountUsername.value);
+            showSnackBar($t("Account updated") + ": " + accountUsername.value);
 
             emit("done");
 

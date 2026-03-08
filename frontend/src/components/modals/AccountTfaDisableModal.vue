@@ -37,7 +37,6 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { onMounted, ref, useTemplateRef } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import { apiAccountTfaDisable } from "@/api/api-account";
@@ -46,6 +45,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useInterval } from "@/composables/use-interval";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -123,7 +123,7 @@ const performRequest = () => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Two factor authentication disabled"));
+            showSnackBar($t("Two factor authentication disabled"));
 
             emit("done");
 
@@ -135,7 +135,7 @@ const performRequest = () => {
             handleErr(err, {
                 unauthorized,
                 tfaNotEnabled: () => {
-                    PagesController.ShowSnackBar($t("Two factor authentication is not enabled"));
+                    showSnackBar($t("Two factor authentication is not enabled"));
 
                     emit("done");
 

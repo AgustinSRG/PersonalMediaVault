@@ -166,7 +166,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { clone } from "@/utils/objects";
-import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
@@ -176,6 +175,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -343,7 +343,7 @@ const addSubtitles = () => {
 
     makeNamedApiRequest(requestIdAdd, apiMediaSetSubtitles(mediaId, id, name, srtFile.value))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Added subtitles") + ": " + res.name);
+            showSnackBarRight($t("Added subtitles") + ": " + res.name);
 
             busy.value = false;
             subtitles.value.push(res);
@@ -487,7 +487,7 @@ const saveRename = () => {
 
     makeNamedApiRequest(requestIdRename, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
+            showSnackBarRight($t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
 
             subtitleRenameBusy.value = false;
             subtitleRenameSelected.value = "";
@@ -597,7 +597,7 @@ const removeSubtitlesConfirmInternal = (confirmation: ProvidedAuthConfirmation) 
 
     makeNamedApiRequest(requestIdDelete, apiMediaRemoveSubtitles(mediaId, id, confirmation))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Removed subtitles") + ": " + sub.name);
+            showSnackBarRight($t("Removed subtitles") + ": " + sub.name);
 
             busyDeleting.value = false;
 

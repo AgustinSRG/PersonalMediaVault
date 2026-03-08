@@ -84,7 +84,6 @@ import { defineAsyncComponent, onMounted, ref } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import type { MediaResolution, MediaType, NamedResolution } from "@/api/models";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
-import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 import { STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
 import { useI18n } from "@/composables/use-i18n";
@@ -92,6 +91,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const ResolutionConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ResolutionConfirmationModal.vue"),
@@ -352,7 +352,7 @@ const performAddResolution = () => {
 
     makeNamedApiRequest(saveRequestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
         .onSuccess((result) => {
-            PagesController.ShowSnackBarRight($t("Added resolution") + ": " + r.name);
+            showSnackBarRight($t("Added resolution") + ": " + r.name);
             busy.value = false;
             r.enabled = true;
             r.fps = result.fps;
@@ -384,7 +384,7 @@ const performAddResolution = () => {
                 unauthorized,
                 duplicatedResolution: () => {
                     // Already added
-                    PagesController.ShowSnackBarRight($t("Added resolution") + ": " + r.name);
+                    showSnackBarRight($t("Added resolution") + ": " + r.name);
                     busy.value = false;
                     r.enabled = true;
                     if (MediaController.MediaData) {
@@ -440,7 +440,7 @@ const performDeleteResolution = () => {
 
     makeNamedApiRequest(saveRequestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Removed resolution") + ": " + r.name);
+            showSnackBarRight($t("Removed resolution") + ": " + r.name);
             busy.value = false;
             r.enabled = false;
             if (MediaController.MediaData) {

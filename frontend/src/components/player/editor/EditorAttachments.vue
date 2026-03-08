@@ -140,7 +140,6 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { clone } from "@/utils/objects";
-import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAttachment, apiMediaRenameAttachment, apiMediaUploadAttachment } from "@/api/api-media-edit";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { useRequestId } from "@/composables/use-request-id";
@@ -150,6 +149,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { renderSize } from "@/utils/size";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -295,7 +295,7 @@ const addAttachment = (file: File) => {
 
     makeNamedApiRequest(requestId, apiMediaUploadAttachment(mediaId, file))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Added attachment") + ": " + res.name);
+            showSnackBarRight($t("Added attachment") + ": " + res.name);
 
             busyUpload.value = false;
             attachmentUploadProgress.value = 0;
@@ -389,7 +389,7 @@ const saveEditAttachment = () => {
 
     makeNamedApiRequest(requestId, apiMediaRenameAttachment(mediaId, id, attachmentEditName.value))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Renamed attachment") + ": " + res.name);
+            showSnackBarRight($t("Renamed attachment") + ": " + res.name);
 
             busyRename.value = false;
             attachmentEdit.value = -1;
@@ -494,7 +494,7 @@ const removeAttachmentConfirmInternal = (confirmation: ProvidedAuthConfirmation)
 
     makeNamedApiRequest(requestId, apiMediaRemoveAttachment(mediaId, id, confirmation))
         .onSuccess(() => {
-            PagesController.ShowSnackBarRight($t("Removed attachment") + ": " + att.name);
+            showSnackBarRight($t("Removed attachment") + ": " + att.name);
 
             busyDelete.value = false;
             for (let i = 0; i < attachments.value.length; i++) {

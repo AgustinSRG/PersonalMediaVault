@@ -127,13 +127,13 @@ import {
     clearSearchPreferences,
     clearUploadPreferences,
 } from "@/control/app-preferences";
-import { PagesController } from "@/control/pages";
 import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
 import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -199,6 +199,6 @@ const submit = () => {
 
     close();
 
-    PagesController.ShowSnackBar($t("Successfully cleared browser data!"));
+    showSnackBar($t("Successfully cleared browser data!"));
 };
 </script>

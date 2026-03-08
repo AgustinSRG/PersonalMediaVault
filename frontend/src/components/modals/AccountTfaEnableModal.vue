@@ -93,7 +93,6 @@ import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "
 import { AuthController } from "@/control/auth";
 import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
@@ -106,6 +105,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBar } from "@/control/snack-bar";
 
 const AccountTfaSettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaSettingsModal.vue"),
@@ -309,7 +309,7 @@ const performRequest = () => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Two factor authentication enabled"));
+            showSnackBar($t("Two factor authentication enabled"));
 
             emit("done");
 
@@ -327,7 +327,7 @@ const performRequest = () => {
                     errorPassword.value = $t("Invalid password");
                 },
                 tfaAlreadyEnabled: () => {
-                    PagesController.ShowSnackBar($t("Two factor authentication is already enabled"));
+                    showSnackBar($t("Two factor authentication is already enabled"));
 
                     emit("done");
 
@@ -366,7 +366,7 @@ const submit = (e: Event) => {
  */
 const copyUrl = () => {
     navigator.clipboard.writeText(url.value);
-    PagesController.ShowSnackBar($t("Copied URL to clipboard"));
+    showSnackBar($t("Copied URL to clipboard"));
 };
 
 // Form container

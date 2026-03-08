@@ -62,7 +62,6 @@ import { EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE } from "@/con
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import { AuthController, SESSION_TOKEN_HEADER_NAME } from "@/control/auth";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
 import { MediaController } from "@/control/media";
@@ -73,6 +72,7 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { showSnackBarRight } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -166,7 +166,7 @@ const changeThumbnail = (file: File) => {
 
     makeNamedApiRequest(changeThumbnailRequestId, apiAlbumsChangeAlbumThumbnail(albumId, file))
         .onSuccess((res) => {
-            PagesController.ShowSnackBarRight($t("Successfully changed thumbnail"));
+            showSnackBarRight($t("Successfully changed thumbnail"));
 
             busy.value = false;
 

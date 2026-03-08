@@ -38,13 +38,13 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { getDefaultGroupName } from "@/utils/home";
 import { apiHomeGroupRename } from "@/api/api-home";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Translation function
 const { $t } = useI18n();
@@ -154,7 +154,7 @@ const submit = (e: Event) => {
         .onSuccess(() => {
             busy.value = false;
 
-            PagesController.ShowSnackBar($t("Row renamed") + ": " + (newName || getDefaultGroupName(props.selectedRowType, $t)));
+            showSnackBar($t("Row renamed") + ": " + (newName || getDefaultGroupName(props.selectedRowType, $t)));
 
             name.value = "";
 
