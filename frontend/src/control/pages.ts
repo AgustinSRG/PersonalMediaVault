@@ -19,11 +19,6 @@ export class PagesController {
     public static HasPageNext = false;
 
     /**
-     * Search query for the albums page
-     */
-    public static AlbumsPageSearch = "";
-
-    /**
      * Call when a page is loaded
      * @param currentMediaIndex The index of the current media in the page
      * @param pageSize The current page size

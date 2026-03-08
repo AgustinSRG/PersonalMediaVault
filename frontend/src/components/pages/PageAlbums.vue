@@ -114,7 +114,6 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import type { AlbumListItem } from "@/api/models";
-import { PagesController } from "@/control/pages";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
 import { shuffleArray } from "@/utils/shuffle";
@@ -126,6 +125,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/control/albums-page-search-store";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -217,7 +217,7 @@ const firstLoaded = ref(false);
 const albumsList = ref<AlbumListItem[]>([]);
 
 // Filter for albums
-const filter = ref(props.inModal ? "" : PagesController.AlbumsPageSearch);
+const filter = ref(props.inModal ? "" : getAlbumsPageSearch());
 
 // Order for albums (type)
 type AlbumsOrder = "asc" | "desc" | "rand";
@@ -442,7 +442,7 @@ onApplicationEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, updateList);
  */
 const changeFilter = () => {
     if (!props.inModal) {
-        PagesController.AlbumsPageSearch = filter.value;
+        setAlbumsPageSearch(filter.value);
     }
     page.value = 0;
     updateList();
