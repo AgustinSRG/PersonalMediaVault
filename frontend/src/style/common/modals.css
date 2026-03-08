@@ -41,6 +41,8 @@
 
     overflow: auto;
     scrollbar-gutter: stable;
+
+    pointer-events: all;
 }
 
 .modal-container.closing {

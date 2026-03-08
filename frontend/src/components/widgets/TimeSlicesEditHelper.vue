@@ -118,17 +118,19 @@
                 </table>
             </div>
         </ResizableWidget>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
-import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
@@ -137,6 +139,11 @@ import type { MediaTimeSlice } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -266,6 +273,10 @@ onBeforeUnmount(() => {
     saveState.value.callback = null;
 });
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
 /**
  * Saves the time slices
  * @param ss The save state
@@ -308,25 +319,15 @@ const saveTimeSlices = (ss: SaveRequestState) => {
         .onRequestError((err, handleErr) => {
             ss.saving = false;
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                badRequest: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
+                unauthorized,
+                badRequest,
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    notFound();
                     MediaController.Load();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
             if (ss.pendingSave) {
                 ss.pendingSave = false;
@@ -336,6 +337,7 @@ const saveTimeSlices = (ss: SaveRequestState) => {
         .onUnexpectedError((err) => {
             console.error(err);
             ss.saving = false;
+            setError(err.message);
             if (ss.pendingSave) {
                 ss.pendingSave = false;
                 saveTimeSlices(ss);

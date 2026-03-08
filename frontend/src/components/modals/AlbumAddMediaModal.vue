@@ -64,29 +64,30 @@
                 </button>
             </div>
         </div>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </ModalDialogContainer>
 </template>
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { ref, useTemplateRef } from "vue";
+import { defineAsyncComponent, ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import {
-    emitAppEvent,
-    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
-    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
-    EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
-import { AuthController } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Translation function
 const { $t } = useI18n();
@@ -131,6 +132,10 @@ const changeToSearch = () => {
 // Busy status
 const busy = ref(false);
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
 /**
  * Called when the user selects a media element
  * @param m The media element
@@ -159,36 +164,24 @@ const selectMedia = (m: MediaListItem, callback: () => void) => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 maxSizeReached: () => {
-                    PagesController.ShowSnackBar(
-                        $t("Error") + ": " + $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
-                    );
+                    setError($t("The album reached the limit of 1024 elements. Please, consider creating another album."));
                 },
-                badRequest: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                badRequest,
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    notFound();
                     AlbumsController.Load();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
             busy.value = false;
             console.error(err);
+            setError(err.message);
         });
 };
 

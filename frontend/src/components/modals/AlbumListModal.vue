@@ -115,11 +115,14 @@
                 </button>
             </div>
         </div>
+
         <AlbumCreateModal
             v-model:display="displayAlbumCreate"
             @new-album="onNewAlbum"
             @update:display="afterModalCreateClosed"
         ></AlbumCreateModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </ModalDialogContainer>
 </template>
 
@@ -146,11 +149,16 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { clickOnEnter } from "@/utils/events";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
+});
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
 });
 
 /**
@@ -416,6 +424,10 @@ const busy = ref(false);
 // ID of the album being targeted
 const busyTarget = ref(-1);
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
 /**
  * Performs a request to
  * remove the media from the album
@@ -452,23 +464,14 @@ const removeFromAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                unauthorized,
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    notFound();
                     AlbumsController.Load();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
@@ -513,31 +516,18 @@ const addIntoAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 maxSizeReached: () => {
-                    PagesController.ShowSnackBar(
-                        $t("Error") + ": " + $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
-                    );
+                    setError($t("The album reached the limit of 1024 elements. Please, consider creating another album."));
                 },
-                badRequest: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                badRequest,
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    notFound();
                     AlbumsController.Load();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {

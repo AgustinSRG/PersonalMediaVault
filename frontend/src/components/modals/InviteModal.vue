@@ -104,6 +104,8 @@
                 v-model:display="displayCloseConfirmationModal"
                 @confirm="closeSession"
             ></InviteCloseSessionConfirmationModal>
+
+            <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
         </div>
     </ModalDialogContainer>
 </template>
@@ -112,7 +114,7 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { PagesController } from "@/control/pages";
 import type { InviteSession } from "@/api/api-invites";
 import {
@@ -132,6 +134,11 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Translation function
 const { $t, locale } = useI18n();
@@ -343,6 +350,9 @@ const durationGenerate = ref<SessionDuration>("day");
 // Busy status
 const busy = ref(false);
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
 /**
  * Generates invite code
  */
@@ -374,22 +384,13 @@ const generateCode = () => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 limitReached: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("You reached the limit of invited sessions you can have"));
+                    setError($t("You reached the limit of invited sessions you can have"));
                 },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                accessDenied,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
@@ -397,7 +398,7 @@ const generateCode = () => {
 
             console.error(err);
 
-            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+            setError(err.message);
         });
 };
 
@@ -426,19 +427,10 @@ const clearCode = () => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                unauthorized,
+                accessDenied,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
@@ -446,7 +438,7 @@ const clearCode = () => {
 
             console.error(err);
 
-            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+            setError(err.message);
         });
 };
 
@@ -498,19 +490,10 @@ const closeSession = () => {
             busyClosing.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                unauthorized,
+                accessDenied,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
@@ -518,7 +501,7 @@ const closeSession = () => {
 
             console.error(err);
 
-            PagesController.ShowSnackBar($t("Error") + ": " + err.message);
+            setError(err.message);
         });
 };
 </script>

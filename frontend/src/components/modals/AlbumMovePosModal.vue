@@ -37,7 +37,6 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
-import { AlbumsController } from "@/control/albums";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 
@@ -71,6 +70,14 @@ const props = defineProps({
         required: true,
     },
 });
+
+// Emits
+const emit = defineEmits<{
+    /**
+     * Event to move the media
+     */
+    (e: "move", oldIndex: number, newIndex: number): void;
+}>();
 
 // Position to be moved to
 const currentPos = ref(props.positionToMove + 1);
@@ -111,7 +118,7 @@ const submit = (e: Event) => {
         return;
     }
 
-    AlbumsController.MoveCurrentAlbumOrder(props.positionToMove, newPos, $t);
+    emit("move", props.positionToMove, newPos);
 
     close();
 };

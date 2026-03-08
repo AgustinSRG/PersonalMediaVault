@@ -187,11 +187,13 @@
                 </div>
             </div>
         </ResizableWidget>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AppStatus } from "@/control/app-status";
@@ -223,6 +225,12 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useTimeout } from "@/composables/use-timeout";
 import { useSpeechReader } from "@/composables/use-speech-reader";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+import { getStoredDescription, setStoredDescription } from "@/control/description-store";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -273,12 +281,6 @@ const contentToChange = ref("");
 
 // Lines of content, to separate by paragraphs
 const contentLines = ref<string[]>([]);
-
-// Stored content in case of session expiration
-const contentStored = ref("");
-
-// Id of the media for the content that was stored
-const contentStoredId = ref(-1);
 
 // Busy status
 const busy = ref(false);
@@ -440,12 +442,13 @@ const load = () => {
 
         stopReading();
 
-        if (contentStoredId.value === MediaController.MediaData.id) {
-            contentToChange.value = contentStored.value;
-        } else {
-            contentStoredId.value = -1;
-            contentStored.value = "";
+        const [contentStoredId, contentStored] = getStoredDescription();
+
+        if (contentStoredId === MediaController.MediaData.id) {
+            contentToChange.value = contentStored;
         }
+
+        setStoredDescription(-1, "");
 
         autoFocus();
         return;
@@ -474,13 +477,14 @@ const load = () => {
 
             stopReading();
 
-            if (contentStoredId.value === MediaController.MediaData.id) {
-                contentToChange.value = contentStored.value;
+            const [contentStoredId, contentStored] = getStoredDescription();
+
+            if (contentStoredId === MediaController.MediaData.id) {
+                contentToChange.value = contentStored;
                 editing.value = !!canWrite.value;
-            } else {
-                contentStoredId.value = -1;
-                contentStored.value = "";
             }
+
+            setStoredDescription(-1, "");
 
             autoFocus();
         })
@@ -502,12 +506,13 @@ const load = () => {
 
                     stopReading();
 
-                    if (contentStoredId.value === MediaController.MediaData.id) {
-                        contentToChange.value = contentStored.value;
-                    } else {
-                        contentStoredId.value = -1;
-                        contentStored.value = "";
+                    const [contentStoredId, contentStored] = getStoredDescription();
+
+                    if (contentStoredId === MediaController.MediaData.id) {
+                        contentToChange.value = contentStored;
                     }
+
+                    setStoredDescription(-1, "");
 
                     autoFocus();
                 })
@@ -537,8 +542,7 @@ onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
 
 watch(display, () => {
     if (display.value) {
-        contentStoredId.value = -1;
-        contentStored.value = "";
+        setStoredDescription(-1, "");
         load();
     }
 });
@@ -667,6 +671,10 @@ const clearBusyTimeout = () => {
     busyDisplayLoad.value = false;
 };
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
 /**
  * Saves changes to the description
  */
@@ -729,31 +737,21 @@ const saveChanges = () => {
 
             handleErr(err, {
                 unauthorized: () => {
-                    contentStoredId.value = mid.value;
-                    contentStored.value = contentToChange.value;
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                    setStoredDescription(mid.value, contentToChange.value);
+                    unauthorized();
                 },
-                badRequest: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                badRequest,
+                accessDenied,
+                notFound,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
             busy.value = false;
             clearBusyTimeout();
             console.error(err);
+            setError(err.message);
         });
 };
 

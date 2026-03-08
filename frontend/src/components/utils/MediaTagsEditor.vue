@@ -52,30 +52,31 @@
                 </button>
             </div>
         </div>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </div>
 </template>
 
 <script setup lang="ts">
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
 import { useTagNames } from "@/composables/use-tags-names";
 import { useUserPermissions } from "@/composables/use-user-permissions";
-import {
-    emitAppEvent,
-    EVENT_NAME_GO_NEXT,
-    EVENT_NAME_GO_PREV,
-    EVENT_NAME_MEDIA_UPDATE,
-    EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { setLastUsedTag } from "@/control/app-preferences";
 import { MediaController } from "@/control/media";
 import { PagesController } from "@/control/pages";
 import { TagsController } from "@/control/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
-import { nextTick, onMounted, ref, useTemplateRef } from "vue";
+import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Translation function
 const { $t } = useI18n();
@@ -145,6 +146,9 @@ const focusInput = (select?: boolean) => {
 // True if a tag is being added or removed
 const busy = ref(false);
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
 // ID for tag update requests
 const requestId = useRequestId();
 
@@ -204,29 +208,18 @@ const addTag = (tag: string, resetTagInput: boolean) => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 invalidTagName: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Invalid tag name"));
+                    setError($t("Invalid tag name") + ": " + tag);
                 },
-                badRequest: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                badRequest,
+                accessDenied,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
-            PagesController.ShowSnackBar(err.message);
+            setError(err.message);
             console.error(err);
             busy.value = false;
         });
@@ -287,23 +280,14 @@ const removeTag = (tag: number) => {
         .onRequestError((err, handleErr) => {
             busy.value = false;
             handleErr(err, {
-                unauthorized: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                unauthorized,
+                accessDenied,
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
-            PagesController.ShowSnackBar(err.message);
+            setError(err.message);
             console.error(err);
             busy.value = false;
         });

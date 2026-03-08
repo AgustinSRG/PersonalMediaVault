@@ -77,23 +77,19 @@
                 </button>
             </div>
         </div>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
     </ModalDialogContainer>
 </template>
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { PropType } from "vue";
-import { computed, ref, useTemplateRef, watch } from "vue";
+import { computed, defineAsyncComponent, ref, useTemplateRef, watch } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageAlbums from "@/components/pages/PageAlbums.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import {
-    emitAppEvent,
-    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
-    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
-    EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
 import { PagesController } from "@/control/pages";
 import type { HomePageElement } from "@/api/api-home";
 import { apiHomeGroupAddElement, HOME_PAGE_ELEMENT_TYPE_ALBUM, HOME_PAGE_ELEMENT_TYPE_MEDIA } from "@/api/api-home";
@@ -101,6 +97,11 @@ import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
+});
 
 // Translation function
 const { $t } = useI18n();
@@ -185,6 +186,9 @@ watch(
     },
 );
 
+// Request error
+const { error, errorDisplay, setError, unauthorized, accessDenied, serverError, networkError } = useCommonRequestErrors();
+
 /**
  * Selects media to be added to the group
  * @param m The media element
@@ -220,38 +224,27 @@ const selectMedia = (m: MediaListItem, callback: () => void) => {
             busy.value = false;
 
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 tooManyElements: () => {
-                    PagesController.ShowSnackBar(
-                        $t("Error") + ": " + $t("The row reached the limit of 256 elements. Please, consider using another row."),
-                    );
+                    setError($t("The row reached the limit of 256 elements. Please, consider using another row."));
                 },
                 notCustomGroup: () => {
                     emit("must-reload");
                     forceClose();
                 },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
                     emit("must-reload");
                     forceClose();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
             busy.value = false;
             console.error(err);
+            setError(err.message);
         });
 };
 
@@ -289,38 +282,27 @@ const selectAlbum = (albumId: number, callback: () => void) => {
         .onRequestError((err, handleErr) => {
             busy.value = false;
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
+                unauthorized,
                 tooManyElements: () => {
-                    PagesController.ShowSnackBar(
-                        $t("Error") + ": " + $t("The row reached the limit of 256 elements. Please, consider using another row."),
-                    );
+                    setError($t("The row reached the limit of 256 elements. Please, consider using another row."));
                 },
                 notCustomGroup: () => {
                     emit("must-reload");
                     forceClose();
                 },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
                     emit("must-reload");
                     forceClose();
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
             busy.value = false;
             console.error(err);
+            setError(err.message);
         });
 };
 

@@ -7,6 +7,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
             <div class="album-header-controls">
                 <div class="album-buttons">
                     <button type="button" :title="$t('Loop')" class="album-header-btn" :class="{ toggled: loop }" @click="toggleLoop">
@@ -46,6 +47,7 @@
                 <div class="album-post-text">{{ renderedCurrentPos }} / {{ albumListLength }}</div>
             </div>
         </div>
+
         <div
             v-show="!loading && loadedAlbum"
             ref="albumBody"
@@ -94,6 +96,7 @@
                 class="dragging-padding-bottom"
             ></div>
         </div>
+
         <div
             v-if="dragging && draggingItem"
             class="album-dragging-helper"
@@ -119,6 +122,7 @@
                 </button>
             </div>
         </div>
+
         <AlbumContextMenu
             v-if="contextShown"
             v-model:shown="contextShown"
@@ -131,19 +135,29 @@
             @change-pos="changeMediaPos"
             @media-remove="removeMedia"
         ></AlbumContextMenu>
+
         <AlbumAddMediaModal v-if="displayUpload" v-model:display="displayUpload" :aid="albumId"></AlbumAddMediaModal>
+
         <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
+
         <AlbumChangeThumbnailModal
             v-if="displayAlbumChangeThumbnail"
             v-model:display="displayAlbumChangeThumbnail"
         ></AlbumChangeThumbnailModal>
+
         <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+
         <AlbumGoToPosModal v-if="displayAlbumGoPos" v-model:display="displayAlbumGoPos"></AlbumGoToPosModal>
+
         <AlbumMovePosModal
             v-model:display="displayAlbumMovePos"
             :position-to-move="positionToMove"
             :album-list-length="albumListLength"
+            @move="moveMedia"
         ></AlbumMovePosModal>
+
+        <ErrorMessageModal v-if="errorDisplay" v-model:display="errorDisplay" :message="error"></ErrorMessageModal>
+
         <LoadingOverlay v-if="loading"></LoadingOverlay>
     </div>
 </template>
@@ -157,7 +171,6 @@ import {
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
-    EVENT_NAME_UNAUTHORIZED,
 } from "@/control/app-events";
 import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
@@ -171,7 +184,7 @@ import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
 import { PagesController } from "@/control/pages";
-import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import { apiAlbumsMoveMediaInAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import MediaItemAlbumThumbnail from "../utils/MediaItemAlbumThumbnail.vue";
 import type { PositionedMediaListItem } from "@/api/models";
 import { onApplicationEvent } from "@/composables/on-app-event";
@@ -181,6 +194,7 @@ import { useInterval } from "@/composables/use-interval";
 import { stopPropagationEvent } from "@/utils/events";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onDocumentEvent } from "@/composables/on-document-event";
+import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
@@ -210,6 +224,10 @@ const AlbumAddMediaModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumAddMediaModal.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
+});
+
+const ErrorMessageModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ErrorMessageModal.vue"),
 });
 
 // Translation
@@ -607,7 +625,7 @@ const showOptions = (item: PositionedMediaListItem, i: number, event: MouseEvent
  */
 const moveMediaUp = (i: number) => {
     if (i > 0) {
-        AlbumsController.MoveCurrentAlbumOrder(i, i - 1, $t);
+        moveMedia(i, i - 1);
     }
 };
 
@@ -617,7 +635,7 @@ const moveMediaUp = (i: number) => {
  */
 const moveMediaDown = (i: number) => {
     if (i < albumListLength.value - 1) {
-        AlbumsController.MoveCurrentAlbumOrder(i, i + 1, $t);
+        moveMedia(i, i + 1);
     }
 };
 
@@ -628,6 +646,64 @@ const moveMediaDown = (i: number) => {
 const changeMediaPos = (i: number) => {
     positionToMove.value = i;
     displayAlbumMovePos.value = true;
+};
+
+// Request error
+const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, notFound, serverError, networkError } =
+    useCommonRequestErrors();
+
+/**
+ * Performs the request to move a media
+ * @param oldIndex Old media index
+ * @param newIndex New media index
+ */
+const moveMedia = (oldIndex: number, newIndex: number) => {
+    if (!AlbumsController.CurrentAlbumData) {
+        return;
+    }
+
+    if (oldIndex < 0 || oldIndex >= AlbumsController.CurrentAlbumData.list.length) {
+        return;
+    }
+
+    const albumId = AlbumsController.CurrentAlbumData.id;
+    const mediaId = AlbumsController.CurrentAlbumData.list[oldIndex].id;
+
+    AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
+
+    emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
+
+    AlbumsController.UpdateAlbumCurrentPos();
+
+    // Update in server
+
+    makeApiRequest(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
+        .onSuccess(() => {
+            emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
+        })
+        .onRequestError((err, handleErr) => {
+            // Revert changes
+            AlbumsController.OnChangedAlbum(albumId, true);
+            // Show error
+            handleErr(err, {
+                unauthorized,
+                maxSizeReached: () => {
+                    setError($t("The album reached the limit of 1024 elements. Please, consider creating another album."));
+                },
+                badRequest,
+                accessDenied,
+                notFound: () => {
+                    notFound();
+                    AlbumsController.OnChangedAlbum(albumId);
+                },
+                serverError,
+                networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            setError(err.message);
+        });
 };
 
 /**
@@ -653,27 +729,19 @@ const removeMedia = (i: number) => {
         })
         .onRequestError((err, handleErr) => {
             handleErr(err, {
-                unauthorized: () => {
-                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                },
-                accessDenied: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                    AuthController.CheckAuthStatusSilent();
-                },
+                unauthorized,
+                accessDenied,
                 notFound: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    notFound();
                     AlbumsController.OnChangedAlbum(aid);
                 },
-                serverError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                },
-                networkError: () => {
-                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                },
+                serverError,
+                networkError,
             });
         })
         .onUnexpectedError((err) => {
             console.error(err);
+            setError(err.message);
         });
 };
 
@@ -867,7 +935,7 @@ onDocumentEvent("mouseup", () => {
             draggingOverPosition.value > draggingPosition.value ? draggingOverPosition.value - 1 : draggingOverPosition.value;
 
         if (initialPosition !== finalPosition) {
-            AlbumsController.MoveCurrentAlbumOrder(initialPosition, finalPosition, $t);
+            moveMedia(initialPosition, finalPosition);
         }
     }
 

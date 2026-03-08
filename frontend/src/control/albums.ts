@@ -2,15 +2,14 @@
 
 "use strict";
 
-import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import type { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
-import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin, apiAlbumsMoveMediaInAlbum } from "@/api/api-albums";
-import { PagesController } from "./pages";
+import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin } from "@/api/api-albums";
 import { apiMediaGetMedia } from "@/api/api-media";
 import {
     addAppEventListener,
@@ -285,76 +284,6 @@ export class AlbumsController {
         if (!noUpdateList) {
             AlbumsController.Load();
         }
-    }
-
-    /**
-     * Moves an element of the album to another position.
-     * Updates the local list and calls the server to update the remote list.
-     * @param oldIndex The original position
-     * @param newIndex The new position
-     * @param $t Translation function to display errors
-     */
-    public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number, $t: (msg: string) => string) {
-        if (!AlbumsController.CurrentAlbumData) {
-            return;
-        }
-
-        if (oldIndex < 0 || oldIndex >= AlbumsController.CurrentAlbumData.list.length) {
-            return;
-        }
-
-        const albumId = AlbumsController.CurrentAlbumData.id;
-        const mediaId = AlbumsController.CurrentAlbumData.list[oldIndex].id;
-
-        AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
-
-        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
-
-        AlbumsController.UpdateAlbumCurrentPos();
-
-        // Update in server
-
-        makeApiRequest(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
-            .onSuccess(() => {
-                emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
-            })
-            .onRequestError((err, handleErr) => {
-                // Revert changes
-                AlbumsController.OnChangedAlbum(albumId, true);
-                // Show error
-                handleErr(err, {
-                    unauthorized: () => {
-                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                    },
-                    maxSizeReached: () => {
-                        PagesController.ShowSnackBar(
-                            $t("Error") +
-                                ": " +
-                                $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
-                        );
-                    },
-                    badRequest: () => {
-                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
-                    },
-                    accessDenied: () => {
-                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
-                        AuthController.CheckAuthStatusSilent();
-                    },
-                    notFound: () => {
-                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
-                        AlbumsController.OnChangedAlbum(albumId);
-                    },
-                    serverError: () => {
-                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
-                    },
-                    networkError: () => {
-                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
-                    },
-                });
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-            });
     }
 
     /**
