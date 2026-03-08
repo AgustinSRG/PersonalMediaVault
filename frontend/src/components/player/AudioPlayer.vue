@@ -748,7 +748,7 @@ onBeforeUnmount(() => {
 const onClearURL = () => {
     const audioElem = audioElement.value;
     if (audioElem) {
-        audioElem.src = "";
+        delete audioElem.src;
     }
 };
 

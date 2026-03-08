@@ -770,7 +770,7 @@ onBeforeUnmount(() => {
 const onClearURL = () => {
     const videoElem = videoElement.value;
     if (videoElem) {
-        videoElem.src = "";
+        delete videoElem.src;
     }
 };
 
