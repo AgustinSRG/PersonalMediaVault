@@ -87,7 +87,7 @@ const addTagByName = (tag: string) => {
     tag = parseTagName(tag);
 
     if (tags.value.includes(tag)) {
-        tags.value = tags.value.filter((t) => tag !== t);
+        return;
     }
 
     tags.value.push(tag);
