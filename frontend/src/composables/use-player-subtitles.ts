@@ -3,10 +3,10 @@
 "use strict";
 
 import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
-import { SubtitlesController } from "@/control/subtitles";
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { onApplicationEvent } from "./on-app-event";
+import { getSubtitlesLine } from "@/control/subtitles";
 
 /**
  * Player subtitles composable
@@ -57,7 +57,7 @@ export function usePlayerSubtitles(currentTime: Ref<number>): PlayerSubtitlesCom
         if (currentTime.value >= subtitlesStart.value && currentTime.value <= subtitlesEnd.value) {
             return;
         }
-        const sub = SubtitlesController.GetSubtitlesLine(currentTime.value);
+        const sub = getSubtitlesLine(currentTime.value);
         if (sub) {
             subtitles.value = sub.text;
             subtitlesStart.value = sub.start;

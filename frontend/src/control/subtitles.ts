@@ -16,152 +16,147 @@ import {
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_SUBTITLES_CHANGED,
     EVENT_NAME_SUBTITLES_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
+import { getUniqueStringId } from "@/utils/unique-id";
 
-const REQUEST_ID_SUBTITLES_LOAD = "subtitles-load";
+// Request ID for loading
+const REQUEST_ID_SUBTITLES_LOAD = getUniqueStringId();
 
 /**
- * Management object to load subtitles.
+ * Current status of subtitles
  */
-export class SubtitlesController {
+const SubtitlesStatus = {
     /**
-     * Media ID owner of the subtitles being loaded
+     * ID of the current media
      */
-    public static MediaId = -1;
+    mediaId: AppStatus.CurrentMedia,
 
     /**
      * ID of the selected subtitles
      */
-    public static SelectedSubtitles = "";
+    selectedSubtitles: "",
 
     /**
      * URL of the SubRip file to download
      */
-    public static SubtitlesFileURL = "";
+    url: "",
 
-    /**
-     * List of subtitles entries, after being parsed
+    /**List of subtitles entries, after being parsed
+     *
      */
-    public static Subtitles: SubtitlesEntry[] = [];
+    subtitles: [] as SubtitlesEntry[],
+};
 
-    /**
-     * Initialization logic
-     */
-    public static Initialize() {
-        addAppEventListener(EVENT_NAME_AUTH_CHANGED, SubtitlesController.Load);
-        addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, SubtitlesController.OnMediaChanged);
-        addAppEventListener(EVENT_NAME_MEDIA_UPDATE, SubtitlesController.Load);
-
-        SubtitlesController.MediaId = AppStatus.CurrentMedia;
-
-        SubtitlesController.Load();
-    }
-
-    /**
-     * Called when the app status changed, in order to check if the current media changed
-     */
-    private static OnMediaChanged() {
-        if (SubtitlesController.MediaId !== AppStatus.CurrentMedia) {
-            SubtitlesController.MediaId = AppStatus.CurrentMedia;
-            SubtitlesController.SelectedSubtitles = "";
-            SubtitlesController.SubtitlesFileURL = "";
-            SubtitlesController.Subtitles = [];
-            SubtitlesController.Load();
-        }
-    }
-
-    /**
-     * Loads the subtitles
-     */
-    public static Load() {
-        if (!MediaController.MediaData) {
-            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
-            clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
-            SubtitlesController.SelectedSubtitles = "";
-            SubtitlesController.SubtitlesFileURL = "";
-            SubtitlesController.Subtitles = [];
-            emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
-            return;
-        }
-
-        const subtitles = MediaController.MediaData.subtitles || [];
-        const prefSubtitles = getSelectedSubtitles();
-
-        SubtitlesController.SelectedSubtitles = "";
-        SubtitlesController.SubtitlesFileURL = "";
-        SubtitlesController.Subtitles = [];
-
-        for (const sub of subtitles) {
-            if (sub.id === prefSubtitles) {
-                SubtitlesController.SelectedSubtitles = sub.id;
-                SubtitlesController.SubtitlesFileURL = getAssetURL(sub.url);
-                break;
-            }
-        }
-
-        if (!SubtitlesController.SelectedSubtitles && prefSubtitles && subtitles.length > 0) {
-            SubtitlesController.SelectedSubtitles = subtitles[0].id;
-            SubtitlesController.SubtitlesFileURL = getAssetURL(subtitles[0].url);
-        }
-
-        if (!SubtitlesController.SubtitlesFileURL) {
-            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
-            clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
-            emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
-            return;
-        }
-
-        clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
-        makeNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD, {
-            method: "GET",
-            url: SubtitlesController.SubtitlesFileURL,
-        })
-            .onSuccess((srtText) => {
-                SubtitlesController.Subtitles = parseSRT(srtText);
-                emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
-            })
-            .onRequestError((err) => {
-                new RequestErrorHandler()
-                    .add(401, "*", () => {
-                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
-                        SubtitlesController.Subtitles = [];
-                        emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
-                    })
-                    .add("*", "*", () => {
-                        // Retry
-                        setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
-                    })
-                    .handle(err);
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-                // Retry
-                setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
-            });
-    }
-
-    /**
-     * Changes current subtitles
-     * @param sub The current subtitles ID
-     */
-    public static OnSubtitlesChanged(sub: string) {
-        if (SubtitlesController.SelectedSubtitles !== sub) {
-            SubtitlesController.Load();
-        }
-    }
-
-    /**
-     * Gets subtitles line by time
-     * @param time The current time
-     * @returns The subtitles entry
-     */
-    public static GetSubtitlesLine(time: number): SubtitlesEntry {
-        return findSubtitlesEntry(SubtitlesController.Subtitles, time);
-    }
+/**
+ * Gets subtitles line by time
+ * @param time The current time
+ * @returns The subtitles entry
+ */
+export function getSubtitlesLine(time: number): SubtitlesEntry {
+    return findSubtitlesEntry(SubtitlesStatus.subtitles, time);
 }
 
-SubtitlesController.Initialize();
+// Delay to retry loading after an error
+const LOAD_RETRY_DELAY = 1500;
+
+/**
+ * Loads current subtitles file
+ */
+function loadSubtitles() {
+    if (!MediaController.MediaData) {
+        abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
+        clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
+        SubtitlesStatus.selectedSubtitles = "";
+        SubtitlesStatus.url = "";
+        SubtitlesStatus.subtitles = [];
+        emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
+        return;
+    }
+
+    const subtitles = MediaController.MediaData.subtitles || [];
+    const prefSubtitles = getSelectedSubtitles();
+
+    SubtitlesStatus.selectedSubtitles = "";
+    SubtitlesStatus.url = "";
+    SubtitlesStatus.subtitles = [];
+
+    for (const sub of subtitles) {
+        if (sub.id === prefSubtitles) {
+            SubtitlesStatus.selectedSubtitles = sub.id;
+            SubtitlesStatus.url = getAssetURL(sub.url);
+            break;
+        }
+    }
+
+    if (!SubtitlesStatus.selectedSubtitles && prefSubtitles && subtitles.length > 0) {
+        SubtitlesStatus.selectedSubtitles = subtitles[0].id;
+        SubtitlesStatus.url = getAssetURL(subtitles[0].url);
+    }
+
+    if (!SubtitlesStatus.url) {
+        abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
+        clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
+        emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
+        return;
+    }
+
+    clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
+    makeNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD, {
+        method: "GET",
+        url: SubtitlesStatus.url,
+    })
+        .onSuccess((srtText) => {
+            SubtitlesStatus.subtitles = parseSRT(srtText);
+            emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
+        })
+        .onRequestError((err) => {
+            new RequestErrorHandler()
+                .add(401, "*", () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                })
+                .add(404, "*", () => {
+                    SubtitlesStatus.subtitles = [];
+                    emitAppEvent(EVENT_NAME_SUBTITLES_UPDATE);
+                })
+                .add("*", "*", () => {
+                    // Retry
+                    setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, LOAD_RETRY_DELAY, loadSubtitles);
+                })
+                .handle(err);
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, LOAD_RETRY_DELAY, loadSubtitles);
+        });
+}
+
+// Load when auth status changes
+addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadSubtitles);
+
+// Load when current media changes
+addAppEventListener(EVENT_NAME_MEDIA_UPDATE, loadSubtitles);
+
+// Load when the app status changes if current media ID changes
+addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    if (SubtitlesStatus.mediaId !== AppStatus.CurrentMedia) {
+        SubtitlesStatus.mediaId = AppStatus.CurrentMedia;
+        SubtitlesStatus.selectedSubtitles = "";
+        SubtitlesStatus.url = "";
+        SubtitlesStatus.subtitles = [];
+
+        loadSubtitles();
+    }
+});
+
+addAppEventListener(EVENT_NAME_SUBTITLES_CHANGED, (sub) => {
+    if (SubtitlesStatus.selectedSubtitles !== sub) {
+        loadSubtitles();
+    }
+});
+
+// Initially load the subtitles
+loadSubtitles();

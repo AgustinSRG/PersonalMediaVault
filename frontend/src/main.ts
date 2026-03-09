@@ -12,7 +12,6 @@ import { MediaController } from "./control/media";
 import { initializeGlobalBusyState } from "./control/busy-state";
 
 AppStatus.Initialize();
-
 AuthController.Initialize();
 TagsController.Initialize();
 MediaController.Initialize();

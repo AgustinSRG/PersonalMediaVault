@@ -193,6 +193,11 @@ export const EVENT_NAME_MEDIA_DESCRIPTION_UPDATE = "current-media-description-up
 export const EVENT_NAME_SUBTITLES_UPDATE = "subtitles-update";
 
 /**
+ * Event triggered when the user changes the selected subtitles
+ */
+export const EVENT_NAME_SUBTITLES_CHANGED = "subtitles-changed";
+
+/**
  * Event triggered when the subtitles options change
  */
 export const EVENT_NAME_SUBTITLES_OPTIONS_CHANGED = "subtitles-options-changed";
@@ -450,6 +455,12 @@ export type AppEventsMap = {
      * Event triggered when a subtitles file is loaded
      */
     [EVENT_NAME_SUBTITLES_UPDATE]: () => void;
+
+    /**
+     * Event triggered when the user changes the selected subtitles
+     * @param sub The selected subtitles
+     */
+    [EVENT_NAME_SUBTITLES_CHANGED]: (sub: string) => void;
 
     /**
      * Event triggered when the subtitles options change

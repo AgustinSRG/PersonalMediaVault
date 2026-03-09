@@ -167,11 +167,6 @@ export class UploadController {
     private static AlbumQueue: Map<number, UploadEntry[]> = new Map();
 
     /**
-     * Number of pending uploads (not ready or error)
-     */
-    private static PendingCount = 0;
-
-    /**
      * Number of active uploads
      */
     private static UploadingCount = 0;

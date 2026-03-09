@@ -306,7 +306,7 @@ import {
     renderToggleDelay,
 } from "@/utils/player-config";
 import { useFocusTrap } from "@/composables/use-focus-trap";
-import { SubtitlesController } from "@/control/subtitles";
+import { emitAppEvent, EVENT_NAME_SUBTITLES_CHANGED } from "@/control/app-events";
 
 const PlayerAutoNextConfig = defineAsyncComponent({
     loader: () => import("./PlayerAutoNextConfig.vue"),
@@ -560,7 +560,7 @@ const onAudioTrackChanged = () => {
 const onSubtitlesChanged = () => {
     setSelectedSubtitles(subtitles.value);
 
-    SubtitlesController.OnSubtitlesChanged(subtitles.value);
+    emitAppEvent(EVENT_NAME_SUBTITLES_CHANGED, subtitles.value);
 };
 
 /**
