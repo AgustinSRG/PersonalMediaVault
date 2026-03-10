@@ -4,7 +4,6 @@
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AlbumsController } from "./albums";
 import {
     addAppEventListener,
     emitAppEvent,
@@ -18,6 +17,7 @@ import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
 import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
+import { checkAlbumNextPrefetch } from "./albums";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -106,7 +106,7 @@ export class MediaController {
         clearNamedTimeout(REQUEST_ID);
         abortNamedApiRequest(REQUEST_ID);
 
-        if (AlbumsController.CheckAlbumNextPrefetch()) {
+        if (checkAlbumNextPrefetch()) {
             return; // Pre-fetch
         }
 

@@ -156,7 +156,6 @@
 </template>
 
 <script setup lang="ts">
-import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
@@ -178,6 +177,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { useTimeout } from "@/composables/use-timeout";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { refreshCurrentAlbum } from "@/control/albums";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -312,7 +312,7 @@ const changeTitle = (e?: Event) => {
 
             emit("changed");
 
-            AlbumsController.LoadCurrentAlbum();
+            refreshCurrentAlbum();
             emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
 
             onSave();
@@ -577,7 +577,7 @@ const changeThumbnail = (file: File) => {
 
             emit("changed");
 
-            AlbumsController.LoadCurrentAlbum();
+            refreshCurrentAlbum();
             emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
         })
         .onCancel(() => {

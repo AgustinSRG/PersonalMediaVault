@@ -53,12 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
-import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
+import type { Album, MediaListItem, PositionedMediaListItem } from "@/api/models";
 import {
     EVENT_NAME_CURRENT_ALBUM_LOADING,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
@@ -68,6 +67,16 @@ import { useI18n } from "@/composables/use-i18n";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";
+import type { AlbumMediaPositionContext } from "@/control/albums";
+import {
+    albumToggleLoop,
+    albumToggleRandom,
+    getCurrentAlbumData,
+    getCurrentAlbumId,
+    getCurrentAlbumMediaPositionContext,
+    isCurrentAlbumLoading,
+} from "@/control/albums";
+import { showSnackBar } from "@/control/snack-bar";
 
 // Emits
 const emit = defineEmits<{
@@ -80,27 +89,30 @@ const emit = defineEmits<{
 // Translation
 const { $t } = useI18n();
 
+// Initial album data
+const initialAlbumData = getCurrentAlbumData();
+
 // True if album was loaded
-const loadedAlbum = ref(!!AlbumsController.CurrentAlbumData);
+const loadedAlbum = ref(!!initialAlbumData);
 
 // Current album ID
-const albumId = ref(AlbumsController.CurrentAlbum);
+const albumId = ref(getCurrentAlbumId());
 
 // Current album name
-const albumName = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "");
+const albumName = ref(initialAlbumData ? initialAlbumData.name : "");
 
 // Length of the album list
-const albumListLength = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0);
+const albumListLength = ref(initialAlbumData ? initialAlbumData.list.length : 0);
 
 // List of album items
 const albumList = ref<PositionedMediaListItem[]>();
 
 // Loading status
-const loading = ref(AlbumsController.CurrentAlbumLoading);
+const loading = ref(isCurrentAlbumLoading());
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
     if (l) {
-        if (albumId.value !== AlbumsController.CurrentAlbum) {
+        if (albumId.value !== getCurrentAlbumId()) {
             loading.value = true;
         }
     } else {
@@ -108,8 +120,11 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
     }
 });
 
+// Initial album media position context
+const initialAlbumMediaPositionContext = getCurrentAlbumMediaPositionContext();
+
 // Current album position
-const currentPos = ref(AlbumsController.CurrentAlbumPos);
+const currentPos = ref(initialAlbumMediaPositionContext.pos);
 
 // Rendered current position (to display it to the user)
 const renderedCurrentPos = computed<string>(() => {
@@ -121,10 +136,10 @@ const renderedCurrentPos = computed<string>(() => {
 });
 
 // Album loop
-const loop = ref(AlbumsController.AlbumLoop);
+const loop = ref(initialAlbumMediaPositionContext.loop);
 
 // Album random
-const random = ref(AlbumsController.AlbumRandom);
+const random = ref(initialAlbumMediaPositionContext.random);
 
 // Window size for the scroller
 const INITIAL_WINDOW_SIZE = 100;
@@ -155,8 +170,11 @@ const updateAlbumList = () => {
 
     if (loadedAlbum.value) {
         let i = 0;
+
+        const originalList = getCurrentAlbumData()?.list || [];
+
         listScroller.addElements(
-            AlbumsController.CurrentAlbumData.list.map((m) => {
+            originalList.map((m) => {
                 return {
                     pos: i++,
                     id: m.id,
@@ -173,11 +191,11 @@ const updateAlbumList = () => {
 
 updateAlbumList();
 
-onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
-    albumId.value = AlbumsController.CurrentAlbum;
-    loadedAlbum.value = !!AlbumsController.CurrentAlbumData;
-    albumName.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
-    albumListLength.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, (albumData: Album | null) => {
+    albumId.value = getCurrentAlbumId();
+    loadedAlbum.value = !!albumData;
+    albumName.value = albumData ? albumData.name : "";
+    albumListLength.value = albumData ? albumData.list.length : 0;
 
     updateAlbumList();
 });
@@ -185,10 +203,10 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
 /**
  * Called when the album position changes
  */
-const onAlbumPosUpdate = () => {
-    loop.value = AlbumsController.AlbumLoop;
-    random.value = AlbumsController.AlbumRandom;
-    currentPos.value = AlbumsController.CurrentAlbumPos;
+const onAlbumPosUpdate = (ctx: AlbumMediaPositionContext) => {
+    loop.value = ctx.loop;
+    random.value = ctx.random;
+    currentPos.value = ctx.pos;
 
     listScroller.moveWindowToElement(currentPos.value);
 
@@ -248,7 +266,7 @@ const checkContainerHeight = () => {
     const changed = listScroller.checkScrollContainerHeight(cont, el);
 
     if (changed) {
-        onAlbumPosUpdate();
+        onAlbumPosUpdate(getCurrentAlbumMediaPositionContext());
     }
 };
 
@@ -278,14 +296,22 @@ onMounted(autoFocus);
  * Toggles the album loop
  */
 const toggleLoop = () => {
-    AlbumsController.ToggleLoop();
+    if (albumToggleLoop()) {
+        showSnackBar($t("Album loop enabled"));
+    } else {
+        showSnackBar($t("Album loop disabled"));
+    }
 };
 
 /**
  * Toggles the album random order
  */
 const toggleRandom = () => {
-    AlbumsController.ToggleRandom();
+    if (albumToggleRandom()) {
+        showSnackBar($t("Album shuffle enabled"));
+    } else {
+        showSnackBar($t("Album shuffle disabled"));
+    }
 };
 
 /**

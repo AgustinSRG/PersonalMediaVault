@@ -112,7 +112,6 @@ import {
 } from "@/control/app-events";
 import { MediaController } from "@/control/media";
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
-import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { closeFullscreen } from "@/utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
@@ -123,6 +122,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import type { PlayerLoadStatus } from "@/utils/player";
 import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
+import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/control/albums";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -248,23 +248,27 @@ const status = computed<PlayerLoadStatus>(() => {
     }
 });
 
+// Initial album media position context
+const initialAlbumMediaPositionContext = getCurrentAlbumMediaPositionContext();
+
 // Previous element in the album
-const prev = ref(AlbumsController.CurrentPrev);
+const prev = ref(initialAlbumMediaPositionContext.prev);
 
 // Next element in the album
-const next = ref(AlbumsController.CurrentNext);
+const next = ref(initialAlbumMediaPositionContext.next);
 
 // Is player coexisting with the album layout?
 const isInAlbum = ref(AppStatus.CurrentAlbum >= 0);
 
-onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, () => {
-    prev.value = AlbumsController.CurrentPrev;
-    next.value = AlbumsController.CurrentNext;
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, (ctx) => {
+    prev.value = ctx.prev;
+    next.value = ctx.next;
+
     isInAlbum.value = AppStatus.CurrentAlbum >= 0;
 });
 
 // Is the current album being loaded?
-const albumLoading = ref(AlbumsController.CurrentAlbumLoading);
+const albumLoading = ref(isCurrentAlbumLoading());
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l) => {
     albumLoading.value = l;

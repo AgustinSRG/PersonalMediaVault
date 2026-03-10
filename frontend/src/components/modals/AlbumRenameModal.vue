@@ -35,7 +35,6 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
@@ -46,6 +45,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -60,17 +60,17 @@ const container = useTemplateRef("container");
 const { close, forceClose } = useModal(display, container);
 
 // Current album ID
-const currentAlbum = ref(AlbumsController.CurrentAlbum);
+const currentAlbum = ref(getCurrentAlbumId());
 
 // Old name
-const oldName = ref(AlbumsController.CurrentAlbumData?.name || "");
+const oldName = ref(getCurrentAlbumData()?.name || "");
 
 // New name
 const name = ref(oldName.value);
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
-    currentAlbum.value = AlbumsController.CurrentAlbum;
-    oldName.value = AlbumsController.CurrentAlbumData?.name || "";
+    currentAlbum.value = getCurrentAlbumId();
+    oldName.value = getCurrentAlbumData()?.name || "";
     name.value = oldName.value;
 });
 
@@ -121,7 +121,7 @@ const submit = (e: Event) => {
 
             forceClose();
 
-            AlbumsController.OnChangedAlbum(albumId);
+            indicateAlbumMetadataChanged(albumId);
         })
         .onCancel(() => {
             busy.value = false;
@@ -138,7 +138,7 @@ const submit = (e: Event) => {
                 accessDenied,
                 notFound: () => {
                     forceClose();
-                    AlbumsController.OnChangedAlbum(albumId);
+                    indicateAlbumMetadataChanged(albumId);
                 },
                 serverError,
                 networkError,

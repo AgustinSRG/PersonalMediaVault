@@ -163,7 +163,6 @@
 </template>
 
 <script setup lang="ts">
-import { AlbumsController } from "@/control/albums";
 import {
     emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
@@ -195,6 +194,17 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import type { AlbumMediaPositionContext } from "@/control/albums";
+import {
+    albumToggleLoop,
+    albumToggleRandom,
+    getCurrentAlbumData,
+    getCurrentAlbumId,
+    getCurrentAlbumMediaPositionContext,
+    indicateAlbumMetadataChanged,
+    isCurrentAlbumLoading,
+    updateAlbumMediaPositionStatus,
+} from "@/control/albums";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
@@ -256,28 +266,34 @@ onMounted(() => {
 });
 
 // Loading status
-const loading = ref(AlbumsController.CurrentAlbumLoading);
+const loading = ref(isCurrentAlbumLoading());
 
 // Current album ID
-const albumId = ref(AlbumsController.CurrentAlbum);
+const albumId = ref(getCurrentAlbumId());
+
+// Initial album data
+const initialAlbumData = getCurrentAlbumData();
 
 // Current album name
-const albumName = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "");
+const albumName = ref(initialAlbumData ? initialAlbumData.name : "");
 
 // Length of the album list
-const albumListLength = ref(AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0);
+const albumListLength = ref(initialAlbumData ? initialAlbumData.list.length : 0);
 
 // True if album is loaded
-const loadedAlbum = ref(!!AlbumsController.CurrentAlbumData);
+const loadedAlbum = ref(!!initialAlbumData);
 
 // True if the album is favorite
-const isFav = ref(albumIsFavorite(AlbumsController.CurrentAlbum));
+const isFav = ref(albumIsFavorite(albumId.value));
 
 // True if the album list must be scrolled
 const mustScroll = ref(true);
 
+// Initial album media position context
+const initialAlbumMediaPositionContext = getCurrentAlbumMediaPositionContext();
+
 // Current position in the album
-const currentPos = ref(AlbumsController.CurrentAlbumPos);
+const currentPos = ref(initialAlbumMediaPositionContext.pos);
 
 // Rendered current position (to display)
 const renderedCurrentPos = computed(() => {
@@ -289,7 +305,7 @@ const renderedCurrentPos = computed(() => {
 });
 
 // ID of the current media
-const currentPosMedia = ref(AlbumsController.CurrentAlbumPos >= 0 ? AppStatus.CurrentMedia : -1);
+const currentPosMedia = ref(currentPos.value >= 0 ? AppStatus.CurrentMedia : -1);
 
 // Loop option
 const loop = ref(false);
@@ -297,25 +313,28 @@ const loop = ref(false);
 // Random order option
 const random = ref(false);
 
-onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
-    if (albumId.value !== AlbumsController.CurrentAlbum) {
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, (albumData) => {
+    const currentAlbumId = getCurrentAlbumId();
+
+    if (albumId.value !== currentAlbumId) {
         mustScroll.value = true;
     }
 
-    albumId.value = AlbumsController.CurrentAlbum;
-    loadedAlbum.value = !!AlbumsController.CurrentAlbumData;
+    albumId.value = currentAlbumId;
 
-    albumName.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
-    albumListLength.value = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
+    loadedAlbum.value = !!albumData;
 
-    isFav.value = albumIsFavorite(AlbumsController.CurrentAlbum);
+    albumName.value = albumData ? albumData.name : "";
+    albumListLength.value = albumData ? albumData.list.length : 0;
+
+    isFav.value = albumIsFavorite(currentAlbumId);
 
     updateAlbumList(!mustScroll.value);
 });
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l: boolean) => {
     if (l) {
-        if (albumId.value !== AlbumsController.CurrentAlbum) {
+        if (albumId.value !== getCurrentAlbumId()) {
             loading.value = true;
         }
     } else {
@@ -324,7 +343,7 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, (l: boolean) => {
 });
 
 onApplicationEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, () => {
-    isFav.value = albumIsFavorite(AlbumsController.CurrentAlbum);
+    isFav.value = albumIsFavorite(getCurrentAlbumId());
 });
 
 // Album list
@@ -373,8 +392,11 @@ const updateAlbumList = (preserveWindowScroll?: boolean) => {
 
     if (loadedAlbum.value) {
         let i = 0;
+
+        const originalList = getCurrentAlbumData()?.list || [];
+
         listScroller.addElements(
-            AlbumsController.CurrentAlbumData.list.map((m) => {
+            originalList.map((m) => {
                 return {
                     pos: i++,
                     id: m.id,
@@ -407,11 +429,11 @@ const updateAlbumList = (preserveWindowScroll?: boolean) => {
 /**
  * Call when album position updates
  */
-const onAlbumPosUpdate = () => {
-    loop.value = AlbumsController.AlbumLoop;
-    random.value = AlbumsController.AlbumRandom;
+const onAlbumPosUpdate = (ctx: AlbumMediaPositionContext) => {
+    loop.value = ctx.loop;
+    random.value = ctx.random;
 
-    const newPosMedia = AlbumsController.CurrentAlbumPos >= 0 ? AppStatus.CurrentMedia : -1;
+    const newPosMedia = ctx.pos >= 0 ? AppStatus.CurrentMedia : -1;
 
     let newMustScroll = false;
 
@@ -420,7 +442,7 @@ const onAlbumPosUpdate = () => {
         newMustScroll = true;
     }
 
-    currentPos.value = AlbumsController.CurrentAlbumPos;
+    currentPos.value = ctx.pos;
     currentPosMedia.value = newPosMedia;
 
     if (newMustScroll && currentPos.value >= 0) {
@@ -441,7 +463,7 @@ onMounted(() => {
 
     mustScroll.value = true;
 
-    onAlbumPosUpdate();
+    onAlbumPosUpdate(getCurrentAlbumMediaPositionContext());
 });
 
 /**
@@ -455,8 +477,7 @@ const closePage = () => {
  * Toggles the loop option
  */
 const toggleLoop = () => {
-    AlbumsController.ToggleLoop();
-    if (AlbumsController.AlbumLoop) {
+    if (albumToggleLoop()) {
         showSnackBar($t("Album loop enabled"));
     } else {
         showSnackBar($t("Album loop disabled"));
@@ -467,8 +488,7 @@ const toggleLoop = () => {
  * Toggles the random option
  */
 const toggleRandom = () => {
-    AlbumsController.ToggleRandom();
-    if (AlbumsController.AlbumRandom) {
+    if (albumToggleRandom()) {
         showSnackBar($t("Album shuffle enabled"));
     } else {
         showSnackBar($t("Album shuffle disabled"));
@@ -479,13 +499,15 @@ const toggleRandom = () => {
  * Toggles the favorite option
  */
 const toggleFav = () => {
+    const currentAlbumId = getCurrentAlbumId();
+
     if (isFav.value) {
         isFav.value = false;
-        albumRemoveFav(AlbumsController.CurrentAlbum);
+        albumRemoveFav(currentAlbumId);
         showSnackBar($t("Album removed from favorites"));
     } else {
         isFav.value = true;
-        albumAddFav(AlbumsController.CurrentAlbum);
+        albumAddFav(currentAlbumId);
         showSnackBar($t("Album added to favorites"));
     }
 };
@@ -512,7 +534,7 @@ const checkContainerHeight = () => {
 
     if (changed) {
         mustScroll.value = true;
-        onAlbumPosUpdate();
+        onAlbumPosUpdate(getCurrentAlbumMediaPositionContext());
     }
 };
 
@@ -658,22 +680,24 @@ const { error, errorDisplay, setError, unauthorized, badRequest, accessDenied, n
  * @param newIndex New media index
  */
 const moveMedia = (oldIndex: number, newIndex: number) => {
-    if (!AlbumsController.CurrentAlbumData) {
+    const albumData = getCurrentAlbumData();
+
+    if (!albumData) {
         return;
     }
 
-    if (oldIndex < 0 || oldIndex >= AlbumsController.CurrentAlbumData.list.length) {
+    if (oldIndex < 0 || oldIndex >= albumData.list.length) {
         return;
     }
 
-    const albumId = AlbumsController.CurrentAlbumData.id;
-    const mediaId = AlbumsController.CurrentAlbumData.list[oldIndex].id;
+    const albumId = albumData.id;
+    const mediaId = albumData.list[oldIndex].id;
 
-    AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
+    albumData.list.splice(newIndex, 0, albumData.list.splice(oldIndex, 1)[0]);
 
-    emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
+    emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, albumData);
 
-    AlbumsController.UpdateAlbumCurrentPos();
+    updateAlbumMediaPositionStatus();
 
     // Update in server
 
@@ -683,7 +707,7 @@ const moveMedia = (oldIndex: number, newIndex: number) => {
         })
         .onRequestError((err, handleErr) => {
             // Revert changes
-            AlbumsController.OnChangedAlbum(albumId, true);
+            indicateAlbumMetadataChanged(albumId, true);
             // Show error
             handleErr(err, {
                 unauthorized,
@@ -694,7 +718,7 @@ const moveMedia = (oldIndex: number, newIndex: number) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    AlbumsController.OnChangedAlbum(albumId);
+                    indicateAlbumMetadataChanged(albumId);
                 },
                 serverError,
                 networkError,
@@ -724,7 +748,7 @@ const removeMedia = (i: number) => {
     makeApiRequest(apiAlbumsRemoveMediaFromAlbum(aid, media.id))
         .onSuccess(() => {
             showSnackBar($t("Successfully removed from album"));
-            AlbumsController.OnChangedAlbum(aid, true);
+            indicateAlbumMetadataChanged(aid, true);
             emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
         })
         .onRequestError((err, handleErr) => {
@@ -733,7 +757,7 @@ const removeMedia = (i: number) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    AlbumsController.OnChangedAlbum(aid);
+                    indicateAlbumMetadataChanged(aid);
                 },
                 serverError,
                 networkError,

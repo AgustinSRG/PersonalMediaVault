@@ -5,11 +5,11 @@
 "use strict";
 
 import { getParameterByName } from "@/utils/cookie";
-import { AlbumsController } from "./albums";
 import { emitAppEvent, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_DELETE } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
 import { generateURIQuery } from "@/utils/api";
 import { ExitPreventer } from "./exit-prevent";
+import { getCurrentAlbumData, getCurrentAlbumId, isAlbumsListLoading } from "./albums";
 
 /**
  * Layout mode
@@ -271,13 +271,17 @@ export class AppStatus {
      */
     public static UpdateURL(replaceState?: boolean) {
         if (AppStatus.CurrentAlbum >= 0 && AppStatus.CurrentMedia < 0) {
-            if (AlbumsController.Loading) {
+            if (isAlbumsListLoading()) {
                 return;
             }
-            if (AlbumsController.CurrentAlbum !== AppStatus.CurrentAlbum) {
+
+            if (getCurrentAlbumId() !== AppStatus.CurrentAlbum) {
                 return;
             }
-            if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {
+
+            const currentAlbumData = getCurrentAlbumData();
+
+            if (currentAlbumData && currentAlbumData.list.length > 0) {
                 return;
             }
         }

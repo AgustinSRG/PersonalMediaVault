@@ -57,7 +57,6 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
@@ -73,6 +72,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -87,14 +87,14 @@ const container = useTemplateRef("container");
 const { close } = useModal(display, container);
 
 // Current album ID
-const currentAlbum = ref(AlbumsController.CurrentAlbum);
+const currentAlbum = ref(getCurrentAlbumId());
 
 // Current album thumbnail
-const thumbnail = ref(AlbumsController.CurrentAlbumData?.thumbnail || "");
+const thumbnail = ref(getCurrentAlbumData()?.thumbnail || "");
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
-    currentAlbum.value = AlbumsController.CurrentAlbum;
-    thumbnail.value = AlbumsController.CurrentAlbumData?.thumbnail || "";
+    currentAlbum.value = getCurrentAlbumId();
+    thumbnail.value = getCurrentAlbumData()?.thumbnail || "";
 });
 
 // Current media thumbnail
@@ -172,7 +172,7 @@ const changeThumbnail = (file: File) => {
 
             thumbnail.value = res.url;
 
-            AlbumsController.OnChangedAlbum(albumId);
+            indicateAlbumMetadataChanged(albumId);
         })
         .onCancel(() => {
             busy.value = false;

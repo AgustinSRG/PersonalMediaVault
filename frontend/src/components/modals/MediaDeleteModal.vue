@@ -46,7 +46,6 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
@@ -63,6 +62,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { refreshCurrentAlbum } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -151,7 +151,8 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             forceClose();
 
-            AlbumsController.LoadCurrentAlbum();
+            refreshCurrentAlbum();
+
             AppStatus.OnDeleteMedia();
         })
         .onCancel(() => {
@@ -177,7 +178,8 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
                     forceClose();
 
-                    AlbumsController.LoadCurrentAlbum();
+                    refreshCurrentAlbum();
+
                     AppStatus.OnDeleteMedia();
                 },
                 serverError,

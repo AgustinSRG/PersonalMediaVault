@@ -35,7 +35,6 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef } from "vue";
@@ -45,6 +44,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { albumsFindDuplicatedName, refreshAlbumsList } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -91,7 +91,7 @@ const submit = (e: Event) => {
         return;
     }
 
-    if (AlbumsController.FindDuplicatedName(name.value)) {
+    if (albumsFindDuplicatedName(name.value)) {
         error.value = $t("There is already another album with the same name");
         return;
     }
@@ -112,7 +112,7 @@ const submit = (e: Event) => {
 
             emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
 
-            AlbumsController.Load();
+            refreshAlbumsList(true);
 
             emit("new-album", response.album_id, albumName);
         })

@@ -3,7 +3,6 @@
 "use strict";
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { AlbumsController } from "./albums";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
 import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
@@ -23,6 +22,7 @@ import {
     EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
+import { getCurrentAlbumMediaPositionContext, indicateAlbumMetadataChanged, loadAlbumNextPreFetch } from "./albums";
 
 /**
  * Max number of uploads in the completed lists (ready, error)
@@ -473,12 +473,14 @@ export class UploadController {
             MediaController.Load();
         }
 
-        if (AlbumsController.CurrentNext && AlbumsController.CurrentNext.id === m.mid) {
-            AlbumsController.PreFetchAlbumNext();
+        const albumMediaPositionContext = getCurrentAlbumMediaPositionContext();
+
+        if (albumMediaPositionContext.next && albumMediaPositionContext.next.id === m.mid) {
+            loadAlbumNextPreFetch();
         }
 
         if (m.album !== -1) {
-            AlbumsController.OnChangedAlbum(m.album, true);
+            indicateAlbumMetadataChanged(m.album, true);
         }
 
         UploadController.CheckCompletedList(UploadController.Entries.ready);

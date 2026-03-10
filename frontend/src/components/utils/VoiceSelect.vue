@@ -43,7 +43,6 @@
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
-import { AlbumsController } from "@/control/albums";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
@@ -243,8 +242,6 @@ const expand = () => {
     expanded.value = true;
 
     updateSuggestions();
-
-    AlbumsController.Refresh();
 
     nextTick(() => {
         nameFilterInput.value?.focus();

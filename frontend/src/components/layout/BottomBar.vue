@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
-import { AlbumsController } from "@/control/albums";
+import { getCurrentAlbumMediaPositionContext } from "@/control/albums";
 import {
     emitAppEvent,
     EVENT_NAME_APP_STATUS_CHANGED,
@@ -66,13 +66,16 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
     focus.value = AppStatus.CurrentFocus;
 });
 
-// Previous and next element in album
-const prev = ref(AlbumsController.CurrentPrev);
-const next = ref(AlbumsController.CurrentNext);
+// Initial album media position context
+const initialAlbumMediaPositionContext = getCurrentAlbumMediaPositionContext();
 
-onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, () => {
-    prev.value = AlbumsController.CurrentPrev;
-    next.value = AlbumsController.CurrentNext;
+// Previous and next element in album
+const prev = ref(initialAlbumMediaPositionContext.prev);
+const next = ref(initialAlbumMediaPositionContext.next);
+
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, (ctx) => {
+    prev.value = ctx.prev;
+    next.value = ctx.next;
 });
 
 // Previous and next element in page

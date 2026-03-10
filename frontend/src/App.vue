@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
-import { AlbumsController } from "./control/albums";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
 import { type UploadEntryMin } from "./control/upload";
@@ -20,6 +19,7 @@ import {
 import { useI18n } from "./composables/use-i18n";
 import { onApplicationEvent } from "./composables/on-app-event";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentAlbumData } from "./control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -39,8 +39,10 @@ const updateTitle = () => {
     if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
         if (AppStatus.CurrentAlbum >= 0) {
             // Media with album list
-            if (AlbumsController.CurrentAlbumData) {
-                document.title = MediaController.MediaData.title + " | " + AlbumsController.CurrentAlbumData.name + " | " + getAppTitle();
+            const currentAlbumData = getCurrentAlbumData();
+
+            if (currentAlbumData) {
+                document.title = MediaController.MediaData.title + " | " + currentAlbumData.name + " | " + getAppTitle();
             } else {
                 document.title = MediaController.MediaData.title + " | " + getAppTitle();
             }
@@ -52,8 +54,12 @@ const updateTitle = () => {
             document.title = MediaController.MediaData.title + " | " + getAppTitle();
         }
     } else if (AppStatus.CurrentAlbum >= 0) {
-        if (AlbumsController.CurrentAlbumData) {
-            document.title = AlbumsController.CurrentAlbumData.name + " | " + getAppTitle();
+        // Empty album
+
+        const currentAlbumData = getCurrentAlbumData();
+
+        if (currentAlbumData) {
+            document.title = currentAlbumData.name + " | " + getAppTitle();
         } else {
             document.title = getAppTitle();
         }
@@ -88,10 +94,13 @@ const updateMediaMetadata = () => {
     if (!window.navigator || !window.navigator.mediaSession) {
         return;
     }
+
+    const currentAlbumData = getCurrentAlbumData();
+
     if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
         window.navigator.mediaSession.metadata = new MediaMetadata({
             title: MediaController.MediaData.title,
-            album: AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : undefined,
+            album: AppStatus.CurrentAlbum >= 0 && currentAlbumData ? currentAlbumData.name : undefined,
             artwork: MediaController.MediaData.thumbnail
                 ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
                 : undefined,

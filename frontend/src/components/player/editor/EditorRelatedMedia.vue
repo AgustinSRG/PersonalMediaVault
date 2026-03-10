@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
@@ -281,8 +280,6 @@ const saveChanges = (e?: Event) => {
             }
 
             emit("changed");
-
-            AlbumsController.LoadCurrentAlbum();
 
             emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
 

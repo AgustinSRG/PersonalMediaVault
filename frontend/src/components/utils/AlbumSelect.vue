@@ -45,7 +45,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
-import { AlbumsController } from "@/control/albums";
+import { getAlbumName, getAlbumsListExt, refreshAlbumsList } from "@/control/albums";
 import { EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
 import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -87,25 +87,6 @@ const album = defineModel<number>("album", {
     default: -1,
 });
 
-/**
- * Gets the name of a selected album
- * @param id Album ID
- * @returns Album name
- */
-const getAlbumName = (id: number): string => {
-    if (id < 0) {
-        return "--";
-    }
-
-    const album = AlbumsController.AlbumsMap.get(id);
-
-    if (!album) {
-        return "";
-    }
-
-    return album.name;
-};
-
 // Album name
 const albumName = ref(getAlbumName(album.value));
 
@@ -114,11 +95,11 @@ watch(album, () => {
 });
 
 // Full list of albums
-let albums = AlbumsController.GetAlbumsListMin();
+let albums = getAlbumsListExt();
 
 // When the albums list changes, update everything
 onApplicationEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, () => {
-    albums = AlbumsController.GetAlbumsListMin();
+    albums = getAlbumsListExt();
 
     albumName.value = getAlbumName(album.value);
 
@@ -245,7 +226,7 @@ const expand = () => {
 
     updateSuggestions();
 
-    AlbumsController.Refresh();
+    refreshAlbumsList();
 
     nextTick(() => {
         nameFilterInput.value?.focus();

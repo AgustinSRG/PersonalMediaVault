@@ -135,8 +135,6 @@
 </template>
 
 <script setup lang="ts">
-import type { AlbumListItemMinExt } from "@/control/albums";
-import { AlbumsController } from "@/control/albums";
 import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/control/app-preferences";
 import type { AppStatusPage } from "@/control/app-status";
 import { AppStatus } from "@/control/app-status";
@@ -155,6 +153,8 @@ import { useFocusTrap } from "@/composables/use-focus-trap";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { stopPropagationEvent } from "@/utils/events";
+import type { AlbumListItemMinExt } from "@/api/models";
+import { getAlbumsListExt } from "@/control/albums";
 
 // Translation
 const { $t } = useI18n();
@@ -242,7 +242,7 @@ let albums: AlbumListItemMinExt[] = [];
  */
 const updateAlbums = () => {
     const albumsOrderMap = getAlbumsOrderMap();
-    albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
+    albums = getAlbumsListExt().sort((a, b) => {
         const lruA = albumsOrderMap[a.id + ""] || 0;
         const lruB = albumsOrderMap[b.id + ""] || 0;
         if (lruA > lruB) {

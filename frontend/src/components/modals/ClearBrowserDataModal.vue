@@ -129,11 +129,10 @@ import {
 } from "@/control/app-preferences";
 import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
-import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
-import { AlbumsController } from "@/control/albums";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { showSnackBar } from "@/control/snack-bar";
+import { refreshAlbumsList } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -175,7 +174,7 @@ const submit = () => {
 
     if (clearRecentlyAccessedAlbums.value) {
         clearAlbumsOrderMap();
-        emitAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
+        refreshAlbumsList(true);
     }
 
     if (clearRecentlyUsedTags.value) {

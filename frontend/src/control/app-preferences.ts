@@ -2,7 +2,6 @@
 
 "use strict";
 
-import { AlbumsController } from "./albums";
 import {
     addAppEventListener,
     emitAppEvent,
@@ -14,7 +13,7 @@ import {
     EVENT_NAME_THEME_CHANGED,
 } from "./app-events";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
-import type { AlbumListItemMin } from "@/api/models";
+import type { Album, AlbumListItemMin } from "@/api/models";
 import type { AppStatusPage } from "./app-status";
 
 export type ColorThemeName = "light" | "dark";
@@ -160,12 +159,12 @@ export function clearAlbumsOrderMap() {
     clearLocalStorage(LS_KEY_ALBUMS_ORDER);
 }
 
-addAppEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
-    if (!AlbumsController.CurrentAlbumData) {
+addAppEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, (albumData: Album | null) => {
+    if (!albumData) {
         return;
     }
 
-    const idString = AlbumsController.CurrentAlbumData.id + "";
+    const idString = albumData.id + "";
     const m = getAlbumsOrderMap();
 
     m[idString] = Date.now();
@@ -188,7 +187,7 @@ addAppEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
 
     saveIntoLocalStorage(LS_KEY_ALBUMS_ORDER, m);
 
-    emitAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, AlbumsController.CurrentAlbumData.id);
+    emitAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, albumData.id);
 });
 
 const LS_KEY_PAGE_SETTINGS = "app-pref-page-settings";

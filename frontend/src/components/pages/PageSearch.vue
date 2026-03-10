@@ -192,7 +192,6 @@
 <script setup lang="ts">
 import type { MediaType } from "@/api/models";
 import { type MediaListItem } from "@/api/models";
-import { AlbumsController } from "@/control/albums";
 import {
     emitAppEvent,
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
@@ -235,6 +234,7 @@ import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onPageLoad, onPageUnload } from "@/control/pages";
+import { getCurrentAlbumData } from "@/control/albums";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -1168,9 +1168,11 @@ const filterElements = (results: MediaListItem[]) => {
 
     let blacklist = new Set();
 
-    if (props.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
+    const currentAlbumData = getCurrentAlbumData();
+
+    if (props.noAlbum >= 0 && currentAlbumData) {
         blacklist = new Set(
-            AlbumsController.CurrentAlbumData.list.map((a) => {
+            currentAlbumData.list.map((a) => {
                 return a.id;
             }),
         );

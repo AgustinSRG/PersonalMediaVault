@@ -63,7 +63,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
-import { AlbumsController } from "@/control/albums";
+import { getAlbumsList, getCurrentAlbumData, refreshAlbumsList } from "@/control/albums";
 import { EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
@@ -128,7 +128,7 @@ const focusSearch = () => {
 
     updateSuggestions();
 
-    AlbumsController.Refresh();
+    refreshAlbumsList();
     TagsController.Refresh();
 };
 
@@ -222,7 +222,7 @@ const updateSuggestions = () => {
     );
 
     newSuggestions = newSuggestions.concat(
-        AlbumsController.GetAlbumsList()
+        getAlbumsList()
             .map((a): SearchBarSuggestion => {
                 const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
                 return {
@@ -240,9 +240,11 @@ const updateSuggestions = () => {
             }),
     );
 
-    if (AlbumsController.CurrentAlbumData) {
+    const currentAlbumData = getCurrentAlbumData();
+
+    if (currentAlbumData) {
         newSuggestions = newSuggestions.concat(
-            AlbumsController.CurrentAlbumData.list
+            currentAlbumData.list
                 .map((a): SearchBarSuggestion => {
                     const i = albumFilter ? matchSearchFilter(a.title, albumFilter, albumFilterWords) : 0;
                     return {

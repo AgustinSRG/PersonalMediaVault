@@ -41,10 +41,10 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
-import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
+import { getCurrentAlbumData, getCurrentAlbumMediaPosition } from "@/control/albums";
 
 // Translation function
 const { $t } = useI18n();
@@ -59,17 +59,17 @@ const container = useTemplateRef("container");
 const { close } = useModal(display, container);
 
 // Current album position
-const currentPos = ref(AlbumsController.CurrentAlbumPos + 1);
+const currentPos = ref(getCurrentAlbumMediaPosition() + 1);
 
 // Current album length
-const albumLength = ref(AlbumsController.CurrentAlbumData?.list.length || 0);
+const albumLength = ref(getCurrentAlbumData()?.list.length || 0);
 
 /**
  * Resets the form
  */
 const reset = () => {
-    currentPos.value = AlbumsController.CurrentAlbumPos + 1;
-    albumLength.value = AlbumsController.CurrentAlbumData?.list.length || 0;
+    currentPos.value = getCurrentAlbumMediaPosition() + 1;
+    albumLength.value = getCurrentAlbumData()?.list.length || 0;
 };
 
 watch(display, () => {
@@ -85,10 +85,12 @@ watch(display, () => {
 const submit = (e: Event) => {
     e.preventDefault();
 
-    if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {
-        const pos = Math.min(Math.max(0, Math.floor(currentPos.value - 1)), AlbumsController.CurrentAlbumData.list.length - 1);
+    const currentAlbumData = getCurrentAlbumData();
 
-        AppStatus.ClickOnMedia(AlbumsController.CurrentAlbumData.list[pos].id, false);
+    if (currentAlbumData && currentAlbumData.list.length > 0) {
+        const pos = Math.min(Math.max(0, Math.floor(currentPos.value - 1)), currentAlbumData.list.length - 1);
+
+        AppStatus.ClickOnMedia(currentAlbumData.list[pos].id, false);
     }
 
     close();

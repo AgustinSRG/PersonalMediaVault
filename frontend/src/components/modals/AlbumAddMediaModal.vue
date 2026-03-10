@@ -76,7 +76,6 @@ import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
-import { AlbumsController } from "@/control/albums";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
@@ -84,6 +83,7 @@ import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { indicateAlbumMetadataChanged, refreshAlbumsList } from "@/control/albums";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -156,7 +156,7 @@ const selectMedia = (m: MediaListItem, callback: () => void) => {
 
             showSnackBar($t("Successfully added to album"));
 
-            AlbumsController.OnChangedAlbum(albumId, true);
+            indicateAlbumMetadataChanged(albumId, true);
 
             callback();
         })
@@ -172,7 +172,7 @@ const selectMedia = (m: MediaListItem, callback: () => void) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    AlbumsController.Load();
+                    refreshAlbumsList(true);
                 },
                 serverError,
                 networkError,

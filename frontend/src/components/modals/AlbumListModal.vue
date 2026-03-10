@@ -128,7 +128,6 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AlbumsController } from "@/control/albums";
 import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
@@ -150,6 +149,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { clickOnEnter } from "@/utils/events";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { getAlbumsListExt, indicateAlbumMetadataChanged, refreshAlbumsList } from "@/control/albums";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -275,7 +275,7 @@ const updateAlbums = () => {
     const albumFilter = normalizeString(filter.value).trim().toLowerCase();
     const albumFilterWords = filterToWords(albumFilter);
 
-    const albums = AlbumsController.GetAlbumsListMin()
+    const albums = getAlbumsListExt()
         .map((a) => {
             const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
             return {
@@ -366,7 +366,7 @@ const load = () => {
 
 onMounted(() => {
     if (display.value) {
-        AlbumsController.Refresh();
+        refreshAlbumsList();
 
         updateAlbums();
         load();
@@ -377,7 +377,7 @@ watch(display, () => {
     displayAlbumCreate.value = false;
 
     if (display.value) {
-        AlbumsController.Refresh();
+        refreshAlbumsList();
 
         updateAlbums();
         load();
@@ -454,7 +454,7 @@ const removeFromAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
 
             updateAlbums();
 
-            AlbumsController.OnChangedAlbum(album.id, true);
+            indicateAlbumMetadataChanged(album.id, true);
 
             if (backToText && editMode.value) {
                 focus();
@@ -468,7 +468,7 @@ const removeFromAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    AlbumsController.Load();
+                    refreshAlbumsList(true);
                 },
                 serverError,
                 networkError,
@@ -506,7 +506,7 @@ const addIntoAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
 
             updateAlbums();
 
-            AlbumsController.OnChangedAlbum(album.id, true);
+            indicateAlbumMetadataChanged(album.id, true);
 
             if (backToText && editMode.value) {
                 changeEditMode();
@@ -524,7 +524,7 @@ const addIntoAlbum = (album: AlbumModalListItem, backToText?: boolean) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    AlbumsController.Load();
+                    refreshAlbumsList(true);
                 },
                 serverError,
                 networkError,

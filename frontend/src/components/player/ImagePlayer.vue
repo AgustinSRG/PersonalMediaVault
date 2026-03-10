@@ -214,7 +214,6 @@ import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { AlbumsController } from "@/control/albums";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
@@ -232,6 +231,7 @@ import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
 import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
+import { getAlbumNextPrefetchData } from "@/control/albums";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1187,19 +1187,18 @@ useGlobalKeyboardHandler((event: KeyboardEvent) => {
  * Called to pre-fetch the next image in an album, for faster load times
  */
 const onAlbumPrefetch = () => {
-    if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
+    const nextMediaData = getAlbumNextPrefetchData();
+
+    if (nextMediaData && nextMediaData.type === MEDIA_TYPE_IMAGE) {
         if (currentResolution.value < 0) {
-            if (AlbumsController.NextMediaData.encoded) {
-                prefetchURL.value = getAssetURL(AlbumsController.NextMediaData.url);
+            if (nextMediaData.encoded) {
+                prefetchURL.value = getAssetURL(nextMediaData.url);
             } else {
                 prefetchURL.value = "";
             }
         } else {
-            if (
-                AlbumsController.NextMediaData.resolutions[currentResolution.value] &&
-                AlbumsController.NextMediaData.resolutions[currentResolution.value].ready
-            ) {
-                prefetchURL.value = getAssetURL(AlbumsController.NextMediaData.resolutions[currentResolution.value].url);
+            if (nextMediaData.resolutions[currentResolution.value] && nextMediaData.resolutions[currentResolution.value].ready) {
+                prefetchURL.value = getAssetURL(nextMediaData.resolutions[currentResolution.value].url);
             } else {
                 prefetchURL.value = "";
             }

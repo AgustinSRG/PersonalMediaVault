@@ -9,6 +9,7 @@ import type { ColorThemeName } from "./app-preferences";
 import type { ImageNote } from "@/utils/notes-format";
 import type { ImageNodesChangeType } from "./img-notes";
 import type { UploadEntryMin } from "./upload";
+import type { AlbumMediaPositionContext } from "./albums";
 
 /**
  * Event triggered when a request results in 401 - Unauthorized
@@ -392,7 +393,7 @@ export type AppEventsMap = {
     /**
      * Event triggered when the current media position in the current album is updated
      */
-    [EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED]: () => void;
+    [EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED]: (context: Readonly<AlbumMediaPositionContext>) => void;
 
     /**
      * Event triggered when the next element is pre-fetched

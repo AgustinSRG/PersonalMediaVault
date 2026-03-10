@@ -52,6 +52,26 @@ export interface AlbumListItemMin {
 }
 
 /**
+ * Minified album data (with lowercased name)
+ */
+export interface AlbumListItemMinExt {
+    /**
+     * Album ID
+     */
+    id: number;
+
+    /**
+     * Album name
+     */
+    name: string;
+
+    /**
+     * Album name (lowercase)
+     */
+    nameLowerCase: string;
+}
+
+/**
  * Album information to display the media list.
  */
 export interface Album {

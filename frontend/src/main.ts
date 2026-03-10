@@ -7,7 +7,7 @@
 import { AppStatus } from "./control/app-status";
 import { AuthController } from "./control/auth";
 import { TagsController } from "./control/tags";
-import { AlbumsController } from "./control/albums";
+import { initializeAlbums } from "./control/albums";
 import { MediaController } from "./control/media";
 import { initializeGlobalBusyState } from "./control/busy-state";
 
@@ -15,7 +15,7 @@ AppStatus.Initialize();
 AuthController.Initialize();
 TagsController.Initialize();
 MediaController.Initialize();
-AlbumsController.Initialize();
+initializeAlbums();
 initializeGlobalBusyState();
 
 // Setup App
