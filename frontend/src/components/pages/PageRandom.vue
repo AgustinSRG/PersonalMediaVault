@@ -61,7 +61,6 @@ import { TagsController } from "@/control/tags";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
-import { MediaController } from "@/control/media";
 import { apiSearchRandom } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
 import PageLoaderFiller from "./common/PageLoaderFiller.vue";
@@ -71,6 +70,7 @@ import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onPageLoad, onPageUnload } from "@/control/pages";
+import { getCurrentMediaId, loadCurrentMedia } from "@/control/media";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -208,8 +208,8 @@ const load = () => {
             if (switchMediaOnLoad.value === "next") {
                 switchMediaOnLoad.value = "";
                 if (pageItems.value.length > 0) {
-                    if (MediaController.MediaId === pageItems.value[0].id) {
-                        MediaController.Load();
+                    if (getCurrentMediaId() === pageItems.value[0].id) {
+                        loadCurrentMedia();
                     } else {
                         goToMedia(pageItems.value[0].id);
                     }
@@ -217,8 +217,8 @@ const load = () => {
             } else if (switchMediaOnLoad.value === "prev") {
                 switchMediaOnLoad.value = "";
                 if (pageItems.value.length > 0) {
-                    if (MediaController.MediaId === pageItems.value[pageItems.value.length - 1].id) {
-                        MediaController.Load();
+                    if (getCurrentMediaId() === pageItems.value[pageItems.value.length - 1].id) {
+                        loadCurrentMedia();
                     } else {
                         goToMedia(pageItems.value[pageItems.value.length - 1].id);
                     }

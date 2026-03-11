@@ -5,7 +5,6 @@
 import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
-import { MediaController } from "./media";
 import type { ImageNote } from "@/utils/notes-format";
 import { parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
@@ -23,6 +22,7 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { removeGlobalBusyState, setGlobalBusyState } from "./busy-state";
+import { getCurrentMediaData, modifyCurrentMediaData } from "./media";
 
 /**
  * The change type for the image nodes
@@ -115,7 +115,9 @@ export class ImageNotesController {
         ImageNotesController.PendingSave = false;
         abortNamedApiRequest(REQUEST_KEY_SAVE);
 
-        if (!MediaController.MediaData) {
+        const mediaData = getCurrentMediaData();
+
+        if (!mediaData) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
             abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
@@ -126,10 +128,10 @@ export class ImageNotesController {
             return;
         }
 
-        ImageNotesController.ImageWidth = MediaController.MediaData.width;
-        ImageNotesController.ImageHeight = MediaController.MediaData.height;
+        ImageNotesController.ImageWidth = mediaData.width;
+        ImageNotesController.ImageHeight = mediaData.height;
 
-        if (!MediaController.MediaData.img_notes || !MediaController.MediaData.img_notes_url) {
+        if (!mediaData.img_notes || !mediaData.img_notes_url) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
             abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
@@ -138,7 +140,7 @@ export class ImageNotesController {
             return;
         }
 
-        ImageNotesController.NotesFileURL = getAssetURL(MediaController.MediaData.img_notes_url);
+        ImageNotesController.NotesFileURL = getAssetURL(mediaData.img_notes_url);
         ImageNotesController.Notes = [];
 
         clearNamedTimeout(REQUEST_KEY_LOAD);
@@ -205,10 +207,10 @@ export class ImageNotesController {
                     ImageNotesController.NotesFileURL = res.url || "";
                 }
 
-                if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
-                    MediaController.MediaData.img_notes_url = res.url || "";
-                    MediaController.MediaData.img_notes = !!res.url;
-                }
+                modifyCurrentMediaData(mediaId, (metadata) => {
+                    metadata.img_notes_url = res.url || "";
+                    metadata.img_notes = !!res.url;
+                });
 
                 if (ImageNotesController.PendingSave) {
                     ImageNotesController.SaveNotes();

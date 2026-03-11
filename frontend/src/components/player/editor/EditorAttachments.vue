@@ -131,10 +131,9 @@
 </template>
 
 <script setup lang="ts">
-import type { MediaAttachment } from "@/api/models";
+import type { MediaAttachment, MediaData } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
@@ -150,6 +149,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { renderSize } from "@/utils/size";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -182,7 +182,7 @@ const emit = defineEmits<{
 
 // List of attachments
 const attachments = ref<MediaAttachment[]>(
-    (MediaController.MediaData?.attachments || []).map((a) => {
+    (getCurrentMediaData()?.attachments || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -210,12 +210,12 @@ const attachmentEditName = ref("");
 /**
  * Updates media data
  */
-const updateMediaData = () => {
-    if (!MediaController.MediaData) {
+const updateMediaData = (mediaData: MediaData | null) => {
+    if (!mediaData) {
         return;
     }
 
-    attachments.value = (MediaController.MediaData.attachments || []).map((a) => {
+    attachments.value = (mediaData.attachments || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -301,9 +301,9 @@ const addAttachment = (file: File) => {
             attachmentUploadProgress.value = 0;
             attachments.value.push(res);
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.attachments = clone(attachments.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.attachments = clone(attachments.value);
+            });
 
             emit("changed");
         })
@@ -403,9 +403,9 @@ const saveEditAttachment = () => {
                 }
             }
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.attachments = clone(attachments.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.attachments = clone(attachments.value);
+            });
 
             emit("changed");
         })
@@ -503,9 +503,10 @@ const removeAttachmentConfirmInternal = (confirmation: ProvidedAuthConfirmation)
                     break;
                 }
             }
-            if (MediaController.MediaData) {
-                MediaController.MediaData.attachments = clone(attachments.value);
-            }
+
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.attachments = clone(attachments.value);
+            });
 
             emit("changed");
         })

@@ -42,7 +42,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { ExitPreventer } from "@/control/exit-prevent";
-import { MediaController } from "@/control/media";
+import { getCurrentMediaData } from "@/control/media";
 import { computed, defineAsyncComponent, ref } from "vue";
 
 const EditorGeneral = defineAsyncComponent({
@@ -100,14 +100,14 @@ const emit = defineEmits<{
 }>();
 
 // Media type
-const type = ref<MediaType>(MediaController.MediaData?.type || 0);
+const type = ref<MediaType>(getCurrentMediaData()?.type || 0);
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    type.value = MediaController.MediaData.type || 0;
+    type.value = mediaData.type || 0;
 });
 
 // Editor pages

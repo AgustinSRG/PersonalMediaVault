@@ -78,11 +78,10 @@
 <script setup lang="ts">
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import type { MediaResolution, MediaType, NamedResolution } from "@/api/models";
+import type { MediaData, MediaResolution, MediaType, NamedResolution } from "@/api/models";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 import { STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
@@ -92,6 +91,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { modifyCurrentMediaData } from "@/control/media";
 
 const ResolutionConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ResolutionConfirmationModal.vue"),
@@ -143,18 +143,18 @@ const resolutions = ref<NamedResolution[]>([]);
 /**
  * Updates media metadata
  */
-const updateMediaData = () => {
-    if (!MediaController.MediaData) {
+const updateMediaData = (mediaData: MediaData | null) => {
+    if (!mediaData) {
         return;
     }
 
-    type.value = MediaController.MediaData.type;
+    type.value = mediaData.type;
 
-    width.value = MediaController.MediaData.width;
-    height.value = MediaController.MediaData.height;
-    fps.value = MediaController.MediaData.fps;
+    width.value = mediaData.width;
+    height.value = mediaData.height;
+    fps.value = mediaData.fps;
 
-    updateResolutions(MediaController.MediaData.resolutions || []);
+    updateResolutions(mediaData.resolutions || []);
 };
 
 onMounted(updateMediaData);
@@ -356,8 +356,9 @@ const performAddResolution = () => {
             busy.value = false;
             r.enabled = true;
             r.fps = result.fps;
-            if (MediaController.MediaData) {
-                MediaController.MediaData.resolutions = resolutions.value
+
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.resolutions = resolutions.value
                     .filter((re) => {
                         return re.enabled;
                     })
@@ -371,7 +372,8 @@ const performAddResolution = () => {
                             url: "",
                         };
                     });
-            }
+            });
+
             emit("changed");
         })
         .onCancel(() => {
@@ -387,8 +389,9 @@ const performAddResolution = () => {
                     showSnackBarRight($t("Added resolution") + ": " + r.name);
                     busy.value = false;
                     r.enabled = true;
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.resolutions = resolutions.value
+
+                    modifyCurrentMediaData(mediaId, (metadata) => {
+                        metadata.resolutions = resolutions.value
                             .filter((re) => {
                                 return re.enabled;
                             })
@@ -402,7 +405,8 @@ const performAddResolution = () => {
                                     url: "",
                                 };
                             });
-                    }
+                    });
+
                     emit("changed");
                 },
                 badRequest,
@@ -443,8 +447,9 @@ const performDeleteResolution = () => {
             showSnackBarRight($t("Removed resolution") + ": " + r.name);
             busy.value = false;
             r.enabled = false;
-            if (MediaController.MediaData) {
-                MediaController.MediaData.resolutions = resolutions.value
+
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.resolutions = resolutions.value
                     .filter((re) => {
                         return re.enabled;
                     })
@@ -458,7 +463,8 @@ const performDeleteResolution = () => {
                             url: "",
                         };
                     });
-            }
+            });
+
             emit("changed");
         })
         .onCancel(() => {

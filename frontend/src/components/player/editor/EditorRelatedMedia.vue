@@ -80,7 +80,6 @@
 <script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -95,6 +94,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 // Limit of related media elements
 const MAX_RELATED_MEDIA_COUNT = 16;
@@ -143,19 +143,19 @@ const emit = defineEmits<{
 const mid = ref(AppStatus.CurrentMedia);
 
 // Original related media list
-const originalRelatedMedia = ref((MediaController.MediaData?.related || []).slice());
+const originalRelatedMedia = ref((getCurrentMediaData()?.related || []).slice());
 
 // Related media list
 const relatedMedia = ref(originalRelatedMedia.value.slice());
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    mid.value = MediaController.MediaData.id;
+    mid.value = mediaData.id;
 
-    originalRelatedMedia.value = (MediaController.MediaData.related || []).slice();
+    originalRelatedMedia.value = (mediaData.related || []).slice();
     relatedMedia.value = originalRelatedMedia.value.slice();
 });
 
@@ -275,9 +275,9 @@ const saveChanges = (e?: Event) => {
             saved.value = true;
             originalRelatedMedia.value = relatedMedia.value.slice();
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.related = relatedMedia.value.slice();
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.related = relatedMedia.value.slice();
+            });
 
             emit("changed");
 

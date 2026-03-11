@@ -199,7 +199,6 @@ import { nextTick } from "vue";
 import { AppStatus } from "@/control/app-status";
 import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
-import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
@@ -227,6 +226,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { getStoredDescription, setStoredDescription } from "@/control/description-store";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -426,11 +426,13 @@ const load = () => {
         return;
     }
 
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
-    const descFilePath = MediaController.MediaData.description_url;
+    const descFilePath = mediaData.description_url;
 
     if (!descFilePath) {
         content.value = "";
@@ -444,7 +446,7 @@ const load = () => {
 
         const [contentStoredId, contentStored] = getStoredDescription();
 
-        if (contentStoredId === MediaController.MediaData.id) {
+        if (contentStoredId === mediaData.id) {
             contentToChange.value = contentStored;
         }
 
@@ -479,7 +481,7 @@ const load = () => {
 
             const [contentStoredId, contentStored] = getStoredDescription();
 
-            if (contentStoredId === MediaController.MediaData.id) {
+            if (contentStoredId === mediaData.id) {
                 contentToChange.value = contentStored;
                 editing.value = !!canWrite.value;
             }
@@ -508,7 +510,7 @@ const load = () => {
 
                     const [contentStoredId, contentStored] = getStoredDescription();
 
-                    if (contentStoredId === MediaController.MediaData.id) {
+                    if (contentStoredId === mediaData.id) {
                         contentToChange.value = contentStored;
                     }
 
@@ -720,9 +722,9 @@ const saveChanges = () => {
 
             stopReading();
 
-            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
-                MediaController.MediaData.description_url = res.url || "";
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.description_url = res.url || "";
+            });
 
             emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
 

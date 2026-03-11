@@ -147,7 +147,6 @@ import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { TagsController } from "@/control/tags";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import type { MediaType } from "@/api/models";
 import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaListItem } from "@/api/models";
@@ -165,6 +164,7 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { refreshCurrentAlbum } from "@/control/albums";
+import { loadCurrentMedia } from "@/control/media";
 
 // Page size for requests
 const PAGE_SIZE = 50;
@@ -526,7 +526,7 @@ const actionNext = (i: number) => {
         status.value = "success";
 
         refreshCurrentAlbum();
-        MediaController.Load();
+        loadCurrentMedia();
         TagsController.Load();
         return;
     }

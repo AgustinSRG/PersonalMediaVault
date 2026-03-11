@@ -277,7 +277,7 @@ import PlayerTopBar from "./common/PlayerTopBar.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { AUTO_LOOP_MIN_DURATION, MediaController } from "@/control/media";
+import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/control/media";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { ColorThemeName } from "@/control/app-preferences";
@@ -888,7 +888,7 @@ const play = () => {
 
     if (requiresRefresh.value) {
         requiresRefresh.value = false;
-        MediaController.Load();
+        loadCurrentMedia();
         return;
     }
 

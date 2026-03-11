@@ -125,7 +125,6 @@
 
 <script setup lang="ts">
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -140,6 +139,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentMediaData, loadCurrentMedia, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -190,13 +190,15 @@ const timeSlicesArray = ref<EditorTimeSlice[]>([]);
  * Updates the media data
  */
 const updateMediaData = () => {
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
     reset();
 
-    timeSlicesArray.value = (MediaController.MediaData.time_slices || []).map((s) => {
+    timeSlicesArray.value = (mediaData.time_slices || []).map((s) => {
         return {
             time: s.time,
             timeStr: renderTimeSeconds(s.time),
@@ -210,8 +212,8 @@ const updateMediaData = () => {
     saveState.value = {
         saving: false,
         pendingSave: false,
-        mid: MediaController.MediaData.id,
-        timeSlices: clone(MediaController.MediaData.time_slices),
+        mid: mediaData.id,
+        timeSlices: clone(mediaData.time_slices),
         callback: onSaved,
     };
 };
@@ -297,9 +299,9 @@ const saveTimeSlices = (ss: SaveRequestState) => {
         .onSuccess(() => {
             ss.saving = false;
 
-            if (MediaController.MediaData && MediaController.MediaData.id === ss.mid) {
-                MediaController.MediaData.time_slices = clone(ss.timeSlices);
-            }
+            modifyCurrentMediaData(ss.mid, (metadata) => {
+                metadata.time_slices = clone(ss.timeSlices);
+            });
 
             if (ss.pendingSave) {
                 ss.pendingSave = false;
@@ -324,7 +326,7 @@ const saveTimeSlices = (ss: SaveRequestState) => {
                 accessDenied,
                 notFound: () => {
                     notFound();
-                    MediaController.Load();
+                    loadCurrentMedia();
                 },
                 serverError,
                 networkError,

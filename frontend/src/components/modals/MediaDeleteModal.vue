@@ -48,7 +48,6 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
@@ -63,6 +62,7 @@ import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
 import { refreshCurrentAlbum } from "@/control/albums";
+import { getCurrentMediaData } from "@/control/media";
 
 // Translation function
 const { $t } = useI18n();
@@ -84,10 +84,10 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
 });
 
 // Current media title
-const currentMediaName = ref(MediaController.MediaData?.title || "");
+const currentMediaName = ref(getCurrentMediaData()?.title || "");
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    currentMediaName.value = MediaController.MediaData?.title || "";
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    currentMediaName.value = mediaData?.title || "";
 });
 
 // Delete confirmation

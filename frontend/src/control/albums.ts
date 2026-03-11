@@ -6,7 +6,6 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
-import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import type { Album, AlbumListItemMin, AlbumListItemMinExt, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin } from "@/api/api-albums";
@@ -25,6 +24,7 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { getCurrentMediaId, provideCurrentMediaData } from "./media";
 
 /**
  * Global state of albums
@@ -560,7 +560,7 @@ const REQUEST_ID_NEXT_PRE_FETCH = getUniqueStringId();
  * Pre-fetches the next media element for faster transition
  */
 export function loadAlbumNextPreFetch() {
-    if (AlbumMediaPositionStatus.next === null || AlbumMediaPositionStatus.next.id === MediaController.MediaId) {
+    if (AlbumMediaPositionStatus.next === null || AlbumMediaPositionStatus.next.id === getCurrentMediaId()) {
         clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
         abortNamedApiRequest(REQUEST_ID_NEXT_PRE_FETCH);
 
@@ -622,12 +622,12 @@ export function checkAlbumNextPrefetch(): boolean {
         return false;
     }
 
-    if (AlbumMediaPositionStatus.next.id !== MediaController.MediaId) {
+    if (AlbumMediaPositionStatus.next.id !== getCurrentMediaId()) {
         return false;
     }
 
     if (AlbumNextPrefetchState.available) {
-        MediaController.SetMediaData(AlbumNextPrefetchState.data);
+        provideCurrentMediaData(AlbumNextPrefetchState.data);
         return true;
     } else {
         return false;

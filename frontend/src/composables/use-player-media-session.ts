@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { MediaController } from "@/control/media";
+import { clearGlobalMediaSessionId, getGlobalMediaSessionId, setGlobalMediaSessionId } from "@/control/media-session-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import { getUniqueStringId } from "@/utils/unique-id";
 import type { Ref } from "vue";
@@ -41,7 +41,7 @@ export function usePlayerMediaSession(
 
     onMounted(() => {
         if (window.navigator && window.navigator.mediaSession) {
-            MediaController.MediaSessionId = mediaSessionId;
+            setGlobalMediaSessionId(mediaSessionId);
             clearMediaSessionActionHandlers();
 
             addMediaSessionActionHandler(actions, handler);
@@ -55,10 +55,10 @@ export function usePlayerMediaSession(
     });
 
     onBeforeUnmount(() => {
-        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === mediaSessionId) {
+        if (window.navigator && window.navigator.mediaSession && getGlobalMediaSessionId() === mediaSessionId) {
             clearMediaSessionActionHandlers();
             navigator.mediaSession.playbackState = "none";
-            MediaController.MediaSessionId = "";
+            clearGlobalMediaSessionId();
         }
     });
 
@@ -68,7 +68,7 @@ export function usePlayerMediaSession(
                 return;
             }
 
-            if (MediaController.MediaSessionId !== mediaSessionId) {
+            if (getGlobalMediaSessionId() !== mediaSessionId) {
                 return;
             }
 

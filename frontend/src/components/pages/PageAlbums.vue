@@ -125,7 +125,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/control/albums-page-search-store";
+import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/control/albums-search";
 
 // Ref to the container element
 const container = useTemplateRef("container");

@@ -5,7 +5,6 @@
 <script setup lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AppStatus } from "./control/app-status";
-import { MediaController } from "./control/media";
 import { type UploadEntryMin } from "./control/upload";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
@@ -20,6 +19,7 @@ import { useI18n } from "./composables/use-i18n";
 import { onApplicationEvent } from "./composables/on-app-event";
 import { showSnackBar } from "@/control/snack-bar";
 import { getCurrentAlbumData } from "./control/albums";
+import { getCurrentMediaData } from "./control/media";
 
 // Translation function
 const { $t } = useI18n();
@@ -36,22 +36,24 @@ const getAppTitle = () => {
  * Updates the document title
  */
 const updateTitle = () => {
-    if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+    const currentMediaData = getCurrentMediaData();
+
+    if (AppStatus.CurrentMedia >= 0 && currentMediaData) {
         if (AppStatus.CurrentAlbum >= 0) {
             // Media with album list
             const currentAlbumData = getCurrentAlbumData();
 
             if (currentAlbumData) {
-                document.title = MediaController.MediaData.title + " | " + currentAlbumData.name + " | " + getAppTitle();
+                document.title = currentMediaData.title + " | " + currentAlbumData.name + " | " + getAppTitle();
             } else {
-                document.title = MediaController.MediaData.title + " | " + getAppTitle();
+                document.title = currentMediaData.title + " | " + getAppTitle();
             }
         } else if (AppStatus.ListSplitMode) {
             // Media with list
-            document.title = MediaController.MediaData.title + " | " + getAppTitle();
+            document.title = currentMediaData.title + " | " + getAppTitle();
         } else {
             // Media alone
-            document.title = MediaController.MediaData.title + " | " + getAppTitle();
+            document.title = currentMediaData.title + " | " + getAppTitle();
         }
     } else if (AppStatus.CurrentAlbum >= 0) {
         // Empty album
@@ -95,14 +97,15 @@ const updateMediaMetadata = () => {
         return;
     }
 
+    const currentMediaData = getCurrentMediaData();
     const currentAlbumData = getCurrentAlbumData();
 
-    if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+    if (AppStatus.CurrentMedia >= 0 && currentMediaData) {
         window.navigator.mediaSession.metadata = new MediaMetadata({
-            title: MediaController.MediaData.title,
+            title: currentMediaData.title,
             album: AppStatus.CurrentAlbum >= 0 && currentAlbumData ? currentAlbumData.name : undefined,
-            artwork: MediaController.MediaData.thumbnail
-                ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
+            artwork: currentMediaData.thumbnail
+                ? [{ src: getAssetURL(currentMediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
                 : undefined,
         });
     } else {

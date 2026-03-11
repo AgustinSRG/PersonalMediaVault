@@ -63,7 +63,6 @@ import { onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
 import { AuthController, SESSION_TOKEN_HEADER_NAME } from "@/control/auth";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
-import { MediaController } from "@/control/media";
 import ThumbImage from "../utils/ThumbImage.vue";
 import ThumbnailCropModal from "./ThumbnailCropModal.vue";
 import { useI18n } from "@/composables/use-i18n";
@@ -73,6 +72,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBarRight } from "@/control/snack-bar";
 import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/albums";
+import { getCurrentMediaData } from "@/control/media";
 
 // Translation function
 const { $t } = useI18n();
@@ -98,10 +98,10 @@ onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
 });
 
 // Current media thumbnail
-const currentMediaThumbnail = ref(MediaController.MediaData?.thumbnail || "");
+const currentMediaThumbnail = ref(getCurrentMediaData()?.thumbnail || "");
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    currentMediaThumbnail.value = MediaController.MediaData?.thumbnail || "";
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    currentMediaThumbnail.value = mediaData?.thumbnail || "";
 });
 
 // Temporal image

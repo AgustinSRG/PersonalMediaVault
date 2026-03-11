@@ -3,7 +3,6 @@
 "use strict";
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { MediaController } from "./media";
 import { TagsController } from "./tags";
 import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
@@ -23,6 +22,8 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { getCurrentAlbumMediaPositionContext, indicateAlbumMetadataChanged, loadAlbumNextPreFetch } from "./albums";
+import { getCurrentMediaId, loadCurrentMedia } from "./media";
+import { addGlobalBusyCheck } from "./busy-state";
 
 /**
  * Max number of uploads in the completed lists (ready, error)
@@ -469,8 +470,8 @@ export class UploadController {
 
         UploadController.CheckQueue();
 
-        if (MediaController.MediaId === m.mid) {
-            MediaController.Load();
+        if (getCurrentMediaId() === m.mid) {
+            loadCurrentMedia();
         }
 
         const albumMediaPositionContext = getCurrentAlbumMediaPositionContext();
@@ -856,3 +857,6 @@ function minimizeEntry(e: UploadEntry): UploadEntryMin {
         progress: e.progress,
     };
 }
+
+// Global busy check for pending uploads
+addGlobalBusyCheck(() => UploadController.GetPendingEntries().length > 0);

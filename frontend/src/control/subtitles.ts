@@ -7,7 +7,6 @@ import type { SubtitlesEntry } from "@/utils/srt";
 import { findSubtitlesEntry, parseSRT } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
-import { MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
 import { getAssetURL } from "@/utils/api";
 import {
@@ -21,6 +20,7 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { getCurrentMediaData } from "./media";
 
 // Request ID for loading
 const REQUEST_ID_SUBTITLES_LOAD = getUniqueStringId();
@@ -66,7 +66,9 @@ const LOAD_RETRY_DELAY = 1500;
  * Loads current subtitles file
  */
 function loadSubtitles() {
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
         clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
         SubtitlesStatus.selectedSubtitles = "";
@@ -76,7 +78,7 @@ function loadSubtitles() {
         return;
     }
 
-    const subtitles = MediaController.MediaData.subtitles || [];
+    const subtitles = mediaData.subtitles || [];
     const prefSubtitles = getSelectedSubtitles();
 
     SubtitlesStatus.selectedSubtitles = "";

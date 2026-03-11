@@ -148,13 +148,13 @@
 </template>
 
 <script setup lang="ts">
-import { MediaController } from "@/control/media";
 import type { PropType } from "vue";
 import { onMounted, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
+import { loadCurrentMedia } from "@/control/media";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -423,7 +423,7 @@ const openStats = () => {
  * Refreshes the media
  */
 const refreshMedia = () => {
-    MediaController.Load();
+    loadCurrentMedia();
     hide();
 };
 

@@ -41,7 +41,6 @@
 <script setup lang="ts">
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
@@ -55,6 +54,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -82,7 +82,7 @@ const emit = defineEmits<{
 }>();
 
 // Original time slices
-const originalTimeSlices = ref(renderTimeSlices(MediaController.MediaData?.time_slices || []));
+const originalTimeSlices = ref(renderTimeSlices(getCurrentMediaData()?.time_slices || []));
 
 // New time slices
 const timeSlices = ref(originalTimeSlices.value);
@@ -90,12 +90,12 @@ const timeSlices = ref(originalTimeSlices.value);
 // Dirty? (unsaved changes)
 const dirty = ref(false);
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    originalTimeSlices.value = renderTimeSlices(MediaController.MediaData.time_slices);
+    originalTimeSlices.value = renderTimeSlices(mediaData.time_slices);
     timeSlices.value = originalTimeSlices.value;
     dirty.value = false;
 });
@@ -158,9 +158,9 @@ const saveChanges = () => {
             originalTimeSlices.value = renderTimeSlices(slices);
             timeSlices.value = originalTimeSlices.value;
 
-            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
-                MediaController.MediaData.time_slices = clone(slices);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.time_slices = clone(slices);
+            });
 
             emit("changed");
 

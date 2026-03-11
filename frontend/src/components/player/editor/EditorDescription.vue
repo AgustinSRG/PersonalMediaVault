@@ -51,7 +51,6 @@ import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRe
 import { apiMediaSetDescription } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
-import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
@@ -60,6 +59,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -116,11 +116,13 @@ const load = () => {
 
     description.value = "";
 
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
-    const descFilePath = MediaController.MediaData.description_url;
+    const descFilePath = mediaData.description_url;
 
     if (!descFilePath) {
         description.value = "";
@@ -217,13 +219,15 @@ const saveChanges = () => {
         return;
     }
 
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
     busy.value = true;
 
-    const mid = MediaController.MediaData.id;
+    const mid = mediaData.id;
 
     makeNamedApiRequest(saveRequestId, apiMediaSetDescription(mid, description.value))
         .onSuccess((res) => {
@@ -233,9 +237,9 @@ const saveChanges = () => {
 
             showSnackBar($t("Successfully saved description"));
 
-            if (MediaController.MediaData && MediaController.MediaData.id === mid) {
-                MediaController.MediaData.description_url = res.url || "";
-            }
+            modifyCurrentMediaData(mid, (metadata) => {
+                metadata.description_url = res.url || "";
+            });
 
             emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "editor");
 

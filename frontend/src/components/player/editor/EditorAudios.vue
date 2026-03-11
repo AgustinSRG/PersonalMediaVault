@@ -165,7 +165,6 @@
 import type { MediaAudioTrack } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
@@ -180,6 +179,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -212,7 +212,7 @@ const emit = defineEmits<{
 
 // List of audio tracks
 const audios = ref<MediaAudioTrack[]>(
-    (MediaController.MediaData?.audios || []).map((a) => {
+    (getCurrentMediaData()?.audios || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -221,12 +221,12 @@ const audios = ref<MediaAudioTrack[]>(
     }),
 );
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    audios.value = (MediaController.MediaData.audios || []).map((a) => {
+    audios.value = (mediaData.audios || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -352,9 +352,9 @@ const addAudio = () => {
             busy.value = false;
             audios.value.push(res);
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.audios = clone(audios.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.audios = clone(audios.value);
+            });
 
             emit("changed");
         })
@@ -501,9 +501,9 @@ const saveRename = () => {
                 }
             }
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.audios = clone(audios.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.audios = clone(audios.value);
+            });
 
             emit("changed");
         })
@@ -608,9 +608,9 @@ const removeAudioConfirmInternal = (confirmation: ProvidedAuthConfirmation) => {
                 }
             }
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.audios = clone(audios.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.audios = clone(audios.value);
+            });
 
             emit("changed");
         })

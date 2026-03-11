@@ -68,11 +68,11 @@ import { useTagNames } from "@/composables/use-tags-names";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { setLastUsedTag } from "@/control/app-preferences";
-import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { showSnackBar } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -114,11 +114,15 @@ const { tagFilter, onTagFilterChanged, tagSuggestions, updateTagSuggestions } = 
  * Loads the tag list for the current media
  */
 const load = () => {
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
-    mediaTags.value = (MediaController.MediaData.tags || []).slice();
+    mediaTags.value = (mediaData.tags || []).slice();
+
     updateTagSuggestions();
+
     focusInput();
 };
 
@@ -162,13 +166,15 @@ const addTag = (tag: string, resetTagInput: boolean) => {
         return;
     }
 
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
     busy.value = true;
 
-    const mediaId = MediaController.MediaData.id;
+    const mediaId = mediaData.id;
 
     makeNamedApiRequest(requestId, apiTagsTagMedia(mediaId, tag))
         .onSuccess((res) => {
@@ -190,12 +196,12 @@ const addTag = (tag: string, resetTagInput: boolean) => {
 
             TagsController.AddTag(res.id, res.name);
 
-            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+            modifyCurrentMediaData(mediaId, (metadata) => {
                 // Update cached media data
-                if (!MediaController.MediaData.tags.includes(res.id)) {
-                    MediaController.MediaData.tags.push(res.id);
+                if (!metadata.tags.includes(res.id)) {
+                    metadata.tags.push(res.id);
                 }
-            }
+            });
 
             emit("tags-update");
 
@@ -234,13 +240,15 @@ const removeTag = (tag: number) => {
         return;
     }
 
-    if (!MediaController.MediaData) {
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
         return;
     }
 
     busy.value = true;
 
-    const mediaId = MediaController.MediaData.id;
+    const mediaId = mediaData.id;
     const tagName = getTagName(tag);
 
     makeNamedApiRequest(requestId, apiTagsUntagMedia(mediaId, tag))
@@ -261,14 +269,14 @@ const removeTag = (tag: number) => {
                 updateTagSuggestions();
             }
 
-            if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+            modifyCurrentMediaData(mediaId, (metadata) => {
                 // Updated cached media data
-                if (MediaController.MediaData.tags.includes(tag)) {
-                    MediaController.MediaData.tags = MediaController.MediaData.tags.filter((t) => {
+                if (metadata.tags.includes(tag)) {
+                    metadata.tags = metadata.tags.filter((t) => {
                         return t !== tag;
                     });
                 }
-            }
+            });
 
             emit("tags-update");
 

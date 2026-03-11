@@ -160,7 +160,6 @@
 import type { MediaSubtitle } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
@@ -176,6 +175,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBarRight } from "@/control/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -208,7 +208,7 @@ const emit = defineEmits<{
 
 // List of subtitles
 const subtitles = ref<MediaSubtitle[]>(
-    (MediaController.MediaData?.subtitles || []).map((a) => {
+    (getCurrentMediaData()?.subtitles || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -217,12 +217,12 @@ const subtitles = ref<MediaSubtitle[]>(
     }),
 );
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    subtitles.value = (MediaController.MediaData.subtitles || []).map((a) => {
+    subtitles.value = (mediaData.subtitles || []).map((a) => {
         return {
             id: a.id,
             name: a.name,
@@ -348,9 +348,9 @@ const addSubtitles = () => {
             busy.value = false;
             subtitles.value.push(res);
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.subtitles = clone(subtitles.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.subtitles = clone(subtitles.value);
+            });
 
             emit("changed");
         })
@@ -500,9 +500,9 @@ const saveRename = () => {
                 }
             }
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.subtitles = clone(subtitles.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.subtitles = clone(subtitles.value);
+            });
 
             emit("changed");
         })
@@ -608,9 +608,9 @@ const removeSubtitlesConfirmInternal = (confirmation: ProvidedAuthConfirmation) 
                 }
             }
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.subtitles = clone(subtitles.value);
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.subtitles = clone(subtitles.value);
+            });
 
             emit("changed");
         })

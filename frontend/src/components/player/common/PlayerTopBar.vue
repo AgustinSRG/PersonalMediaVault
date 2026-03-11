@@ -46,7 +46,6 @@
 </template>
 
 <script setup lang="ts">
-import { MediaController } from "@/control/media";
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
 import { AuthController } from "@/control/auth";
@@ -56,6 +55,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { stopPropagationEvent } from "@/utils/events";
 import { useTimeout } from "@/composables/use-timeout";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { loadCurrentMedia } from "@/control/media";
 
 const PlayerAlbumFullScreen = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerAlbumFullScreen.vue"),
@@ -150,7 +150,7 @@ watch(expanded, () => {
     if (dirty.value) {
         dirty.value = false;
         mediaLoadTimeout.set(() => {
-            MediaController.Load();
+            loadCurrentMedia();
         }, MEDIA_LOAD_DELAY);
     }
 });

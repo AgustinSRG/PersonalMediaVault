@@ -89,7 +89,6 @@
 <script setup lang="ts">
 import type { MediaData, TaskStatus } from "@/api/models";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -98,6 +97,7 @@ import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTasksGetTask } from "@/api/api-tasks";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
+import { loadCurrentMedia } from "@/control/media";
 
 // Known stages in order
 const KNOWN_STAGES_IN_ORDER = ["PREPARE", "COPY", "PROBE", "ENCODE", "ENCRYPT", "UPDATE", "FINISH"];
@@ -190,7 +190,7 @@ const refreshPending = ref(false);
  * Refreshes the media
  */
 const refreshMedia = () => {
-    MediaController.Load();
+    loadCurrentMedia();
 };
 
 watch(

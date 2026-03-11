@@ -158,7 +158,6 @@
 <script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef } from "vue";
@@ -178,6 +177,7 @@ import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { useTimeout } from "@/composables/use-timeout";
 import { showSnackBarRight } from "@/control/snack-bar";
 import { refreshCurrentAlbum } from "@/control/albums";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -205,49 +205,49 @@ const emit = defineEmits<{
 }>();
 
 // Media type
-const type = ref<MediaType>(MediaController.MediaData?.type || 0);
+const type = ref<MediaType>(getCurrentMediaData()?.type || 0);
 
 // The media has duration?
 const mediaHasDuration = computed(() => [MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO].includes(type.value));
 
 // Original media title
-const originalTitle = ref(MediaController.MediaData?.title || "");
+const originalTitle = ref(getCurrentMediaData()?.title || "");
 
 // Media title
 const title = ref(originalTitle.value);
 
 // Original value or "Force start beginning" option
-const originalStartBeginning = ref(MediaController.MediaData?.force_start_beginning || false);
+const originalStartBeginning = ref(getCurrentMediaData()?.force_start_beginning || false);
 
 // Start media from beginning
 const startBeginning = ref(originalStartBeginning.value);
 
 // Orinal value of "Is animation" option
-const originalIsAnimation = ref(MediaController.MediaData?.is_anim || false);
+const originalIsAnimation = ref(getCurrentMediaData()?.is_anim || false);
 
 // Is animation? (only for videos)
 const isAnimation = ref(originalIsAnimation.value);
 
 // Media thumbnail
-const thumbnail = ref(MediaController.MediaData?.thumbnail || "");
+const thumbnail = ref(getCurrentMediaData()?.thumbnail || "");
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    if (!MediaController.MediaData) {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (mediaData) => {
+    if (!mediaData) {
         return;
     }
 
-    type.value = MediaController.MediaData.type;
+    type.value = mediaData.type;
 
-    originalTitle.value = MediaController.MediaData.title;
+    originalTitle.value = mediaData.title;
     title.value = originalTitle.value;
 
-    originalStartBeginning.value = MediaController.MediaData.force_start_beginning;
+    originalStartBeginning.value = mediaData.force_start_beginning;
     startBeginning.value = originalStartBeginning.value;
 
-    originalIsAnimation.value = MediaController.MediaData.is_anim;
+    originalIsAnimation.value = mediaData.is_anim;
     isAnimation.value = originalIsAnimation.value;
 
-    thumbnail.value = MediaController.MediaData.thumbnail;
+    thumbnail.value = mediaData.thumbnail;
 });
 
 /**
@@ -306,9 +306,9 @@ const changeTitle = (e?: Event) => {
             savedTitle.value = true;
             originalTitle.value = title.value;
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.title = title.value;
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.title = title.value;
+            });
 
             emit("changed");
 
@@ -376,10 +376,10 @@ const changeExtraParams = () => {
             originalStartBeginning.value = startBeginning.value;
             originalIsAnimation.value = isAnimation.value;
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.force_start_beginning = startBeginning.value;
-                MediaController.MediaData.is_anim = isAnimation.value;
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.force_start_beginning = startBeginning.value;
+                metadata.is_anim = isAnimation.value;
+            });
 
             emit("changed");
         })
@@ -571,9 +571,9 @@ const changeThumbnail = (file: File) => {
             busyThumbnail.value = false;
             thumbnail.value = res.url;
 
-            if (MediaController.MediaData) {
-                MediaController.MediaData.thumbnail = res.url;
-            }
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.thumbnail = res.url;
+            });
 
             emit("changed");
 

@@ -110,7 +110,6 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
 } from "@/control/app-events";
-import { MediaController } from "@/control/media";
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 import { AppStatus } from "@/control/app-status";
 import { closeFullscreen } from "@/utils/full-screen";
@@ -123,6 +122,7 @@ import { onDocumentEvent } from "@/composables/on-document-event";
 import type { PlayerLoadStatus } from "@/utils/player";
 import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
 import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/control/albums";
+import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/control/media";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -208,24 +208,24 @@ const loopForcedValue = ref(false);
 const tick = ref(0);
 
 // Media loading status
-const loading = ref(MediaController.Loading);
+const loading = ref(isCurrentMediaLoading());
 
 onApplicationEvent(EVENT_NAME_MEDIA_LOADING, (l) => {
     loading.value = l;
 });
 
 // Current media ID
-const mid = ref(MediaController.MediaId);
+const mid = ref(getCurrentMediaId());
 
 // Current media data
-const mediaData = ref(MediaController.MediaData);
+const mediaData = ref(getCurrentMediaData());
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (newMediaData) => {
     displayDelete.value = false;
 
-    mid.value = MediaController.MediaId;
-    if (MediaController.MediaData !== mediaData.value) {
-        mediaData.value = MediaController.MediaData;
+    mid.value = getCurrentMediaId();
+    if (newMediaData !== mediaData.value) {
+        mediaData.value = newMediaData;
 
         tick.value++;
 

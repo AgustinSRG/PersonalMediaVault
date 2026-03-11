@@ -3,7 +3,7 @@
 "use strict";
 
 import type { MediaData } from "@/api/models";
-import { MediaController } from "@/control/media";
+import { getCurrentMediaData } from "@/control/media";
 import { renderTimeSeconds } from "@/utils/time";
 import type { NormalizedTimeSlice } from "@/utils/time-slices";
 import { findTimeSlice, normalizeTimeSlices } from "@/utils/time-slices";
@@ -169,7 +169,7 @@ export function usePlayerTimeSlices(
      * Called when time slices need to be refreshed
      */
     const refreshTimeSlices = () => {
-        const metadata = MediaController.MediaData;
+        const metadata = getCurrentMediaData();
 
         if (!metadata) {
             return;
