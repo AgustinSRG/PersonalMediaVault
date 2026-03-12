@@ -54,10 +54,10 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
     EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
-import { checkMediaListForNewTags } from "@/control/tags";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
+import { checkMediaListForNewTags } from "@/global-state/tags";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -69,8 +69,8 @@ import { useRequestId } from "@/composables/use-request-id";
 import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onApplicationEvent } from "@/composables/on-app-event";
-import { onPageLoad, onPageUnload } from "@/control/pages";
-import { getCurrentMediaId, loadCurrentMedia } from "@/control/media";
+import { onPageLoad, onPageUnload } from "@/global-state/pages";
+import { getCurrentMediaId, loadCurrentMedia } from "@/global-state/media";
 
 // Ref to the container element
 const container = useTemplateRef("container");

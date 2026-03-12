@@ -248,8 +248,8 @@
 <script setup lang="ts">
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroupElements, apiHomeGroupDeleteElement, apiHomeGroupMoveElement, getHomePageElementReference } from "@/api/api-home";
-import { AppStatus } from "@/control/app-status";
-import { checkMediaListForNewTags } from "@/control/tags";
+import { AppStatus } from "@/global-state/app-status";
+import { checkMediaListForNewTags } from "@/global-state/tags";
 import { getFrontendUrl } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
 import {
@@ -265,9 +265,9 @@ import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asan
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
 import HomePageItemThumbnail from "./HomePageItemThumbnail.vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import { apiSearch } from "@/api/api-search";
-import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { useRequestId } from "@/composables/use-request-id";
 import { useInterval } from "@/composables/use-interval";

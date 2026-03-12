@@ -237,13 +237,13 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { onMounted, ref, useTemplateRef, watch } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 import type { ImageResolutionStandardToggleable, VideoResolutionStandardToggleable } from "@/utils/resolutions";
@@ -256,7 +256,7 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 // Translation function
 const { $t } = useI18n();

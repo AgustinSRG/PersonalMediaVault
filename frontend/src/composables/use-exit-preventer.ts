@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { removeExitPrevent, setupExitPrevent } from "@/control/exit-prevent";
+import { removeExitPrevent, setupExitPrevent } from "@/global-state/exit-prevent";
 import type { Ref } from "vue";
 import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 

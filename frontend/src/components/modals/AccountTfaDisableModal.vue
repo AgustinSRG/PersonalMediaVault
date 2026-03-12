@@ -45,7 +45,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useInterval } from "@/composables/use-interval";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 // Translation function
 const { $t } = useI18n();

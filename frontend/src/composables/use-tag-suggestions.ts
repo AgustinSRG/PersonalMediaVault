@@ -2,15 +2,15 @@
 
 "use strict";
 
-import { getTagsMap, refreshTags, type MatchingTag } from "@/control/tags";
+import { getTagsMap, refreshTags, type MatchingTag } from "@/global-state/tags";
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { useTimeout } from "./use-timeout";
 import { onApplicationEvent } from "./on-app-event";
-import { EVENT_NAME_TAGS_UPDATE } from "@/control/app-events";
+import { EVENT_NAME_TAGS_UPDATE } from "@/global-state/app-events";
 import { parseTagName } from "@/utils/tags";
-import type { LastUsedTagMode } from "@/control/app-preferences";
-import { getLastUsedTags } from "@/control/app-preferences";
+import type { LastUsedTagMode } from "@/global-state/app-preferences";
+import { getLastUsedTags } from "@/global-state/app-preferences";
 
 /**
  * Composable for tag suggestions

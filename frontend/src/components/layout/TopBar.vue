@@ -33,9 +33,9 @@
 </template>
 
 <script setup lang="ts">
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import { computed, ref, useTemplateRef } from "vue";
-import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import VaultSearchInput from "../utils/VaultSearchInput.vue";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";

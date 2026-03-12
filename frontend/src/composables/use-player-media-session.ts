@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { clearGlobalMediaSessionId, getGlobalMediaSessionId, setGlobalMediaSessionId } from "@/control/media-session-id";
+import { clearGlobalMediaSessionId, getGlobalMediaSessionId, setGlobalMediaSessionId } from "@/global-state/media-session-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import { getUniqueStringId } from "@/utils/unique-id";
 import type { Ref } from "vue";

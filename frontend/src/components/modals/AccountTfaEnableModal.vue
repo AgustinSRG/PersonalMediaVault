@@ -89,8 +89,8 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
+import { AuthController } from "@/global-state/auth";
 import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
@@ -105,7 +105,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 const AccountTfaSettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaSettingsModal.vue"),

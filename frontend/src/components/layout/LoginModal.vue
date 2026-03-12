@@ -95,7 +95,7 @@
 import type { SessionDuration } from "@/api/api-auth";
 import { apiAuthLogin } from "@/api/api-auth";
 import { apiInvitesLogin } from "@/api/api-invites";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";

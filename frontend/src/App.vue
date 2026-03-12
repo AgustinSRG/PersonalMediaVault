@@ -4,22 +4,22 @@
 
 <script setup lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
-import { AppStatus } from "./control/app-status";
-import { type UploadEntryMin } from "./control/upload";
+import { AppStatus } from "./global-state/app-status";
+import { type UploadEntryMin } from "./global-state/upload";
 import { getAssetURL } from "@/utils/api";
-import { AuthController } from "./control/auth";
+import { AuthController } from "./global-state/auth";
 import {
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
     EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
-} from "./control/app-events";
+} from "./global-state/app-events";
 import { useI18n } from "./composables/use-i18n";
 import { onApplicationEvent } from "./composables/on-app-event";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentAlbumData } from "./control/album";
-import { getCurrentMediaData } from "./control/media";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentAlbumData } from "./global-state/album";
+import { getCurrentMediaData } from "./global-state/media";
 
 // Translation function
 const { $t } = useI18n();

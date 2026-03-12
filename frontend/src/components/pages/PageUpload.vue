@@ -147,9 +147,9 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/control/app-status";
-import type { UploadEntryMin } from "@/control/upload";
-import { UploadController } from "@/control/upload";
+import { AppStatus } from "@/global-state/app-status";
+import type { UploadEntryMin } from "@/global-state/upload";
+import { UploadController } from "@/global-state/upload";
 import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -164,7 +164,7 @@ import {
     EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
     EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
     EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
-} from "@/control/app-events";
+} from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";

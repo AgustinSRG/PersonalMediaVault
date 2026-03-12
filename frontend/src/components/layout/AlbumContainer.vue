@@ -170,10 +170,10 @@ import {
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
-} from "@/control/app-events";
-import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+} from "@/global-state/app-events";
+import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/global-state/app-preferences";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 import { getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -193,8 +193,8 @@ import { stopPropagationEvent } from "@/utils/events";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import type { AlbumMediaPositionContext } from "@/control/album";
+import { showSnackBar } from "@/global-state/snack-bar";
+import type { AlbumMediaPositionContext } from "@/global-state/album";
 import {
     albumToggleLoop,
     albumToggleRandom,
@@ -204,7 +204,7 @@ import {
     indicateAlbumMetadataChanged,
     isCurrentAlbumLoading,
     updateAlbumMediaPositionStatus,
-} from "@/control/album";
+} from "@/global-state/album";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),

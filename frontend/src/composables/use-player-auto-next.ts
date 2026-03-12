@@ -2,14 +2,14 @@
 
 "use strict";
 
-import { getAutoNextTime, setAutoNextTime } from "@/control/player-preferences";
+import { getAutoNextTime, setAutoNextTime } from "@/global-state/player-preferences";
 import type { Ref } from "vue";
 import { watch } from "vue";
 import { useTimeout } from "./use-timeout";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "./use-i18n";
 import { renderAutoNext } from "@/utils/player-config";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 /**
  * Required props for player auto-next

@@ -89,7 +89,7 @@ import { computed, defineAsyncComponent, ref, useTemplateRef, watch } from "vue"
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageAlbums from "@/components/pages/PageAlbums.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/global-state/app-events";
 import type { HomePageElement } from "@/api/api-home";
 import { apiHomeGroupAddElement, HOME_PAGE_ELEMENT_TYPE_ALBUM, HOME_PAGE_ELEMENT_TYPE_MEDIA } from "@/api/api-home";
 import type { MediaListItem } from "@/api/models";
@@ -97,7 +97,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

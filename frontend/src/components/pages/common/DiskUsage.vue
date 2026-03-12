@@ -18,8 +18,13 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useTimeout } from "@/composables/use-timeout";
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED, EVENT_NAME_UPLOAD_LIST_ENTRY_READY } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_UNAUTHORIZED,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
+} from "@/global-state/app-events";
+import { AuthController } from "@/global-state/auth";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
 import { makeNamedApiRequest } from "@asanrom/request-browser";

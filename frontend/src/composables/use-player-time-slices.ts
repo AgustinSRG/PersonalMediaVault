@@ -3,7 +3,7 @@
 "use strict";
 
 import type { MediaData } from "@/api/models";
-import { getCurrentMediaData } from "@/control/media";
+import { getCurrentMediaData } from "@/global-state/media";
 import { renderTimeSeconds } from "@/utils/time";
 import type { NormalizedTimeSlice } from "@/utils/time-slices";
 import { findTimeSlice, normalizeTimeSlices } from "@/utils/time-slices";

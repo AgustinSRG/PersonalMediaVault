@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "@/composables/use-i18n";
-import type { AppStatusPage } from "@/control/app-status";
+import type { AppStatusPage } from "@/global-state/app-status";
 
 import { getFrontendUrl } from "@/utils/api";
 import { preventDefaultEvent } from "@/utils/events";

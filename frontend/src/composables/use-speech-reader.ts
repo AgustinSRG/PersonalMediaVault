@@ -2,7 +2,7 @@
 
 "use strict";
 
-import type { DescriptionWidgetReadSettings } from "@/control/player-preferences";
+import type { DescriptionWidgetReadSettings } from "@/global-state/player-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { onBeforeUnmount, ref, shallowRef } from "vue";
 import { useI18n } from "./use-i18n";

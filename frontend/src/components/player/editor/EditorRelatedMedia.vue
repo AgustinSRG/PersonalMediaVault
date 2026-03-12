@@ -78,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -93,8 +93,8 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
-import { showSnackBarRight } from "@/control/snack-bar";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBarRight } from "@/global-state/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 // Limit of related media elements
 const MAX_RELATED_MEDIA_COUNT = 16;

@@ -2,11 +2,11 @@
 
 "use strict";
 
-import { EVENT_NAME_SUBTITLES_UPDATE } from "@/control/app-events";
+import { EVENT_NAME_SUBTITLES_UPDATE } from "@/global-state/app-events";
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { onApplicationEvent } from "./on-app-event";
-import { getSubtitlesLine } from "@/control/subtitles";
+import { getSubtitlesLine } from "@/global-state/subtitles";
 
 /**
  * Player subtitles composable

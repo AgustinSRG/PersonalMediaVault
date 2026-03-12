@@ -44,8 +44,8 @@
 <script setup lang="ts">
 import { useI18n } from "@/composables/use-i18n";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
-import { setLastUsedTag } from "@/control/app-preferences";
-import type { MatchingTag } from "@/control/tags";
+import { setLastUsedTag } from "@/global-state/app-preferences";
+import type { MatchingTag } from "@/global-state/tags";
 import { parseTagName } from "@/utils/tags";
 import { useTemplateRef } from "vue";
 

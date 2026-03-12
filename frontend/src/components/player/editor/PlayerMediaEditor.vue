@@ -40,9 +40,9 @@ import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/mode
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
-import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { tryPreventableExit } from "@/control/exit-prevent";
-import { getCurrentMediaData } from "@/control/media";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { tryPreventableExit } from "@/global-state/exit-prevent";
+import { getCurrentMediaData } from "@/global-state/media";
 import { computed, defineAsyncComponent, ref } from "vue";
 
 const EditorGeneral = defineAsyncComponent({

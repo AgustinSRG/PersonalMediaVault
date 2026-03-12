@@ -62,8 +62,8 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { apiAccountChangeUsername } from "@/api/api-account";
-import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
+import { AuthController } from "@/global-state/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -75,7 +75,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 // Translation function
 const { $t } = useI18n();

@@ -2,11 +2,11 @@
 
 "use strict";
 
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { onApplicationEvent } from "./on-app-event";
-import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 
 /**
  * User permissions composable

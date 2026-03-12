@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED } from "@/global-state/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef } from "vue";
 import { apiAlbumsCreateAlbum } from "@/api/api-albums";
@@ -43,8 +43,8 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { albumsFindDuplicatedName, refreshAlbumsList } from "@/control/albums";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { albumsFindDuplicatedName, refreshAlbumsList } from "@/global-state/albums";
 
 // Translation function
 const { $t } = useI18n();

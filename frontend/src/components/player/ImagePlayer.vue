@@ -204,7 +204,7 @@ import {
     setImageFit,
     setImageScale,
     setUserSelectedResolutionImage,
-} from "@/control/player-preferences";
+} from "@/global-state/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import ScaleControl from "./common/ScaleControl.vue";
@@ -212,12 +212,12 @@ import PlayerTopBar from "./common/PlayerTopBar.vue";
 import ImageNotes from "./common/ImageNotes.vue";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { AuthController } from "@/control/auth";
-import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/global-state/auth";
+import { AppStatus } from "@/global-state/app-status";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
-import { EVENT_NAME_NEXT_PRE_FETCH } from "@/control/app-events";
+import { EVENT_NAME_NEXT_PRE_FETCH } from "@/global-state/app-events";
 import PlayerControls from "./common/PlayerControls.vue";
 import PlayerLoader from "./common/PlayerLoader.vue";
 import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
@@ -231,7 +231,7 @@ import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
 import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
-import { getAlbumNextPrefetchData } from "@/control/album";
+import { getAlbumNextPrefetchData } from "@/global-state/album";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),

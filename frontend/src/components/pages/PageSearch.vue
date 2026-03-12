@@ -203,10 +203,10 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
-import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/control/tags";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
+import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -219,13 +219,13 @@ import { isTouchDevice } from "@/utils/touch";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import MediaItem from "../utils/MediaItem.vue";
 import TagIdList from "../utils/TagIdList.vue";
-import type { SearchMode } from "@/control/app-preferences";
+import type { SearchMode } from "@/global-state/app-preferences";
 import {
     getPreferredSearchMode,
     getSemanticSearchOnlyImages,
     setPreferredSearchMode,
     setSemanticSearchOnlyImages,
-} from "@/control/app-preferences";
+} from "@/global-state/app-preferences";
 import { apiSemanticSearch, apiSemanticSearchEncodeImage, apiSemanticSearchEncodeText } from "@/api/api-semantic-search";
 import { useRequestId } from "@/composables/use-request-id";
 import { useI18n } from "@/composables/use-i18n";
@@ -233,8 +233,8 @@ import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { onPageLoad, onPageUnload } from "@/control/pages";
-import { getCurrentAlbumData } from "@/control/album";
+import { onPageLoad, onPageUnload } from "@/global-state/pages";
+import { getCurrentAlbumData } from "@/global-state/album";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),

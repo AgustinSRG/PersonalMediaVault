@@ -108,10 +108,10 @@ import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
-import { AuthController } from "../../control/auth";
-import type { ColorThemeName } from "@/control/app-preferences";
-import { getTheme } from "@/control/app-preferences";
-import { AppStatus } from "@/control/app-status";
+import { AuthController } from "../../global-state/auth";
+import type { ColorThemeName } from "@/global-state/app-preferences";
+import { getTheme } from "@/global-state/app-preferences";
+import { AppStatus } from "@/global-state/app-status";
 import { isTouchDevice } from "@/utils/touch";
 import {
     EVENT_NAME_THEME_CHANGED,
@@ -120,7 +120,7 @@ import {
     EVENT_NAME_AUTH_LOADING,
     EVENT_NAME_AUTH_ERROR,
     EVENT_NAME_APP_NEW_VERSION,
-} from "@/control/app-events";
+} from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 

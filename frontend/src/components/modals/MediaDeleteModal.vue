@@ -46,8 +46,8 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
@@ -60,9 +60,9 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { refreshCurrentAlbum } from "@/control/album";
-import { getCurrentMediaData } from "@/control/media";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { refreshCurrentAlbum } from "@/global-state/album";
+import { getCurrentMediaData } from "@/global-state/media";
 
 // Translation function
 const { $t } = useI18n();

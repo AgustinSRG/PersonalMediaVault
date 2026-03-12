@@ -2,12 +2,12 @@
 
 "use strict";
 
-import { getPagePreferences } from "@/control/app-preferences";
-import type { AppStatusPage } from "@/control/app-status";
+import { getPagePreferences } from "@/global-state/app-preferences";
+import type { AppStatusPage } from "@/global-state/app-status";
 import type { Ref } from "vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { onApplicationEvent } from "./on-app-event";
-import { EVENT_NAME_PAGE_PREFERENCES_UPDATED } from "@/control/app-events";
+import { EVENT_NAME_PAGE_PREFERENCES_UPDATED } from "@/global-state/app-events";
 
 /**
  * Page preferences composable

@@ -109,9 +109,9 @@ import {
     EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
-} from "@/control/app-events";
+} from "@/global-state/app-events";
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus } from "@/global-state/app-status";
 import { closeFullscreen } from "@/utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import LoadingOverlay from "./LoadingOverlay.vue";
@@ -120,9 +120,9 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import type { PlayerLoadStatus } from "@/utils/player";
-import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
-import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/control/album";
-import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/control/media";
+import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/global-state/pages";
+import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/global-state/album";
+import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/global-state/media";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),

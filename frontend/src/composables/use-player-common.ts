@@ -9,8 +9,8 @@ import { isTouchDevice } from "@/utils/touch";
 import type { Ref } from "vue";
 import { ref, watch } from "vue";
 import { useGlobalKeyboardHandler } from "./use-global-keyboard-handler";
-import { AuthController } from "@/control/auth";
-import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/global-state/auth";
+import { AppStatus } from "@/global-state/app-status";
 
 /**
  * Common player props

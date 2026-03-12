@@ -69,8 +69,8 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";

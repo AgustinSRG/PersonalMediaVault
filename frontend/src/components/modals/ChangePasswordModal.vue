@@ -70,10 +70,10 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { apiAccountChangePassword } from "@/api/api-account";
-import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
@@ -84,7 +84,7 @@ import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 // Translation function
 const { $t } = useI18n();

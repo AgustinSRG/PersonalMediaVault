@@ -50,7 +50,7 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import type { PropType } from "vue";
 import { computed, ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
-import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/global-state/app-events";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";

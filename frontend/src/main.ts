@@ -4,8 +4,8 @@
 
 // Initialize stuff
 
-import { AppStatus } from "./control/app-status";
-import { AuthController } from "./control/auth";
+import { AppStatus } from "./global-state/app-status";
+import { AuthController } from "./global-state/auth";
 
 AuthController.Initialize();
 AppStatus.Initialize();

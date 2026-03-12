@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
 import { clone } from "@/utils/objects";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -138,8 +138,8 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentMediaData, loadCurrentMedia, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentMediaData, loadCurrentMedia, modifyCurrentMediaData } from "@/global-state/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/control/app-status";
+import { AppStatus } from "@/global-state/app-status";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, ref, shallowRef, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -99,8 +99,8 @@ import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
-import { showSnackBarRight } from "@/control/snack-bar";
-import { loadCurrentMedia } from "@/control/media";
+import { showSnackBarRight } from "@/global-state/snack-bar";
+import { loadCurrentMedia } from "@/global-state/media";
 
 const ReEncodeConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ReEncodeConfirmationModal.vue"),

@@ -184,13 +184,13 @@
 
 <script setup lang="ts">
 import DropdownContainer from "./common/DropdownContainer.vue";
-import { getPagePreferences, resetPagePreferences, setPagePreferences } from "@/control/app-preferences";
+import { getPagePreferences, resetPagePreferences, setPagePreferences } from "@/global-state/app-preferences";
 import type { PropType } from "vue";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
-import type { AppStatusPage } from "@/control/app-status";
+import type { AppStatusPage } from "@/global-state/app-status";
 
 // Translation function
 const { $t } = useI18n();

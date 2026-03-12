@@ -48,14 +48,14 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import type { MediaData } from "@/api/models";
-import { tryPreventableExit } from "@/control/exit-prevent";
+import { tryPreventableExit } from "@/global-state/exit-prevent";
 import { useI18n } from "@/composables/use-i18n";
 import { stopPropagationEvent } from "@/utils/events";
 import { useTimeout } from "@/composables/use-timeout";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { loadCurrentMedia } from "@/control/media";
+import { loadCurrentMedia } from "@/global-state/media";
 
 const PlayerAlbumFullScreen = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerAlbumFullScreen.vue"),

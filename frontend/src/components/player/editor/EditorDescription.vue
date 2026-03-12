@@ -45,7 +45,12 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/global-state/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { apiMediaSetDescription } from "@/api/api-media-edit";
@@ -58,8 +63,8 @@ import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),

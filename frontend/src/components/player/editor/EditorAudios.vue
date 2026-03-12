@@ -163,8 +163,8 @@
 
 <script setup lang="ts">
 import type { MediaAudioTrack } from "@/api/models";
-import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
@@ -178,8 +178,8 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
-import { showSnackBarRight } from "@/control/snack-bar";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBarRight } from "@/global-state/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

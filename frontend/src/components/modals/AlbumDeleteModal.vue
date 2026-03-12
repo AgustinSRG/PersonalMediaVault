@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/app-events";
+import { EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/global-state/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef } from "vue";
 import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
@@ -59,8 +59,8 @@ import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/album";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/global-state/album";
 
 // Translation function
 const { $t } = useI18n();

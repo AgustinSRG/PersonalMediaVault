@@ -196,8 +196,13 @@
 import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AppStatus } from "@/control/app-status";
-import { emitAppEvent, EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import {
+    emitAppEvent,
+    EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/global-state/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { getAssetURL } from "@/utils/api";
@@ -212,7 +217,7 @@ import {
     getDescriptionWidgetReadSettings,
     setDescriptionSize,
     setDescriptionWidgetReadSettings,
-} from "@/control/player-preferences";
+} from "@/global-state/player-preferences";
 import { isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
 import { clone } from "@/utils/objects";
 import type { WidgetActionButton } from "@/utils/widgets";
@@ -224,9 +229,9 @@ import { useTimeout } from "@/composables/use-timeout";
 import { useSpeechReader } from "@/composables/use-speech-reader";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { getStoredDescription, setStoredDescription } from "@/control/description-store";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { getStoredDescription, setStoredDescription } from "@/global-state/description-store";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

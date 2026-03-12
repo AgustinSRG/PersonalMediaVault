@@ -2,8 +2,8 @@
 
 "use strict";
 
-import type { AppEventsMap } from "@/control/app-events";
-import { addAppEventListener, removeAppEventListener } from "@/control/app-events";
+import type { AppEventsMap } from "@/global-state/app-events";
+import { addAppEventListener, removeAppEventListener } from "@/global-state/app-events";
 import { onBeforeUnmount } from "vue";
 
 /**

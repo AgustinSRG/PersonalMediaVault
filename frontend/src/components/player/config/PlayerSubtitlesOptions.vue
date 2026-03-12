@@ -242,8 +242,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
-import { getSubtitlesOptions, setSubtitlesOptions } from "@/control/player-preferences";
-import { emitAppEvent, EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/control/app-events";
+import { getSubtitlesOptions, setSubtitlesOptions } from "@/global-state/player-preferences";
+import { emitAppEvent, EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/global-state/app-events";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";
 import { useI18n } from "@/composables/use-i18n";

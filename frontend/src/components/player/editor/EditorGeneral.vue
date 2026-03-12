@@ -156,8 +156,8 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef } from "vue";
@@ -175,9 +175,9 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { useTimeout } from "@/composables/use-timeout";
-import { showSnackBarRight } from "@/control/snack-bar";
-import { refreshCurrentAlbum } from "@/control/album";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBarRight } from "@/global-state/snack-bar";
+import { refreshCurrentAlbum } from "@/global-state/album";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),

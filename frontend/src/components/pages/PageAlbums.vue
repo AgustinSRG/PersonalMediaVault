@@ -101,15 +101,15 @@ import {
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
     EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import PageMenu from "@/components/pages/common/PageMenu.vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -125,7 +125,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/control/albums-search";
+import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/global-state/albums-search";
 
 // Ref to the container element
 const container = useTemplateRef("container");

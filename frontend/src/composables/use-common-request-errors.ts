@@ -5,8 +5,8 @@
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { useI18n } from "./use-i18n";
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
+import { AuthController } from "@/global-state/auth";
 
 /**
  * Composable that provides handlers for common errors

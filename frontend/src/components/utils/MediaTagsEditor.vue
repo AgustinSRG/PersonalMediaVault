@@ -66,13 +66,13 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
 import { useTagNames } from "@/composables/use-tags-names";
 import { useUserPermissions } from "@/composables/use-user-permissions";
-import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { setLastUsedTag } from "@/control/app-preferences";
-import { indicateTagCreation, indicateTagDeletion } from "@/control/tags";
+import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { setLastUsedTag } from "@/global-state/app-preferences";
+import { indicateTagCreation, indicateTagDeletion } from "@/global-state/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

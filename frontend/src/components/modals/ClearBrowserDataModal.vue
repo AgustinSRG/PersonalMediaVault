@@ -118,7 +118,7 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { clearCachedTimes, clearPlayerPreferences } from "@/control/player-preferences";
+import { clearCachedTimes, clearPlayerPreferences } from "@/global-state/player-preferences";
 import {
     clearAlbumsOrderMap,
     clearFavAlbums,
@@ -126,14 +126,14 @@ import {
     clearPagePreferences,
     clearSearchPreferences,
     clearUploadPreferences,
-} from "@/control/app-preferences";
+} from "@/global-state/app-preferences";
 import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
-import { showSnackBar } from "@/control/snack-bar";
-import { refreshAlbumsList } from "@/control/albums";
-import { clearCachedAlbumPositions } from "@/control/album-position-cache";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { refreshAlbumsList } from "@/global-state/albums";
+import { clearCachedAlbumPositions } from "@/global-state/album-position-cache";
 
 // Translation function
 const { $t } = useI18n();

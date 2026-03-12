@@ -181,10 +181,10 @@ import {
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
 import { computed, defineAsyncComponent, nextTick, ref, watch } from "vue";
-import { AuthController } from "@/control/auth";
+import { AuthController } from "@/global-state/auth";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";

@@ -292,7 +292,7 @@ import {
     setSelectedAudioTrack,
     setSelectedSubtitles,
     setTogglePlayDelay,
-} from "@/control/player-preferences";
+} from "@/global-state/player-preferences";
 import { useI18n } from "@/composables/use-i18n";
 import {
     renderAnimStyle,
@@ -306,7 +306,7 @@ import {
     renderToggleDelay,
 } from "@/utils/player-config";
 import { useFocusTrap } from "@/composables/use-focus-trap";
-import { emitAppEvent, EVENT_NAME_SUBTITLES_CHANGED } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_SUBTITLES_CHANGED } from "@/global-state/app-events";
 
 const PlayerAutoNextConfig = defineAsyncComponent({
     loader: () => import("./PlayerAutoNextConfig.vue"),

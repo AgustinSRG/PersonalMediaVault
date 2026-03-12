@@ -62,8 +62,8 @@
 
 <script setup lang="ts">
 import type { PropType } from "vue";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";

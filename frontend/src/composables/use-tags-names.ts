@@ -2,9 +2,9 @@
 
 "use strict";
 
-import { getTagsVersion, resolveTagName } from "@/control/tags";
+import { getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { computed, ref } from "vue";
-import { addAppEventListener, EVENT_NAME_TAGS_UPDATE } from "@/control/app-events";
+import { addAppEventListener, EVENT_NAME_TAGS_UPDATE } from "@/global-state/app-events";
 
 /**
  * Tags names composable

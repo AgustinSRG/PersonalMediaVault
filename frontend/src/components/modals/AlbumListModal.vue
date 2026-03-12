@@ -128,9 +128,14 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import {
+    emitAppEvent,
+    EVENT_NAME_ALBUMS_LIST_UPDATE,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -148,9 +153,9 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { clickOnEnter } from "@/utils/events";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { getAlbumsListExt, refreshAlbumsList } from "@/control/albums";
-import { indicateAlbumMetadataChanged } from "@/control/album";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { getAlbumsListExt, refreshAlbumsList } from "@/global-state/albums";
+import { indicateAlbumMetadataChanged } from "@/global-state/album";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),

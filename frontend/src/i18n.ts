@@ -3,7 +3,7 @@
 "use strict";
 
 import { nextTick, ref } from "vue";
-import { addAppEventListener, emitAppEvent, EVENT_NAME_LOADED_LOCALE, EVENT_NAME_LOCALE_CHANGED } from "@/control/app-events";
+import { addAppEventListener, emitAppEvent, EVENT_NAME_LOADED_LOCALE, EVENT_NAME_LOCALE_CHANGED } from "@/global-state/app-events";
 import { clearLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
 
 /**

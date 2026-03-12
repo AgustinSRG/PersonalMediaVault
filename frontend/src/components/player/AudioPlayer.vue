@@ -269,7 +269,7 @@ import {
     setPlayerVolume,
     setShowAudioThumbnail,
     setShowAudioTitle,
-} from "@/control/player-preferences";
+} from "@/global-state/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
@@ -277,14 +277,14 @@ import PlayerTopBar from "./common/PlayerTopBar.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/control/media";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
-import type { ColorThemeName } from "@/control/app-preferences";
-import { getTheme } from "@/control/app-preferences";
+import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/global-state/media";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
+import type { ColorThemeName } from "@/global-state/app-preferences";
+import { getTheme } from "@/global-state/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
-import { EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
+import { EVENT_NAME_THEME_CHANGED } from "@/global-state/app-events";
 import PlayerControls from "./common/PlayerControls.vue";
 import type { PlayerPlayFeedbackType } from "@/utils/player";
 import PlayerPlayFeedback from "./common/PlayerPlayFeedback.vue";
@@ -305,7 +305,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 import { useTimeout } from "@/composables/use-timeout";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
-import { showSnackBar } from "@/control/snack-bar";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),

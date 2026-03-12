@@ -52,11 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_IMAGE_NOTES_UPDATE } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_IMAGE_NOTES_UPDATE } from "@/global-state/app-events";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
-import { ImageNotesController } from "@/control/img-notes";
+import { ImageNotesController } from "@/global-state/img-notes";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
@@ -65,7 +65,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
-import { showSnackBarRight } from "@/control/snack-bar";
+import { showSnackBarRight } from "@/global-state/snack-bar";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),

@@ -2,8 +2,8 @@
 
 "use strict";
 
-import type { AppStatusPage } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import type { AppStatusPage } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 
 /**
  * API Prefix

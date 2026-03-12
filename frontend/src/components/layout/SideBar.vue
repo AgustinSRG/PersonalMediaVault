@@ -135,10 +135,10 @@
 </template>
 
 <script setup lang="ts">
-import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/control/app-preferences";
-import type { AppStatusPage } from "@/control/app-status";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/global-state/app-preferences";
+import type { AppStatusPage } from "@/global-state/app-status";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 import { getFrontendUrl } from "@/utils/api";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import {
@@ -147,14 +147,14 @@ import {
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
-} from "@/control/app-events";
+} from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { stopPropagationEvent } from "@/utils/events";
 import type { AlbumListItemMinExt } from "@/api/models";
-import { getAlbumsListExt } from "@/control/albums";
+import { getAlbumsListExt } from "@/global-state/albums";
 
 // Translation
 const { $t } = useI18n();

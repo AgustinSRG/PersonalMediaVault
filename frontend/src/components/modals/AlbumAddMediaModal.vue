@@ -75,16 +75,16 @@ import { defineAsyncComponent, ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/global-state/app-events";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { showSnackBar } from "@/control/snack-bar";
-import { refreshAlbumsList } from "@/control/albums";
-import { indicateAlbumMetadataChanged } from "@/control/album";
+import { showSnackBar } from "@/global-state/snack-bar";
+import { refreshAlbumsList } from "@/global-state/albums";
+import { indicateAlbumMetadataChanged } from "@/global-state/album";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

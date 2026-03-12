@@ -66,15 +66,15 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import PageMenu from "@/components/pages/common/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
-import { checkMediaListForNewTags } from "@/control/tags";
+import { checkMediaListForNewTags } from "@/global-state/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { apiSearch } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
@@ -84,7 +84,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useRequestId } from "@/composables/use-request-id";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { onPageLoad, onPageUnload } from "@/control/pages";
+import { onPageLoad, onPageUnload } from "@/global-state/pages";
 
 // Ref to the container element
 const container = useTemplateRef("container");

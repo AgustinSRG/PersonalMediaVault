@@ -154,7 +154,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
-import { loadCurrentMedia } from "@/control/media";
+import { loadCurrentMedia } from "@/global-state/media";
 
 // Ref to the container element
 const container = useTemplateRef("container");

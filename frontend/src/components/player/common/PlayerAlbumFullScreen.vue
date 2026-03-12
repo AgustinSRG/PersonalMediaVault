@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/control/app-status";
+import { AppStatus } from "@/global-state/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
@@ -62,12 +62,12 @@ import {
     EVENT_NAME_CURRENT_ALBUM_LOADING,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
-} from "@/control/app-events";
+} from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";
-import type { AlbumMediaPositionContext } from "@/control/album";
+import type { AlbumMediaPositionContext } from "@/global-state/album";
 import {
     albumToggleLoop,
     albumToggleRandom,
@@ -75,8 +75,8 @@ import {
     getCurrentAlbumId,
     getCurrentAlbumMediaPositionContext,
     isCurrentAlbumLoading,
-} from "@/control/album";
-import { showSnackBar } from "@/control/snack-bar";
+} from "@/global-state/album";
+import { showSnackBar } from "@/global-state/snack-bar";
 
 // Emits
 const emit = defineEmits<{

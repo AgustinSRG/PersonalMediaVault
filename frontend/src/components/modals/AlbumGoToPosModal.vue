@@ -41,10 +41,10 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus } from "@/global-state/app-status";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
-import { getCurrentAlbumData, getCurrentAlbumMediaPosition } from "@/control/album";
+import { getCurrentAlbumData, getCurrentAlbumMediaPosition } from "@/global-state/album";
 
 // Translation function
 const { $t } = useI18n();

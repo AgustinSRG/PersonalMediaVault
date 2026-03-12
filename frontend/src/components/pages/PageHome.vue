@@ -138,8 +138,8 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
-} from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+} from "@/global-state/app-events";
+import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
@@ -148,14 +148,14 @@ import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
 import HomePageRow from "./common/HomePageRow.vue";
 import { doHomePageSilentSaveAction, getHomePageBackStatePage, HomePageGroupTypes, type HomePageGroupStartMovingData } from "@/utils/home";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus } from "@/global-state/app-status";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useInterval } from "@/composables/use-interval";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
-import { onHomeGroupLoad, onPageUnload } from "@/control/pages";
+import { onHomeGroupLoad, onPageUnload } from "@/global-state/pages";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),

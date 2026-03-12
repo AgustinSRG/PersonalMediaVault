@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { addGlobalKeyboardHandler, removeGlobalKeyboardHandler, type KeyboardEventHandler } from "@/control/keyboard";
+import { addGlobalKeyboardHandler, removeGlobalKeyboardHandler, type KeyboardEventHandler } from "@/global-state/keyboard";
 import { onBeforeUnmount } from "vue";
 
 /**

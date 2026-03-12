@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
-import { getCurrentAlbumMediaPositionContext } from "@/control/album";
+import { getCurrentAlbumMediaPositionContext } from "@/global-state/album";
 import {
     emitAppEvent,
     EVENT_NAME_APP_STATUS_CHANGED,
@@ -50,9 +50,9 @@ import {
     EVENT_NAME_GO_NEXT,
     EVENT_NAME_GO_PREV,
     EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
-} from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
+} from "@/global-state/app-events";
+import { AppStatus } from "@/global-state/app-status";
+import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/global-state/pages";
 import { clickOnEnter } from "@/utils/events";
 import { ref } from "vue";
 

@@ -144,8 +144,8 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { findTagByName, getTagsVersion, refreshTags, resolveTagName } from "@/control/tags";
-import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { findTagByName, getTagsVersion, refreshTags, resolveTagName } from "@/global-state/tags";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import type { MediaType } from "@/api/models";
@@ -163,8 +163,8 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
-import { refreshCurrentAlbum } from "@/control/album";
-import { loadCurrentMedia } from "@/control/media";
+import { refreshCurrentAlbum } from "@/global-state/album";
+import { loadCurrentMedia } from "@/global-state/media";
 
 // Page size for requests
 const PAGE_SIZE = 50;
