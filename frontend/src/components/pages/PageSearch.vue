@@ -206,7 +206,7 @@ import {
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { TagsController } from "@/control/tags";
+import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -234,7 +234,7 @@ import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onPageLoad, onPageUnload } from "@/control/pages";
-import { getCurrentAlbumData } from "@/control/albums";
+import { getCurrentAlbumData } from "@/control/album";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -520,9 +520,12 @@ const getTagList = (): string[] => {
     if (tagMode.value === "any" && tags.value.length > 16) {
         return [];
     }
+
+    const tagsVersion = getTagsVersion();
+
     return tags.value
         .map((tag) => {
-            return TagsController.GetTagName(tag, TagsController.TagsVersion);
+            return resolveTagName(tag, tagsVersion);
         })
         .slice(0, 16);
 };
@@ -1158,7 +1161,7 @@ const loadSemanticImageVector = () => {
  * @param results The list of results received from the API
  */
 const filterElements = (results: MediaListItem[]) => {
-    TagsController.OnMediaListReceived(results);
+    checkMediaListForNewTags(results);
 
     const filterText = mode.value === "basic" || mode.value === "adv" ? normalizeString(textSearch.value).trim().toLowerCase() : "";
     const filterTextWords = filterToWords(filterText);

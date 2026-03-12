@@ -17,7 +17,7 @@ import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
 import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
-import { checkAlbumNextPrefetch } from "./albums";
+import { checkAlbumNextPrefetch } from "./album";
 import { getUniqueStringId } from "@/utils/unique-id";
 
 /**

@@ -231,7 +231,7 @@ import { positionEventFromMouseEvent } from "@/utils/position-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
 import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
-import { getAlbumNextPrefetchData } from "@/control/albums";
+import { getAlbumNextPrefetchData } from "@/control/album";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),

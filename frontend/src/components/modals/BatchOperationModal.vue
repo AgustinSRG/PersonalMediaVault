@@ -144,7 +144,7 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { TagsController } from "@/control/tags";
+import { findTagByName, getTagsVersion, refreshTags, resolveTagName } from "@/control/tags";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
@@ -163,7 +163,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
-import { refreshCurrentAlbum } from "@/control/albums";
+import { refreshCurrentAlbum } from "@/control/album";
 import { loadCurrentMedia } from "@/control/media";
 
 // Page size for requests
@@ -406,12 +406,16 @@ const getTagList = (): string[] => {
     if (tagModeSearch.value === "untagged") {
         return [];
     }
+
     if (tagModeSearch.value === "any" && tagsSearch.value.length > 16) {
         return [];
     }
+
+    const tagsVersion = getTagsVersion();
+
     return tagsSearch.value
         .map((tag) => {
-            return TagsController.GetTagName(tag, TagsController.TagsVersion);
+            return resolveTagName(tag, tagsVersion);
         })
         .slice(0, 16);
 };
@@ -527,7 +531,7 @@ const actionNext = (i: number) => {
 
         refreshCurrentAlbum();
         loadCurrentMedia();
-        TagsController.Load();
+        refreshTags(true);
         return;
     }
 
@@ -614,7 +618,7 @@ const actionRemoveTag = (mid: number, tags: string[], next: number) => {
         return;
     }
 
-    const tagId = TagsController.FindTag(tags[0]);
+    const tagId = findTagByName(tags[0]);
 
     if (tagId < 0) {
         // Tag not found

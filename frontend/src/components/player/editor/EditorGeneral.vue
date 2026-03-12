@@ -176,7 +176,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { useTimeout } from "@/composables/use-timeout";
 import { showSnackBarRight } from "@/control/snack-bar";
-import { refreshCurrentAlbum } from "@/control/albums";
+import { refreshCurrentAlbum } from "@/control/album";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/control/media";
 
 const SaveChangesAskModal = defineAsyncComponent({

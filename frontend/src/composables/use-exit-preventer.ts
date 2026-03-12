@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { ExitPreventer } from "@/control/exit-prevent";
+import { removeExitPrevent, setupExitPrevent } from "@/control/exit-prevent";
 import type { Ref } from "vue";
 import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 
@@ -48,7 +48,7 @@ export function useExitPreventer(dirty: Ref<boolean>, saveChanges: () => void) {
     const exitOnSave = ref(false);
 
     onMounted(() => {
-        ExitPreventer.SetupExitPrevent(
+        setupExitPrevent(
             () => dirty.value,
             (callback: () => void) => {
                 exitCallback.value = callback;
@@ -58,7 +58,7 @@ export function useExitPreventer(dirty: Ref<boolean>, saveChanges: () => void) {
     });
 
     onBeforeUnmount(() => {
-        ExitPreventer.RemoveExitPrevent();
+        removeExitPrevent();
     });
 
     /**

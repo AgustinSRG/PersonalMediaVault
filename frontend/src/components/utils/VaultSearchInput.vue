@@ -63,10 +63,11 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
-import { getAlbumsList, getCurrentAlbumData, refreshAlbumsList } from "@/control/albums";
+import { getCurrentAlbumData } from "@/control/album";
+import { getAlbumsList, refreshAlbumsList } from "@/control/albums";
 import { EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { TagsController } from "@/control/tags";
+import { getTagsMap, refreshTags } from "@/control/tags";
 import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -129,7 +130,7 @@ const focusSearch = () => {
     updateSuggestions();
 
     refreshAlbumsList();
-    TagsController.Refresh();
+    refreshTags();
 };
 
 /**
@@ -203,7 +204,7 @@ const updateSuggestions = () => {
     let newSuggestions: SearchBarSuggestion[] = [];
 
     newSuggestions = newSuggestions.concat(
-        Array.from(TagsController.Tags.entries())
+        Array.from(getTagsMap().entries())
             .map((a): SearchBarSuggestion => {
                 const i = tagFilter ? normalizeString(a[1]).indexOf(tagFilter) : 0;
                 return {

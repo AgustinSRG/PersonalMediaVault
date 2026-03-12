@@ -50,7 +50,7 @@ import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
 import { AuthController } from "@/control/auth";
 import type { MediaData } from "@/api/models";
-import { ExitPreventer } from "@/control/exit-prevent";
+import { tryPreventableExit } from "@/control/exit-prevent";
 import { useI18n } from "@/composables/use-i18n";
 import { stopPropagationEvent } from "@/utils/events";
 import { useTimeout } from "@/composables/use-timeout";
@@ -196,7 +196,7 @@ const onEditDone = () => {
  * Closes the top bar
  */
 const closeTitle = () => {
-    ExitPreventer.TryExit(() => {
+    tryPreventableExit(() => {
         expanded.value = false;
     });
 };

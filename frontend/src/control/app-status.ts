@@ -6,10 +6,13 @@
 
 import { getParameterByName } from "@/utils/cookie";
 import { emitAppEvent, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_DELETE } from "./app-events";
-import { getCachedAlbumPosition } from "./player-preferences";
 import { generateURIQuery } from "@/utils/api";
-import { ExitPreventer } from "./exit-prevent";
-import { getCurrentAlbumData, getCurrentAlbumId, isAlbumsListLoading } from "./albums";
+import { initializeAlbums, isAlbumsListLoading } from "./albums";
+import { getCurrentAlbumData, getCurrentAlbumId, initializeAlbum } from "./album";
+import { getCachedAlbumPosition } from "./album-position-cache";
+import { initializeMedia } from "./media";
+import { initializeTags } from "./tags";
+import { tryPreventableExit } from "./exit-prevent";
 
 /**
  * Layout mode
@@ -92,6 +95,14 @@ export class AppStatus {
 
         AppStatus.LoadURLParams();
         AppStatus.OnStatusUpdate();
+
+        // Initialize global state
+
+        initializeAlbums();
+        initializeTags();
+
+        initializeAlbum();
+        initializeMedia();
     }
 
     /**
@@ -317,7 +328,7 @@ export class AppStatus {
      * @param page The page to navigate to
      */
     public static GoToPage(page: AppStatusPage) {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             AppStatus.CurrentPage = page;
 
             if (AppStatus.CurrentPage === "random") {
@@ -349,7 +360,7 @@ export class AppStatus {
      * @param searchParams Search parameters
      */
     public static GoToPageConditionalSplit(page: AppStatusPage, searchParams?: string) {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             const changedPage = AppStatus.CurrentPage !== page;
 
             AppStatus.CurrentPage = page;
@@ -381,7 +392,7 @@ export class AppStatus {
      * Expands the page, closing the player
      */
     public static ExpandPage() {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             AppStatus.CurrentAlbum = -1;
             AppStatus.CurrentMedia = -1;
             AppStatus.CurrentHomePageGroup = -1;
@@ -472,7 +483,7 @@ export class AppStatus {
      * @param group ID of the home group
      */
     public static ClickOnMedia(mediaId: number, split: boolean, group?: number) {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             AppStatus.CurrentMedia = mediaId;
 
             if (split) {
@@ -496,7 +507,7 @@ export class AppStatus {
      * @param albumId The album ID
      */
     public static ClickOnAlbum(albumId: number) {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             AppStatus.CurrentAlbum = albumId;
             AppStatus.CurrentMedia = -1;
             AppStatus.CurrentHomePageGroup = -1;
@@ -614,7 +625,7 @@ export class AppStatus {
      * @param textSearch The text to search
      */
     public static GoFindMedia(textSearch: string) {
-        ExitPreventer.TryExit(() => {
+        tryPreventableExit(() => {
             AppStatus.CurrentPage = "search";
 
             AppStatus.CurrentAlbum = -1;

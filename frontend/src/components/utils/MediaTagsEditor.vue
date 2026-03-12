@@ -68,7 +68,7 @@ import { useTagNames } from "@/composables/use-tags-names";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
 import { setLastUsedTag } from "@/control/app-preferences";
-import { TagsController } from "@/control/tags";
+import { indicateTagCreation, indicateTagDeletion } from "@/control/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { showSnackBar } from "@/control/snack-bar";
@@ -194,7 +194,7 @@ const addTag = (tag: string, resetTagInput: boolean) => {
 
             updateTagSuggestions();
 
-            TagsController.AddTag(res.id, res.name);
+            indicateTagCreation(res.id, res.name);
 
             modifyCurrentMediaData(mediaId, (metadata) => {
                 // Update cached media data
@@ -264,7 +264,7 @@ const removeTag = (tag: number) => {
                 }
             }
             if (removed) {
-                TagsController.RemoveTag(tag);
+                indicateTagDeletion(tag);
             } else {
                 updateTagSuggestions();
             }

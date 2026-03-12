@@ -61,7 +61,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
-import { refreshCurrentAlbum } from "@/control/albums";
+import { refreshCurrentAlbum } from "@/control/album";
 import { getCurrentMediaData } from "@/control/media";
 
 // Translation function

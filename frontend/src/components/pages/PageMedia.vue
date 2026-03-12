@@ -74,7 +74,7 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import PageMenu from "@/components/pages/common/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
-import { TagsController } from "@/control/tags";
+import { checkMediaListForNewTags } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { apiSearch } from "@/api/api-search";
 import MediaItem from "../utils/MediaItem.vue";
@@ -229,7 +229,7 @@ const load = () => {
 
     makeNamedApiRequest(loadRequestId, apiSearch(search.value || "", order.value, page.value, props.pageSize))
         .onSuccess((result) => {
-            TagsController.OnMediaListReceived(result.page_items);
+            checkMediaListForNewTags(result.page_items);
 
             pageItems.value = result.page_items;
             page.value = result.page_index;

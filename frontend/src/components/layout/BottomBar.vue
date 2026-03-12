@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
-import { getCurrentAlbumMediaPositionContext } from "@/control/albums";
+import { getCurrentAlbumMediaPositionContext } from "@/control/album";
 import {
     emitAppEvent,
     EVENT_NAME_APP_STATUS_CHANGED,

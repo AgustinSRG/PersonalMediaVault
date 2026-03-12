@@ -41,7 +41,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/control/app-events";
-import { ExitPreventer } from "@/control/exit-prevent";
+import { tryPreventableExit } from "@/control/exit-prevent";
 import { getCurrentMediaData } from "@/control/media";
 import { computed, defineAsyncComponent, ref } from "vue";
 
@@ -226,7 +226,8 @@ const changePage = (p: EditorPage) => {
     if (p === page.value) {
         return;
     }
-    ExitPreventer.TryExit(() => {
+
+    tryPreventableExit(() => {
         page.value = p;
     });
 };

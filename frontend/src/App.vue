@@ -18,7 +18,7 @@ import {
 import { useI18n } from "./composables/use-i18n";
 import { onApplicationEvent } from "./composables/on-app-event";
 import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentAlbumData } from "./control/albums";
+import { getCurrentAlbumData } from "./control/album";
 import { getCurrentMediaData } from "./control/media";
 
 // Translation function

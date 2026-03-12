@@ -2,8 +2,7 @@
 
 "use strict";
 
-import type { MatchingTag } from "@/control/tags";
-import { TagsController } from "@/control/tags";
+import { getTagsMap, refreshTags, type MatchingTag } from "@/control/tags";
 import type { Ref } from "vue";
 import { ref } from "vue";
 import { useTimeout } from "./use-timeout";
@@ -64,6 +63,8 @@ export function useTagSuggestions(
      * Updates matching tags
      */
     const findTags = () => {
+        const tagsMap = getTagsMap();
+
         findTagTimeout.clear();
 
         const nameFilter = parseTagName(tagFilter.value);
@@ -75,11 +76,11 @@ export function useTagSuggestions(
             const addedTagIds: number[] = [];
 
             for (const tid of lastUsedTagsIds) {
-                if (!TagsController.Tags.has(tid) || addedTagIds.includes(tid)) {
+                if (!tagsMap.has(tid) || addedTagIds.includes(tid)) {
                     continue;
                 }
 
-                const tagName = TagsController.Tags.get(tid);
+                const tagName = tagsMap.get(tid);
 
                 if (suggestionFilter && !suggestionFilter(tid, tagName)) {
                     continue;
@@ -87,7 +88,7 @@ export function useTagSuggestions(
 
                 lastUsedTags.push({
                     id: tid,
-                    name: TagsController.Tags.get(tid),
+                    name: tagsMap.get(tid),
                 });
 
                 addedTagIds.push(tid);
@@ -98,7 +99,7 @@ export function useTagSuggestions(
             }
 
             if (lastUsedTags.length < TAGS_SUGGESTION_LIMIT) {
-                Array.from(TagsController.Tags.entries())
+                Array.from(tagsMap.entries())
                     .filter((t) => {
                         if (suggestionFilter && !suggestionFilter(t[0], t[1])) {
                             return false;
@@ -127,7 +128,7 @@ export function useTagSuggestions(
             return;
         }
 
-        tagSuggestions.value = Array.from(TagsController.Tags.entries())
+        tagSuggestions.value = Array.from(tagsMap.entries())
             .map((a) => {
                 const i = a[1].indexOf(nameFilter);
                 const lastUsedIndex = lastUsedTagsIds.indexOf(a[0]);
@@ -174,7 +175,7 @@ export function useTagSuggestions(
     findTags();
 
     // Refresh the tag list from the server
-    TagsController.Refresh();
+    refreshTags();
 
     // Delay to update the matching tags (milliseconds)
     const TAGS_UPDATE_DELAY = 200;

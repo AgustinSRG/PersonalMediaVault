@@ -60,7 +60,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
-import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/albums";
+import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/control/album";
 
 // Translation function
 const { $t } = useI18n();

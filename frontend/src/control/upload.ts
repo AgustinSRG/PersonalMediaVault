@@ -3,7 +3,7 @@
 "use strict";
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { TagsController } from "./tags";
+import { indicateTagCreation } from "./tags";
 import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
@@ -21,7 +21,7 @@ import {
     EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
-import { getCurrentAlbumMediaPositionContext, indicateAlbumMetadataChanged, loadAlbumNextPreFetch } from "./albums";
+import { getCurrentAlbumMediaPositionContext, indicateAlbumMetadataChanged, loadAlbumNextPreFetch } from "./album";
 import { getCurrentMediaId, loadCurrentMedia } from "./media";
 import { addGlobalBusyCheck } from "./busy-state";
 
@@ -706,7 +706,7 @@ export class UploadController {
 
                 emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
-                TagsController.AddTag(res.id, res.name);
+                indicateTagCreation(res.id, res.name);
 
                 UploadController.AddNextTag(m);
             })

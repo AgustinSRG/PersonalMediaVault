@@ -194,7 +194,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
-import type { AlbumMediaPositionContext } from "@/control/albums";
+import type { AlbumMediaPositionContext } from "@/control/album";
 import {
     albumToggleLoop,
     albumToggleRandom,
@@ -204,7 +204,7 @@ import {
     indicateAlbumMetadataChanged,
     isCurrentAlbumLoading,
     updateAlbumMediaPositionStatus,
-} from "@/control/albums";
+} from "@/control/album";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),

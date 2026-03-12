@@ -9,7 +9,7 @@ import type { ColorThemeName } from "./app-preferences";
 import type { ImageNote } from "@/utils/notes-format";
 import type { ImageNodesChangeType } from "./img-notes";
 import type { UploadEntryMin } from "./upload";
-import type { AlbumMediaPositionContext } from "./albums";
+import type { AlbumMediaPositionContext } from "./album";
 
 /**
  * Event triggered when a request results in 401 - Unauthorized

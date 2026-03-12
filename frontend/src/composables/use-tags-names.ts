@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { TagsController } from "@/control/tags";
+import { getTagsVersion, resolveTagName } from "@/control/tags";
 import { computed, ref } from "vue";
 import { addAppEventListener, EVENT_NAME_TAGS_UPDATE } from "@/control/app-events";
 
@@ -18,7 +18,7 @@ export type TagsComposable = {
     getTagName: (tag: number) => string;
 };
 
-const tagsVersion = ref(TagsController.TagsVersion);
+const tagsVersion = ref(getTagsVersion());
 
 addAppEventListener(EVENT_NAME_TAGS_UPDATE, (v) => {
     tagsVersion.value = v;
@@ -31,7 +31,7 @@ addAppEventListener(EVENT_NAME_TAGS_UPDATE, (v) => {
 export function useTagNames(): TagsComposable {
     const getTagName = computed(() => {
         return (id: number): string => {
-            return TagsController.GetTagName(id, tagsVersion.value);
+            return resolveTagName(id, tagsVersion.value);
         };
     }).value;
 

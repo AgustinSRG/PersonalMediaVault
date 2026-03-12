@@ -57,7 +57,7 @@ import {
 } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { TagsController } from "@/control/tags";
+import { checkMediaListForNewTags } from "@/control/tags";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -196,7 +196,7 @@ const load = () => {
                 return true;
             });
 
-            TagsController.OnMediaListReceived(pageItems.value);
+            checkMediaListForNewTags(pageItems.value);
 
             total.value = pageItems.value.length;
 

@@ -67,7 +67,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";
-import type { AlbumMediaPositionContext } from "@/control/albums";
+import type { AlbumMediaPositionContext } from "@/control/album";
 import {
     albumToggleLoop,
     albumToggleRandom,
@@ -75,7 +75,7 @@ import {
     getCurrentAlbumId,
     getCurrentAlbumMediaPositionContext,
     isCurrentAlbumLoading,
-} from "@/control/albums";
+} from "@/control/album";
 import { showSnackBar } from "@/control/snack-bar";
 
 // Emits

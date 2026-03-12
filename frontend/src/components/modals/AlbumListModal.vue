@@ -149,7 +149,8 @@ import { useRequestId } from "@/composables/use-request-id";
 import { clickOnEnter } from "@/utils/events";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
-import { getAlbumsListExt, indicateAlbumMetadataChanged, refreshAlbumsList } from "@/control/albums";
+import { getAlbumsListExt, refreshAlbumsList } from "@/control/albums";
+import { indicateAlbumMetadataChanged } from "@/control/album";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),

@@ -6,15 +6,9 @@
 
 import { AppStatus } from "./control/app-status";
 import { AuthController } from "./control/auth";
-import { TagsController } from "./control/tags";
-import { initializeAlbums } from "./control/albums";
-import { initializeMedia } from "./control/media";
 
-AppStatus.Initialize();
 AuthController.Initialize();
-TagsController.Initialize();
-initializeMedia();
-initializeAlbums();
+AppStatus.Initialize();
 
 // Setup App
 

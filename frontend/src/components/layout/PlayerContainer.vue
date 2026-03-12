@@ -121,7 +121,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import type { PlayerLoadStatus } from "@/utils/player";
 import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/control/pages";
-import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/control/albums";
+import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/control/album";
 import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/control/media";
 
 const EmptyPlayer = defineAsyncComponent({

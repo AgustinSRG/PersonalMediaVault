@@ -83,7 +83,8 @@ import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/control/snack-bar";
-import { indicateAlbumMetadataChanged, refreshAlbumsList } from "@/control/albums";
+import { refreshAlbumsList } from "@/control/albums";
+import { indicateAlbumMetadataChanged } from "@/control/album";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),

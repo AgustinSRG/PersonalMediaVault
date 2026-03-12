@@ -249,7 +249,7 @@
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroupElements, apiHomeGroupDeleteElement, apiHomeGroupMoveElement, getHomePageElementReference } from "@/api/api-home";
 import { AppStatus } from "@/control/app-status";
-import { TagsController } from "@/control/tags";
+import { checkMediaListForNewTags } from "@/control/tags";
 import { getFrontendUrl } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
 import {
@@ -666,8 +666,9 @@ const loadCustomElements = () => {
 
     makeNamedApiRequest(loadRequestId, apiHomeGetGroupElements(props.group.id))
         .onSuccess((result) => {
-            TagsController.OnMediaListReceived(result.filter((r) => !!r.media).map((r) => r.media));
             clearNamedTimeout(loadRequestId);
+
+            checkMediaListForNewTags(result.filter((r) => !!r.media).map((r) => r.media));
 
             onElementsLoaded(result);
         })
@@ -711,8 +712,9 @@ const loadRecentMedia = () => {
 
     makeNamedApiRequest(loadRequestId, apiSearch("", "desc", 0, props.pageSize))
         .onSuccess((result) => {
-            TagsController.OnMediaListReceived(result.page_items);
             clearNamedTimeout(loadRequestId);
+
+            checkMediaListForNewTags(result.page_items);
 
             onElementsLoaded(
                 result.page_items.map((r) => {
