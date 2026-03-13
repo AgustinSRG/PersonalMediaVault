@@ -232,6 +232,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { getStoredDescription, setStoredDescription } from "@/global-state/description-store";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -416,9 +417,6 @@ const actionButtons = computed<WidgetActionButton[]>(() => {
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry loading after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the content
@@ -657,16 +655,13 @@ const resetDefaultValues = () => {
     voiceReadingSettings.value.voice = "";
 };
 
-// Delay to display the busy loader (milliseconds)
-const BUSY_TIMEOUT_DELAY = 333;
-
 /**
  * Sets the timeout to display the busy loader
  */
 const setBusyTimeout = () => {
     busyTimeout.set(() => {
         busyDisplayLoad.value = true;
-    }, BUSY_TIMEOUT_DELAY);
+    }, LOADER_DISPLAY_DELAY);
 };
 
 /**

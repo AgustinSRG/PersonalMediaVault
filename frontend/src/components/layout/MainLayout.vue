@@ -123,131 +123,98 @@ import {
 } from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
+import { LOADER_DISPLAY_DELAY } from "@/constants";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
     loadingComponent: PlayerContainerLoader,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const AlbumContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/AlbumContainer.vue"),
     loadingComponent: AlbumContainerLoader,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageContent = defineAsyncComponent({
     loader: () => import("@/components/layout/PageContent.vue"),
     loadingComponent: PageContentLoader,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const LoginModal = defineAsyncComponent({
     loader: () => import("@/components/layout/LoginModal.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const LogoutModal = defineAsyncComponent({
     loader: () => import("@/components/modals/LogoutModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const VaultSettingsDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/VaultSettingsDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountSettingsDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/AccountSettingsDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const LanguageDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/LanguageDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ThemeDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/ThemeDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ChangeUsernameModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ChangeUsernameModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ChangePasswordModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ChangePasswordModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AdvancedSettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AdvancedSettingsModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountsAdminModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountsAdminModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const TaskListModal = defineAsyncComponent({
     loader: () => import("@/components/modals/TaskListModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ClearBrowserDataModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ClearBrowserDataModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const HelpHubDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/HelpHubDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AboutModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AboutModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const KeyboardGuideModal = defineAsyncComponent({
     loader: () => import("@/components/modals/KeyboardGuideModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const BatchOperationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/BatchOperationModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const InviteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/InviteModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountSecuritySettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountSecuritySettingsModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Ref to the container element

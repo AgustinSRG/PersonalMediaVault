@@ -257,6 +257,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 // Translation function
 const { $t } = useI18n();
@@ -371,9 +372,6 @@ const loading = ref(true);
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

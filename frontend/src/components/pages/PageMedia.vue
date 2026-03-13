@@ -85,6 +85,7 @@ import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useRequestId } from "@/composables/use-request-id";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -203,12 +204,6 @@ const switchMediaOnLoad = ref<"" | "next" | "prev">("");
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to display the loader (milliseconds)
-const LOADER_DISPLAY_DELAY = 330;
-
-// Delay to retry loading (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

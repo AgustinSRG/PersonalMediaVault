@@ -65,6 +65,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -111,9 +112,6 @@ const dirty = ref(false);
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// DElay to retry loading (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 const load = () => {
     clearNamedTimeout(loadRequestId);

@@ -6,8 +6,8 @@
 </template>
 
 <script setup lang="ts">
-import { MEDIA_TYPE_AUDIO } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
+import { MEDIA_TYPE_AUDIO } from "@/constants";
 import { renderTimeSeconds } from "@/utils/time";
 
 // Translation function

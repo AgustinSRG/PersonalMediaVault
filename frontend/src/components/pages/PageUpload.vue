@@ -152,7 +152,6 @@ import type { UploadEntryMin } from "@/global-state/upload";
 import { UploadController } from "@/global-state/upload";
 import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
 import DiskUsage from "./common/DiskUsage.vue";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
@@ -171,8 +170,6 @@ import { clickOnEnter } from "@/utils/events";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 /**

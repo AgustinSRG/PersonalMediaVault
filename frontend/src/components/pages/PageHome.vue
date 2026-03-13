@@ -156,29 +156,22 @@ import { useInterval } from "@/composables/use-interval";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onHomeGroupLoad, onPageUnload } from "@/global-state/pages";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 200,
 });
 
 const HomePageRenameRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRenameRowModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 200,
 });
 
 const HomePageMoveRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageMoveRowModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 200,
 });
 
 const HomePageDeleteRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageDeleteRowModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 200,
 });
 
 // Props
@@ -262,12 +255,6 @@ const groups = ref<HomePageGroup[]>([]);
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to display the loader (milliseconds)
-const LOADER_DISPLAY_DELAY = 330;
-
-// Delay to retry loading (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

@@ -277,7 +277,7 @@
 
 <script setup lang="ts">
 import type { MediaData } from "@/api/models";
-import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, ref, useTemplateRef } from "vue";

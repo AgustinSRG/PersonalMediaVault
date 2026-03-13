@@ -19,6 +19,7 @@ import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { checkAlbumNextPrefetch } from "./album";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -94,9 +95,6 @@ function setCurrentMediaData(data: MediaData | null) {
 
 // Request ID to load the current media
 const REQUEST_ID = getUniqueStringId();
-
-// Delay to retry loading after an error
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads current media

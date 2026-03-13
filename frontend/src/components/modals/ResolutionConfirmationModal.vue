@@ -44,9 +44,10 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { useTemplateRef } from "vue";
 import type { PropType } from "vue";
-import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaType, type NamedResolution } from "@/api/models";
+import type { MediaType, NamedResolution } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/constants";
 
 // Translation function
 const { $t } = useI18n();

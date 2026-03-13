@@ -170,7 +170,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useRequestId } from "@/composables/use-request-id";
 import type { MediaType } from "@/api/models";
-import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useExitPreventer } from "@/composables/use-exit-preventer";

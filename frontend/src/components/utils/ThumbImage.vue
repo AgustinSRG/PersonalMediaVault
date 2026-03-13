@@ -9,13 +9,8 @@
 
 <script setup lang="ts">
 import { useTimeout } from "@/composables/use-timeout";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { onMounted, ref, useTemplateRef } from "vue";
-
-// Delay to show the loader (milliseconds)
-const LOADER_VISIBILITY_DELAY = 333;
-
-// Delay to reload after error (milliseconds)
-const RELOAD_DELAY = 1500;
 
 defineProps({
     /**
@@ -57,7 +52,7 @@ const startLoading = () => {
 
     displayLoaderTimeout.set(() => {
         displayLoader.value = true;
-    }, LOADER_VISIBILITY_DELAY);
+    }, LOADER_DISPLAY_DELAY);
 };
 
 /**
@@ -79,7 +74,7 @@ const onError = () => {
 
     reloadTimeout.set(() => {
         startLoading();
-    }, RELOAD_DELAY);
+    }, LOAD_RETRY_DELAY);
 };
 
 // Reference to the image element

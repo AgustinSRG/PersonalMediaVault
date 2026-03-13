@@ -82,29 +82,23 @@ import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
-import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { VaultAccount } from "@/api/api-admin";
 import { apiAdminListAccounts } from "@/api/api-admin";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const AccountCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountCreateModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountModifyModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountModifyModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountDeleteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountDeleteModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Translation function
@@ -127,9 +121,6 @@ const loading = ref(true);
 
 // Request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads account list

@@ -99,18 +99,16 @@ import PasswordInput from "../utils/PasswordInput.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
 import { apiAccountTimeOtpEnable, apiAccountTimeOtpSettings } from "@/api/api-account";
-import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const AccountTfaSettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaSettingsModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Translation function
@@ -168,9 +166,6 @@ const loadingSettings = ref(true);
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the TFA settings

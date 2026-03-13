@@ -120,7 +120,6 @@ import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { apiAccountGetSecuritySettings, apiAccountSetSecuritySettings } from "@/api/api-account";
-import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import { useModal } from "@/composables/use-modal";
@@ -129,17 +128,14 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const AccountTfaEnableModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaEnableModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AccountTfaDisableModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaDisableModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Translation function
@@ -185,9 +181,6 @@ const markDirty = () => {
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

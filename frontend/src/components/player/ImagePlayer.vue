@@ -215,7 +215,7 @@ import { getAssetURL } from "@/utils/api";
 import { AuthController } from "@/global-state/auth";
 import { AppStatus } from "@/global-state/app-status";
 import type { MediaData, MediaListItem } from "@/api/models";
-import { MEDIA_TYPE_IMAGE } from "@/api/models";
+import { MEDIA_TYPE_IMAGE } from "@/constants";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_NEXT_PRE_FETCH } from "@/global-state/app-events";
 import PlayerControls from "./common/PlayerControls.vue";

@@ -226,21 +226,6 @@ export interface VaultUserConfig {
 // Media
 
 /**
- * Type value for images
- */
-export const MEDIA_TYPE_IMAGE = 1;
-
-/**
- * Type value for videos
- */
-export const MEDIA_TYPE_VIDEO = 2;
-
-/**
- * Type value for audios
- */
-export const MEDIA_TYPE_AUDIO = 3;
-
-/**
  * Media type.
  * Image = 1
  * Video = 2

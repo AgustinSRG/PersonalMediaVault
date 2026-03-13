@@ -3,7 +3,7 @@
 "use strict";
 
 import type { MediaData } from "@/api/models";
-import { MEDIA_TYPE_IMAGE } from "@/api/models";
+import { MEDIA_TYPE_IMAGE } from "@/constants";
 
 /**
  * Renders value percent

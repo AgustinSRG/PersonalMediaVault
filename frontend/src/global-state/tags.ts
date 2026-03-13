@@ -9,6 +9,7 @@ import type { MediaListItem } from "@/api/models";
 import { apiTagsGetTags } from "@/api/api-tags";
 import { addAppEventListener, emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_TAGS_UPDATE, EVENT_NAME_UNAUTHORIZED } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 /**
  * Tag data with the matching information
@@ -117,9 +118,6 @@ export function findTagByName(name: string): number {
 
 // Request ID to load tags
 const REQUEST_ID = getUniqueStringId();
-
-// Delay to retry loading after an error
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads tags list from the server

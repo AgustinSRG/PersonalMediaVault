@@ -82,7 +82,7 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import type { MediaData, MediaResolution, MediaType, NamedResolution } from "@/api/models";
-import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/constants";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 import { STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
 import { useI18n } from "@/composables/use-i18n";

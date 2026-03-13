@@ -25,6 +25,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { getCurrentMediaId, provideCurrentMediaData } from "./media";
 import { setCachedAlbumPosition } from "./album-position-cache";
 import { refreshAlbumsList } from "./albums";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 /**
  * State of the current album
@@ -91,9 +92,6 @@ function setCurrentAlbumData(data: Album | null) {
 
 // Request ID for current album load
 const REQUEST_ID_CURRENT_ALBUM_LOAD = getUniqueStringId();
-
-// Delay to retry loading after an error
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the current album data

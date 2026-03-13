@@ -235,6 +235,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { getCurrentAlbumData } from "@/global-state/album";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -710,9 +711,6 @@ const continueSearch = () => {
         load();
     }
 };
-
-// Delay to retry loading (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the media elements (default)

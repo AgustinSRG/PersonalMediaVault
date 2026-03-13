@@ -123,47 +123,42 @@ import type { PlayerLoadStatus } from "@/utils/player";
 import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/global-state/pages";
 import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/global-state/album";
 import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/global-state/media";
+import { LOADER_DISPLAY_DELAY } from "@/constants";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 1000,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const AudioPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/AudioPlayer.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 1000,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const VideoPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/VideoPlayer.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 1000,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const ImagePlayer = defineAsyncComponent({
     loader: () => import("@/components/player/ImagePlayer.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 1000,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const AlbumListModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumListModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const SizeStatsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SizeStatsModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const MediaDeleteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/MediaDeleteModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Props

@@ -4,10 +4,8 @@
 
 <script setup lang="ts">
 import { useTimeout } from "@/composables/use-timeout";
+import { LOADER_DISPLAY_DELAY } from "@/constants";
 import { computed, onMounted, ref, watch } from "vue";
-
-// Default delay (milliseconds)
-const DEFAULT_DELAY = 333;
 
 const props = defineProps({
     /**
@@ -61,7 +59,7 @@ const displayTimeout = useTimeout();
 const onLoadingTrue = () => {
     displayTimeout.set(() => {
         displayLoader.value = true;
-    }, props.delay || DEFAULT_DELAY);
+    }, props.delay || LOADER_DISPLAY_DELAY);
 };
 
 /**

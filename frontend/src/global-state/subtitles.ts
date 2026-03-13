@@ -21,6 +21,7 @@ import {
 } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { getCurrentMediaData } from "./media";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 // Request ID for loading
 const REQUEST_ID_SUBTITLES_LOAD = getUniqueStringId();
@@ -58,9 +59,6 @@ const SubtitlesStatus = {
 export function getSubtitlesLine(time: number): SubtitlesEntry {
     return findSubtitlesEntry(SubtitlesStatus.subtitles, time);
 }
-
-// Delay to retry loading after an error
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads current subtitles file

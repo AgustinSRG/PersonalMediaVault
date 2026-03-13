@@ -149,7 +149,7 @@ import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import type { MediaType } from "@/api/models";
-import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, type MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
@@ -165,6 +165,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { refreshCurrentAlbum } from "@/global-state/album";
 import { loadCurrentMedia } from "@/global-state/media";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 
 // Page size for requests
 const PAGE_SIZE = 50;

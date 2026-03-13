@@ -208,32 +208,22 @@ import {
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AlbumRenameModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumRenameModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AlbumChangeThumbnailModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumChangeThumbnailModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AlbumDeleteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumDeleteModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const AlbumAddMediaModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumAddMediaModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ErrorMessageModal = defineAsyncComponent({

@@ -194,47 +194,46 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
+import { LOADER_DISPLAY_DELAY } from "@/constants";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageMedia = defineAsyncComponent({
     loader: () => import("@/components/pages/PageMedia.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageUpload = defineAsyncComponent({
     loader: () => import("@/components/pages/PageUpload.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageRandom = defineAsyncComponent({
     loader: () => import("@/components/pages/PageRandom.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageAlbums = defineAsyncComponent({
     loader: () => import("@/components/pages/PageAlbums.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageSearch = defineAsyncComponent({
     loader: () => import("@/components/pages/PageSearch.vue"),
     loadingComponent: LoadingOverlay,
-    delay: 200,
+    delay: LOADER_DISPLAY_DELAY,
 });
 
 const PageSettingsDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/PageSettingsDropdown.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 // Translation function

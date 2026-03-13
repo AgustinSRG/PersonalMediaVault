@@ -273,6 +273,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 
 const HomePageRowAddElementModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
@@ -642,12 +643,6 @@ const onElementsLoaded = (newElements: HomePageElement[]) => {
         emit("loaded-current");
     }
 };
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
-
-// Delay to display the loader (milliseconds)
-const LOADER_DISPLAY_DELAY = 330;
 
 /**
  * Loads custom elements for the row

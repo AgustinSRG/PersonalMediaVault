@@ -135,6 +135,7 @@ import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -195,9 +196,6 @@ updateNowTimer.set(() => {
 const renderedExpirationRemaining = computed(() =>
     renderTimeSeconds(Math.round(Math.max(0, expirationRemaining.value - (now.value - lastReceivedTimestamp.value)) / 1000)),
 );
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

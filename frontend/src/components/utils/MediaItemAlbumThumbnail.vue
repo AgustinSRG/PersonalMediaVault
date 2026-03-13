@@ -17,14 +17,16 @@
 </template>
 
 <script setup lang="ts">
-import { MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO, type MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import type { PropType } from "vue";
 import MediaNoThumbnail from "./MediaNoThumbnail.vue";
 import ThumbImage from "./ThumbImage.vue";
 import DurationIndicator from "./DurationIndicator.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { getAssetURL } from "@/utils/api";
+import { MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 
+// Translation
 const { $t } = useI18n();
 
 type OptionalPositionedMediaListItem = MediaListItem & {

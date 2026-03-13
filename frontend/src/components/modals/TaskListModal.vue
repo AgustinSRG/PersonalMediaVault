@@ -81,6 +81,7 @@ import type { TaskStatus } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 // Translation function
 const { $t } = useI18n();
@@ -124,9 +125,6 @@ const loading = ref(true);
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data

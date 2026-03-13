@@ -145,7 +145,6 @@ import { getFrontendUrl } from "@/utils/api";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useUserPermissions } from "@/composables/use-user-permissions";
@@ -156,11 +155,10 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getAlbumsListExt, refreshAlbumsList } from "@/global-state/albums";
 import { indicateAlbumMetadataChanged } from "@/global-state/album";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
 });
 
 const ErrorMessageModal = defineAsyncComponent({
@@ -317,9 +315,6 @@ const loadRequestId = useRequestId();
 
 // Loading status
 const loading = ref(true);
-
-// Delay to retry after error (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the list of media albums

@@ -15,6 +15,7 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 /**
  * Global state of albums
@@ -114,9 +115,6 @@ export function albumsFindDuplicatedName(name: string): boolean {
 
 // Request ID for album list load
 const REQUEST_ID_ALBUMS_LOAD = getUniqueStringId();
-
-// Delay to retry loading after an error
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the albums list

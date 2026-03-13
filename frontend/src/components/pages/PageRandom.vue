@@ -71,6 +71,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { getCurrentMediaId, loadCurrentMedia } from "@/global-state/media";
+import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -160,12 +161,6 @@ const switchMediaOnLoad = ref<"" | "next" | "prev">("");
 
 // Load request ID
 const loadRequestId = useRequestId();
-
-// Delay to display the loader (milliseconds)
-const LOADER_DISPLAY_DELAY = 330;
-
-// Delay to retry loading (milliseconds)
-const LOAD_RETRY_DELAY = 1500;
 
 /**
  * Loads the data
