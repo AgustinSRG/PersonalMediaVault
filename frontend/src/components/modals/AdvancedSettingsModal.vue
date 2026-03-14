@@ -243,7 +243,6 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { onMounted, ref, useTemplateRef, watch } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { AuthController } from "@/global-state/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 import type { ImageResolutionStandardToggleable, VideoResolutionStandardToggleable } from "@/utils/resolutions";
@@ -258,6 +257,7 @@ import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { checkAuthenticationStatus } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -507,7 +507,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             showSnackBar($t("Vault configuration updated!"));
 
-            AuthController.CheckAuthStatus();
+            checkAuthenticationStatus();
 
             forceClose();
         })

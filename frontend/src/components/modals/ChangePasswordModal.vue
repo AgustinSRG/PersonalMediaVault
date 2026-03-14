@@ -70,10 +70,8 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { apiAccountChangePassword } from "@/api/api-account";
-import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
-import { AuthController } from "@/global-state/auth";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
@@ -81,10 +79,10 @@ import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
-import { onApplicationEvent } from "@/composables/on-app-event";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { useUsername } from "@/composables/use-username";
 
 // Translation function
 const { $t } = useI18n();
@@ -99,11 +97,7 @@ const container = useTemplateRef("container");
 const { close, forceClose } = useModal(display, container);
 
 // Username
-const username = ref(AuthController.Username);
-
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    username.value = AuthController.Username;
-});
+const username = useUsername();
 
 // Current password
 const currentPassword = ref("");

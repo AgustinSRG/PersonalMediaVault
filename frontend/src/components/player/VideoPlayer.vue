@@ -294,7 +294,7 @@ import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/global-state/media";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
+import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
 import type { PropType } from "vue";
 import type { MediaData, MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
@@ -1879,11 +1879,13 @@ const onMediaError = () => {
     if (!videoURL.value) {
         return;
     }
-    if (!AuthController.RefreshAuthStatus()) {
+    if (!refreshAuthenticationStatus()) {
         mediaError.value = true;
         updateMediaErrorMessage();
+
         loading.value = false;
-        AuthController.CheckAuthStatusSilent();
+
+        checkAuthenticationStatusSilent();
     }
 };
 
@@ -2020,11 +2022,14 @@ usePlayerMediaSession(
 /* Keyboard handler */
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
         return false;
     }
+
     let caught = true;
+
     const shifting = event.shiftKey;
+
     switch (event.key) {
         case "A":
         case "a":

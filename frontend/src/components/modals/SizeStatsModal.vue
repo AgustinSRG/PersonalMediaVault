@@ -86,7 +86,6 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { onMounted, ref, useTemplateRef, watch } from "vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { AuthController } from "@/global-state/auth";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
 import { apiMediaGetMediaSizeStats } from "@/api/api-media";
 import { useI18n } from "@/composables/use-i18n";
@@ -94,6 +93,7 @@ import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { renderSize } from "@/utils/size";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -153,7 +153,7 @@ const load = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

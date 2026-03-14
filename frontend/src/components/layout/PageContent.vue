@@ -184,7 +184,6 @@ import {
 } from "@/global-state/app-events";
 import { AppStatus } from "@/global-state/app-status";
 import { computed, defineAsyncComponent, nextTick, ref, watch } from "vue";
-import { AuthController } from "@/global-state/auth";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -195,6 +194,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
+import { isVaultLocked } from "@/global-state/auth";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -497,7 +497,7 @@ const KEYBOARD_HANDLER_PRIORITY = 10;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

@@ -48,7 +48,6 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
-import { AuthController } from "@/global-state/auth";
 import type { MediaData } from "@/api/models";
 import { tryPreventableExit } from "@/global-state/exit-prevent";
 import { useI18n } from "@/composables/use-i18n";
@@ -56,6 +55,7 @@ import { stopPropagationEvent } from "@/utils/events";
 import { useTimeout } from "@/composables/use-timeout";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { loadCurrentMedia } from "@/global-state/media";
+import { isVaultLocked } from "@/global-state/auth";
 
 const PlayerAlbumFullScreen = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerAlbumFullScreen.vue"),
@@ -266,7 +266,7 @@ const onAnimationEnd = (event: AnimationEvent) => {
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !event.key || event.ctrlKey) {
         return false;
     }
 

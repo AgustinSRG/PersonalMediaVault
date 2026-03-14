@@ -205,7 +205,6 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
@@ -236,6 +235,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { getCurrentAlbumData } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { getAuthStatus, isVaultLocked } from "@/global-state/auth";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -502,7 +502,7 @@ const started = ref(false);
 const finished = ref(true);
 
 // Search mode
-const mode = ref(getPreferredSearchMode(AuthController.SemanticSearchAvailable));
+const mode = ref(getPreferredSearchMode(getAuthStatus().semanticSearchAvailable));
 
 // Tags to filter by
 const tags = ref<number[]>([]);
@@ -553,7 +553,7 @@ const getTagMode = (): "allof" | "anyof" | "noneof" => {
 const albumSearch = ref(-1);
 
 // True if semantic search is available
-const semanticSearchAvailable = ref(AuthController.SemanticSearchAvailable);
+const semanticSearchAvailable = ref(getAuthStatus().semanticSearchAvailable);
 
 // Vector (for semantic search)
 const vector = ref([]);
@@ -677,8 +677,8 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
     }
 });
 
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    semanticSearchAvailable.value = AuthController.SemanticSearchAvailable;
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
+    semanticSearchAvailable.value = newAuthStatus.semanticSearchAvailable;
 
     if ((mode.value === "semantic" || mode.value === "image") && !semanticSearchAvailable.value) {
         setMode("basic");
@@ -725,7 +725,7 @@ const load = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -870,7 +870,7 @@ const loadSemantic = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -955,7 +955,7 @@ const loadSemanticVector = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -1015,7 +1015,7 @@ const loadSemanticImage = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -1101,7 +1101,7 @@ const loadSemanticImageVector = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -1620,7 +1620,7 @@ const skipTagSuggestions = () => {
 const KEYBOARD_HANDLER_PRIORITY = 20;
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

@@ -138,7 +138,6 @@
 import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/local-storage/app-preferences";
 import type { AppStatusPage } from "@/global-state/app-status";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import { getFrontendUrl } from "@/utils/api";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import {
@@ -155,6 +154,7 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { stopPropagationEvent } from "@/utils/events";
 import type { AlbumListItemMinExt } from "@/api/models";
 import { getAlbumsListExt } from "@/global-state/albums";
+import { getAuthStatus } from "@/global-state/auth";
 
 // Translation
 const { $t } = useI18n();
@@ -170,11 +170,14 @@ const emit = defineEmits<{
     (e: "skip-to-content"): void;
 }>();
 
+// Initial auth status
+const initialAuthStatus = getAuthStatus();
+
 // Custom title
-const customTitle = ref(AuthController.Title);
+const customTitle = ref(initialAuthStatus.title);
 
 // Custom logo
-const customLogo = ref(AuthController.Logo);
+const customLogo = ref(initialAuthStatus.logo);
 
 // Application title
 const appTitle = computed(() => customTitle.value || $t("Personal Media Vault"));
@@ -182,9 +185,9 @@ const appTitle = computed(() => customTitle.value || $t("Personal Media Vault"))
 // Application logo
 const appLogo = computed(() => customLogo.value || "PMV");
 
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    customTitle.value = AuthController.Title;
-    customLogo.value = AuthController.Logo;
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
+    customTitle.value = newAuthStatus.title;
+    customLogo.value = newAuthStatus.logo;
 });
 
 // User permissions

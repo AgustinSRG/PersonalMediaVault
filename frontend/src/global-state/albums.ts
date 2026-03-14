@@ -4,7 +4,6 @@
 
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AuthController } from "./auth";
 import type { AlbumListItemMin, AlbumListItemMinExt } from "@/api/models";
 import { apiAlbumsGetAlbumsMin } from "@/api/api-albums";
 import {
@@ -16,6 +15,7 @@ import {
 } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "./auth";
 
 /**
  * Global state of albums
@@ -122,7 +122,7 @@ const REQUEST_ID_ALBUMS_LOAD = getUniqueStringId();
 function loadAlbumsList() {
     AlbumsState.loading = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

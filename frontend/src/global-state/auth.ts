@@ -17,310 +17,386 @@ import {
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
 import { abortNamedApiRequest, addRequestAuthenticationHandler, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
+import { getUniqueStringId } from "@/utils/unique-id";
+import { LOAD_RETRY_DELAY, SESSION_TOKEN_HEADER_NAME } from "@/constants";
 
-const REQUEST_KEY = "auth-control-check";
-const REQUEST_KEY_SILENT = "auth-control-check-silent";
-
+// Local storage key to store the auth token
 const LS_KEY_AUTH_TOKEN = "x-session-token";
+
+// Local storage key to store the vault fingerprint
 const LS_KEY_VAULT_FINGERPRINT = "x-vault-fingerprint";
 
-export const SESSION_TOKEN_HEADER_NAME = "x-session-token";
-
 /**
- * Authentication status management object
+ * Authentication status type
  */
-export class AuthController {
+export type AuthStatus = {
     /**
      * True if the vault is locked
      */
-    public static Locked = true;
+    locked: boolean;
 
     /**
-     * Session ID
+     * True if loading the auth state
      */
-    public static Session = "";
+    loading: boolean;
 
     /**
-     * Username
+     * Current session token
      */
-    public static Username = "";
+    session: string;
+
+    /**
+     * Current username
+     */
+    username: string;
 
     /**
      * Vault fingerprint
      */
-    public static Fingerprint = "";
+    fingerprint: string;
 
     /**
-     * True if loading
+     * True if the user has root permissions
      */
-    public static Loading = true;
+    isRoot: boolean;
 
     /**
-     * True if the user has root permission on the vault
+     * True if the user has write permissions
      */
-    public static IsRoot = false;
+    canWrite: boolean;
 
     /**
-     * True if the user can make changes to the vault
+     * Custom vault title
      */
-    public static CanWrite = false;
+    title: string;
 
     /**
-     * Custom title of the vault
+     * Custom logo
      */
-    public static Title = "";
+    logo: string;
 
     /**
-     * Custom logo text of the vault
+     * Custom CSS
      */
-    public static Logo = "";
-
-    /**
-     * Custom CSS of the vault
-     */
-    public static CSS = "";
+    css: string;
 
     /**
      * True if semantic search is available
      */
-    public static SemanticSearchAvailable = false;
+    semanticSearchAvailable: boolean;
 
     /**
-     * Initialization logic
-     * Runs at app startup
+     * True if the authentication status is being silently checked
      */
-    public static Initialize() {
-        addRequestAuthenticationHandler(() => {
-            AuthController.RefreshAuthStatus();
+    checkingSilent: boolean;
+};
 
-            const authHeaders = Object.create(null);
-            authHeaders[SESSION_TOKEN_HEADER_NAME] = AuthController.Session;
+/**
+ * Authentication state
+ */
+const AuthState: AuthStatus = {
+    locked: true,
+    loading: true,
+    session: "",
+    username: "",
+    fingerprint: "",
+    isRoot: false,
+    canWrite: false,
+    title: "",
+    logo: "",
+    css: "",
+    semanticSearchAvailable: false,
+    checkingSilent: false,
+};
 
-            return authHeaders;
+/**
+ * Gets the current auth status
+ * @returns The current auth status
+ */
+export function getAuthStatus(): Readonly<AuthStatus> {
+    return AuthState;
+}
+
+/**
+ * Checks if the auth status is being loaded
+ * @returns True if the status is being loaded
+ */
+export function isLoadingAuthStatus(): boolean {
+    return AuthState.loading;
+}
+
+/**
+ * Checks if the vault is locked
+ * @returns True if the vault is locked
+ */
+export function isVaultLocked(): boolean {
+    return AuthState.locked;
+}
+
+/**
+ * Loads session token and fingerprint from
+ * the local storage
+ */
+function loadSessionTokenAndFingerprint() {
+    AuthState.session = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
+    AuthState.fingerprint = fetchFromLocalStorage(LS_KEY_VAULT_FINGERPRINT, "");
+}
+
+/**
+ * Sets the cookie for the images/videos
+ * that do not support headers
+ */
+function setAssetsCookie() {
+    const cookieName = "st-" + AuthState.fingerprint;
+    setAssetsSessionCookie(cookieName, AuthState.session);
+}
+
+/**
+ * Refreshes authentication status from the local storage
+ * @returns True if the status was not synced, false if the status was synced
+ */
+export function refreshAuthenticationStatus(): boolean {
+    const storedSession = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
+
+    if (storedSession !== AuthState.session) {
+        loadSessionTokenAndFingerprint();
+        setAssetsCookie();
+        checkAuthenticationStatus();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Sets the authentication loading state
+ * @param loading The loading state
+ */
+function setAuthenticationLoading(loading: boolean) {
+    AuthState.loading = loading;
+    emitAppEvent(EVENT_NAME_AUTH_LOADING, loading);
+}
+
+/**
+ * Updates custom style for the page
+ */
+function updateCustomStyle() {
+    const head = document.head || document.getElementsByTagName("head")[0];
+
+    if (!head) {
+        return;
+    }
+
+    let styleElement: any = document.querySelector("#custom-style-pmv");
+
+    if (styleElement) {
+        styleElement.remove();
+    }
+
+    styleElement = document.createElement("style");
+
+    styleElement.id = "custom-style-pmv";
+    styleElement.type = "text/css";
+    styleElement.appendChild(document.createTextNode(AuthState.css));
+
+    head.appendChild(styleElement);
+}
+
+// Request ID for loading the auth context
+const REQUEST_KEY = getUniqueStringId();
+
+/**
+ * Loads the authentication status from the server
+ */
+export function checkAuthenticationStatus() {
+    setAuthenticationLoading(true);
+
+    clearNamedTimeout(REQUEST_KEY);
+
+    makeNamedApiRequest(REQUEST_KEY, apiAccountGetContext())
+        .onSuccess((response) => {
+            AuthState.locked = false;
+            AuthState.isRoot = response.root;
+            AuthState.canWrite = response.write;
+            AuthState.username = response.username;
+            AuthState.title = response.title;
+            AuthState.logo = response.logo;
+            AuthState.css = response.css;
+            AuthState.semanticSearchAvailable = response.semanticSearch || false;
+
+            if (import.meta.env.VITE__VERSION !== response.version) {
+                emitAppEvent(EVENT_NAME_APP_NEW_VERSION);
+            }
+
+            emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+
+            setAuthenticationLoading(false);
+
+            updateCustomStyle();
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    AuthState.locked = true;
+                    AuthState.username = "";
+
+                    emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+
+                    setAuthenticationLoading(false);
+                },
+                temporalError: () => {
+                    // Retry
+                    emitAppEvent(EVENT_NAME_AUTH_ERROR);
+                    setNamedTimeout(REQUEST_KEY, LOAD_RETRY_DELAY, checkAuthenticationStatus);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // We assume the credentials are invalid
+            AuthState.locked = true;
+            AuthState.username = "";
+
+            emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+
+            setAuthenticationLoading(false);
         });
+}
 
-        addAppEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.OnUnauthorized);
+// Request ID for silently loading the context
+const REQUEST_KEY_SILENT = getUniqueStringId();
 
-        AuthController.LoadAuthStatus();
-        AuthController.SetAssetsCookie();
-        AuthController.CheckAuthStatus();
+/**
+ * Checks auth status silently (no loading events)
+ */
+export function checkAuthenticationStatusSilent() {
+    if (AuthState.checkingSilent) {
+        return;
     }
 
-    /**
-     * Loads authentication status from local storage
-     */
-    public static LoadAuthStatus() {
-        AuthController.Session = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
-        AuthController.Fingerprint = fetchFromLocalStorage(LS_KEY_VAULT_FINGERPRINT, "");
+    clearNamedTimeout(REQUEST_KEY_SILENT);
+
+    if (AuthState.loading) {
+        abortNamedApiRequest(REQUEST_KEY_SILENT);
+        AuthState.checkingSilent = false;
     }
 
-    /**
-     * Sets assets cookie for media to load
-     */
-    public static SetAssetsCookie() {
-        const cookieName = "st-" + AuthController.Fingerprint;
-        setAssetsSessionCookie(cookieName, AuthController.Session);
-    }
+    AuthState.checkingSilent = true;
 
-    /**
-     * Refreshes auth status from the local storage
-     * @returns True if the status was not synced, false if the status was synced
-     */
-    public static RefreshAuthStatus(): boolean {
-        const storedSession = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
-
-        if (storedSession !== AuthController.Session) {
-            AuthController.LoadAuthStatus();
-            AuthController.SetAssetsCookie();
-            AuthController.CheckAuthStatus();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Checks auth status
-     */
-    public static CheckAuthStatus() {
-        AuthController.Loading = true;
-        emitAppEvent(EVENT_NAME_AUTH_LOADING, true);
-        clearNamedTimeout(REQUEST_KEY);
-        makeNamedApiRequest(REQUEST_KEY, apiAccountGetContext())
-            .onSuccess((response) => {
-                AuthController.Locked = false;
-                AuthController.IsRoot = response.root;
-                AuthController.CanWrite = response.write;
-                AuthController.Username = response.username;
-                AuthController.Title = response.title;
-                AuthController.Logo = response.logo;
-                AuthController.CSS = response.css;
-                AuthController.SemanticSearchAvailable = response.semanticSearch || false;
-                if (import.meta.env.VITE__VERSION !== response.version) {
-                    emitAppEvent(EVENT_NAME_APP_NEW_VERSION);
-                }
-                emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-                AuthController.Loading = false;
-                emitAppEvent(EVENT_NAME_AUTH_LOADING, false);
-                AuthController.UpdateCustomStyle();
-            })
-            .onRequestError((err, handleErr) => {
-                handleErr(err, {
-                    unauthorized: () => {
-                        AuthController.Locked = true;
-                        AuthController.Username = "";
-                        emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-                        AuthController.Loading = false;
-                        emitAppEvent(EVENT_NAME_AUTH_LOADING, false);
-                    },
-                    temporalError: () => {
-                        // Retry
-                        emitAppEvent(EVENT_NAME_AUTH_ERROR);
-                        setNamedTimeout(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
-                    },
-                });
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-                // We assume the credentials are invalid
-                AuthController.Locked = true;
-                AuthController.Username = "";
-                emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-                AuthController.Loading = false;
-                emitAppEvent(EVENT_NAME_AUTH_LOADING, false);
+    makeNamedApiRequest(REQUEST_KEY_SILENT, apiAccountGetContext())
+        .onSuccess(() => {
+            AuthState.checkingSilent = false;
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    AuthState.checkingSilent = false;
+                    checkAuthenticationStatus();
+                },
+                temporalError: () => {
+                    // Retry
+                    setNamedTimeout(REQUEST_KEY_SILENT, LOAD_RETRY_DELAY, checkAuthenticationStatusSilent);
+                },
             });
-    }
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            AuthState.checkingSilent = false;
+            checkAuthenticationStatus();
+        });
+}
 
-    public static CheckingAuthSilent = false;
+/**
+ * Handles new authenticated session.
+ * Call when the user logs into the vault.
+ * @param session The session token
+ * @param fingerprint The vault fingerprint
+ */
+export function handleAuthenticatedNewSession(session: string, fingerprint: string) {
+    AuthState.locked = true;
 
-    /**
-     * Checks auth status silently (no loading events)
-     */
-    public static CheckAuthStatusSilent() {
-        if (AuthController.CheckingAuthSilent) {
+    AuthState.session = session;
+    saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, session);
+
+    AuthState.fingerprint = fingerprint;
+    saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
+
+    setAssetsCookie();
+
+    AuthState.username = "";
+
+    emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+
+    checkAuthenticationStatus();
+}
+
+/**
+ * Updates currently authenticated username.
+ * Call when the user updates their username.
+ * @param username New username
+ */
+export function updateAuthenticatedUsername(username: string) {
+    AuthState.username = username;
+    emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+}
+
+/**
+ * Clears current session token after logging out
+ */
+function clearSession() {
+    AuthState.locked = true;
+    AuthState.session = "";
+
+    saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
+
+    AuthState.username = "";
+
+    setAssetsCookie();
+
+    emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthState);
+}
+
+/**
+ * Closes current session in order to log out
+ */
+export function closeCurrentAuthenticatedSession() {
+    const currentSession = AuthState.session;
+    makeApiRequest(apiAuthLogout())
+        .onSuccess(() => {
+            if (AuthState.session === currentSession) {
+                clearSession();
+            }
+        })
+        .onRequestError(() => {
+            if (AuthState.session === currentSession) {
+                clearSession();
+            }
+        });
+}
+/**
+ * Initializes the authentication state
+ */
+export function initializeAuthentication() {
+    // Add the session header to all API requests
+    addRequestAuthenticationHandler(() => {
+        refreshAuthenticationStatus();
+
+        const authHeaders = Object.create(null);
+        authHeaders[SESSION_TOKEN_HEADER_NAME] = AuthState.session;
+
+        return authHeaders;
+    });
+
+    // Handle unauthorized signal, indicating the token is no longer valid
+    addAppEventListener(EVENT_NAME_UNAUTHORIZED, () => {
+        if (AuthState.locked) {
             return;
         }
 
-        clearNamedTimeout(REQUEST_KEY_SILENT);
+        clearSession();
+    });
 
-        if (AuthController.Loading) {
-            abortNamedApiRequest(REQUEST_KEY_SILENT);
-            AuthController.CheckingAuthSilent = false;
-        }
-
-        AuthController.CheckingAuthSilent = true;
-
-        makeNamedApiRequest(REQUEST_KEY_SILENT, apiAccountGetContext())
-            .onSuccess(() => {
-                AuthController.CheckingAuthSilent = false;
-            })
-            .onRequestError((err, handleErr) => {
-                handleErr(err, {
-                    unauthorized: () => {
-                        AuthController.CheckingAuthSilent = false;
-                        AuthController.CheckAuthStatus();
-                    },
-                    temporalError: () => {
-                        // Retry
-                        setNamedTimeout(REQUEST_KEY_SILENT, 1500, AuthController.CheckAuthStatusSilent);
-                    },
-                });
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-                AuthController.CheckingAuthSilent = false;
-                AuthController.CheckAuthStatus();
-            });
-    }
-
-    /**
-     * Updates local status username
-     * @param username New username
-     */
-    public static UpdateUsername(username: string) {
-        AuthController.Username = username;
-        emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-    }
-
-    /**
-     * Sets session
-     * @param session Session ID
-     * @param fingerprint Vault fingerprint
-     */
-    public static SetSession(session: string, fingerprint: string) {
-        AuthController.Locked = true;
-        AuthController.Session = session;
-        saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, session);
-        AuthController.Fingerprint = fingerprint;
-        saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
-        AuthController.SetAssetsCookie();
-        AuthController.Username = "";
-        emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-        AuthController.CheckAuthStatus();
-    }
-
-    /**
-     * Logs out
-     */
-    public static Logout() {
-        const currentSession = AuthController.Session;
-        makeApiRequest(apiAuthLogout())
-            .onSuccess(() => {
-                if (AuthController.Session === currentSession) {
-                    AuthController.ClearSession();
-                }
-            })
-            .onRequestError(() => {
-                if (AuthController.Session === currentSession) {
-                    AuthController.ClearSession();
-                }
-            });
-    }
-
-    /**
-     * Clears current session to after logging out
-     */
-    public static OnUnauthorized() {
-        if (AuthController.Locked) {
-            return;
-        }
-        AuthController.ClearSession();
-    }
-
-    /**
-     * Clears current session to after logging out
-     */
-    public static ClearSession() {
-        AuthController.Locked = true;
-        AuthController.Session = "";
-        saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
-        AuthController.Username = "";
-        AuthController.SetAssetsCookie();
-        emitAppEvent(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
-    }
-
-    /**
-     * Updates custom style
-     */
-    private static UpdateCustomStyle() {
-        const head = document.head || document.getElementsByTagName("head")[0];
-
-        if (!head) {
-            return;
-        }
-
-        let styleElement: any = document.querySelector("#custom-style-pmv");
-
-        if (styleElement) {
-            styleElement.remove();
-        }
-
-        styleElement = document.createElement("style");
-
-        styleElement.id = "custom-style-pmv";
-        styleElement.type = "text/css";
-        styleElement.appendChild(document.createTextNode(AuthController.CSS));
-
-        head.appendChild(styleElement);
-    }
+    loadSessionTokenAndFingerprint();
+    setAssetsCookie();
+    checkAuthenticationStatus();
 }

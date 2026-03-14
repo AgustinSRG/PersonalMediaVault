@@ -44,13 +44,11 @@ import { onMounted, ref, useTemplateRef } from "vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
-import { AuthController } from "@/global-state/auth";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
-import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useInterval } from "@/composables/use-interval";
-import { onApplicationEvent } from "@/composables/on-app-event";
+import { useUsername } from "@/composables/use-username";
 
 // Translation function
 const { $t } = useI18n();
@@ -114,11 +112,7 @@ onMounted(() => {
 });
 
 // Username
-const username = ref(AuthController.Username);
-
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    username.value = AuthController.Username;
-});
+const username = useUsername();
 
 // TFA code
 const code = ref("");

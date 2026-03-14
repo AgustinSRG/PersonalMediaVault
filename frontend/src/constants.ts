@@ -3,6 +3,12 @@
 "use strict";
 
 /**
+ * Name of the header to provide
+ * the session token for the server API
+ */
+export const SESSION_TOKEN_HEADER_NAME = "x-session-token";
+
+/**
  * Type value for images
  */
 export const MEDIA_TYPE_IMAGE = 1;

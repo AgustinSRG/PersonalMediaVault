@@ -90,7 +90,6 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
-import { AuthController } from "@/global-state/auth";
 import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
@@ -106,6 +105,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { getAuthStatus } from "@/global-state/auth";
 
 const AccountTfaSettingsModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaSettingsModal.vue"),
@@ -134,11 +134,11 @@ const emit = defineEmits<{
 // TFA TOTP issuer name
 const issuer = ref("PMV");
 
-// TFA account name
-const account = ref(AuthController.Username);
-
 // TFA original account name
-const originalAccount = ref(AuthController.Username);
+const originalAccount = ref(getAuthStatus().username);
+
+// TFA account name
+const account = ref(originalAccount.value);
 
 // TOTP algorithm
 const algorithm = ref<TimeOtpAlgorithm>("sha1");
@@ -232,9 +232,9 @@ onMounted(() => {
     }
 });
 
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    account.value = AuthController.Username;
-    originalAccount.value = AuthController.Username;
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
+    account.value = newAuthStatus.username;
+    originalAccount.value = newAuthStatus.username;
 });
 
 // Display custom settings modal

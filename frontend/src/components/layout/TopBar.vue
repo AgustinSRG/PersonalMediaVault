@@ -33,13 +33,13 @@
 </template>
 
 <script setup lang="ts">
-import { AuthController } from "@/global-state/auth";
 import { computed, ref, useTemplateRef } from "vue";
 import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import VaultSearchInput from "../utils/VaultSearchInput.vue";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { useI18n } from "@/composables/use-i18n";
+import { getAuthStatus, isVaultLocked } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -80,15 +80,18 @@ const emit = defineEmits<{
 // Is search focused?
 const searchFocused = ref(false);
 
+// Initial auth status
+const initialAuthStatus = getAuthStatus();
+
 // Custom title
-const customTitle = ref(AuthController.Title);
+const customTitle = ref(initialAuthStatus.title);
 
 // Custom logo
-const customLogo = ref(AuthController.Logo);
+const customLogo = ref(initialAuthStatus.logo);
 
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, () => {
-    customTitle.value = AuthController.Title;
-    customLogo.value = AuthController.Logo;
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
+    customTitle.value = newAuthStatus.title;
+    customLogo.value = newAuthStatus.logo;
 });
 
 // Application title
@@ -143,7 +146,7 @@ const focusSearch = () => {
 };
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !event.key) {
+    if (isVaultLocked() || !event.key) {
         return false;
     }
 

@@ -3,7 +3,7 @@
 "use strict";
 
 import type { AppStatusPage } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
+import { getAuthStatus } from "@/global-state/auth";
 
 /**
  * API Prefix
@@ -41,7 +41,7 @@ export function getApiURL(path: string): string {
 export function getAssetURL(path: string): string {
     if (import.meta.env.DEV) {
         const assetUrl = new URL(resolveUrl(path, (import.meta.env.VITE_DEV_TEST_HOST || "http://localhost") + ""));
-        assetUrl.searchParams.set("session_token", AuthController.Session);
+        assetUrl.searchParams.set("session_token", getAuthStatus().session);
         return assetUrl.toString();
     } else {
         return resolveUrl("." + path, location.protocol + "//" + location.host + location.pathname);

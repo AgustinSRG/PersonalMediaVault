@@ -68,7 +68,6 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -86,6 +85,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
+import { isVaultLocked } from "@/global-state/auth";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -218,7 +218,7 @@ const load = () => {
         loading.value = true;
     });
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -469,7 +469,7 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

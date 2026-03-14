@@ -24,7 +24,7 @@ import {
     EVENT_NAME_UNAUTHORIZED,
     EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
 } from "@/global-state/app-events";
-import { AuthController } from "@/global-state/auth";
+import { isVaultLocked } from "@/global-state/auth";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
@@ -89,7 +89,7 @@ const loading = ref(false);
  * calling the corresponding API
  */
 const load = () => {
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return;
     }
 

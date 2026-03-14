@@ -5,7 +5,6 @@
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
-import { AuthController } from "./auth";
 import type { Album, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiMediaGetMedia } from "@/api/api-media";
@@ -26,6 +25,7 @@ import { getCurrentMediaId, provideCurrentMediaData } from "./media";
 import { setCachedAlbumPosition } from "./album-position-cache";
 import { refreshAlbumsList } from "./albums";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "./auth";
 
 /**
  * State of the current album
@@ -112,7 +112,7 @@ function loadCurrentAlbum() {
 
     setCurrentAlbumLoading(true);
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -424,7 +424,7 @@ export function loadAlbumNextPreFetch() {
     AlbumNextPrefetchState.loading = true;
     AlbumNextPrefetchState.available = false;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

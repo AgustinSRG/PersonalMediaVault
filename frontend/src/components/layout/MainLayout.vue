@@ -108,7 +108,6 @@ import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
-import { AuthController } from "../../global-state/auth";
 import type { ColorThemeName } from "@/local-storage/app-preferences";
 import { getTheme } from "@/local-storage/app-preferences";
 import { AppStatus } from "@/global-state/app-status";
@@ -124,6 +123,7 @@ import {
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
+import { closeCurrentAuthenticatedSession, isLoadingAuthStatus, isVaultLocked } from "@/global-state/auth";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -227,10 +227,10 @@ const { $t } = useI18n();
 const theme = ref(getTheme());
 
 // Is vault locked?
-const locked = ref(AuthController.Locked);
+const locked = ref(isVaultLocked());
 
 // Is auth status being loaded?
-const loadingAuth = ref(AuthController.Loading);
+const loadingAuth = ref(isLoadingAuthStatus());
 
 // Is there an error loading the auth status?
 const loadingAuthError = ref(false);
@@ -313,8 +313,8 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
     focus.value = AppStatus.CurrentFocus;
 });
 
-onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (l: boolean) => {
-    locked.value = l;
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthState) => {
+    locked.value = newAuthState.locked;
     loadingAuthError.value = false;
 
     if (locked.value) {
@@ -428,7 +428,7 @@ const onGoSettings = (o: string) => {
             displaySecuritySettings.value = true;
             break;
         case "logout":
-            AuthController.Logout();
+            closeCurrentAuthenticatedSession();
             break;
     }
 };

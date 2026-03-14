@@ -279,7 +279,6 @@ import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/global-state/media";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import type { ColorThemeName } from "@/local-storage/app-preferences";
 import { getTheme } from "@/local-storage/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
@@ -306,6 +305,7 @@ import { usePlayerTimeSlices } from "@/composables/use-player-time-slices";
 import { useTimeout } from "@/composables/use-timeout";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1644,11 +1644,13 @@ const onMediaError = () => {
     if (!audioURL.value) {
         return;
     }
-    if (!AuthController.RefreshAuthStatus()) {
+    if (!refreshAuthenticationStatus()) {
         mediaError.value = true;
         updateMediaErrorMessage();
+
         loading.value = false;
-        AuthController.CheckAuthStatusSilent();
+
+        checkAuthenticationStatusSilent();
     }
 };
 
@@ -1778,11 +1780,14 @@ usePlayerMediaSession(
 /* Keyboard handler */
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
         return false;
     }
+
     let caught = true;
+
     const shifting = event.shiftKey;
+
     switch (event.key) {
         case "A":
         case "a":

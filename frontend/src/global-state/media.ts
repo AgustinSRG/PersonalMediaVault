@@ -14,12 +14,12 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
 import { AppStatus } from "./app-status";
-import { AuthController } from "./auth";
 import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { checkAlbumNextPrefetch } from "./album";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "./auth";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -115,7 +115,7 @@ export function loadCurrentMedia() {
 
     setCurrentMediaLoading(true);
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

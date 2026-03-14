@@ -10,6 +10,7 @@ import type { ImageNote } from "@/utils/notes-format";
 import type { ImageNodesChangeType } from "./img-notes";
 import type { UploadEntryMin } from "./upload";
 import type { AlbumMediaPositionContext } from "./album";
+import type { AuthStatus } from "./auth";
 
 /**
  * Event triggered when a request results in 401 - Unauthorized
@@ -272,10 +273,9 @@ export type AppEventsMap = {
 
     /**
      * Event triggered when the authentication status changes
-     * @param locked True if the vault is locked
-     * @param username Username
+     * @param status The authentication status
      */
-    [EVENT_NAME_AUTH_CHANGED]: (locked: boolean, username: string) => void;
+    [EVENT_NAME_AUTH_CHANGED]: (status: Readonly<AuthStatus>) => void;
 
     /**
      * Event triggered when the authentication status cannot be loaded due to an error
@@ -418,6 +418,9 @@ export type AppEventsMap = {
 
     /**
      * Event triggered when the current media data is updated
+     * @param notes List of image notes
+     * @param imageWidth Image width (px)
+     * @param imageHeight Image height (px)
      */
     [EVENT_NAME_IMAGE_NOTES_UPDATE]: (notes: ImageNote[], imageWidth: number, imageHeight: number) => void;
 

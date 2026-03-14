@@ -21,10 +21,10 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { AuthController } from "@/global-state/auth";
 import { useTemplateRef } from "vue";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
+import { closeCurrentAuthenticatedSession } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -42,7 +42,7 @@ const { close } = useModal(display, container);
  * Logs out of the vault
  */
 const logout = () => {
-    AuthController.Logout();
+    closeCurrentAuthenticatedSession();
     close();
 };
 </script>

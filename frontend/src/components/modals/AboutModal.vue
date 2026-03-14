@@ -77,11 +77,11 @@ import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-brow
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiAbout } from "@/api/api-about";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
-import { AuthController } from "@/global-state/auth";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
+import { isVaultLocked } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -134,7 +134,7 @@ const load = () => {
     abortNamedApiRequest(requestId);
     clearNamedTimeout(requestId);
 
-    if (!display.value || AuthController.Locked) {
+    if (!display.value || isVaultLocked()) {
         return;
     }
 

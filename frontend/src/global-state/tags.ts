@@ -4,12 +4,12 @@
 
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AuthController } from "./auth";
 import type { MediaListItem } from "@/api/models";
 import { apiTagsGetTags } from "@/api/api-tags";
 import { addAppEventListener, emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_TAGS_UPDATE, EVENT_NAME_UNAUTHORIZED } from "./app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "./auth";
 
 /**
  * Tag data with the matching information
@@ -125,7 +125,7 @@ const REQUEST_ID = getUniqueStringId();
 function loadTags() {
     TagsState.loading = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

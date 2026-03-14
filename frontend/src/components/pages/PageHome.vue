@@ -139,7 +139,6 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
@@ -157,6 +156,7 @@ import { onDocumentEvent } from "@/composables/on-document-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onHomeGroupLoad, onPageUnload } from "@/global-state/pages";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
+import { checkAuthenticationStatus, isVaultLocked } from "@/global-state/auth";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -269,7 +269,7 @@ const load = () => {
         loading.value = true;
     });
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -904,7 +904,7 @@ const doSilentMove = (rowId: number, position: number) => {
                         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     accessDenied: () => {
-                        AuthController.CheckAuthStatus();
+                        checkAuthenticationStatus();
                     },
                     notFound: () => {
                         load();
@@ -927,7 +927,7 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey || props.editing) {
+    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey || props.editing) {
         return false;
     }
 

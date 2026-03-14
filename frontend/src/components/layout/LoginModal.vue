@@ -95,7 +95,6 @@
 import type { SessionDuration } from "@/api/api-auth";
 import { apiAuthLogin } from "@/api/api-auth";
 import { apiInvitesLogin } from "@/api/api-invites";
-import { AuthController } from "@/global-state/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
@@ -104,6 +103,7 @@ import { stringMultiReplace } from "@/utils/string-multi-replace";
 import { useInterval } from "@/composables/use-interval";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useI18n } from "@/composables/use-i18n";
+import { handleAuthenticatedNewSession } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -199,7 +199,7 @@ const loginWithCredentials = () => {
             password.value = "";
             tfaCode.value = "";
 
-            AuthController.SetSession(response.session_id, response.vault_fingerprint);
+            handleAuthenticatedNewSession(response.session_id, response.vault_fingerprint);
         })
         .onCancel(() => {
             busy.value = false;
@@ -263,7 +263,7 @@ const loginWithCode = () => {
 
             code.value = "";
 
-            AuthController.SetSession(response.session_id, response.vault_fingerprint);
+            handleAuthenticatedNewSession(response.session_id, response.vault_fingerprint);
         })
         .onCancel(() => {
             busy.value = false;

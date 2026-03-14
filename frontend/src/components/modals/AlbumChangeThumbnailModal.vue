@@ -60,7 +60,6 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
-import { AuthController, SESSION_TOKEN_HEADER_NAME } from "@/global-state/auth";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
 import ThumbImage from "../utils/ThumbImage.vue";
@@ -73,6 +72,8 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { getCurrentAlbumData, getCurrentAlbumId, indicateAlbumMetadataChanged } from "@/global-state/album";
 import { getCurrentMediaData } from "@/global-state/media";
+import { SESSION_TOKEN_HEADER_NAME } from "@/constants";
+import { getAuthStatus } from "@/global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -310,7 +311,7 @@ const setCurrentMediaThumbnail = () => {
     fetch(thumbnailUrl, {
         signal: abortController.signal,
         headers: {
-            [SESSION_TOKEN_HEADER_NAME]: AuthController.Session,
+            [SESSION_TOKEN_HEADER_NAME]: getAuthStatus().session,
         },
     })
         .then((response) => {

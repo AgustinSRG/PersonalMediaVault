@@ -265,7 +265,6 @@ import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asan
 import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
 import HomePageItemThumbnail from "./HomePageItemThumbnail.vue";
-import { AuthController } from "@/global-state/auth";
 import { apiSearch } from "@/api/api-search";
 import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
@@ -274,6 +273,7 @@ import { useInterval } from "@/composables/use-interval";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
+import { checkAuthenticationStatus, isVaultLocked } from "@/global-state/auth";
 
 const HomePageRowAddElementModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
@@ -655,7 +655,7 @@ const loadCustomElements = () => {
         loadDisplay.value = true;
     });
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -701,7 +701,7 @@ const loadRecentMedia = () => {
         loadDisplay.value = true;
     });
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -750,7 +750,7 @@ const loadRecentAlbums = () => {
         loadDisplay.value = true;
     });
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 
@@ -1102,7 +1102,7 @@ const doSilentDelete = (element: HomePageElement) => {
                         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     accessDenied: () => {
-                        AuthController.CheckAuthStatus();
+                        checkAuthenticationStatus();
                     },
                     notCustomGroup: () => {
                         emit("must-reload");
@@ -1176,7 +1176,7 @@ const doSilentMove = (element: HomePageElement, position: number) => {
                         emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     accessDenied: () => {
-                        AuthController.CheckAuthStatus();
+                        checkAuthenticationStatus();
                     },
                     notCustomGroup: () => {
                         emit("must-reload");

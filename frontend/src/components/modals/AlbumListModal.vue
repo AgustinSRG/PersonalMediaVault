@@ -135,7 +135,6 @@ import {
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -156,6 +155,7 @@ import { showSnackBar } from "@/global-state/snack-bar";
 import { getAlbumsListExt, refreshAlbumsList } from "@/global-state/albums";
 import { indicateAlbumMetadataChanged } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { isVaultLocked } from "@/global-state/auth";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -325,7 +325,7 @@ const load = () => {
 
     loading.value = true;
 
-    if (AuthController.Locked) {
+    if (isVaultLocked()) {
         return; // Vault is locked
     }
 

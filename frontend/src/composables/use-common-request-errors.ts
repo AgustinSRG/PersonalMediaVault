@@ -6,7 +6,7 @@ import type { Ref } from "vue";
 import { ref } from "vue";
 import { useI18n } from "./use-i18n";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
-import { AuthController } from "@/global-state/auth";
+import { checkAuthenticationStatusSilent } from "@/global-state/auth";
 
 /**
  * Composable that provides handlers for common errors
@@ -102,7 +102,7 @@ export function useCommonRequestErrors(): CommonRequestErrorsComposable {
     // Handler for 'access denied' error
     const accessDenied = () => {
         setError($t("Access denied") + ". " + $t("Try refreshing the page to refresh your permissions") + ".");
-        AuthController.CheckAuthStatusSilent();
+        checkAuthenticationStatusSilent();
     };
 
     // Handler for 'not found' error

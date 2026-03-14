@@ -212,7 +212,7 @@ import PlayerTopBar from "./common/PlayerTopBar.vue";
 import ImageNotes from "./common/ImageNotes.vue";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
-import { AuthController } from "@/global-state/auth";
+import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
 import { AppStatus } from "@/global-state/app-status";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/constants";
@@ -698,10 +698,12 @@ const onImageLoaded = () => {
  * Called when the media cannot be loaded
  */
 const onMediaError = () => {
-    if (!AuthController.RefreshAuthStatus()) {
+    if (!refreshAuthenticationStatus()) {
         mediaError.value = true;
+
         loading.value = false;
-        AuthController.CheckAuthStatusSilent();
+
+        checkAuthenticationStatusSilent();
     }
 };
 
@@ -1059,7 +1061,7 @@ usePlayerMediaSession(["nexttrack", "previoustrack"], (event: MediaSessionAction
 });
 
 useGlobalKeyboardHandler((event: KeyboardEvent) => {
-    if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
         return false;
     }
 

@@ -7,7 +7,6 @@ import MainLayout from "./components/layout/MainLayout.vue";
 import { AppStatus } from "./global-state/app-status";
 import { type UploadEntryMin } from "./global-state/upload";
 import { getAssetURL } from "@/utils/api";
-import { AuthController } from "./global-state/auth";
 import {
     EVENT_NAME_APP_STATUS_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
@@ -20,6 +19,7 @@ import { onApplicationEvent } from "./composables/on-app-event";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentAlbumData } from "./global-state/album";
 import { getCurrentMediaData } from "./global-state/media";
+import { getAuthStatus } from "./global-state/auth";
 
 // Translation function
 const { $t } = useI18n();
@@ -29,7 +29,7 @@ const { $t } = useI18n();
  * @returns The application title
  */
 const getAppTitle = () => {
-    return AuthController.Title || $t("Personal Media Vault");
+    return getAuthStatus().title || $t("Personal Media Vault");
 };
 
 /**

@@ -173,7 +173,6 @@ import {
 } from "@/global-state/app-events";
 import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/local-storage/app-preferences";
 import { AppStatus } from "@/global-state/app-status";
-import { AuthController } from "@/global-state/auth";
 import { getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -205,6 +204,7 @@ import {
     isCurrentAlbumLoading,
     updateAlbumMediaPositionStatus,
 } from "@/global-state/album";
+import { isVaultLocked } from "@/global-state/auth";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
@@ -986,7 +986,7 @@ const KEYBOARD_HANDLER_PRIORITY = 10;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (AuthController.Locked || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
         return false;
     }
 
