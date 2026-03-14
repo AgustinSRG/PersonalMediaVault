@@ -419,7 +419,7 @@ export type AppEventsMap = {
     /**
      * Event triggered when the current media data is updated
      */
-    [EVENT_NAME_IMAGE_NOTES_UPDATE]: () => void;
+    [EVENT_NAME_IMAGE_NOTES_UPDATE]: (notes: ImageNote[], imageWidth: number, imageHeight: number) => void;
 
     /**
      * Event triggered when the image notes are changed

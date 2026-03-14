@@ -7,7 +7,7 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
 import type { ImageNote } from "@/utils/notes-format";
 import { parseImageNotes } from "@/utils/notes-format";
-import { getUniqueNumericId } from "@/utils/unique-id";
+import { getUniqueNumericId, getUniqueStringId } from "@/utils/unique-id";
 import { getAssetURL } from "@/utils/api";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
 import {
@@ -23,6 +23,7 @@ import {
 } from "./app-events";
 import { removeGlobalBusyState, setGlobalBusyState } from "./busy-state";
 import { getCurrentMediaData, modifyCurrentMediaData } from "./media";
+import { LOAD_RETRY_DELAY } from "@/constants";
 
 /**
  * The change type for the image nodes
@@ -32,330 +33,356 @@ import { getCurrentMediaData, modifyCurrentMediaData } from "./media";
  */
 export type ImageNodesChangeType = "push" | "rm" | "update";
 
-const BUSY_KEY = "image-notes-save";
+/**
+ * Image notes state
+ */
+const ImageNotesState = {
+    /**
+     * ID of the media owner of the image notes
+     */
+    mediaId: AppStatus.CurrentMedia,
 
-const REQUEST_KEY_LOAD = "img-notes-load";
-const REQUEST_KEY_SAVE = "notes-save";
+    /**
+     * Image width (px)
+     */
+    imageWidth: 0,
+
+    /**
+     * Image height (px)
+     */
+    imageHeight: 0,
+
+    /**
+     * Notes URL
+     */
+    url: "",
+
+    /**
+     * List of image notes
+     */
+    notes: [] as ImageNote[],
+
+    /**
+     * True if the image notes need to be saved
+     */
+    pendingSave: false,
+
+    /**
+     * True if saving the image notes
+     */
+    saving: false,
+};
 
 /**
- * Management object for image notes
+ * Gets the ID of the media for which the image notes are being loaded
+ * @returns The media ID
  */
-export class ImageNotesController {
-    /**
-     * Current media ID owner of the image notes
-     */
-    public static MediaId = -1;
-
-    /**
-     * Image width
-     */
-    public static ImageWidth = 0;
-
-    /**
-     * Image height
-     */
-    public static ImageHeight = 0;
-
-    /**
-     * URL to the JSON file to download to get the image notes
-     */
-    public static NotesFileURL = "";
-
-    /**
-     * Array of notes
-     */
-    public static Notes: ImageNote[] = [];
-
-    /**
-     * Initialization logic
-     */
-    public static Initialize() {
-        addAppEventListener(EVENT_NAME_AUTH_CHANGED, ImageNotesController.Load);
-        addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, ImageNotesController.OnMediaChanged);
-        addAppEventListener(EVENT_NAME_MEDIA_UPDATE, ImageNotesController.Load);
-
-        ImageNotesController.MediaId = AppStatus.CurrentMedia;
-
-        ImageNotesController.Load();
-    }
-
-    /**
-     * Called when the app status changed, in order to check if the current media changed
-     */
-    public static OnMediaChanged() {
-        if (ImageNotesController.MediaId !== AppStatus.CurrentMedia) {
-            ImageNotesController.MediaId = AppStatus.CurrentMedia;
-            ImageNotesController.NotesFileURL = "";
-            ImageNotesController.Notes = [];
-            ImageNotesController.Load();
-        }
-    }
-
-    /**
-     * Gets a copy of the image notes array
-     * @returns A copy of the image notes array
-     */
-    public static GetNotes(): ImageNote[] {
-        return ImageNotesController.Notes.map((n) => {
-            return {
-                id: n.id,
-                x: n.x,
-                y: n.y,
-                w: n.w,
-                h: n.h,
-                text: n.text,
-            };
-        });
-    }
-
-    /**
-     * Loads image notes
-     */
-    public static Load() {
-        ImageNotesController.PendingSave = false;
-        abortNamedApiRequest(REQUEST_KEY_SAVE);
-
-        const mediaData = getCurrentMediaData();
-
-        if (!mediaData) {
-            clearNamedTimeout(REQUEST_KEY_LOAD);
-            abortNamedApiRequest(REQUEST_KEY_LOAD);
-            ImageNotesController.NotesFileURL = "";
-            ImageNotesController.ImageWidth = 0;
-            ImageNotesController.ImageHeight = 0;
-            ImageNotesController.Notes = [];
-            emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
-            return;
-        }
-
-        ImageNotesController.ImageWidth = mediaData.width;
-        ImageNotesController.ImageHeight = mediaData.height;
-
-        if (!mediaData.img_notes || !mediaData.img_notes_url) {
-            clearNamedTimeout(REQUEST_KEY_LOAD);
-            abortNamedApiRequest(REQUEST_KEY_LOAD);
-            ImageNotesController.NotesFileURL = "";
-            ImageNotesController.Notes = [];
-            emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
-            return;
-        }
-
-        ImageNotesController.NotesFileURL = getAssetURL(mediaData.img_notes_url);
-        ImageNotesController.Notes = [];
-
-        clearNamedTimeout(REQUEST_KEY_LOAD);
-        makeNamedApiRequest(REQUEST_KEY_LOAD, {
-            method: "GET",
-            url: ImageNotesController.NotesFileURL,
-        })
-            .onSuccess((jsonNotes) => {
-                ImageNotesController.Notes = parseImageNotes(jsonNotes);
-                emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
-            })
-            .onRequestError((err) => {
-                new RequestErrorHandler()
-                    .add(401, "*", () => {
-                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
-                        ImageNotesController.Notes = [];
-                        emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
-                    })
-                    .add("*", "*", () => {
-                        // Retry
-                        setNamedTimeout(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
-                    })
-                    .handle(err);
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-                // Retry
-                setNamedTimeout(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
-            });
-    }
-
-    /**
-     * Pending save flag. If true, the notes must save after the current save request ends.
-     */
-    private static PendingSave = false;
-
-    /**
-     * True if there is a pending save request.
-     */
-    private static Saving = false;
-
-    /**
-     * Saves the image notes
-     */
-    public static SaveNotes() {
-        if (ImageNotesController.Saving) {
-            ImageNotesController.PendingSave = true;
-            return;
-        }
-
-        ImageNotesController.Saving = true;
-        setGlobalBusyState(BUSY_KEY);
-        ImageNotesController.PendingSave = false;
-        const mediaId = ImageNotesController.MediaId;
-
-        makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
-            .onSuccess((res) => {
-                ImageNotesController.Saving = false;
-                removeGlobalBusyState(BUSY_KEY);
-
-                if (ImageNotesController.MediaId === mediaId) {
-                    ImageNotesController.NotesFileURL = res.url || "";
-                }
-
-                modifyCurrentMediaData(mediaId, (metadata) => {
-                    metadata.img_notes_url = res.url || "";
-                    metadata.img_notes = !!res.url;
-                });
-
-                if (ImageNotesController.PendingSave) {
-                    ImageNotesController.SaveNotes();
-                } else {
-                    emitAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED);
-                }
-            })
-            .onCancel(() => {
-                ImageNotesController.Saving = false;
-                ImageNotesController.PendingSave = false;
-                removeGlobalBusyState(BUSY_KEY);
-            })
-            .onRequestError((err, handleErr) => {
-                ImageNotesController.Saving = false;
-                removeGlobalBusyState(BUSY_KEY);
-                handleErr(err, {
-                    unauthorized: () => {
-                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                    },
-                    badRequest: () => {
-                        ImageNotesController.PendingSave = false;
-                    },
-                    accessDenied: () => {
-                        ImageNotesController.PendingSave = false;
-                    },
-                    notFound: () => {
-                        ImageNotesController.PendingSave = false;
-                    },
-                    temporalError: () => {
-                        ImageNotesController.SaveNotes();
-                    },
-                });
-            })
-            .onUnexpectedError((err) => {
-                console.error(err);
-                ImageNotesController.Saving = false;
-                ImageNotesController.PendingSave = false;
-                removeGlobalBusyState(BUSY_KEY);
-            });
-    }
-
-    /**
-     * Adds image note
-     * @param x X coordinate
-     * @param y Y coordinate
-     * @param w Width
-     * @param h Height
-     */
-    public static AddNote(x: number, y: number, w: number, h: number) {
-        const note: ImageNote = {
-            id: getUniqueNumericId(),
-            x: x,
-            y: y,
-            w: w,
-            h: h,
-            text: "",
-        };
-
-        ImageNotesController.Notes.push(note);
-
-        ImageNotesController.Emit("push", note);
-
-        ImageNotesController.SaveNotes();
-    }
-
-    /**
-     * Modifies a note
-     * @param note The modified note
-     */
-    public static ModifyNote(note: ImageNote) {
-        let noteIndex = -1;
-        for (let i = 0; i < ImageNotesController.Notes.length; i++) {
-            if (ImageNotesController.Notes[i].id === note.id) {
-                noteIndex = i;
-                break;
-            }
-        }
-
-        if (noteIndex === -1) {
-            return;
-        }
-
-        const actualNote = ImageNotesController.Notes[noteIndex];
-
-        if (note.id !== actualNote.id) {
-            return;
-        }
-
-        if (
-            actualNote.x === note.x &&
-            actualNote.y === note.y &&
-            actualNote.w === note.w &&
-            actualNote.h === note.h &&
-            actualNote.text === note.text
-        ) {
-            return; // Nothing changed
-        }
-
-        ImageNotesController.Notes[noteIndex] = {
-            id: note.id,
-            x: note.x,
-            y: note.y,
-            w: note.w,
-            h: note.h,
-            text: note.text,
-        };
-
-        ImageNotesController.Emit("update", note, noteIndex);
-
-        ImageNotesController.SaveNotes();
-    }
-
-    /**
-     * Removes a note
-     * @param note The note to remove
-     */
-    public static RemoveNote(note: ImageNote) {
-        let noteIndex = -1;
-        for (let i = 0; i < ImageNotesController.Notes.length; i++) {
-            if (ImageNotesController.Notes[i].id === note.id) {
-                noteIndex = i;
-                break;
-            }
-        }
-
-        if (noteIndex === -1) {
-            return;
-        }
-
-        ImageNotesController.Notes.splice(noteIndex, 1);
-
-        ImageNotesController.Emit("rm", null, noteIndex);
-
-        ImageNotesController.SaveNotes();
-    }
-
-    /**
-     * Emits list update event
-     * @param type Change type
-     * @param note Note
-     * @param index Index
-     */
-    private static Emit(type: ImageNodesChangeType, note: ImageNote | null, index?: number) {
-        emitAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, type, note, index);
-    }
+export function getImageNotesMediaId(): number {
+    return ImageNotesState.mediaId;
 }
 
-ImageNotesController.Initialize();
+/**
+ * Gets image width for the current image notes
+ * @returns The width (px)
+ */
+export function getImageNotesWidth(): number {
+    return ImageNotesState.imageWidth;
+}
+
+/**
+ * Gets image height for the current image notes
+ * @returns The height (px)
+ */
+export function getImageNotesHeight(): number {
+    return ImageNotesState.imageHeight;
+}
+
+/**
+ * Gets the current image notes array
+ * @returns The current image notes array
+ */
+export function getImageNotes(): ImageNote[] {
+    return ImageNotesState.notes;
+}
+
+/**
+ * Sets image notes
+ * @param notes The list of image notes
+ */
+export function setImageNotes(notes: ImageNote[]) {
+    ImageNotesState.notes = notes;
+    emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesState.notes, ImageNotesState.imageWidth, ImageNotesState.imageWidth);
+}
+
+// Request ID for loading
+const REQUEST_KEY_LOAD = getUniqueStringId();
+
+/**
+ * Loads image notes
+ */
+function loadImageNotes() {
+    ImageNotesState.pendingSave = false;
+    clearNamedTimeout(REQUEST_KEY_SAVE);
+    abortNamedApiRequest(REQUEST_KEY_SAVE);
+
+    const mediaData = getCurrentMediaData();
+
+    if (!mediaData) {
+        clearNamedTimeout(REQUEST_KEY_LOAD);
+        abortNamedApiRequest(REQUEST_KEY_LOAD);
+
+        ImageNotesState.url = "";
+        ImageNotesState.imageWidth = 0;
+        ImageNotesState.imageHeight = 0;
+
+        setImageNotes([]);
+        return;
+    }
+
+    ImageNotesState.imageWidth = mediaData.width;
+    ImageNotesState.imageHeight = mediaData.height;
+
+    if (!mediaData.img_notes || !mediaData.img_notes_url) {
+        clearNamedTimeout(REQUEST_KEY_LOAD);
+        abortNamedApiRequest(REQUEST_KEY_LOAD);
+
+        ImageNotesState.url = "";
+
+        setImageNotes([]);
+        return;
+    }
+
+    ImageNotesState.url = getAssetURL(mediaData.img_notes_url);
+    ImageNotesState.notes = [];
+
+    clearNamedTimeout(REQUEST_KEY_LOAD);
+    makeNamedApiRequest(REQUEST_KEY_LOAD, {
+        method: "GET",
+        url: ImageNotesState.url,
+    })
+        .onSuccess((jsonNotes) => {
+            setImageNotes(parseImageNotes(jsonNotes));
+        })
+        .onRequestError((err) => {
+            new RequestErrorHandler()
+                .add(401, "*", () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                })
+                .add(404, "*", () => {
+                    setImageNotes([]);
+                })
+                .add("*", "*", () => {
+                    // Retry
+                    setNamedTimeout(REQUEST_KEY_LOAD, LOAD_RETRY_DELAY, loadImageNotes);
+                })
+                .handle(err);
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            // Retry
+            setNamedTimeout(REQUEST_KEY_LOAD, LOAD_RETRY_DELAY, loadImageNotes);
+        });
+}
+
+// Key for busy state
+const BUSY_KEY = "image-notes-save";
+
+// Request ID for saving
+const REQUEST_KEY_SAVE = getUniqueStringId();
+
+/**
+ * Saves the image notes
+ */
+function saveImageNotes() {
+    if (ImageNotesState.saving) {
+        ImageNotesState.pendingSave = true;
+        return;
+    }
+
+    ImageNotesState.saving = true;
+
+    setGlobalBusyState(BUSY_KEY);
+
+    ImageNotesState.pendingSave = false;
+
+    const mediaId = ImageNotesState.mediaId;
+
+    clearNamedTimeout(REQUEST_KEY_SAVE);
+
+    makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesState.notes))
+        .onSuccess((res) => {
+            ImageNotesState.saving = false;
+
+            removeGlobalBusyState(BUSY_KEY);
+
+            if (ImageNotesState.mediaId === mediaId) {
+                ImageNotesState.url = res.url || "";
+            }
+
+            modifyCurrentMediaData(mediaId, (metadata) => {
+                metadata.img_notes_url = res.url || "";
+                metadata.img_notes = !!res.url;
+            });
+
+            if (ImageNotesState.pendingSave) {
+                saveImageNotes();
+            } else {
+                emitAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED);
+            }
+        })
+        .onCancel(() => {
+            ImageNotesState.saving = false;
+            ImageNotesState.pendingSave = false;
+            removeGlobalBusyState(BUSY_KEY);
+        })
+        .onRequestError((err, handleErr) => {
+            ImageNotesState.saving = false;
+
+            removeGlobalBusyState(BUSY_KEY);
+
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                badRequest: () => {
+                    ImageNotesState.pendingSave = false;
+                },
+                accessDenied: () => {
+                    ImageNotesState.pendingSave = false;
+                },
+                notFound: () => {
+                    ImageNotesState.pendingSave = false;
+                },
+                temporalError: () => {
+                    setNamedTimeout(REQUEST_KEY_SAVE, LOAD_RETRY_DELAY, saveImageNotes);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            ImageNotesState.saving = false;
+            ImageNotesState.pendingSave = false;
+            removeGlobalBusyState(BUSY_KEY);
+        });
+}
+
+/**
+ * Emits list update event
+ * @param type Change type
+ * @param note Note
+ * @param index Index
+ */
+function emit(type: ImageNodesChangeType, note: ImageNote | null, index?: number) {
+    emitAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, type, note, index);
+}
+
+/**
+ * Adds image note
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param w Width
+ * @param h Height
+ */
+export function addImageNote(x: number, y: number, w: number, h: number) {
+    const note: ImageNote = {
+        id: getUniqueNumericId(),
+        x: x,
+        y: y,
+        w: w,
+        h: h,
+        text: "",
+    };
+
+    ImageNotesState.notes.push(note);
+
+    emit("push", note);
+
+    saveImageNotes();
+}
+
+/**
+ * Modifies a note
+ * @param note The modified note
+ */
+export function modifyImageNote(note: ImageNote) {
+    let noteIndex = -1;
+    for (let i = 0; i < ImageNotesState.notes.length; i++) {
+        if (ImageNotesState.notes[i].id === note.id) {
+            noteIndex = i;
+            break;
+        }
+    }
+
+    if (noteIndex === -1) {
+        return;
+    }
+
+    const actualNote = ImageNotesState.notes[noteIndex];
+
+    if (note.id !== actualNote.id) {
+        return;
+    }
+
+    if (
+        actualNote.x === note.x &&
+        actualNote.y === note.y &&
+        actualNote.w === note.w &&
+        actualNote.h === note.h &&
+        actualNote.text === note.text
+    ) {
+        return; // Nothing changed
+    }
+
+    ImageNotesState.notes[noteIndex] = {
+        id: note.id,
+        x: note.x,
+        y: note.y,
+        w: note.w,
+        h: note.h,
+        text: note.text,
+    };
+
+    emit("update", note, noteIndex);
+
+    saveImageNotes();
+}
+
+/**
+ * Removes a note
+ * @param note The note to remove
+ */
+export function removeImageNote(note: ImageNote) {
+    let noteIndex = -1;
+    for (let i = 0; i < ImageNotesState.notes.length; i++) {
+        if (ImageNotesState.notes[i].id === note.id) {
+            noteIndex = i;
+            break;
+        }
+    }
+
+    if (noteIndex === -1) {
+        return;
+    }
+
+    ImageNotesState.notes.splice(noteIndex, 1);
+
+    emit("rm", null, noteIndex);
+
+    saveImageNotes();
+}
+
+addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadImageNotes);
+addAppEventListener(EVENT_NAME_MEDIA_UPDATE, loadImageNotes);
+
+addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, () => {
+    if (ImageNotesState.mediaId !== AppStatus.CurrentMedia) {
+        ImageNotesState.mediaId = AppStatus.CurrentMedia;
+        ImageNotesState.url = "";
+        ImageNotesState.notes = [];
+
+        loadImageNotes();
+    }
+});
+
+// Initially load image notes
+loadImageNotes();

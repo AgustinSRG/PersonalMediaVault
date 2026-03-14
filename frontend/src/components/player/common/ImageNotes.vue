@@ -135,7 +135,6 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
-import { ImageNotesController } from "@/global-state/img-notes";
 import { escapeHTML } from "@/utils/html";
 import type { ImageNote } from "@/utils/notes-format";
 import type { PositionEvent } from "@/utils/position-event";
@@ -145,6 +144,15 @@ import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { stopPropagationEvent } from "@/utils/events";
+import {
+    addImageNote,
+    getImageNotes,
+    getImageNotesHeight,
+    getImageNotesWidth,
+    modifyImageNote,
+    removeImageNote,
+} from "@/global-state/img-notes";
+import { clone } from "@/utils/objects";
 
 /**
  * Maps a dimension based in the image dimensions
@@ -211,16 +219,16 @@ const props = defineProps({
 });
 
 // List of image notes
-const notes = ref<ImageNote[]>(ImageNotesController.GetNotes());
+const notes = ref<ImageNote[]>(clone(getImageNotes()));
 
 // Image dimensions (pixels)
-const imageWidth = ref(Math.max(1, ImageNotesController.ImageWidth));
-const imageHeight = ref(Math.max(1, ImageNotesController.ImageHeight));
+const imageWidth = ref(Math.max(1, getImageNotesWidth()));
+const imageHeight = ref(Math.max(1, getImageNotesHeight()));
 
-onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, () => {
-    notes.value = ImageNotesController.GetNotes();
-    imageWidth.value = Math.max(1, ImageNotesController.ImageWidth);
-    imageHeight.value = Math.max(1, ImageNotesController.ImageHeight);
+onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, (newNotes: ImageNote[], w: number, h: number) => {
+    notes.value = clone(newNotes);
+    imageWidth.value = Math.max(1, w);
+    imageHeight.value = Math.max(1, h);
 });
 
 // Id of the selected note
@@ -775,14 +783,14 @@ const drop = () => {
     if (adding.value) {
         adding.value = false;
 
-        ImageNotesController.AddNote(addX.value, addY.value, addW.value, addH.value);
+        addImageNote(addX.value, addY.value, addW.value, addH.value);
     }
 
     if (moving.value) {
         moving.value = false;
 
         if (selectedNotesData.value) {
-            ImageNotesController.ModifyNote(selectedNotesData.value);
+            modifyImageNote(selectedNotesData.value);
         }
 
         autoFocus();
@@ -792,7 +800,7 @@ const drop = () => {
         resizing.value = false;
 
         if (selectedNotesData.value) {
-            ImageNotesController.ModifyNote(selectedNotesData.value);
+            modifyImageNote(selectedNotesData.value);
         }
 
         autoFocus();
@@ -807,7 +815,7 @@ onDocumentEvent("touchend", drop);
  * @param note The note
  */
 const saveNote = (note: ImageNote) => {
-    ImageNotesController.ModifyNote(note);
+    modifyImageNote(note);
 
     selectedNotes.value = -1;
     selectedNotesData.value = null;
@@ -818,7 +826,7 @@ const saveNote = (note: ImageNote) => {
  * @param note The note
  */
 const deleteNote = (note: ImageNote) => {
-    ImageNotesController.RemoveNote(note);
+    removeImageNote(note);
 
     selectedNotes.value = -1;
     selectedNotesData.value = null;

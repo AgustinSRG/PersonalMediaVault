@@ -52,11 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_IMAGE_NOTES_UPDATE } from "@/global-state/app-events";
+import { EVENT_NAME_IMAGE_NOTES_UPDATE } from "@/global-state/app-events";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
+import type { ImageNote } from "@/utils/notes-format";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
-import { ImageNotesController } from "@/global-state/img-notes";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { useI18n } from "@/composables/use-i18n";
@@ -66,6 +66,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBarRight } from "@/global-state/snack-bar";
+import { getImageNotes, getImageNotesMediaId, setImageNotes } from "@/global-state/img-notes";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -93,10 +94,10 @@ const emit = defineEmits<{
 }>();
 
 // Image notes
-const imageNotes = ref(imageNotesToText(ImageNotesController.Notes));
+const imageNotes = ref(imageNotesToText(getImageNotes()));
 
-onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, () => {
-    imageNotes.value = imageNotesToText(ImageNotesController.Notes);
+onApplicationEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, (notes: ImageNote[]) => {
+    imageNotes.value = imageNotesToText(notes);
 });
 
 // Dirty? (unsaved changes)
@@ -146,7 +147,7 @@ const saveChanges = () => {
 
     busy.value = true;
 
-    const mediaId = ImageNotesController.MediaId;
+    const mediaId = getImageNotesMediaId();
 
     const notes = textToImageNotes(imageNotes.value);
 
@@ -158,8 +159,7 @@ const saveChanges = () => {
             saved.value = true;
             dirty.value = false;
 
-            ImageNotesController.Notes = notes;
-            emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
+            setImageNotes(notes);
 
             emit("changed");
 
