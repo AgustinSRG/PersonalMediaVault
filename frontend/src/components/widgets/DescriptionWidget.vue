@@ -229,7 +229,7 @@ import { useTimeout } from "@/composables/use-timeout";
 import { useSpeechReader } from "@/composables/use-speech-reader";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
-import { getStoredDescription, setStoredDescription } from "@/global-state/description-store";
+import { getStoredDescription, setStoredDescription } from "@/global-state/stored-description";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
