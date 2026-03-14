@@ -1,4 +1,4 @@
-// Upload controller
+// Upload global state
 
 "use strict";
 

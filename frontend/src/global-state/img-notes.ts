@@ -1,4 +1,4 @@
-// Image notes controller
+// Image notes global state
 
 "use strict";
 

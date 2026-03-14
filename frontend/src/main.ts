@@ -2,19 +2,15 @@
 
 "use strict";
 
-// Initialize stuff
-
-import { AppStatus } from "./global-state/app-status";
-import { AuthController } from "./global-state/auth";
-
-AuthController.Initialize();
-AppStatus.Initialize();
-
-// Setup App
-
+import { initializeGlobalState } from "./initialization";
 import { createApp } from "vue";
-
 import App from "./App.vue";
+
+// Initialize global state
+
+initializeGlobalState();
+
+// Disable default behavior for dropping files
 
 document.addEventListener("drop", function (e: DragEvent) {
     e.preventDefault();

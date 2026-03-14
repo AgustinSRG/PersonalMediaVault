@@ -1,4 +1,4 @@
-// Media data controller
+// Current media global state
 
 "use strict";
 

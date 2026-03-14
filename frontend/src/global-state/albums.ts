@@ -1,4 +1,4 @@
-// Albums list global loader
+// Global albums list
 
 "use strict";
 

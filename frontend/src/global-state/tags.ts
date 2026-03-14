@@ -1,4 +1,4 @@
-// Tags data controller
+// Global tag list
 
 "use strict";
 

@@ -1,4 +1,4 @@
-// Keyboard events manager
+// Global keyboard handlers
 
 "use strict";
 

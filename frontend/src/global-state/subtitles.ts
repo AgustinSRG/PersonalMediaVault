@@ -1,4 +1,4 @@
-// Subtitles controller
+// Subtitles global state
 
 "use strict";
 

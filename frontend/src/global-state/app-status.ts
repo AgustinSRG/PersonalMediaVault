@@ -7,11 +7,9 @@
 import { getParameterByName } from "@/utils/cookie";
 import { emitAppEvent, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_DELETE } from "./app-events";
 import { generateURIQuery } from "@/utils/api";
-import { initializeAlbums, isAlbumsListLoading } from "./albums";
-import { getCurrentAlbumData, getCurrentAlbumId, initializeAlbum } from "./album";
+import { isAlbumsListLoading } from "./albums";
+import { getCurrentAlbumData, getCurrentAlbumId } from "./album";
 import { getCachedAlbumPosition } from "./album-position-cache";
-import { initializeMedia } from "./media";
-import { initializeTags } from "./tags";
 import { tryPreventableExit } from "./exit-prevent";
 
 /**
@@ -95,14 +93,6 @@ export class AppStatus {
 
         AppStatus.LoadURLParams();
         AppStatus.OnStatusUpdate();
-
-        // Initialize global state
-
-        initializeAlbums();
-        initializeTags();
-
-        initializeAlbum();
-        initializeMedia();
     }
 
     /**

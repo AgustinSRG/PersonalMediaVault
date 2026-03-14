@@ -1,4 +1,4 @@
-// Auth controller
+// Authentication global state
 
 "use strict";
 

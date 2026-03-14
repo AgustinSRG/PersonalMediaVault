@@ -1,4 +1,4 @@
-// Global events manager
+// Global application events
 
 "use strict";
 
