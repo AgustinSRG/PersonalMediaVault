@@ -204,7 +204,7 @@ import {
     setImageFit,
     setImageScale,
     setUserSelectedResolutionImage,
-} from "@/global-state/player-preferences";
+} from "@/local-storage/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import ScaleControl from "./common/ScaleControl.vue";

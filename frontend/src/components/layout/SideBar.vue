@@ -135,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/global-state/app-preferences";
+import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/local-storage/app-preferences";
 import type { AppStatusPage } from "@/global-state/app-status";
 import { AppStatus } from "@/global-state/app-status";
 import { AuthController } from "@/global-state/auth";

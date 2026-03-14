@@ -5,7 +5,7 @@
 import type { Album, MediaData } from "@/api/models";
 import { type AlbumListItemMin } from "@/api/models";
 import { type SnackBarPosition } from "./snack-bar";
-import type { ColorThemeName } from "./app-preferences";
+import type { ColorThemeName } from "../local-storage/app-preferences";
 import type { ImageNote } from "@/utils/notes-format";
 import type { ImageNodesChangeType } from "./img-notes";
 import type { UploadEntryMin } from "./upload";

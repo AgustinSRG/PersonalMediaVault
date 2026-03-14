@@ -89,7 +89,7 @@
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useInterval } from "@/composables/use-interval";
-import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 import type { WidgetActionButton } from "@/utils/widgets";

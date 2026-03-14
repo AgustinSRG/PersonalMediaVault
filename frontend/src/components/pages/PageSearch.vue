@@ -219,13 +219,13 @@ import { isTouchDevice } from "@/utils/touch";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import MediaItem from "../utils/MediaItem.vue";
 import TagIdList from "../utils/TagIdList.vue";
-import type { SearchMode } from "@/global-state/app-preferences";
+import type { SearchMode } from "@/local-storage/app-preferences";
 import {
     getPreferredSearchMode,
     getSemanticSearchOnlyImages,
     setPreferredSearchMode,
     setSemanticSearchOnlyImages,
-} from "@/global-state/app-preferences";
+} from "@/local-storage/app-preferences";
 import { apiSemanticSearch, apiSemanticSearchEncodeImage, apiSemanticSearchEncodeText } from "@/api/api-semantic-search";
 import { useRequestId } from "@/composables/use-request-id";
 import { useI18n } from "@/composables/use-i18n";

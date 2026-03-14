@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { getPagePreferences } from "@/global-state/app-preferences";
+import { getPagePreferences } from "@/local-storage/app-preferences";
 import type { AppStatusPage } from "@/global-state/app-status";
 import type { Ref } from "vue";
 import { onBeforeUnmount, ref, watch } from "vue";

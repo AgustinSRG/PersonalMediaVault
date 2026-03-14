@@ -184,7 +184,7 @@
 
 <script setup lang="ts">
 import DropdownContainer from "./common/DropdownContainer.vue";
-import { getPagePreferences, resetPagePreferences, setPagePreferences } from "@/global-state/app-preferences";
+import { getPagePreferences, resetPagePreferences, setPagePreferences } from "@/local-storage/app-preferences";
 import type { PropType } from "vue";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";

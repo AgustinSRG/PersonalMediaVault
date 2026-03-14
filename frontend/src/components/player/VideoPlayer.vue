@@ -285,7 +285,7 @@ import {
     setPlayerMuted,
     setPlayerVolume,
     setUserSelectedResolutionVideo,
-} from "@/global-state/player-preferences";
+} from "@/local-storage/player-preferences";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";

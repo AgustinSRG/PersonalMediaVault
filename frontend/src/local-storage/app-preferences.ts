@@ -11,10 +11,10 @@ import {
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
     EVENT_NAME_PAGE_PREFERENCES_UPDATED,
     EVENT_NAME_THEME_CHANGED,
-} from "./app-events";
-import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
+} from "../global-state/app-events";
+import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import type { Album, AlbumListItemMin } from "@/api/models";
-import type { AppStatusPage } from "./app-status";
+import type { AppStatusPage } from "../global-state/app-status";
 
 export type ColorThemeName = "light" | "dark";
 

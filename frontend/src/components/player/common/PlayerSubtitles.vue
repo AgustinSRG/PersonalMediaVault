@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { getSubtitlesOptions } from "@/global-state/player-preferences";
+import { getSubtitlesOptions } from "@/local-storage/player-preferences";
 import { toHtmlMinimal } from "@/utils/html-min";
 import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/global-state/app-events";
 import { onApplicationEvent } from "@/composables/on-app-event";

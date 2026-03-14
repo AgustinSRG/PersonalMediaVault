@@ -9,8 +9,8 @@ import { useTimeout } from "./use-timeout";
 import { onApplicationEvent } from "./on-app-event";
 import { EVENT_NAME_TAGS_UPDATE } from "@/global-state/app-events";
 import { parseTagName } from "@/utils/tags";
-import type { LastUsedTagMode } from "@/global-state/app-preferences";
-import { getLastUsedTags } from "@/global-state/app-preferences";
+import type { LastUsedTagMode } from "@/local-storage/app-preferences";
+import { getLastUsedTags } from "@/local-storage/app-preferences";
 
 /**
  * Composable for tag suggestions

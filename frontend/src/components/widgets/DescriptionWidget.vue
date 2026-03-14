@@ -217,7 +217,7 @@ import {
     getDescriptionWidgetReadSettings,
     setDescriptionSize,
     setDescriptionWidgetReadSettings,
-} from "@/global-state/player-preferences";
+} from "@/local-storage/player-preferences";
 import { isSpeechSynthesisAvailable } from "@/utils/voice-synthesis";
 import { clone } from "@/utils/objects";
 import type { WidgetActionButton } from "@/utils/widgets";

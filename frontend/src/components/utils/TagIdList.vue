@@ -41,7 +41,7 @@
 import { useI18n } from "@/composables/use-i18n";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
 import { useTagNames } from "@/composables/use-tags-names";
-import { setLastUsedTag } from "@/global-state/app-preferences";
+import { setLastUsedTag } from "@/local-storage/app-preferences";
 import type { MatchingTag } from "@/global-state/tags";
 import { useTemplateRef } from "vue";
 

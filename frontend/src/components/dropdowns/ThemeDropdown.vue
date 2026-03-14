@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { clickOnEnter } from "@/utils/events";
 import DropdownContainer from "./common/DropdownContainer.vue";
-import { getTheme, setTheme } from "@/global-state/app-preferences";
+import { getTheme, setTheme } from "@/local-storage/app-preferences";
 import { ref } from "vue";
 import { EVENT_NAME_THEME_CHANGED } from "@/global-state/app-events";
 import { onApplicationEvent } from "@/composables/on-app-event";

@@ -109,8 +109,8 @@ import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
 import { AuthController } from "../../global-state/auth";
-import type { ColorThemeName } from "@/global-state/app-preferences";
-import { getTheme } from "@/global-state/app-preferences";
+import type { ColorThemeName } from "@/local-storage/app-preferences";
+import { getTheme } from "@/local-storage/app-preferences";
 import { AppStatus } from "@/global-state/app-status";
 import { isTouchDevice } from "@/utils/touch";
 import {

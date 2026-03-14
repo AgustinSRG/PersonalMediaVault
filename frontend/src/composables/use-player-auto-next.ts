@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { getAutoNextTime, setAutoNextTime } from "@/global-state/player-preferences";
+import { getAutoNextTime, setAutoNextTime } from "@/local-storage/player-preferences";
 import type { Ref } from "vue";
 import { watch } from "vue";
 import { useTimeout } from "./use-timeout";

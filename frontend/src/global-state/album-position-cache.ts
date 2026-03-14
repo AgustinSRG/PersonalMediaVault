@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { fetchFromLocalStorage, saveIntoLocalStorage, clearLocalStorage } from "@/utils/local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage, clearLocalStorage } from "@/local-storage/local-storage";
 
 const MAX_CACHE_ALBUM_POS_SIZE = 100;
 const LS_KEY_ALBUM_POS_CACHE = "player-album-pos-cache";

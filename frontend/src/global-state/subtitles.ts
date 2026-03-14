@@ -7,7 +7,7 @@ import type { SubtitlesEntry } from "@/utils/srt";
 import { findSubtitlesEntry, parseSRT } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppStatus } from "./app-status";
-import { getSelectedSubtitles } from "./player-preferences";
+import { getSelectedSubtitles } from "../local-storage/player-preferences";
 import { getAssetURL } from "@/utils/api";
 import {
     addAppEventListener,

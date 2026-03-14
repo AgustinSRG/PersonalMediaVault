@@ -269,7 +269,7 @@ import {
     setPlayerVolume,
     setShowAudioThumbnail,
     setShowAudioTitle,
-} from "@/global-state/player-preferences";
+} from "@/local-storage/player-preferences";
 import type { PropType } from "vue";
 import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
@@ -280,8 +280,8 @@ import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/global-state/media";
 import { AppStatus } from "@/global-state/app-status";
 import { AuthController } from "@/global-state/auth";
-import type { ColorThemeName } from "@/global-state/app-preferences";
-import { getTheme } from "@/global-state/app-preferences";
+import type { ColorThemeName } from "@/local-storage/app-preferences";
+import { getTheme } from "@/local-storage/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import { EVENT_NAME_THEME_CHANGED } from "@/global-state/app-events";

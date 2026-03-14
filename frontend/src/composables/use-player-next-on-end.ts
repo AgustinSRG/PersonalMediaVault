@@ -6,7 +6,7 @@ import type { Ref } from "vue";
 import { ref, watch } from "vue";
 import { useTimeout } from "./use-timeout";
 import type { MediaListItem } from "@/api/models";
-import { getAutoNextOnEnd, getAutoNextPageDelay, setAutoNextOnEnd, setAutoNextPageDelay } from "@/global-state/player-preferences";
+import { getAutoNextOnEnd, getAutoNextPageDelay, setAutoNextOnEnd, setAutoNextPageDelay } from "@/local-storage/player-preferences";
 
 /**
  * Required props for player next-end

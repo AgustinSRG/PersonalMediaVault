@@ -118,7 +118,7 @@
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { clearCachedTimes, clearPlayerPreferences } from "@/global-state/player-preferences";
+import { clearCachedTimes, clearPlayerPreferences } from "@/local-storage/player-preferences";
 import {
     clearAlbumsOrderMap,
     clearFavAlbums,
@@ -126,9 +126,9 @@ import {
     clearPagePreferences,
     clearSearchPreferences,
     clearUploadPreferences,
-} from "@/global-state/app-preferences";
+} from "@/local-storage/app-preferences";
 import { clearLanguageSetting } from "@/i18n";
-import { clearLocalStorage } from "@/utils/local-storage";
+import { clearLocalStorage } from "@/local-storage/local-storage";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { showSnackBar } from "@/global-state/snack-bar";

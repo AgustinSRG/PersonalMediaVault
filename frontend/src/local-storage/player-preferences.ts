@@ -3,7 +3,7 @@
 "use strict";
 
 import type { MediaData } from "@/api/models";
-import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
+import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "@/local-storage/local-storage";
 
 /**
  * User selected resolution (video)

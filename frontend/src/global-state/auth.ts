@@ -14,7 +14,7 @@ import {
     EVENT_NAME_AUTH_LOADING,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
-import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
 import { abortNamedApiRequest, addRequestAuthenticationHandler, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 

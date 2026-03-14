@@ -4,7 +4,7 @@
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { indicateTagCreation } from "./tags";
-import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
+import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "../local-storage/app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTagsTagMedia } from "@/api/api-tags";

@@ -292,7 +292,7 @@ import {
     setSelectedAudioTrack,
     setSelectedSubtitles,
     setTogglePlayDelay,
-} from "@/global-state/player-preferences";
+} from "@/local-storage/player-preferences";
 import { useI18n } from "@/composables/use-i18n";
 import {
     renderAnimStyle,

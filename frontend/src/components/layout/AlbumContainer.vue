@@ -171,7 +171,7 @@ import {
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
 } from "@/global-state/app-events";
-import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/global-state/app-preferences";
+import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/local-storage/app-preferences";
 import { AppStatus } from "@/global-state/app-status";
 import { AuthController } from "@/global-state/auth";
 import { getFrontendUrl } from "@/utils/api";
