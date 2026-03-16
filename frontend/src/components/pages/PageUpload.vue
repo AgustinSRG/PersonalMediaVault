@@ -100,20 +100,38 @@
                             type="button"
                             class="table-btn"
                             :title="$t('Cancel upload')"
-                            @click="removeFile(m.id)"
+                            @click="removeUploadEntry(m.id)"
                         >
                             <i class="fas fa-times"></i>
                         </button>
                         <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('View media')" @click="goToMedia(m)">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('Done')" @click="removeFile(m.id)">
+                        <button
+                            v-if="m.status === 'ready'"
+                            type="button"
+                            class="table-btn"
+                            :title="$t('Done')"
+                            @click="removeUploadEntry(m.id)"
+                        >
                             <i class="fas fa-check"></i>
                         </button>
-                        <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Try again')" @click="tryAgain(m)">
+                        <button
+                            v-if="m.status === 'error'"
+                            type="button"
+                            class="table-btn"
+                            :title="$t('Try again')"
+                            @click="retryMediaUpload(m.id)"
+                        >
                             <i class="fas fa-rotate"></i>
                         </button>
-                        <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Remove')" @click="removeFile(m.id)">
+                        <button
+                            v-if="m.status === 'error'"
+                            type="button"
+                            class="table-btn"
+                            :title="$t('Remove')"
+                            @click="removeUploadEntry(m.id)"
+                        >
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -123,12 +141,12 @@
 
         <div v-if="entriesPending.length > 0 || entriesReady.length > 0 || entriesError.length > 0" class="upload-table table-responsive">
             <div v-if="entriesReady.length > 0 || entriesError.length > 0" class="form-group">
-                <button type="button" class="btn btn-primary" @click="clearList">
+                <button type="button" class="btn btn-primary" @click="clearUploadList">
                     <i class="fas fa-broom"></i> {{ $t("Clear list") }}
                 </button>
             </div>
             <div v-if="entriesPending.length > 0" class="form-group">
-                <button type="button" class="btn btn-primary" @click="cancelAll">
+                <button type="button" class="btn btn-primary" @click="cancelAllPendingUploads">
                     <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
                 </button>
             </div>
@@ -148,8 +166,19 @@
 
 <script setup lang="ts">
 import { AppStatus } from "@/global-state/app-status";
-import type { UploadEntryMin } from "@/global-state/upload";
-import { UploadController } from "@/global-state/upload";
+import {
+    cancelAllPendingUploads,
+    clearUploadList,
+    removeUploadEntry,
+    retryMediaUpload,
+    uploadGetErrorEntries,
+    uploadGetMaxParallelUploads,
+    uploadGetPendingEntries,
+    uploadGetReadyEntries,
+    uploadMediaFile,
+    uploadSetMaxParallelUploads,
+    type UploadEntryMin,
+} from "@/global-state/upload";
 import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { renderSize } from "@/utils/size";
@@ -226,7 +255,7 @@ const entriesError = ref<UploadEntryMin[]>([]);
 const MAX_PARALLEL_UPLOADS_OPTIONS = [1, 2, 4, 8, 16, 32, 64];
 
 // Max number of allowed parallel uploads
-const maxParallelUploads = ref(UploadController.GetMaxParallelUploads());
+const maxParallelUploads = ref(uploadGetMaxParallelUploads());
 
 // Base statuses of entries in order to classify them
 type UploadEntryBaseStatus = "pending" | "ready" | "error";
@@ -267,9 +296,9 @@ const updateFilteredEntries = () => {
  * Refreshes uploads entries lists
  */
 const refreshUploadList = () => {
-    entriesPending.value = UploadController.GetPendingEntries();
-    entriesReady.value = UploadController.GetReadyEntries();
-    entriesError.value = UploadController.GetErrorEntries();
+    entriesPending.value = uploadGetPendingEntries();
+    entriesReady.value = uploadGetReadyEntries();
+    entriesError.value = uploadGetErrorEntries();
 
     updateFilteredEntries();
 };
@@ -403,37 +432,7 @@ const updateSelectedState = (s: UploadEntryBaseStatus) => {
  */
 const updateMaxParallelUploads = (m: number) => {
     maxParallelUploads.value = m;
-    UploadController.SetMaxParallelUploads(m);
-};
-
-/**
- * Removes a file
- * @param id The file entry ID
- */
-const removeFile = (id: number) => {
-    UploadController.RemoveFile(id);
-};
-
-/**
- * Clears the list
- */
-const clearList = () => {
-    UploadController.ClearList();
-};
-
-/**
- * Cancels all uploads
- */
-const cancelAll = () => {
-    UploadController.CancelAll();
-};
-
-/**
- * Retries an errored entry
- * @param m The entry
- */
-const tryAgain = (m: UploadEntryMin) => {
-    UploadController.TryAgain(m.id);
+    uploadSetMaxParallelUploads(m);
 };
 
 /**
@@ -472,7 +471,7 @@ const addFiles = (files: File[]) => {
  */
 const onUploadConfirmed = (album: number, tags: string[]) => {
     for (const file of filesToUpload.value) {
-        UploadController.AddFile(file, album, tags.slice());
+        uploadMediaFile(file, album, tags.slice());
     }
     filesToUpload.value = [];
 };
