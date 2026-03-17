@@ -97,12 +97,11 @@
 import {
     emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -127,6 +126,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { getAlbumsPageSearch, setAlbumsPageSearch } from "@/global-state/albums-search";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus, isPageVisible, navigationChangeSearchParams, navigationClickOnAlbum } from "@/global-state/navigation";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -227,7 +227,7 @@ type AlbumsOrder = "asc" | "desc" | "rand";
 const order = ref<AlbumsOrder>("desc");
 
 // Search parameters
-const searchParams = ref(props.inModal ? "" : AppStatus.SearchParams);
+const searchParams = ref(props.inModal ? "" : getNavigationStatus().searchParams);
 
 // Page number
 const page = ref(0);
@@ -246,12 +246,12 @@ const updateSearchParams = () => {
 
 updateSearchParams();
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
     if (props.inModal) {
         return;
     }
-    if (AppStatus.SearchParams !== searchParams.value) {
-        searchParams.value = AppStatus.SearchParams;
+    if (navStatus.searchParams !== searchParams.value) {
+        searchParams.value = navStatus.searchParams;
         updateSearchParams();
         updateList();
     }
@@ -265,7 +265,7 @@ const onSearchParamsChanged = () => {
         return;
     }
     searchParams.value = packSearchParams(page.value, order.value);
-    AppStatus.ChangeSearchParams(searchParams.value);
+    navigationChangeSearchParams(searchParams.value);
 };
 
 // Total number of albums
@@ -489,7 +489,7 @@ const goToAlbum = (album: AlbumListItem, e: Event) => {
         return;
     }
 
-    AppStatus.ClickOnAlbum(album.id);
+    navigationClickOnAlbum(album.id);
 };
 
 /**
@@ -534,7 +534,7 @@ const createAlbum = () => {
  * @param albumId The album ID
  */
 const onNewAlbum = (albumId: number) => {
-    AppStatus.ClickOnAlbum(albumId);
+    navigationClickOnAlbum(albumId);
 };
 
 // Padding for the last row
@@ -549,18 +549,20 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    const navStatus = getNavigationStatus();
+
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 
-    if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
+    if (event.key === "PageUp" || (event.key === "ArrowLeft" && navStatus.media < 0)) {
         if (page.value > 0) {
             changePage(page.value - 1);
         }
         return true;
     }
 
-    if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
+    if (event.key === "PageDown" || (event.key === "ArrowRight" && navStatus.media < 0)) {
         if (page.value < totalPages.value - 1) {
             changePage(page.value + 1);
         }

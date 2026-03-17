@@ -9,8 +9,8 @@ import { isTouchDevice } from "@/utils/touch";
 import type { Ref } from "vue";
 import { ref, watch } from "vue";
 import { useGlobalKeyboardHandler } from "./use-global-keyboard-handler";
-import { AppStatus } from "@/global-state/app-status";
 import { isVaultLocked } from "@/global-state/auth";
+import { isPlayerVisible } from "@/global-state/navigation";
 
 /**
  * Common player props
@@ -203,7 +203,7 @@ export function usePlayerCommon(props: PlayerCommonProps, emit: PlayerCommonEmit
 
     // Global keyboard handler
     useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-        if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+        if (isVaultLocked() || !isPlayerVisible() || !event.key || event.ctrlKey) {
             return false;
         }
         let caught = true;

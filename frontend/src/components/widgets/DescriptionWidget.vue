@@ -196,7 +196,6 @@
 import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AppStatus } from "@/global-state/app-status";
 import {
     emitAppEvent,
     EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
@@ -233,6 +232,7 @@ import { getStoredDescription, setStoredDescription } from "@/global-state/store
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -295,7 +295,7 @@ const busy = ref(false);
 const busyDisplayLoad = ref(false);
 
 // Current media ID
-const mid = ref(AppStatus.CurrentMedia);
+const mid = ref(getNavigationStatus().media);
 
 // Loading status
 const loading = ref(true);
@@ -541,7 +541,7 @@ onMounted(() => {
 });
 
 onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, () => {
-    mid.value = AppStatus.CurrentMedia;
+    mid.value = getNavigationStatus().media;
     load();
 });
 

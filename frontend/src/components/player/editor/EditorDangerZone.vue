@@ -89,7 +89,6 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/global-state/app-status";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, ref, shallowRef, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -101,6 +100,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { loadCurrentMedia } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ReEncodeConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ReEncodeConfirmationModal.vue"),
@@ -152,7 +152,7 @@ const doEncodeMedia = () => {
     busyReEncode.value = true;
     errorReEncode.value = "";
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestId, apiMediaEncodeMedia(mediaId))
         .onSuccess(() => {
@@ -293,7 +293,7 @@ const performReplaceMediaRequest = (confirmation: ProvidedAuthConfirmation) => {
     replaceProgress.value = 0;
     errorReplace.value = "";
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestId, apiMediaReplaceMedia(mediaId, file, confirmation))
         .onSuccess(() => {

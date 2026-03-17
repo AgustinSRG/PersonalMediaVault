@@ -4,11 +4,10 @@
 
 <script setup lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
-import { AppStatus } from "./global-state/app-status";
 import { type UploadEntryMin } from "./global-state/upload";
 import { getAssetURL } from "@/utils/api";
 import {
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
@@ -20,6 +19,7 @@ import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentAlbumData } from "./global-state/album";
 import { getCurrentMediaData } from "./global-state/media";
 import { getAuthStatus } from "./global-state/auth";
+import { getNavigationStatus } from "./global-state/navigation";
 
 // Translation function
 const { $t } = useI18n();
@@ -36,10 +36,11 @@ const getAppTitle = () => {
  * Updates the document title
  */
 const updateTitle = () => {
+    const navStatus = getNavigationStatus();
     const currentMediaData = getCurrentMediaData();
 
-    if (AppStatus.CurrentMedia >= 0 && currentMediaData) {
-        if (AppStatus.CurrentAlbum >= 0) {
+    if (navStatus.media >= 0 && currentMediaData) {
+        if (navStatus.album >= 0) {
             // Media with album list
             const currentAlbumData = getCurrentAlbumData();
 
@@ -48,14 +49,14 @@ const updateTitle = () => {
             } else {
                 document.title = currentMediaData.title + " | " + getAppTitle();
             }
-        } else if (AppStatus.ListSplitMode) {
+        } else if (navStatus.listSplitMode) {
             // Media with list
             document.title = currentMediaData.title + " | " + getAppTitle();
         } else {
             // Media alone
             document.title = currentMediaData.title + " | " + getAppTitle();
         }
-    } else if (AppStatus.CurrentAlbum >= 0) {
+    } else if (navStatus.album >= 0) {
         // Empty album
 
         const currentAlbumData = getCurrentAlbumData();
@@ -66,8 +67,8 @@ const updateTitle = () => {
             document.title = getAppTitle();
         }
     } else {
-        const searchPart = AppStatus.CurrentSearch ? " (" + $t("Tag") + ": " + AppStatus.CurrentSearch + ")" : "";
-        switch (AppStatus.CurrentPage) {
+        const searchPart = navStatus.search ? " (" + $t("Tag") + ": " + navStatus.search + ")" : "";
+        switch (navStatus.page) {
             case "upload":
                 document.title = $t("Upload") + " | " + getAppTitle();
                 break;
@@ -97,13 +98,14 @@ const updateMediaMetadata = () => {
         return;
     }
 
+    const navStatus = getNavigationStatus();
     const currentMediaData = getCurrentMediaData();
     const currentAlbumData = getCurrentAlbumData();
 
-    if (AppStatus.CurrentMedia >= 0 && currentMediaData) {
+    if (navStatus.media >= 0 && currentMediaData) {
         window.navigator.mediaSession.metadata = new MediaMetadata({
             title: currentMediaData.title,
-            album: AppStatus.CurrentAlbum >= 0 && currentAlbumData ? currentAlbumData.name : undefined,
+            album: navStatus.album >= 0 && currentAlbumData ? currentAlbumData.name : undefined,
             artwork: currentMediaData.thumbnail
                 ? [{ src: getAssetURL(currentMediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
                 : undefined,
@@ -116,15 +118,15 @@ const updateMediaMetadata = () => {
 /**
  * Updates application status
  */
-const updateAppStatus = () => {
+const updateNavStatus = () => {
     updateTitle();
     updateMediaMetadata();
 };
 
-updateAppStatus();
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, updateAppStatus);
-onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, updateAppStatus);
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateAppStatus);
+updateNavStatus();
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, updateNavStatus);
+onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, updateNavStatus);
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateNavStatus);
 
 // Notify when upload is ready
 onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (m: UploadEntryMin) => {

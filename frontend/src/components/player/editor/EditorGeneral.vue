@@ -157,7 +157,6 @@
 
 <script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef } from "vue";
@@ -178,6 +177,7 @@ import { useTimeout } from "@/composables/use-timeout";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { refreshCurrentAlbum } from "@/global-state/album";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const SaveChangesAskModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SaveChangesAskModal.vue"),
@@ -296,7 +296,7 @@ const changeTitle = (e?: Event) => {
     busyTitle.value = true;
     errorTitle.value = "";
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdTitle, apiMediaChangeMediaTitle(mediaId, title.value))
         .onSuccess(() => {
@@ -366,7 +366,7 @@ const changeExtraParams = () => {
     busyExtra.value = true;
     errorExtraConfig.value = "";
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdExtra, apiMediaChangeExtraParams(mediaId, startBeginning.value, isAnimation.value))
         .onSuccess(() => {
@@ -562,7 +562,7 @@ const changeThumbnail = (file: File) => {
     busyThumbnail.value = true;
     errorThumbnail.value = "";
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdThumbnail, apiMediaChangeMediaThumbnail(mediaId, file))
         .onSuccess((res) => {

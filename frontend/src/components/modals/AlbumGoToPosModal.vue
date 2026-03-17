@@ -41,10 +41,10 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { ref, useTemplateRef, watch } from "vue";
-import { AppStatus } from "@/global-state/app-status";
 import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { getCurrentAlbumData, getCurrentAlbumMediaPosition } from "@/global-state/album";
+import { navigationClickOnMedia } from "@/global-state/navigation";
 
 // Translation function
 const { $t } = useI18n();
@@ -90,7 +90,7 @@ const submit = (e: Event) => {
     if (currentAlbumData && currentAlbumData.list.length > 0) {
         const pos = Math.min(Math.max(0, Math.floor(currentPos.value - 1)), currentAlbumData.list.length - 1);
 
-        AppStatus.ClickOnMedia(currentAlbumData.list[pos].id, false);
+        navigationClickOnMedia(currentAlbumData.list[pos].id, false);
     }
 
     close();

@@ -130,7 +130,7 @@
 import {
     emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_HOME_SCROLL_CHANGED,
     EVENT_NAME_MEDIA_DELETE,
@@ -147,7 +147,6 @@ import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
 import HomePageRow from "./common/HomePageRow.vue";
 import { doHomePageSilentSaveAction, getHomePageBackStatePage, HomePageGroupTypes, type HomePageGroupStartMovingData } from "@/utils/home";
-import { AppStatus } from "@/global-state/app-status";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { onApplicationEvent } from "@/composables/on-app-event";
@@ -157,6 +156,7 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onHomeGroupLoad, onPageUnload } from "@/global-state/pages";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { checkAuthenticationStatus, isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus, isPageVisible, navigationClickOnMedia } from "@/global-state/navigation";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -326,11 +326,14 @@ watch(
     },
 );
 
+// Initial navigation status
+const initialNavStatus = getNavigationStatus();
+
 // Current media
-const currentMedia = ref(AppStatus.CurrentMedia);
+const currentMedia = ref(initialNavStatus.media);
 
 // Current media group
-const currentGroup = ref(AppStatus.CurrentHomePageGroup);
+const currentGroup = ref(initialNavStatus.homePageGroup);
 
 // Relative element to the current media
 const currentGroupNext = ref(-1);
@@ -338,11 +341,11 @@ const currentGroupPrev = ref(-1);
 const currentGroupFirst = ref(-1);
 const currentGroupLast = ref(-1);
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    const changed = currentMedia.value !== AppStatus.CurrentMedia || currentGroup.value !== AppStatus.CurrentHomePageGroup;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    const changed = currentMedia.value !== navStatus.media || currentGroup.value !== navStatus.homePageGroup;
 
-    currentMedia.value = AppStatus.CurrentMedia;
-    currentGroup.value = AppStatus.CurrentHomePageGroup;
+    currentMedia.value = navStatus.media;
+    currentGroup.value = navStatus.homePageGroup;
 
     if (changed) {
         currentGroupPrev.value = -1;
@@ -386,7 +389,7 @@ onBeforeUnmount(() => {
  * @param id Media ID
  */
 const goToMedia = (id: number) => {
-    AppStatus.ClickOnMedia(id, true, currentGroup.value);
+    navigationClickOnMedia(id, true, currentGroup.value);
 };
 
 /**
@@ -927,7 +930,7 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey || props.editing) {
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey || props.editing) {
         return false;
     }
 

@@ -77,7 +77,6 @@
 
 <script setup lang="ts">
 import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -92,6 +91,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useRequestId } from "@/composables/use-request-id";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ResolutionConfirmationModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ResolutionConfirmationModal.vue"),
@@ -348,7 +348,7 @@ const performAddResolution = () => {
     busy.value = true;
     busyTarget.value = r.name;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(saveRequestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
         .onSuccess((result) => {
@@ -440,7 +440,7 @@ const performDeleteResolution = () => {
     busy.value = true;
     busyTarget.value = r.name;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(saveRequestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
         .onSuccess(() => {

@@ -165,7 +165,6 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/global-state/app-status";
 import {
     cancelAllPendingUploads,
     clearUploadList,
@@ -196,6 +195,7 @@ import {
 import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { clickOnEnter } from "@/utils/events";
+import { navigationClickOnMedia } from "@/global-state/navigation";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
@@ -449,7 +449,7 @@ const goToMedia = (m: UploadEntryMin, e?: MouseEvent) => {
         return;
     }
 
-    AppStatus.ClickOnMedia(m.mid, true);
+    navigationClickOnMedia(m.mid, true);
 
     emit("media-go");
 };

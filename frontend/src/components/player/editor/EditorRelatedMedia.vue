@@ -79,7 +79,6 @@
 
 <script setup lang="ts">
 import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -95,6 +94,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useExitPreventer } from "@/composables/use-exit-preventer";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 // Limit of related media elements
 const MAX_RELATED_MEDIA_COUNT = 16;
@@ -140,7 +140,7 @@ const emit = defineEmits<{
 }>();
 
 // Current media ID
-const mid = ref(AppStatus.CurrentMedia);
+const mid = ref(getNavigationStatus().media);
 
 // Original related media list
 const originalRelatedMedia = ref((getCurrentMediaData()?.related || []).slice());
@@ -259,7 +259,7 @@ const saveChanges = (e?: Event) => {
 
     busy.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(
         saveRequestId,

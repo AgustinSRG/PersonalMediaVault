@@ -131,10 +131,9 @@ import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import {
     emitAppEvent,
     EVENT_NAME_ALBUMS_LIST_UPDATE,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -156,6 +155,7 @@ import { getAlbumsListExt, refreshAlbumsList } from "@/global-state/albums";
 import { indicateAlbumMetadataChanged } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus, navigationClickOnAlbumByMedia } from "@/global-state/navigation";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -234,14 +234,14 @@ const albums = ref<AlbumModalListItem[]>([]);
 const filter = ref("");
 
 // Current media ID
-const mid = ref(AppStatus.CurrentMedia);
+const mid = ref(getNavigationStatus().media);
 
 // List of albums the media is in
 const mediaAlbums = ref<number[]>([]);
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    const changed = mid.value !== AppStatus.CurrentMedia;
-    mid.value = AppStatus.CurrentMedia;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navState) => {
+    const changed = mid.value !== navState.media;
+    mid.value = navState.media;
     if (changed) {
         updateAlbums();
     }
@@ -274,7 +274,7 @@ const bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(LIST_S
  * Updates the albums list
  */
 const updateAlbums = () => {
-    const mid = AppStatus.CurrentMedia;
+    const mid = getNavigationStatus().media;
 
     const albumFilter = normalizeString(filter.value).trim().toLowerCase();
     const albumFilterWords = filterToWords(albumFilter);
@@ -404,7 +404,7 @@ const goToAlbum = (album: AlbumModalListItem, event?: Event) => {
     }
 
     forceClose();
-    AppStatus.ClickOnAlbumByMedia(album.id, mid.value);
+    navigationClickOnAlbumByMedia(album.id, mid.value);
 };
 
 /**

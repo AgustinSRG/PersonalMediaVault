@@ -11,6 +11,7 @@ import type { ImageNodesChangeType } from "./img-notes";
 import type { UploadEntryMin } from "./upload";
 import type { AlbumMediaPositionContext } from "./album";
 import type { AuthStatus } from "./auth";
+import type { NavigationStatus } from "./navigation";
 
 /**
  * Event triggered when a request results in 401 - Unauthorized
@@ -38,9 +39,9 @@ export const EVENT_NAME_AUTH_CHANGED = "auth-status-changed";
 export const EVENT_NAME_AUTH_ERROR = "auth-status-loading-error";
 
 /**
- * Event triggered when the app status changes
+ * Event triggered when the navigation status changes
  */
-export const EVENT_NAME_APP_STATUS_CHANGED = "app-status-update";
+export const EVENT_NAME_NAV_STATUS_CHANGED = "navigation-status-update";
 
 /**
  * Event triggered when the locale changes
@@ -283,9 +284,10 @@ export type AppEventsMap = {
     [EVENT_NAME_AUTH_ERROR]: () => void;
 
     /**
-     * Event triggered when the app status changes
+     * Event triggered when the navigation status changes
+     * @param status Navigation status
      */
-    [EVENT_NAME_APP_STATUS_CHANGED]: () => void;
+    [EVENT_NAME_NAV_STATUS_CHANGED]: (status: Readonly<NavigationStatus>) => void;
 
     /**
      * Event triggered when the locale changes

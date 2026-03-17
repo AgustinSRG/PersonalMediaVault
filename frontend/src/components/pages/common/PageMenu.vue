@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "@/composables/use-i18n";
-import type { AppStatusPage } from "@/global-state/app-status";
+import type { NavigationStatusPage } from "@/global-state/navigation";
 
 import { getFrontendUrl } from "@/utils/api";
 import { preventDefaultEvent } from "@/utils/events";
@@ -122,7 +122,7 @@ const props = defineProps({
      * Name of the page
      */
     pageName: {
-        type: String as PropType<AppStatusPage>,
+        type: String as PropType<NavigationStatusPage>,
         required: true,
     },
 
@@ -177,7 +177,7 @@ const clickPage = (p: number, e: Event) => {
  * @param order The page order
  * @returns The URL
  */
-const getPageUrl = (page: number, pageName: AppStatusPage, order: string): string => {
+const getPageUrl = (page: number, pageName: NavigationStatusPage, order: string): string => {
     return getFrontendUrl({
         page: pageName || null,
         sp: packSearchParams(page, order || "") || null,

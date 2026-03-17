@@ -248,7 +248,6 @@
 <script setup lang="ts">
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroupElements, apiHomeGroupDeleteElement, apiHomeGroupMoveElement, getHomePageElementReference } from "@/api/api-home";
-import { AppStatus } from "@/global-state/app-status";
 import { checkMediaListForNewTags } from "@/global-state/tags";
 import { getFrontendUrl } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
@@ -274,6 +273,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { checkAuthenticationStatus, isVaultLocked } from "@/global-state/auth";
+import { navigationClickOnAlbum, navigationClickOnMedia } from "@/global-state/navigation";
 
 const HomePageRowAddElementModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
@@ -964,10 +964,10 @@ const goToElement = (element: HomePageElement, i: number, e?: Event) => {
     }
 
     if (element.media) {
-        AppStatus.ClickOnMedia(element.media.id, true, props.group.id);
+        navigationClickOnMedia(element.media.id, true, props.group.id);
     } else if (element.album) {
         setHomePageBackState(props.group.id, i);
-        AppStatus.ClickOnAlbum(element.album.id);
+        navigationClickOnAlbum(element.album.id);
     }
 };
 

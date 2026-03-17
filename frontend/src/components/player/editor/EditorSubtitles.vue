@@ -159,7 +159,6 @@
 <script setup lang="ts">
 import type { MediaSubtitle } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
@@ -176,6 +175,7 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -339,7 +339,7 @@ const addSubtitles = () => {
     busy.value = true;
     uploading.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdAdd, apiMediaSetSubtitles(mediaId, id, name, srtFile.value))
         .onSuccess((res) => {
@@ -483,7 +483,7 @@ const saveRename = () => {
 
     subtitleRenameBusy.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdRename, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
         .onSuccess(() => {
@@ -592,7 +592,7 @@ const removeSubtitlesConfirmInternal = (confirmation: ProvidedAuthConfirmation) 
     busyDeleting.value = true;
     busyDeletingId.value = sub.id;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
     const id = sub.id;
 
     makeNamedApiRequest(requestIdDelete, apiMediaRemoveSubtitles(mediaId, id, confirmation))

@@ -172,7 +172,6 @@ import {
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
 } from "@/global-state/app-events";
 import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/local-storage/app-preferences";
-import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -205,6 +204,7 @@ import {
     updateAlbumMediaPositionStatus,
 } from "@/global-state/album";
 import { isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus, navigationClickOnMedia, navigationCloseAlbum } from "@/global-state/navigation";
 
 const AlbumGoToPosModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
@@ -295,7 +295,7 @@ const renderedCurrentPos = computed(() => {
 });
 
 // ID of the current media
-const currentPosMedia = ref(currentPos.value >= 0 ? AppStatus.CurrentMedia : -1);
+const currentPosMedia = ref(currentPos.value >= 0 ? getNavigationStatus().media : -1);
 
 // Loop option
 const loop = ref(false);
@@ -423,7 +423,7 @@ const onAlbumPosUpdate = (ctx: AlbumMediaPositionContext) => {
     loop.value = ctx.loop;
     random.value = ctx.random;
 
-    const newPosMedia = ctx.pos >= 0 ? AppStatus.CurrentMedia : -1;
+    const newPosMedia = ctx.pos >= 0 ? getNavigationStatus().media : -1;
 
     let newMustScroll = false;
 
@@ -460,7 +460,7 @@ onMounted(() => {
  * Closes the page
  */
 const closePage = () => {
-    AppStatus.CloseAlbum();
+    navigationCloseAlbum();
 };
 
 /**
@@ -826,7 +826,8 @@ const clickMedia = (item: PositionedMediaListItem, e?: MouseEvent) => {
     if (e) {
         e.preventDefault();
     }
-    AppStatus.ClickOnMedia(item.id, false);
+
+    navigationClickOnMedia(item.id, false);
 };
 
 /**
@@ -986,7 +987,7 @@ const KEYBOARD_HANDLER_PRIORITY = 10;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || getNavigationStatus().layout !== "album" || !event.key || event.ctrlKey) {
         return false;
     }
 

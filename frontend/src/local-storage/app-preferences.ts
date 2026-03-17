@@ -14,7 +14,7 @@ import {
 } from "../global-state/app-events";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import type { Album, AlbumListItemMin } from "@/api/models";
-import type { AppStatusPage } from "../global-state/app-status";
+import type { NavigationStatusPage } from "@/global-state/navigation";
 
 export type ColorThemeName = "light" | "dark";
 
@@ -256,7 +256,7 @@ const DEFAULT_PAGE_PREFERENCES: PagePreferences = {
  * @param page The page name
  * @returns The page preferences
  */
-export function getPagePreferences(page: AppStatusPage): PagePreferences {
+export function getPagePreferences(page: NavigationStatusPage): PagePreferences {
     if (window.innerWidth > 1000) {
         DEFAULT_PAGE_PREFERENCES.rowSize = Math.max(2, Math.round((window.innerWidth - 240) / 250));
     } else {
@@ -313,7 +313,7 @@ export function getPagePreferences(page: AppStatusPage): PagePreferences {
  * @param page The page name
  * @param preferences The page preferences
  */
-export function setPagePreferences(page: AppStatusPage, preferences: PagePreferences) {
+export function setPagePreferences(page: NavigationStatusPage, preferences: PagePreferences) {
     saveIntoLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page, preferences);
     emitAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
@@ -322,7 +322,7 @@ export function setPagePreferences(page: AppStatusPage, preferences: PagePrefere
  * Resets page preferences
  * @param page Page name
  */
-export function resetPagePreferences(page: AppStatusPage) {
+export function resetPagePreferences(page: NavigationStatusPage) {
     clearLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page);
     clearLocalStorage(LS_KEY_PAGE_SETTINGS);
     emitAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED);

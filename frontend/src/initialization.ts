@@ -5,7 +5,7 @@
 "use strict";
 
 import { initializeAuthentication } from "./global-state/auth";
-import { AppStatus } from "./global-state/app-status";
+import { initializeNavigation } from "./global-state/navigation";
 import { initializeAlbums } from "./global-state/albums";
 import { initializeTags } from "./global-state/tags";
 import { initializeAlbum } from "./global-state/album";
@@ -19,7 +19,7 @@ export function initializeGlobalState() {
     initializeAuthentication();
 
     // Initialize navigation status
-    AppStatus.Initialize();
+    initializeNavigation();
 
     // Initialize loader for global albums list
     initializeAlbums();

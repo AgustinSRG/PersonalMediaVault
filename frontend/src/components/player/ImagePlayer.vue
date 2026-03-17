@@ -213,7 +213,6 @@ import ImageNotes from "./common/ImageNotes.vue";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
-import { AppStatus } from "@/global-state/app-status";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/constants";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
@@ -232,6 +231,7 @@ import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerCommonControls } from "@/composables/use-player-common-controls";
 import { usePlayerAutoNext } from "@/composables/use-player-auto-next";
 import { getAlbumNextPrefetchData } from "@/global-state/album";
+import { isPlayerVisible } from "@/global-state/navigation";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1061,7 +1061,7 @@ usePlayerMediaSession(["nexttrack", "previoustrack"], (event: MediaSessionAction
 });
 
 useGlobalKeyboardHandler((event: KeyboardEvent) => {
-    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+    if (isVaultLocked() || !isPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
         return false;
     }
 

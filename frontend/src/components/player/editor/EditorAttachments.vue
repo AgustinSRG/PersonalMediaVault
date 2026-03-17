@@ -133,7 +133,6 @@
 <script setup lang="ts">
 import type { MediaAttachment, MediaData } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
@@ -150,6 +149,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { renderSize } from "@/utils/size";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -291,7 +291,7 @@ const addAttachment = (file: File) => {
 
     busyUpload.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestId, apiMediaUploadAttachment(mediaId, file))
         .onSuccess((res) => {
@@ -384,7 +384,7 @@ const saveEditAttachment = () => {
 
     busyRename.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
     const id = attachmentEdit.value;
 
     makeNamedApiRequest(requestId, apiMediaRenameAttachment(mediaId, id, attachmentEditName.value))
@@ -489,7 +489,7 @@ const removeAttachmentConfirmInternal = (confirmation: ProvidedAuthConfirmation)
     busyDelete.value = true;
     busyDeleteId.value = att.id;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
     const id = att.id;
 
     makeNamedApiRequest(requestId, apiMediaRemoveAttachment(mediaId, id, confirmation))

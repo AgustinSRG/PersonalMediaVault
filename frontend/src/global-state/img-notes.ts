@@ -4,7 +4,6 @@
 
 import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AppStatus } from "./app-status";
 import type { ImageNote } from "@/utils/notes-format";
 import { parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId, getUniqueStringId } from "@/utils/unique-id";
@@ -13,7 +12,7 @@ import { apiMediaSetNotes } from "@/api/api-media-edit";
 import {
     addAppEventListener,
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_IMAGE_NOTES_CHANGE,
     EVENT_NAME_IMAGE_NOTES_SAVED,
@@ -24,6 +23,7 @@ import {
 import { removeGlobalBusyState, setGlobalBusyState } from "./busy-state";
 import { getCurrentMediaData, modifyCurrentMediaData } from "./media";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { getNavigationStatus } from "./navigation";
 
 /**
  * The change type for the image nodes
@@ -40,7 +40,7 @@ const ImageNotesState = {
     /**
      * ID of the media owner of the image notes
      */
-    mediaId: AppStatus.CurrentMedia,
+    mediaId: getNavigationStatus().media,
 
     /**
      * Image width (px)
@@ -374,9 +374,9 @@ export function removeImageNote(note: ImageNote) {
 addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadImageNotes);
 addAppEventListener(EVENT_NAME_MEDIA_UPDATE, loadImageNotes);
 
-addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    if (ImageNotesState.mediaId !== AppStatus.CurrentMedia) {
-        ImageNotesState.mediaId = AppStatus.CurrentMedia;
+addAppEventListener(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    if (ImageNotesState.mediaId !== navStatus.media) {
+        ImageNotesState.mediaId = navStatus.media;
         ImageNotesState.url = "";
         ImageNotesState.notes = [];
 

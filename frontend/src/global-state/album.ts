@@ -4,7 +4,6 @@
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AppStatus } from "./app-status";
 import type { Album, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiMediaGetMedia } from "@/api/api-media";
@@ -12,7 +11,7 @@ import {
     addAppEventListener,
     emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_LOADING,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
@@ -26,6 +25,7 @@ import { setCachedAlbumPosition } from "./album-position-cache";
 import { refreshAlbumsList } from "./albums";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { isVaultLocked } from "./auth";
+import { getNavigationStatus, navigationClickOnAlbumWithList, navigationCloseAlbum, navigationUpdateURL } from "./navigation";
 
 /**
  * State of the current album
@@ -125,7 +125,7 @@ function loadCurrentAlbum() {
 
             updateAlbumMediaPositionStatus();
 
-            AppStatus.UpdateURL();
+            navigationUpdateURL();
         })
         .onRequestError((err, handleErr) => {
             handleErr(err, {
@@ -137,7 +137,7 @@ function loadCurrentAlbum() {
 
                     setCurrentAlbumLoading(false);
 
-                    AppStatus.CloseAlbum();
+                    navigationCloseAlbum();
 
                     refreshAlbumsList();
                 },
@@ -159,19 +159,6 @@ function loadCurrentAlbum() {
  */
 export function refreshCurrentAlbum() {
     loadCurrentAlbum();
-}
-
-/**
- * Called when the app status changes, in order to reload if necessary
- */
-function onCurrentAlbumChanged() {
-    if (AppStatus.CurrentAlbum !== CurrentAlbumState.id) {
-        CurrentAlbumState.id = AppStatus.CurrentAlbum;
-        CurrentAlbumState.data = null;
-        loadCurrentAlbum();
-    }
-
-    updateAlbumMediaPositionStatus();
 }
 
 /**
@@ -275,7 +262,7 @@ export function getCurrentAlbumMediaPositionContext(): Readonly<AlbumMediaPositi
  * Updates current album media position status
  */
 export function updateAlbumMediaPositionStatus() {
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     if (!CurrentAlbumState.data || CurrentAlbumState.loading) {
         AlbumMediaPositionStatus.pos = -1;
@@ -290,7 +277,9 @@ export function updateAlbumMediaPositionStatus() {
         const albumList = CurrentAlbumState.data.list.map((a) => {
             return a.id;
         });
-        AppStatus.ClickOnAlbumWithList(CurrentAlbumState.data.id, albumList);
+
+        navigationClickOnAlbumWithList(CurrentAlbumState.data.id, albumList);
+
         return;
     }
 
@@ -488,9 +477,18 @@ export function checkAlbumNextPrefetch(): boolean {
  */
 export function initializeAlbum() {
     addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadCurrentAlbum);
-    addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, onCurrentAlbumChanged);
 
-    CurrentAlbumState.id = AppStatus.CurrentAlbum;
+    addAppEventListener(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+        if (navStatus.album !== CurrentAlbumState.id) {
+            CurrentAlbumState.id = navStatus.album;
+            CurrentAlbumState.data = null;
+            loadCurrentAlbum();
+        }
+
+        updateAlbumMediaPositionStatus();
+    });
+
+    CurrentAlbumState.id = getNavigationStatus().album;
 
     loadCurrentAlbum();
 }

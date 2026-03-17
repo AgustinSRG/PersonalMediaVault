@@ -2,7 +2,7 @@
 
 "use strict";
 
-import type { AppStatusPage } from "@/global-state/app-status";
+import type { NavigationStatusPage } from "@/global-state/navigation";
 import { getAuthStatus } from "@/global-state/auth";
 
 /**
@@ -89,7 +89,7 @@ export type FrontendUrlStatusParams = {
     album?: number | string;
 
     // Current page
-    page?: AppStatusPage;
+    page?: NavigationStatusPage;
 
     // Home page group
     g?: number;

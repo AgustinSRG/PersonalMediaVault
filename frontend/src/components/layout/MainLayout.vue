@@ -110,11 +110,10 @@ import PageContentLoader from "./PageContentLoader.vue";
 
 import type { ColorThemeName } from "@/local-storage/app-preferences";
 import { getTheme } from "@/local-storage/app-preferences";
-import { AppStatus } from "@/global-state/app-status";
 import { isTouchDevice } from "@/utils/touch";
 import {
     EVENT_NAME_THEME_CHANGED,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_AUTH_LOADING,
     EVENT_NAME_AUTH_ERROR,
@@ -124,6 +123,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
 import { closeCurrentAuthenticatedSession, isLoadingAuthStatus, isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -236,10 +236,10 @@ const loadingAuth = ref(isLoadingAuthStatus());
 const loadingAuthError = ref(false);
 
 // Current layout
-const layout = ref(AppStatus.CurrentLayout);
+const layout = ref(getNavigationStatus().layout);
 
 // Current focus
-const focus = ref(AppStatus.CurrentFocus);
+const focus = ref(getNavigationStatus().focus);
 
 // Display the logout modal?
 const displayLogout = ref(false);
@@ -308,9 +308,9 @@ onApplicationEvent(EVENT_NAME_THEME_CHANGED, (t: ColorThemeName) => {
     theme.value = t;
 });
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    layout.value = AppStatus.CurrentLayout;
-    focus.value = AppStatus.CurrentFocus;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    layout.value = navStatus.layout;
+    focus.value = navStatus.focus;
 });
 
 onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthState) => {
@@ -497,7 +497,7 @@ const skipToMainContent = (event?: Event) => {
         event.preventDefault();
     }
     let skipTo: HTMLElement;
-    switch (AppStatus.CurrentLayout) {
+    switch (getNavigationStatus().layout) {
         case "media":
         case "media-split":
         case "album":

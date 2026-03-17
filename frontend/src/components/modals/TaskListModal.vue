@@ -70,7 +70,6 @@
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
 import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -82,6 +81,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { useRequestId } from "@/composables/use-request-id";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { navigationClickOnMedia } from "@/global-state/navigation";
 
 // Translation function
 const { $t } = useI18n();
@@ -326,7 +326,9 @@ const goToMedia = (mid: number, e?: Event) => {
     if (e) {
         e.preventDefault();
     }
-    AppStatus.ClickOnMedia(mid, true);
+
+    navigationClickOnMedia(mid, true);
+
     close();
 };
 

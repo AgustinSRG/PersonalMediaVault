@@ -196,7 +196,7 @@ import {
     emitAppEvent,
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
     EVENT_NAME_ADVANCED_SEARCH_SCROLL,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -204,7 +204,6 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
@@ -236,6 +235,7 @@ import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { getCurrentAlbumData } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { getAuthStatus, isVaultLocked } from "@/global-state/auth";
+import { getNavigationStatus, isPageVisible, navigationChangeSearchParams, navigationClickOnMedia } from "@/global-state/navigation";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -394,7 +394,7 @@ onApplicationEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, (e: Event) => {
 const loading = ref(false);
 
 // Search parameters
-const searchParams = ref(AppStatus.SearchParams);
+const searchParams = ref(getNavigationStatus().searchParams);
 
 /**
  * Page search parameters
@@ -409,14 +409,16 @@ type PageSearchParameters = {
  * @returns The parsed search parameters
  */
 const parsePageSearchParameters = (): PageSearchParameters => {
-    if (props.inModal || !AppStatus.SearchParams) {
+    const navSearchParams = getNavigationStatus().searchParams;
+
+    if (props.inModal || !navSearchParams) {
         return {
             textSearch: "",
             tags: [],
         };
     }
 
-    const parts = AppStatus.SearchParams.split("~");
+    const parts = navSearchParams.split("~");
 
     const tags = parts[0]
         .split("-")
@@ -460,8 +462,8 @@ const updateSearchParams = () => {
 
     searchParams.value = newSearchParams;
 
-    if (AppStatus.SearchParams !== newSearchParams) {
-        AppStatus.ChangeSearchParams(newSearchParams);
+    if (getNavigationStatus().searchParams !== newSearchParams) {
+        navigationChangeSearchParams(newSearchParams);
     }
 };
 
@@ -475,10 +477,10 @@ const textSearch = ref("");
 const type = ref<MediaType>(0);
 
 // Current media
-const currentMedia = ref(AppStatus.CurrentMedia);
+const currentMedia = ref(getNavigationStatus().media);
 
 // Last current media
-const lastCurrentMedia = ref(AppStatus.CurrentMedia);
+const lastCurrentMedia = ref(getNavigationStatus().media);
 
 // Current page
 const page = ref(0);
@@ -648,12 +650,12 @@ onMounted(() => {
     startSearch();
 });
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    const changed = currentMedia.value !== AppStatus.CurrentMedia;
-    currentMedia.value = AppStatus.CurrentMedia;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    const changed = currentMedia.value !== navStatus.media;
+    currentMedia.value = navStatus.media;
 
-    if (AppStatus.CurrentMedia >= 0) {
-        lastCurrentMedia.value = AppStatus.CurrentMedia;
+    if (navStatus.media >= 0) {
+        lastCurrentMedia.value = navStatus.media;
     }
 
     if (!props.inModal) {
@@ -667,7 +669,7 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
         onCurrentMediaChanged();
     }
 
-    if (!props.inModal && searchParams.value !== AppStatus.SearchParams) {
+    if (!props.inModal && searchParams.value !== navStatus.searchParams) {
         const parsedParams = parsePageSearchParameters();
         textSearch.value = parsedParams.textSearch;
         tags.value = parsedParams.tags;
@@ -1533,7 +1535,7 @@ const goToMedia = (m: MediaListItem) => {
             }
         });
     } else {
-        AppStatus.ClickOnMedia(m.id, true);
+        navigationClickOnMedia(m.id, true);
     }
 };
 
@@ -1620,7 +1622,7 @@ const skipTagSuggestions = () => {
 const KEYBOARD_HANDLER_PRIORITY = 20;
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

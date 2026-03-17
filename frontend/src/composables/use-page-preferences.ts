@@ -3,7 +3,7 @@
 "use strict";
 
 import { getPagePreferences } from "@/local-storage/app-preferences";
-import type { AppStatusPage } from "@/global-state/app-status";
+import type { NavigationStatusPage } from "@/global-state/navigation";
 import type { Ref } from "vue";
 import { onBeforeUnmount, ref, watch } from "vue";
 import { onApplicationEvent } from "./on-app-event";
@@ -60,7 +60,10 @@ export type PagePreferencesComposable = {
  * @param updateOnWindowResize True to update the preferences when the window resizes
  * @returns The page preferences composable
  */
-export function usePagePreferences(page: AppStatusPage | Ref<AppStatusPage>, updateOnWindowResize?: boolean): PagePreferencesComposable {
+export function usePagePreferences(
+    page: NavigationStatusPage | Ref<NavigationStatusPage>,
+    updateOnWindowResize?: boolean,
+): PagePreferencesComposable {
     // Initial preferences
     const initialPagePreferences = getPagePreferences(typeof page === "string" ? page : page.value);
 

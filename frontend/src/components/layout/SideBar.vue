@@ -136,14 +136,18 @@
 
 <script setup lang="ts">
 import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/local-storage/app-preferences";
-import type { AppStatusPage } from "@/global-state/app-status";
-import { AppStatus } from "@/global-state/app-status";
+import {
+    getNavigationStatus,
+    navigationClickOnAlbum,
+    navigationGoToPageConditionalSplit,
+    type NavigationStatusPage,
+} from "@/global-state/navigation";
 import { getFrontendUrl } from "@/utils/api";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_ALBUMS_LIST_UPDATE,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
 } from "@/global-state/app-events";
@@ -193,40 +197,43 @@ onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
 // User permissions
 const { canWrite } = useUserPermissions();
 
+// Initial navigation status
+const initialNavStatus = getNavigationStatus();
+
 // Current page
-const page = ref(AppStatus.CurrentPage);
+const page = ref(initialNavStatus.page);
 
 // Current album
-const album = ref(AppStatus.CurrentAlbum);
+const album = ref(initialNavStatus.album);
 
 // Current layout
-const layout = ref(AppStatus.CurrentLayout);
+const layout = ref(initialNavStatus.layout);
 
 // Is initial layout?
 const isInitialLayout = computed(() => layout.value === "initial");
 
 // Current search
-const search = ref(AppStatus.CurrentSearch);
+const search = ref(initialNavStatus.search);
 
 // Cached album search params
-const cachedAlbumsSearchParams = ref(AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "");
+const cachedAlbumsSearchParams = ref(initialNavStatus.page === "albums" ? initialNavStatus.searchParams : "");
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    if (AppStatus.CurrentLayout !== "initial") {
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    if (navStatus.layout !== "initial") {
         display.value = false;
     } else if (layout.value !== "initial") {
         display.value = true;
     }
 
-    layout.value = AppStatus.CurrentLayout;
+    layout.value = navStatus.layout;
 
-    page.value = AppStatus.CurrentPage;
-    album.value = AppStatus.CurrentAlbum;
+    page.value = navStatus.page;
+    album.value = navStatus.album;
 
-    search.value = AppStatus.CurrentSearch;
+    search.value = navStatus.search;
 
-    if (AppStatus.CurrentPage === "albums") {
-        cachedAlbumsSearchParams.value = AppStatus.SearchParams;
+    if (navStatus.page === "albums") {
+        cachedAlbumsSearchParams.value = navStatus.searchParams;
     }
 });
 
@@ -348,7 +355,7 @@ useFocusTrap(container, display, lostFocus);
  * @param searchParams The search params
  * @returns The URL
  */
-const getPageURL = (page: AppStatusPage, searchParams?: string): string => {
+const getPageURL = (page: NavigationStatusPage, searchParams?: string): string => {
     return getFrontendUrl({
         page: page,
         sp: searchParams || null,
@@ -361,14 +368,17 @@ const getPageURL = (page: AppStatusPage, searchParams?: string): string => {
  * @param e The click event
  * @param searchParams The search params
  */
-const goToPage = (p: AppStatusPage, e: Event, searchParams?: string) => {
+const goToPage = (p: NavigationStatusPage, e: Event, searchParams?: string) => {
     if (e) {
         e.preventDefault();
     }
-    AppStatus.GoToPageConditionalSplit(p, searchParams);
+
+    navigationGoToPageConditionalSplit(p, searchParams);
+
     nextTick(() => {
         emit("skip-to-content");
     });
+
     if (window.innerWidth < 1000) {
         close();
     }
@@ -393,7 +403,7 @@ const getAlbumURL = (albumId: number): string => {
 const goToAlbum = (albumId: number, e?: Event) => {
     e?.preventDefault();
 
-    AppStatus.ClickOnAlbum(albumId);
+    navigationClickOnAlbum(albumId);
 
     nextTick(() => {
         emit("skip-to-content");

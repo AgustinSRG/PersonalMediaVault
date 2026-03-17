@@ -45,13 +45,13 @@ import { useI18n } from "@/composables/use-i18n";
 import { getCurrentAlbumMediaPositionContext } from "@/global-state/album";
 import {
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_GO_NEXT,
     EVENT_NAME_GO_PREV,
     EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
+import { getNavigationStatus, navigationFocusLeft, navigationFocusRight } from "@/global-state/navigation";
 import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/global-state/pages";
 import { clickOnEnter } from "@/utils/events";
 import { ref } from "vue";
@@ -60,10 +60,10 @@ import { ref } from "vue";
 const { $t } = useI18n();
 
 // Current focus
-const focus = ref(AppStatus.CurrentFocus);
+const focus = ref(getNavigationStatus().focus);
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    focus.value = AppStatus.CurrentFocus;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    focus.value = navStatus.focus;
 });
 
 // Initial album media position context
@@ -91,14 +91,14 @@ onApplicationEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, (p, n) => {
  * Called when the user clicked on the 'left' button
  */
 const clickLeft = () => {
-    AppStatus.FocusLeft();
+    navigationFocusLeft();
 };
 
 /**
  * Called when the user clicked on the 'right' button
  */
 const clickRight = () => {
-    AppStatus.FocusRight();
+    navigationFocusRight();
 };
 
 /**

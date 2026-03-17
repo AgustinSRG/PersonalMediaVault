@@ -46,7 +46,7 @@
 import type { MediaListItem } from "@/api/models";
 import {
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -55,7 +55,6 @@ import {
     EVENT_NAME_RANDOM_PAGE_REFRESH,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { checkMediaListForNewTags } from "@/global-state/tags";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -72,6 +71,14 @@ import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { getCurrentMediaId, loadCurrentMedia } from "@/global-state/media";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
+import {
+    getNavigationStatus,
+    isPageVisible,
+    navigationClearSearch,
+    navigationClickOnMedia,
+    navigationGoToPage,
+    navigationRefreshSeed,
+} from "@/global-state/navigation";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -138,17 +145,20 @@ const loading = ref(false);
 // True if it was loaded at least once
 const firstLoaded = ref(false);
 
+// Initial nav status
+const initialNavStatus = getNavigationStatus();
+
 // Current media
-const currentMedia = ref(AppStatus.CurrentMedia);
+const currentMedia = ref(initialNavStatus.media);
 
 // Current search
-const search = ref(AppStatus.CurrentSearch);
+const search = ref(initialNavStatus.search);
 
 // Search parameters
-const searchParams = ref(AppStatus.SearchParams);
+const searchParams = ref(initialNavStatus.searchParams);
 
 // RNG seed
-const seed = ref(AppStatus.RandomSeed);
+const seed = ref(initialNavStatus.randomSeed);
 
 // Total number of items
 const total = ref(0);
@@ -255,20 +265,20 @@ watch(
     },
 );
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    const changed = currentMedia.value !== AppStatus.CurrentMedia;
-    currentMedia.value = AppStatus.CurrentMedia;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    const changed = currentMedia.value !== navStatus.media;
+    currentMedia.value = navStatus.media;
 
     let mustLoad = false;
 
-    if (AppStatus.CurrentSearch !== search.value) {
-        search.value = AppStatus.CurrentSearch;
+    if (navStatus.search !== search.value) {
+        search.value = navStatus.search;
         mustLoad = true;
     }
 
-    if (AppStatus.SearchParams !== searchParams.value || AppStatus.RandomSeed !== seed.value) {
-        seed.value = AppStatus.RandomSeed;
-        searchParams.value = AppStatus.SearchParams;
+    if (navStatus.searchParams !== searchParams.value || navStatus.randomSeed !== seed.value) {
+        seed.value = navStatus.randomSeed;
+        searchParams.value = navStatus.searchParams;
         mustLoad = true;
     }
 
@@ -288,7 +298,7 @@ onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
  * @param mid The ID of the media
  */
 const goToMedia = (mid: number) => {
-    AppStatus.ClickOnMedia(mid, true);
+    navigationClickOnMedia(mid, true);
 };
 
 /**
@@ -355,21 +365,21 @@ onBeforeUnmount(() => {
  * Clears the search
  */
 const clearSearch = () => {
-    AppStatus.ClearSearch();
+    navigationClearSearch();
 };
 
 /**
  * Navigates to advanced search
  */
 const goAdvancedSearch = () => {
-    AppStatus.GoToPage("search");
+    navigationGoToPage("search");
 };
 
 /**
  * Refreshes the seed
  */
 const refreshSeed = () => {
-    AppStatus.RefreshSeed();
+    navigationRefreshSeed();
 };
 
 onApplicationEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, refreshSeed);
@@ -421,7 +431,7 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

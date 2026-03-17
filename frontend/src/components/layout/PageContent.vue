@@ -179,10 +179,9 @@
 import {
     emitAppEvent,
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_RANDOM_PAGE_REFRESH,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { computed, defineAsyncComponent, nextTick, ref, watch } from "vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoadingIcon from "../utils/LoadingIcon.vue";
@@ -195,6 +194,14 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
+import {
+    getNavigationStatus,
+    isPageVisible,
+    navigationChangeSearchParams,
+    navigationClosePage,
+    navigationExpandPage,
+    navigationGoToPageConditionalSplit,
+} from "@/global-state/navigation";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -247,17 +254,20 @@ defineProps({
     min: Boolean,
 });
 
+// Initial navigation status
+const initialNavStatus = getNavigationStatus();
+
 // True if the page container is being displayed
-const isDisplayed = ref((AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0);
+const isDisplayed = ref((initialNavStatus.media < 0 || initialNavStatus.listSplitMode) && initialNavStatus.album < 0);
 
 // Current page
-const page = ref(AppStatus.CurrentPage);
+const page = ref(initialNavStatus.page);
 
 // Current search
-const search = ref(AppStatus.CurrentSearch);
+const search = ref(initialNavStatus.search);
 
 // Current search params
-const searchParams = ref(AppStatus.SearchParams);
+const searchParams = ref(initialNavStatus.searchParams);
 
 // Current page number
 const pageN = ref(1);
@@ -276,16 +286,16 @@ const updateSearchParams = () => {
 
 updateSearchParams();
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    if (page.value !== AppStatus.CurrentPage && AppStatus.CurrentPage === "home") {
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    if (page.value !== navStatus.page && navStatus.page === "home") {
         homeEditMode.value = false;
     }
 
-    page.value = AppStatus.CurrentPage;
-    search.value = AppStatus.CurrentSearch;
-    isDisplayed.value = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
+    page.value = navStatus.page;
+    search.value = navStatus.search;
+    isDisplayed.value = (navStatus.media < 0 || navStatus.listSplitMode) && navStatus.album < 0;
 
-    searchParams.value = AppStatus.SearchParams;
+    searchParams.value = navStatus.searchParams;
     updateSearchParams();
 });
 
@@ -384,15 +394,16 @@ watch(canWrite, () => {
  * Expands the page
  */
 const expandPage = () => {
-    AppStatus.ExpandPage();
+    navigationExpandPage();
 };
 
 /**
  * Closes the page and focus the player (if any)
  */
 const closePage = () => {
-    AppStatus.ClosePage();
-    const player: any = document.querySelector(".player-container");
+    navigationClosePage();
+
+    const player = document.querySelector(".player-container") as HTMLElement;
     if (player) {
         player.focus();
     }
@@ -414,7 +425,7 @@ const openConfig = () => {
  */
 const onSearchParamsChanged = () => {
     searchParams.value = packSearchParams(pageN.value, order.value);
-    AppStatus.ChangeSearchParams(searchParams.value);
+    navigationChangeSearchParams(searchParams.value);
 };
 
 /**
@@ -469,7 +480,7 @@ const homeFinishEdit = () => {
  * Navigates to the upload page
  */
 const uploadMedia = () => {
-    AppStatus.GoToPageConditionalSplit("upload");
+    navigationGoToPageConditionalSplit("upload");
 };
 
 // Current page scroll
@@ -497,7 +508,7 @@ const KEYBOARD_HANDLER_PRIORITY = 10;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

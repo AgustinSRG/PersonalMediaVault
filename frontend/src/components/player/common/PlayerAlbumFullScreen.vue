@@ -53,7 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import { AppStatus } from "@/global-state/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import MediaItemAlbumThumbnail from "@/components/utils/MediaItemAlbumThumbnail.vue";
@@ -77,6 +76,7 @@ import {
     isCurrentAlbumLoading,
 } from "@/global-state/album";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { navigationClickOnMedia } from "@/global-state/navigation";
 
 // Emits
 const emit = defineEmits<{
@@ -326,7 +326,7 @@ const close = () => {
  * @param item The media element
  */
 const clickMedia = (item: MediaListItem) => {
-    AppStatus.ClickOnMedia(item.id, false);
+    navigationClickOnMedia(item.id, false);
     close();
 };
 </script>

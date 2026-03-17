@@ -6,13 +6,12 @@ import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "
 import type { SubtitlesEntry } from "@/utils/srt";
 import { findSubtitlesEntry, parseSRT } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AppStatus } from "./app-status";
 import { getSelectedSubtitles } from "../local-storage/player-preferences";
 import { getAssetURL } from "@/utils/api";
 import {
     addAppEventListener,
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_SUBTITLES_CHANGED,
@@ -22,6 +21,7 @@ import {
 import { getUniqueStringId } from "@/utils/unique-id";
 import { getCurrentMediaData } from "./media";
 import { LOAD_RETRY_DELAY } from "@/constants";
+import { getNavigationStatus } from "./navigation";
 
 // Request ID for loading
 const REQUEST_ID_SUBTITLES_LOAD = getUniqueStringId();
@@ -33,7 +33,7 @@ const SubtitlesStatus = {
     /**
      * ID of the current media
      */
-    mediaId: AppStatus.CurrentMedia,
+    mediaId: getNavigationStatus().media,
 
     /**
      * ID of the selected subtitles
@@ -140,10 +140,10 @@ addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadSubtitles);
 // Load when current media changes
 addAppEventListener(EVENT_NAME_MEDIA_UPDATE, loadSubtitles);
 
-// Load when the app status changes if current media ID changes
-addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    if (SubtitlesStatus.mediaId !== AppStatus.CurrentMedia) {
-        SubtitlesStatus.mediaId = AppStatus.CurrentMedia;
+// Load when the navigation status changes if current media ID changes
+addAppEventListener(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    if (SubtitlesStatus.mediaId !== navStatus.media) {
+        SubtitlesStatus.mediaId = navStatus.media;
         SubtitlesStatus.selectedSubtitles = "";
         SubtitlesStatus.url = "";
         SubtitlesStatus.subtitles = [];

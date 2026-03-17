@@ -111,7 +111,6 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
 } from "@/global-state/app-events";
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
-import { AppStatus } from "@/global-state/app-status";
 import { closeFullscreen } from "@/utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import LoadingOverlay from "./LoadingOverlay.vue";
@@ -124,6 +123,7 @@ import { getPageHasNextGlobalState, getPageHasPrevGlobalState } from "@/global-s
 import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/global-state/album";
 import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/global-state/media";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
+import { getNavigationStatus, navigationClickOnMedia } from "@/global-state/navigation";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -253,13 +253,13 @@ const prev = ref(initialAlbumMediaPositionContext.prev);
 const next = ref(initialAlbumMediaPositionContext.next);
 
 // Is player coexisting with the album layout?
-const isInAlbum = ref(AppStatus.CurrentAlbum >= 0);
+const isInAlbum = ref(getNavigationStatus().album >= 0);
 
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, (ctx) => {
     prev.value = ctx.prev;
     next.value = ctx.next;
 
-    isInAlbum.value = AppStatus.CurrentAlbum >= 0;
+    isInAlbum.value = getNavigationStatus().album >= 0;
 });
 
 // Is the current album being loaded?
@@ -347,7 +347,7 @@ onMounted(() => {
  */
 const goPrev = () => {
     if (prev.value) {
-        AppStatus.ClickOnMedia(prev.value.id, false);
+        navigationClickOnMedia(prev.value.id, false);
     } else if (hasPagePrev.value) {
         emitAppEvent(EVENT_NAME_PAGE_NAV_PREV);
     }
@@ -360,7 +360,7 @@ onApplicationEvent(EVENT_NAME_GO_PREV, goPrev);
  */
 const goNext = () => {
     if (next.value) {
-        AppStatus.ClickOnMedia(next.value.id, false);
+        navigationClickOnMedia(next.value.id, false);
     } else if (hasPageNext.value) {
         emitAppEvent(EVENT_NAME_PAGE_NAV_NEXT);
     }

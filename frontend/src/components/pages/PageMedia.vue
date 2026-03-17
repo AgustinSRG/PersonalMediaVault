@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import {
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -67,7 +67,6 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
 } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
@@ -86,6 +85,14 @@ import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-hand
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
+import {
+    getNavigationStatus,
+    isPageVisible,
+    navigationChangeSearchParams,
+    navigationClearSearch,
+    navigationClickOnMedia,
+    navigationGoToPage,
+} from "@/global-state/navigation";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -152,14 +159,17 @@ const loading = ref(false);
 // True if it was loaded at least once
 const firstLoaded = ref(false);
 
+// Initial navigation status
+const initialNavStatus = getNavigationStatus();
+
 // Current media
-const currentMedia = ref(AppStatus.CurrentMedia);
+const currentMedia = ref(initialNavStatus.media);
 
 // Current search
-const search = ref(AppStatus.CurrentSearch);
+const search = ref(initialNavStatus.search);
 
 // Search parameters
-const searchParams = ref(AppStatus.SearchParams);
+const searchParams = ref(initialNavStatus.searchParams);
 
 // Page order (type)
 type PageOrder = "asc" | "desc";
@@ -187,7 +197,7 @@ updateSearchParams();
  */
 const onSearchParamsChanged = () => {
     searchParams.value = packSearchParams(page.value, order.value);
-    AppStatus.ChangeSearchParams(searchParams.value);
+    navigationChangeSearchParams(searchParams.value);
 };
 
 // Total number of items
@@ -298,19 +308,19 @@ watch(
     },
 );
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    const changed = currentMedia.value !== AppStatus.CurrentMedia;
-    currentMedia.value = AppStatus.CurrentMedia;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    const changed = currentMedia.value !== navStatus.media;
+    currentMedia.value = navStatus.media;
 
     let mustLoad = false;
 
-    if (AppStatus.CurrentSearch !== search.value) {
-        search.value = AppStatus.CurrentSearch;
+    if (navStatus.search !== search.value) {
+        search.value = navStatus.search;
         mustLoad = true;
     }
 
-    if (AppStatus.SearchParams !== searchParams.value) {
-        searchParams.value = AppStatus.SearchParams;
+    if (navStatus.searchParams !== searchParams.value) {
+        searchParams.value = navStatus.searchParams;
         updateSearchParams();
         load();
     }
@@ -341,7 +351,7 @@ const changePage = (p: number) => {
  * @param mid The ID of the media
  */
 const goToMedia = (mid: number) => {
-    AppStatus.ClickOnMedia(mid, true);
+    navigationClickOnMedia(mid, true);
 };
 
 /**
@@ -412,14 +422,14 @@ onBeforeUnmount(() => {
  * Clears the search
  */
 const clearSearch = () => {
-    AppStatus.ClearSearch();
+    navigationClearSearch();
 };
 
 /**
  * Navigates to advanced search
  */
 const goAdvancedSearch = () => {
-    AppStatus.GoToPage("search");
+    navigationGoToPage("search");
 };
 
 /**
@@ -469,18 +479,20 @@ const KEYBOARD_HANDLER_PRIORITY = 20;
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPageVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPageVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 
-    if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
+    const navStatus = getNavigationStatus();
+
+    if (event.key === "PageUp" || (event.key === "ArrowLeft" && navStatus.media < 0)) {
         if (page.value > 0) {
             changePage(page.value - 1);
         }
         return true;
     }
 
-    if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
+    if (event.key === "PageDown" || (event.key === "ArrowRight" && navStatus.media < 0)) {
         if (page.value < totalPages.value - 1) {
             changePage(page.value + 1);
         }

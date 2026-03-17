@@ -7,19 +7,19 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import {
     addAppEventListener,
     emitAppEvent,
-    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_MEDIA_LOADING,
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
-import { AppStatus } from "./app-status";
 import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { checkAlbumNextPrefetch } from "./album";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { isVaultLocked } from "./auth";
+import { getNavigationStatus } from "./navigation";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -156,16 +156,6 @@ export function loadCurrentMedia() {
 }
 
 /**
- * Called when the current media ID changes
- */
-function onMediaChanged() {
-    if (CurrentMediaState.id !== AppStatus.CurrentMedia) {
-        CurrentMediaState.id = AppStatus.CurrentMedia;
-        loadCurrentMedia();
-    }
-}
-
-/**
  * Provides the media data externally, without loading.
  * Called by pre-fetch or cache services
  * @param media The media data
@@ -180,9 +170,14 @@ export function provideCurrentMediaData(media: MediaData) {
  */
 export function initializeMedia() {
     addAppEventListener(EVENT_NAME_AUTH_CHANGED, loadCurrentMedia);
-    addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, onMediaChanged);
+    addAppEventListener(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+        if (CurrentMediaState.id !== navStatus.media) {
+            CurrentMediaState.id = navStatus.media;
+            loadCurrentMedia();
+        }
+    });
 
-    CurrentMediaState.id = AppStatus.CurrentMedia;
+    CurrentMediaState.id = getNavigationStatus().media;
 
     loadCurrentMedia();
 }

@@ -278,7 +278,6 @@ import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getAssetURL } from "@/utils/api";
 import { AUTO_LOOP_MIN_DURATION, loadCurrentMedia } from "@/global-state/media";
-import { AppStatus } from "@/global-state/app-status";
 import type { ColorThemeName } from "@/local-storage/app-preferences";
 import { getTheme } from "@/local-storage/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
@@ -306,6 +305,7 @@ import { useTimeout } from "@/composables/use-timeout";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
+import { isPlayerVisible } from "@/global-state/navigation";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -1780,7 +1780,7 @@ usePlayerMediaSession(
 /* Keyboard handler */
 
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPlayerVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 

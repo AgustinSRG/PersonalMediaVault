@@ -46,8 +46,7 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
+import { EVENT_NAME_NAV_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { ref, useTemplateRef, watch } from "vue";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
@@ -63,6 +62,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { showSnackBar } from "@/global-state/snack-bar";
 import { refreshCurrentAlbum } from "@/global-state/album";
 import { getCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus, navigationOnDeleteMedia } from "@/global-state/navigation";
 
 // Translation function
 const { $t } = useI18n();
@@ -77,10 +77,10 @@ const container = useTemplateRef("container");
 const { close, forceClose } = useModal(display, container);
 
 // Current media ID
-const currentMedia = ref(AppStatus.CurrentMedia);
+const currentMedia = ref(getNavigationStatus().media);
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    currentMedia.value = AppStatus.CurrentMedia;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    currentMedia.value = navStatus.media;
 });
 
 // Current media title
@@ -153,7 +153,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             refreshCurrentAlbum();
 
-            AppStatus.OnDeleteMedia();
+            navigationOnDeleteMedia();
         })
         .onCancel(() => {
             busy.value = false;
@@ -180,7 +180,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
                     refreshCurrentAlbum();
 
-                    AppStatus.OnDeleteMedia();
+                    navigationOnDeleteMedia();
                 },
                 serverError,
                 networkError,

@@ -164,7 +164,6 @@
 <script setup lang="ts">
 import type { MediaAudioTrack } from "@/api/models";
 import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue";
@@ -180,6 +179,7 @@ import { useCommonRequestErrors } from "@/composables/use-common-request-errors"
 import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { showSnackBarRight } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import { getNavigationStatus } from "@/global-state/navigation";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -343,7 +343,7 @@ const addAudio = () => {
     busy.value = true;
     uploading.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdAdd, apiMediaSetAudioTrack(mediaId, id, name, audioFile.value))
         .onSuccess((res) => {
@@ -484,7 +484,7 @@ const saveRename = () => {
 
     audioRenameBusy.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
 
     makeNamedApiRequest(requestIdRename, apiMediaRenameAudioTrack(mediaId, audioId, newId, newName))
         .onSuccess(() => {
@@ -592,7 +592,7 @@ const removeAudioConfirmInternal = (confirmation: ProvidedAuthConfirmation) => {
     busyDeleting.value = true;
     busyDeletingId.value = aud.id;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = getNavigationStatus().media;
     const id = aud.id;
 
     makeNamedApiRequest(requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id, confirmation))

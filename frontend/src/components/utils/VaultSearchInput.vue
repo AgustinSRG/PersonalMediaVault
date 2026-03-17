@@ -65,8 +65,14 @@ import { useI18n } from "@/composables/use-i18n";
 import { useTimeout } from "@/composables/use-timeout";
 import { getCurrentAlbumData } from "@/global-state/album";
 import { getAlbumsList, refreshAlbumsList } from "@/global-state/albums";
-import { EVENT_NAME_APP_STATUS_CHANGED } from "@/global-state/app-events";
-import { AppStatus } from "@/global-state/app-status";
+import { EVENT_NAME_NAV_STATUS_CHANGED } from "@/global-state/app-events";
+import {
+    getNavigationStatus,
+    navigationClickOnAlbum,
+    navigationClickOnMedia,
+    navigationGoFindMedia,
+    navigationGoToSearch,
+} from "@/global-state/navigation";
 import { getTagsMap, refreshTags } from "@/global-state/tags";
 import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -96,10 +102,10 @@ interface SearchBarSuggestion {
 const { $t } = useI18n();
 
 // Search filter
-const search = ref(AppStatus.CurrentSearch);
+const search = ref(getNavigationStatus().search);
 
-onApplicationEvent(EVENT_NAME_APP_STATUS_CHANGED, () => {
-    search.value = AppStatus.CurrentSearch;
+onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
+    search.value = navStatus.search;
 });
 
 // True if it has a search
@@ -351,7 +357,7 @@ const clearSearch = () => {
  * Navigates to the search page
  */
 const goSearch = () => {
-    AppStatus.GoToSearch(search.value);
+    navigationGoToSearch(search.value);
     blurSearchInputElement();
 };
 
@@ -359,8 +365,8 @@ const goSearch = () => {
  * Navigates to the 'Find Media' page
  */
 const goFindMedia = () => {
-    AppStatus.GoToSearch("");
-    AppStatus.GoFindMedia(search.value);
+    navigationGoToSearch("");
+    navigationGoFindMedia(search.value);
 };
 
 /**
@@ -371,11 +377,11 @@ const goFindMedia = () => {
 const selectSearch = (s: SearchBarSuggestion) => {
     if (s.type === "album") {
         search.value = "";
-        AppStatus.ClickOnAlbum(Number(s.id));
+        navigationClickOnAlbum(Number(s.id));
         blurSearchInputElement();
     } else if (s.type === "media") {
         search.value = "";
-        AppStatus.ClickOnMedia(Number(s.id), false);
+        navigationClickOnMedia(Number(s.id), false);
         blurSearchInputElement();
     } else if (s.type === "tag") {
         search.value = s.name;

@@ -62,7 +62,6 @@
 
 <script setup lang="ts">
 import type { PropType } from "vue";
-import { AppStatus } from "@/global-state/app-status";
 import type { MediaListItem } from "@/api/models";
 import PlayerTooltip from "./common/PlayerTooltip.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
@@ -73,6 +72,7 @@ import type { PlayerLoadStatus } from "@/utils/player";
 import { PLAYER_KEYBOARD_HANDLER_PRIORITY, usePlayerCommon } from "@/composables/use-player-common";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { isVaultLocked } from "@/global-state/auth";
+import { isPlayerVisible } from "@/global-state/navigation";
 
 // Translation
 const { $t } = useI18n();
@@ -180,7 +180,7 @@ const leaveControls = () => {
 
 // Global keyboard handler
 useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
-    if (isVaultLocked() || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+    if (isVaultLocked() || !isPlayerVisible() || !event.key || event.ctrlKey) {
         return false;
     }
 
