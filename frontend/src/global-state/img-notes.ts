@@ -111,7 +111,7 @@ export function getImageNotes(): ImageNote[] {
  */
 export function setImageNotes(notes: ImageNote[]) {
     ImageNotesState.notes = notes;
-    emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesState.notes, ImageNotesState.imageWidth, ImageNotesState.imageWidth);
+    emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesState.notes, ImageNotesState.imageWidth, ImageNotesState.imageHeight);
 }
 
 // Request ID for loading
