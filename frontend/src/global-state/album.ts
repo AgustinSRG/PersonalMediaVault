@@ -456,15 +456,7 @@ export function loadAlbumNextPreFetch() {
  * @returns True if the pre-fetched data was set, so no load is needed
  */
 export function checkAlbumNextPrefetch(): boolean {
-    if (AlbumMediaPositionStatus.next === null) {
-        return false;
-    }
-
-    if (AlbumMediaPositionStatus.next.id !== getCurrentMediaId()) {
-        return false;
-    }
-
-    if (AlbumNextPrefetchState.available) {
+    if (AlbumNextPrefetchState.available && AlbumNextPrefetchState.data && AlbumNextPrefetchState.data.id === getCurrentMediaId()) {
         provideCurrentMediaData(AlbumNextPrefetchState.data);
         return true;
     } else {

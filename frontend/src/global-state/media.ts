@@ -111,6 +111,10 @@ export function loadCurrentMedia() {
         return;
     }
 
+    if (checkAlbumNextPrefetch()) {
+        return; // Pre-fetch
+    }
+
     setCurrentMediaData(null);
 
     setCurrentMediaLoading(true);
@@ -121,10 +125,6 @@ export function loadCurrentMedia() {
 
     clearNamedTimeout(REQUEST_ID);
     abortNamedApiRequest(REQUEST_ID);
-
-    if (checkAlbumNextPrefetch()) {
-        return; // Pre-fetch
-    }
 
     makeNamedApiRequest(REQUEST_ID, apiMediaGetMedia(CurrentMediaState.id))
         .onSuccess((media) => {

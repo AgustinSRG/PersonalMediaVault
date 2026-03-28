@@ -27,9 +27,9 @@ export function initializeGlobalState() {
     // Initialize loader for global tags list
     initializeTags();
 
-    // Initializes loader and state for the current album
-    initializeAlbum();
-
     // Initializes loader and state for the current media
     initializeMedia();
+
+    // Initializes loader and state for the current album
+    initializeAlbum();
 }
