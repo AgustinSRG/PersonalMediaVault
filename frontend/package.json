@@ -38,7 +38,7 @@
     },
     "overrides": {
         "minimatch": "10.2.4",
-        "serialize-javascript": "7.0.3"
+        "serialize-javascript": "7.0.5"
     },
     "optionalDependencies": {
         "fonteditor-core": "2.6.3",
