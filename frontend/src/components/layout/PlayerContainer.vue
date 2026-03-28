@@ -124,6 +124,8 @@ import { getCurrentAlbumMediaPositionContext, isCurrentAlbumLoading } from "@/gl
 import { getCurrentMediaData, getCurrentMediaId, isCurrentMediaLoading } from "@/global-state/media";
 import { LOADER_DISPLAY_DELAY } from "@/constants";
 import { getNavigationStatus, navigationClickOnMedia } from "@/global-state/navigation";
+import { useTimeout } from "@/composables/use-timeout";
+import type { MediaData } from "@/api/models";
 
 const EmptyPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/EmptyPlayer.vue"),
@@ -215,10 +217,16 @@ const mid = ref(getCurrentMediaId());
 // Current media data
 const mediaData = ref(getCurrentMediaData());
 
-onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (newMediaData) => {
-    displayDelete.value = false;
+// Timeout to clear the media data
+const mediaDataLoadTimeout = useTimeout();
 
+/**
+ * Sets the media data
+ * @param newMediaData The media data
+ */
+const setMediaData = (newMediaData: MediaData) => {
     mid.value = getCurrentMediaId();
+
     if (newMediaData !== mediaData.value) {
         mediaData.value = newMediaData;
 
@@ -227,6 +235,20 @@ onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (newMediaData) => {
         if (mid.value >= 0) {
             container.value.focus();
         }
+    }
+};
+
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, (newMediaData) => {
+    displayDelete.value = false;
+
+    mediaDataLoadTimeout.clear();
+
+    if (newMediaData) {
+        setMediaData(newMediaData);
+    } else {
+        mediaDataLoadTimeout.set(() => {
+            setMediaData(newMediaData);
+        }, LOADER_DISPLAY_DELAY);
     }
 });
 
