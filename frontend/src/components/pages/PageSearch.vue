@@ -155,20 +155,9 @@
                 </div>
             </div>
 
-            <div v-if="pageItems.length > 0" class="search-results-final-display">
-                <div v-for="i in rowPaddingPreserveCols" :key="'pad-prev-' + i" class="search-result-item">
-                    <div class="search-result-thumb">
-                        <div class="search-result-thumb-inner">
-                            <div class="search-result-loader">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
-                </div>
-
+            <div v-for="row in rows" :key="row.index" class="search-results-final-display">
                 <MediaItem
-                    v-for="(item, i) in pageItems"
+                    v-for="(item, i) in row.items"
                     :key="i"
                     :item="item"
                     :current="currentMedia == item.id"
@@ -177,7 +166,7 @@
                     @go="goToMedia(item)"
                 ></MediaItem>
 
-                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
+                <div v-for="i in Math.max(0, itemsFitInRow - row.items.length)" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <div v-if="!finished" class="search-continue-mark">
@@ -351,10 +340,70 @@ onMounted(() => {
 const mediaIndexMap = new Map<number, number>();
 
 // Initial window size for scroller
-const INITIAL_WINDOW_SIZE = 50;
+const INITIAL_WINDOW_SIZE = 10;
 
-// Page items
-const pageItems = ref<MediaListItem[]>([]);
+// Row
+type PageSearchRow = {
+    // Row index
+    index: number;
+
+    // Items
+    items: MediaListItem[];
+};
+
+// List of visible rows
+const rows = ref<PageSearchRow[]>([]);
+
+// Padding for the last row
+const { itemsFitInRow } = usePageLastRowPadding(
+    props,
+    topContainer,
+    computed(() => (rows.value.length ? rows.value[rows.value.length - 1].items.length : 0)),
+);
+
+watch(itemsFitInRow, () => {
+    // Row size changed. Reorganize rows
+
+    const centerPosition = listScroller.getCenterPosition();
+
+    const oldList = listScroller.list;
+
+    const newRows: PageSearchRow[] = [];
+
+    let lastRow: PageSearchRow | null = null;
+
+    mediaIndexMap.clear();
+
+    for (const row of oldList) {
+        for (const item of row.items) {
+            if (lastRow && lastRow.items.length < itemsFitInRow.value) {
+                lastRow.items.push(item);
+                mediaIndexMap.set(item.id, lastRow.index);
+                continue;
+            }
+
+            lastRow = {
+                index: newRows.length,
+                items: [item],
+            };
+
+            newRows.push(lastRow);
+
+            mediaIndexMap.set(item.id, lastRow.index);
+        }
+    }
+
+    listScroller.list = newRows;
+
+    listScroller.moveWindowToElement(centerPosition);
+
+    if (lastCurrentMediaMustScroll.value) {
+        lastCurrentMediaMustScroll.value = false;
+        scrollToLastCurrentMedia();
+    } else {
+        scrollToCurrentMedia();
+    }
+});
 
 // Position of the scroll window
 const windowPosition = ref(0);
@@ -362,10 +411,10 @@ const windowPosition = ref(0);
 // List scroller
 const listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
     get: () => {
-        return pageItems.value;
+        return rows.value;
     },
     set: (l) => {
-        pageItems.value = l;
+        rows.value = l;
     },
     onChange: () => {
         windowPosition.value = listScroller.windowPosition;
@@ -591,6 +640,7 @@ const resetSearch = () => {
     loading.value = false;
     finished.value = true;
     started.value = false;
+    lastCurrentMediaMustScroll.value = false;
     startSearch();
 };
 
@@ -1157,6 +1207,42 @@ const loadSemanticImageVector = () => {
 };
 
 /**
+ * Adds elements
+ * @param results The list of elements
+ */
+const addElements = (results: MediaListItem[]) => {
+    let lastRow = listScroller.list[listScroller.list.length - 1] || null;
+    let nextRowIndex = listScroller.list.length;
+
+    const newRows: PageSearchRow[] = [];
+
+    for (const item of results) {
+        if (lastRow && lastRow.items.length < itemsFitInRow.value) {
+            mediaIndexMap.set(item.id, lastRow.index);
+            lastRow.items.push(item);
+            continue;
+        }
+
+        lastRow = {
+            index: nextRowIndex,
+            items: [item],
+        };
+
+        mediaIndexMap.set(item.id, lastRow.index);
+
+        newRows.push(lastRow);
+
+        nextRowIndex++;
+    }
+
+    if (newRows.length > 0) {
+        listScroller.addElements(newRows);
+    }
+
+    fullListLength.value = listScroller.list.length;
+};
+
+/**
  * Filters found elements and adds them to the list if the match the filter
  * @param results The list of results received from the API
  */
@@ -1183,7 +1269,7 @@ const filterElements = (results: MediaListItem[]) => {
         blacklist = props.removeMediaFromList;
     }
 
-    const resultsToAdd = [];
+    const resultsToAdd: MediaListItem[] = [];
 
     for (const e of results) {
         if (blacklist.has(e.id)) {
@@ -1256,13 +1342,10 @@ const filterElements = (results: MediaListItem[]) => {
             }
         }
 
-        mediaIndexMap.set(e.id, listScroller.list.length + resultsToAdd.length);
-
         resultsToAdd.push(e);
     }
 
-    listScroller.addElements(resultsToAdd);
-    fullListLength.value = listScroller.list.length;
+    addElements(resultsToAdd);
 
     nextTick(() => {
         checkContainerHeight();
@@ -1351,7 +1434,7 @@ const checkContainerHeight = (): boolean => {
 // Interval to check the container height
 const checkContainerTimer = useInterval();
 
-// DElay to keep checking the container height
+// Delay to keep checking the container height
 const CHECK_CONTAINER_HEIGHT_DELAY = 100;
 
 onMounted(() => {
@@ -1424,11 +1507,14 @@ const scrollToLastCurrentMedia = () => {
     });
 };
 
+// Must scroll to the last current media?
+const lastCurrentMediaMustScroll = ref(false);
+
 watch(
     () => props.min,
     () => {
         if (!props.min) {
-            scrollToLastCurrentMedia();
+            lastCurrentMediaMustScroll.value = true;
         }
     },
 );
@@ -1485,7 +1571,7 @@ const onOnlyImagesChanged = () => {
  * Find the index of the current media in the list
  * @returns the index, or -1 if not found
  */
-const findCurrentMediaIndex = (): number => {
+const findCurrentMediaRow = (): number => {
     if (mediaIndexMap.has(currentMedia.value)) {
         return mediaIndexMap.get(currentMedia.value);
     } else {
@@ -1494,13 +1580,67 @@ const findCurrentMediaIndex = (): number => {
 };
 
 /**
+ * Find the index of the current media in the list
+ * @returns the index, or -1 if not found
+ */
+const findCurrentMediaGlobalIndex = (): number => {
+    const rowIndex = findCurrentMediaRow();
+    const row = listScroller.list[rowIndex];
+
+    if (!row) {
+        return -1;
+    }
+
+    for (let i = 0; i < row.items.length; i++) {
+        if (row.items[i].id === currentMedia.value) {
+            return rowIndex * itemsFitInRow.value + i;
+        }
+    }
+
+    return -1;
+};
+
+/**
+ * Counts elements
+ * @returns The element count
+ */
+const countElements = (): number => {
+    const list = listScroller.list;
+
+    if (list.length === 0) {
+        return 0;
+    } else if (list.length === 1) {
+        return list[0].items.length;
+    } else {
+        return itemsFitInRow.value * (list.length - 1) + list[list.length - 1].items.length;
+    }
+};
+
+/**
+ * Obtains the media element placed at a certain position
+ * @param i The Index
+ * @returns The media element or null
+ */
+const getMediaElementByGlobalIndex = (i: number): MediaListItem | null => {
+    const rowIndex = Math.floor(i / itemsFitInRow.value);
+    const subIndex = i % itemsFitInRow.value;
+
+    const row = listScroller.list[rowIndex];
+
+    if (!row) {
+        return null;
+    }
+
+    return row.items[subIndex] || null;
+};
+
+/**
  * Call when the current media changes
  */
 const onCurrentMediaChanged = () => {
     if (!props.inModal) {
-        const completePageList = listScroller.list;
-        const i = findCurrentMediaIndex();
-        onPageLoad(i, completePageList.length, 0, 1);
+        const i = findCurrentMediaGlobalIndex();
+        onPageLoad(i, countElements(), 0, 1);
     }
 };
 
@@ -1512,27 +1652,73 @@ onBeforeUnmount(() => {
 });
 
 /**
+ * Removes media element from list
+ * @param m The media element to remove
+ */
+const removeMediaElement = (m: MediaListItem) => {
+    const centerPosition = listScroller.getCenterPosition();
+
+    const mediaIndex = mediaIndexMap.get(m.id);
+
+    if (mediaIndex === undefined) {
+        return;
+    }
+
+    const rowList = listScroller.list;
+
+    const rowOfMedia = rowList[mediaIndex];
+
+    if (!rowOfMedia) {
+        return;
+    }
+
+    let removed = false;
+
+    for (let i = 0; i < rowOfMedia.items.length; i++) {
+        if (rowOfMedia.items[i].id === m.id) {
+            rowOfMedia.items.splice(i, 1);
+            mediaIndexMap.delete(m.id);
+            removed = true;
+            break;
+        }
+    }
+
+    if (!removed) {
+        return;
+    }
+
+    for (let i = mediaIndex + 1; i < rowList.length; i++) {
+        const prevRow = rowList[i - 1];
+        const row = rowList[i];
+
+        if (row.items.length > 0) {
+            const elementToMove = row.items.shift();
+
+            mediaIndexMap.set(elementToMove.id, prevRow.index);
+
+            prevRow.items.push(elementToMove);
+        }
+    }
+
+    // Check to delete the last row
+
+    const lastRow = rowList[rowList.length - 1];
+
+    if (lastRow && lastRow.items.length === 0) {
+        rowList.pop();
+    }
+
+    listScroller.moveWindowToElement(centerPosition);
+};
+
+/**
  * Navigates or selects a media element
  * @param m The media element
  */
 const goToMedia = (m: MediaListItem) => {
     if (props.inModal) {
         emit("select-media", m, () => {
-            const fullList = listScroller.list;
-            const centerPosition = listScroller.getCenterPosition();
-
-            const mediaIndex = mediaIndexMap.get(m.id);
-
-            if (mediaIndex !== undefined) {
-                fullList.splice(mediaIndex, 1);
-                mediaIndexMap.delete(m.id);
-
-                listScroller.moveWindowToElement(centerPosition);
-
-                for (let i = mediaIndex; i < fullList.length; i++) {
-                    mediaIndexMap.set(fullList[i].id, i);
-                }
-            }
+            removeMediaElement(m);
         });
     } else {
         navigationClickOnMedia(m.id, true);
@@ -1543,12 +1729,17 @@ const goToMedia = (m: MediaListItem) => {
  * Navigates to the previous media
  */
 const prevMedia = () => {
-    const completePageList = listScroller.list;
-    const i = findCurrentMediaIndex();
+    const i = findCurrentMediaGlobalIndex();
     if (i !== -1 && i > 0) {
-        goToMedia(completePageList[i - 1]);
-    } else if (i === -1 && completePageList.length > 0) {
-        goToMedia(completePageList[0]);
+        const element = getMediaElementByGlobalIndex(i - 1);
+        if (element) {
+            goToMedia(element);
+        }
+    } else if (i === -1 && countElements() > 0) {
+        const element = getMediaElementByGlobalIndex(0);
+        if (element) {
+            goToMedia(element);
+        }
     }
 };
 
@@ -1558,12 +1749,17 @@ onApplicationEvent(EVENT_NAME_PAGE_NAV_PREV, prevMedia);
  * Navigates to the next media element
  */
 const nextMedia = () => {
-    const completePageList = listScroller.list;
-    const i = findCurrentMediaIndex();
-    if (i !== -1 && i < completePageList.length - 1) {
-        goToMedia(completePageList[i + 1]);
-    } else if (i === -1 && completePageList.length > 0) {
-        goToMedia(completePageList[0]);
+    const i = findCurrentMediaGlobalIndex();
+    if (i !== -1 && i < countElements() - 1) {
+        const element = getMediaElementByGlobalIndex(i + 1);
+        if (element) {
+            goToMedia(element);
+        }
+    } else if (i === -1 && countElements() > 0) {
+        const element = getMediaElementByGlobalIndex(0);
+        if (element) {
+            goToMedia(element);
+        }
     }
 };
 
@@ -1585,14 +1781,6 @@ const onSubmit = (event?: Event) => {
         elementToFocus.focus();
     }
 };
-
-// Padding for the last row
-const { lastRowPadding, rowPaddingPreserveCols } = usePageLastRowPadding(
-    props,
-    topContainer,
-    computed(() => pageItems.value.length),
-    windowPosition,
-);
 
 /**
  * Event handler for 'keydown' on the element after the tags suggestions

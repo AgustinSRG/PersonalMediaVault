@@ -2,7 +2,7 @@
 
 "use strict";
 
-import type { Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
 export type LastRowPaddingComposable = {
@@ -12,16 +12,16 @@ export type LastRowPaddingComposable = {
     lastRowPadding: Ref<number>;
 
     /**
-     * Columns to preserve for row padding
+     * Number of items that fit in a row
      */
-    rowPaddingPreserveCols?: Ref<number>;
+    itemsFitInRow: Ref<number>;
 };
 
 /**
  * Gets the number of elements for the last row padding in pages.
  * @param props The page component properties
  * @param container The page container
- * @param pageSize The actual page size
+ * @param pageItems The page items
  * @param windowPosition Optional ref to the scroller window position
  * @returns A computed reference to the number of element for row padding
  */
@@ -34,8 +34,7 @@ export function usePageLastRowPadding(
         rowSizeMin: number;
     },
     container: Readonly<Ref<HTMLElement>>,
-    pageSize: Ref<number>,
-    windowPosition?: Ref<number>,
+    pageItemsLength: ComputedRef<number>,
 ): LastRowPaddingComposable {
     // Window width
     const containerWidth = ref(0);
@@ -56,7 +55,7 @@ export function usePageLastRowPadding(
         resizeObserver.disconnect();
     });
 
-    const lastRowPadding = computed(() => {
+    const itemsFitInRow = computed(() => {
         const itemWidth = Math.max(
             props.minItemsSize,
             Math.min(
@@ -65,37 +64,15 @@ export function usePageLastRowPadding(
             ),
         );
 
-        const elementsFitInRow = Math.max(1, Math.floor(containerWidth.value / Math.max(1, itemWidth)));
-
-        if (windowPosition) {
-            const lastWindowElement = windowPosition.value + pageSize.value - 1;
-
-            return Math.max(0, elementsFitInRow - 1 - (lastWindowElement % elementsFitInRow));
-        } else {
-            return Math.max(0, elementsFitInRow - (pageSize.value % elementsFitInRow));
-        }
+        return Math.max(1, Math.floor(containerWidth.value / Math.max(1, itemWidth)));
     });
 
-    const rowPaddingPreserveCols = computed(() => {
-        const itemWidth = Math.max(
-            props.minItemsSize,
-            Math.min(
-                props.maxItemsSize,
-                props.min ? containerWidth.value / Math.max(1, props.rowSizeMin) : containerWidth.value / Math.max(1, props.rowSize),
-            ),
-        );
-
-        const itemsFitInRow = Math.max(1, Math.floor(containerWidth.value / Math.max(1, itemWidth)));
-
-        if (windowPosition) {
-            return windowPosition.value % itemsFitInRow;
-        } else {
-            return 0;
-        }
+    const lastRowPadding = computed(() => {
+        return Math.max(0, itemsFitInRow.value - (pageItemsLength.value % itemsFitInRow.value));
     });
 
     return {
         lastRowPadding,
-        rowPaddingPreserveCols,
+        itemsFitInRow,
     };
 }
