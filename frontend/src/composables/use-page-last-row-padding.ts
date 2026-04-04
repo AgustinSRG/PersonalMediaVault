@@ -3,7 +3,7 @@
 "use strict";
 
 import type { ComputedRef, Ref } from "vue";
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 export type LastRowPaddingComposable = {
     /**
@@ -36,16 +36,34 @@ export function usePageLastRowPadding(
     container: Readonly<Ref<HTMLElement>>,
     pageItemsLength: ComputedRef<number>,
 ): LastRowPaddingComposable {
-    // Window width
-    const containerWidth = ref(0);
+    // Number of items that fit in a row
+    const itemsFitInRow = ref(1);
 
+    /**
+     * Updates value of itemsFitInRow
+     */
+    const updateItemsFitInRow = () => {
+        const containerWidth = container.value?.getBoundingClientRect().width || 0;
+
+        const itemWidth = Math.max(
+            props.minItemsSize,
+            Math.min(
+                props.maxItemsSize,
+                props.min ? containerWidth / Math.max(1, props.rowSizeMin) : containerWidth / Math.max(1, props.rowSize),
+            ),
+        );
+
+        itemsFitInRow.value = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+    };
+
+    updateItemsFitInRow();
+
+    // Resize observer
     const resizeObserver = new ResizeObserver(() => {
-        containerWidth.value = container.value?.getBoundingClientRect().width || 0;
+        updateItemsFitInRow();
     });
 
     onMounted(() => {
-        containerWidth.value = container.value?.getBoundingClientRect().width || 0;
-
         if (container.value) {
             resizeObserver.observe(container.value);
         }
@@ -55,16 +73,10 @@ export function usePageLastRowPadding(
         resizeObserver.disconnect();
     });
 
-    const itemsFitInRow = computed(() => {
-        const itemWidth = Math.max(
-            props.minItemsSize,
-            Math.min(
-                props.maxItemsSize,
-                props.min ? containerWidth.value / Math.max(1, props.rowSizeMin) : containerWidth.value / Math.max(1, props.rowSize),
-            ),
-        );
+    watch([() => props.minItemsSize, () => props.rowSizeMin, () => props.rowSize], updateItemsFitInRow);
 
-        return Math.max(1, Math.floor(containerWidth.value / Math.max(1, itemWidth)));
+    watch([() => props.min], () => {
+        nextTick(updateItemsFitInRow);
     });
 
     const lastRowPadding = computed(() => {

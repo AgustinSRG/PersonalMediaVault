@@ -361,6 +361,18 @@ const { itemsFitInRow } = usePageLastRowPadding(
     computed(() => (rows.value.length ? rows.value[rows.value.length - 1].items.length : 0)),
 );
 
+// Must scroll to the last current media?
+const lastCurrentMediaMustScroll = ref(false);
+
+watch(
+    () => props.min,
+    () => {
+        if (!props.min) {
+            lastCurrentMediaMustScroll.value = true;
+        }
+    },
+);
+
 watch(itemsFitInRow, () => {
     // Row size changed. Reorganize rows
 
@@ -1506,18 +1518,6 @@ const scrollToLastCurrentMedia = () => {
         });
     });
 };
-
-// Must scroll to the last current media?
-const lastCurrentMediaMustScroll = ref(false);
-
-watch(
-    () => props.min,
-    () => {
-        if (!props.min) {
-            lastCurrentMediaMustScroll.value = true;
-        }
-    },
-);
 
 /**
  * Automatically focuses the appropriate element
