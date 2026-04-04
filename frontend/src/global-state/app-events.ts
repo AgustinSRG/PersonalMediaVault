@@ -353,14 +353,16 @@ export type AppEventsMap = {
     /**
      * Event triggered when the user makes changes to the basic metadata of the current media
      * This means albums and pages should reload
+     * @param id The media ID
      */
-    [EVENT_NAME_MEDIA_METADATA_CHANGE]: () => void;
+    [EVENT_NAME_MEDIA_METADATA_CHANGE]: (id: number) => void;
 
     /**
      * Event triggered when the user deletes the current media
      * This means albums and pages should reload
+     * @param id The media ID
      */
-    [EVENT_NAME_MEDIA_DELETE]: () => void;
+    [EVENT_NAME_MEDIA_DELETE]: (id: number) => void;
 
     /**
      * Event triggered to show a message in the snackbar

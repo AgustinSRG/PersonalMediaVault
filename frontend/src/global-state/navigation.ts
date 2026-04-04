@@ -453,7 +453,7 @@ export function navigationExpandPage() {
 /**
  * Call when the current media is deleted
  */
-export function navigationOnDeleteMedia() {
+export function navigationOnDeleteMedia(id: number) {
     NavigationState.media = -1;
     NavigationState.homePageGroup = -1;
 
@@ -461,7 +461,7 @@ export function navigationOnDeleteMedia() {
 
     NavigationState.focus = "right";
 
-    emitAppEvent(EVENT_NAME_MEDIA_DELETE);
+    emitAppEvent(EVENT_NAME_MEDIA_DELETE, id);
 
     onStatusUpdate();
 }

@@ -265,7 +265,14 @@ import type { PropType } from "vue";
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from "vue";
 import HomePageItemThumbnail from "./HomePageItemThumbnail.vue";
 import { apiSearch } from "@/api/api-search";
-import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/global-state/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_HOME_SCROLL_CHANGED,
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/global-state/app-events";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { useRequestId } from "@/composables/use-request-id";
 import { useInterval } from "@/composables/use-interval";
@@ -556,12 +563,33 @@ onApplicationEvent(EVENT_NAME_HOME_SCROLL_CHANGED, () => {
     checkLoad();
 });
 
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id) => {
+    const foundElement = elements.value.find((e) => e.media?.id === id);
+    if (foundElement) {
+        checkLoad(true);
+    }
+});
+
+onApplicationEvent(EVENT_NAME_MEDIA_DELETE, (id) => {
+    const foundElement = elements.value.find((e) => e.media?.id === id);
+    if (foundElement) {
+        checkLoad(true);
+    }
+});
+
+onApplicationEvent(EVENT_NAME_ALBUMS_CHANGED, () => {
+    const foundElement = elements.value.find((e) => !!e.album);
+    if (foundElement) {
+        checkLoad(true);
+    }
+});
+
 // When mounted, check for load
 onMounted(() => {
     checkLoad(true);
 });
 
-// If page size changes,, check for load
+// If page size changes, check for load
 watch(
     () => props.pageSize,
     () => {

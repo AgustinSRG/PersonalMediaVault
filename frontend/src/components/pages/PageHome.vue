@@ -129,12 +129,9 @@
 <script setup lang="ts">
 import {
     emitAppEvent,
-    EVENT_NAME_ALBUMS_CHANGED,
     EVENT_NAME_NAV_STATUS_CHANGED,
     EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_HOME_SCROLL_CHANGED,
-    EVENT_NAME_MEDIA_DELETE,
-    EVENT_NAME_MEDIA_METADATA_CHANGE,
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
@@ -307,9 +304,6 @@ const load = () => {
 
 onMounted(load);
 onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
-onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
-onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
-onApplicationEvent(EVENT_NAME_ALBUMS_CHANGED, load);
 
 // Reload when page size changes
 watch(() => props.pageSize, load);

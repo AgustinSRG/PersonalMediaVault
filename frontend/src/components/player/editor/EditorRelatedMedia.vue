@@ -281,7 +281,7 @@ const saveChanges = (e?: Event) => {
 
             emit("changed");
 
-            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
+            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId);
 
             onSave();
         })

@@ -153,7 +153,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
             refreshCurrentAlbum();
 
-            navigationOnDeleteMedia();
+            navigationOnDeleteMedia(mediaId);
         })
         .onCancel(() => {
             busy.value = false;
@@ -180,7 +180,7 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
 
                     refreshCurrentAlbum();
 
-                    navigationOnDeleteMedia();
+                    navigationOnDeleteMedia(mediaId);
                 },
                 serverError,
                 networkError,
