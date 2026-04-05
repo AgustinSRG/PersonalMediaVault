@@ -5,4 +5,4 @@ call candle -ext WixUIExtension -ext WixUtilExtension -arch x64 HeatFile.wxs -o 
 
 call candle -ext WixUIExtension -ext WixUtilExtension -arch x64 Product.wxs -o Product.wixobj
 
-call light Product.wixobj -spdb HeatFile.wixobj -cultures:en-us -loc en-us.wxl -b PersonalMediaVault -o PersonalMediaVault-5.2.4-x64.msi -ext WixUIExtension -ext WixUtilExtension
+call light Product.wixobj -spdb HeatFile.wixobj -cultures:en-us -loc en-us.wxl -b PersonalMediaVault -o PersonalMediaVault-5.2.5-x64.msi -ext WixUIExtension -ext WixUtilExtension
