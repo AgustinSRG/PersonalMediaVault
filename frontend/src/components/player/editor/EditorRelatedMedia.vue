@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { emitAppEvent, EVENT_NAME_MEDIA_METADATA_CHANGE, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import { EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
@@ -280,8 +280,6 @@ const saveChanges = (e?: Event) => {
             });
 
             emit("changed");
-
-            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId);
 
             onSave();
         })

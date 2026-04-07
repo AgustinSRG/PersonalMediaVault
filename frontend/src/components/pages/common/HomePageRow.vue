@@ -281,6 +281,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { checkAuthenticationStatus, isVaultLocked } from "@/global-state/auth";
 import { navigationClickOnAlbum, navigationClickOnMedia } from "@/global-state/navigation";
+import { updateListItemFromPartialMetadata } from "@/global-state/media";
 
 const HomePageRowAddElementModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
@@ -563,10 +564,13 @@ onApplicationEvent(EVENT_NAME_HOME_SCROLL_CHANGED, () => {
     checkLoad();
 });
 
-onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id) => {
-    const foundElement = elements.value.find((e) => e.media?.id === id);
-    if (foundElement) {
-        checkLoad(true);
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id, partialMeta) => {
+    for (const element of elements.value) {
+        if (element.media?.id !== id) {
+            continue;
+        }
+
+        updateListItemFromPartialMetadata(element.media, partialMeta);
     }
 });
 

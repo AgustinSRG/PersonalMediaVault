@@ -13,7 +13,7 @@ import {
     EVENT_NAME_MEDIA_UPDATE,
     EVENT_NAME_UNAUTHORIZED,
 } from "./app-events";
-import type { MediaData } from "@/api/models";
+import type { MediaData, MediaListItem } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { checkAlbumNextPrefetch } from "./album";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -194,4 +194,19 @@ export function modifyCurrentMediaData(id: number, callback: (metadata: MediaDat
     }
 
     callback(CurrentMediaState.data);
+}
+
+/**
+ * Updates media list item from modified partial metadata
+ * @param item The media list item
+ * @param partialMeta The modified partial metadata
+ */
+export function updateListItemFromPartialMetadata(item: MediaListItem, partialMeta: Partial<MediaData>) {
+    if (partialMeta.title !== undefined) {
+        item.title = partialMeta.title;
+    }
+
+    if (partialMeta.thumbnail !== undefined) {
+        item.thumbnail = partialMeta.thumbnail;
+    }
 }

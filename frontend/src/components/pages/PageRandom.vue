@@ -68,7 +68,7 @@ import { usePageLastRowPadding } from "@/composables/use-page-last-row-padding";
 import { useGlobalKeyboardHandler } from "@/composables/use-global-keyboard-handler";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onPageLoad, onPageUnload } from "@/global-state/pages";
-import { getCurrentMediaId, loadCurrentMedia } from "@/global-state/media";
+import { getCurrentMediaId, loadCurrentMedia, updateListItemFromPartialMetadata } from "@/global-state/media";
 import { LOAD_RETRY_DELAY, LOADER_DISPLAY_DELAY } from "@/constants";
 import { isVaultLocked } from "@/global-state/auth";
 import {
@@ -254,8 +254,17 @@ const load = () => {
 
 onMounted(load);
 onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
-onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
 onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
+
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id, partialMeta) => {
+    for (const element of pageItems.value) {
+        if (element.id !== id) {
+            continue;
+        }
+
+        updateListItemFromPartialMetadata(element, partialMeta);
+    }
+});
 
 // Reload when page size changes
 watch(

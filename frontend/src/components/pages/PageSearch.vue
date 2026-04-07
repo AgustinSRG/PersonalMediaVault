@@ -225,6 +225,7 @@ import { getCurrentAlbumData } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { getAuthStatus, isVaultLocked } from "@/global-state/auth";
 import { getNavigationStatus, isPageVisible, navigationChangeSearchParams, navigationClickOnMedia } from "@/global-state/navigation";
+import { updateListItemFromPartialMetadata } from "@/global-state/media";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -657,8 +658,40 @@ const resetSearch = () => {
 };
 
 onApplicationEvent(EVENT_NAME_MEDIA_DELETE, resetSearch);
-onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, resetSearch);
 watch(() => props.pageSize, resetSearch);
+
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id, partialMeta) => {
+    const rowIndex = mediaIndexMap.get(id);
+    const row = listScroller.list[rowIndex];
+
+    if (row) {
+        return;
+    }
+
+    for (const element of row.items) {
+        if (element.id !== id) {
+            continue;
+        }
+
+        updateListItemFromPartialMetadata(element, partialMeta);
+
+        break;
+    }
+});
+
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id, partialMeta) => {
+    for (const row of rows.value) {
+        for (const element of row.items) {
+            if (element.id !== id) {
+                continue;
+            }
+
+            updateListItemFromPartialMetadata(element, partialMeta);
+
+            return;
+        }
+    }
+});
 
 // ID for the dirty timeout
 const dirtyTimeoutId = useRequestId();

@@ -354,8 +354,9 @@ export type AppEventsMap = {
      * Event triggered when the user makes changes to the basic metadata of the current media
      * This means albums and pages should reload
      * @param id The media ID
+     * @param partialMeta Partial media metadata to indicate the fields that were modified
      */
-    [EVENT_NAME_MEDIA_METADATA_CHANGE]: (id: number) => void;
+    [EVENT_NAME_MEDIA_METADATA_CHANGE]: (id: number, partialMeta: Partial<MediaData>) => void;
 
     /**
      * Event triggered when the user deletes the current media

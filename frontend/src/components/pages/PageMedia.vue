@@ -93,6 +93,7 @@ import {
     navigationClickOnMedia,
     navigationGoToPage,
 } from "@/global-state/navigation";
+import { updateListItemFromPartialMetadata } from "@/global-state/media";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -296,8 +297,17 @@ const load = () => {
 
 onMounted(load);
 onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
-onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, load);
 onApplicationEvent(EVENT_NAME_MEDIA_DELETE, load);
+
+onApplicationEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, (id, partialMeta) => {
+    for (const element of pageItems.value) {
+        if (element.id !== id) {
+            continue;
+        }
+
+        updateListItemFromPartialMetadata(element, partialMeta);
+    }
+});
 
 // Reload when page size changes
 watch(

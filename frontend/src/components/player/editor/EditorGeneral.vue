@@ -313,7 +313,7 @@ const changeTitle = (e?: Event) => {
             emit("changed");
 
             refreshCurrentAlbum();
-            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId);
+            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId, { title: title.value });
 
             onSave();
         })
@@ -578,7 +578,7 @@ const changeThumbnail = (file: File) => {
             emit("changed");
 
             refreshCurrentAlbum();
-            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId);
+            emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, mediaId, { thumbnail: res.url });
         })
         .onCancel(() => {
             busyThumbnail.value = false;
