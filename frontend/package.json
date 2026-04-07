@@ -14,8 +14,7 @@
         "update-locales": "npm run update-translations",
         "update-translations": "node scripts/translate-file-maker.cjs",
         "apply-missing-translations": "node scripts/apply-missing-translations.cjs",
-        "update-fa-subset": "node scripts/create-fa-subset.cjs && npm run prettier",
-        "visualize-bundle": "vite-bundle-visualizer -o bundle-size-stats.html --sourcemap"
+        "update-fa-subset": "node scripts/create-fa-subset.cjs && npm run prettier"
     },
     "dependencies": {
         "@asanrom/request-browser": "1.0.5",
@@ -32,17 +31,19 @@
         "prettier": "3.8.1",
         "typescript": "5.9.3",
         "typescript-eslint": "8.56.1",
-        "vite": "7.3.1",
+        "vite": "8.0.5",
         "vite-plugin-pwa": "1.2.0",
         "vue-tsc": "3.2.5"
     },
     "overrides": {
         "minimatch": "10.2.4",
-        "serialize-javascript": "7.0.5"
+        "serialize-javascript": "7.0.5",
+        "vite-plugin-pwa": {
+            "vite": "8.0.5"
+        }
     },
     "optionalDependencies": {
         "fonteditor-core": "2.6.3",
-        "ttf2woff2": "8.0.0",
-        "vite-bundle-visualizer": "1.2.1"
+        "ttf2woff2": "8.0.0"
     }
 }
