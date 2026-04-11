@@ -3,20 +3,20 @@
         <!--- Resolutions -->
 
         <div class="form-group">
-            <label v-if="type === 2"
+            <label v-if="type === MEDIA_TYPE_VIDEO"
                 >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}.</label
             >
-            <label v-if="type === 1"
+            <label v-if="type === MEDIA_TYPE_IMAGE"
                 >{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}.</label
             >
         </div>
 
         <div class="form-group">
-            <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
-            <label v-if="type === 2"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
+            <label v-if="type === MEDIA_TYPE_IMAGE">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
+            <label v-if="type === MEDIA_TYPE_VIDEO"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
         </div>
 
-        <div v-if="(type === 2 || type === 1) && resolutions.length > 0" class="table-responsive">
+        <div v-if="resolutions.length > 0" class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -90,7 +90,7 @@ import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useRequestId } from "@/composables/use-request-id";
 import { showSnackBarRight } from "@/global-state/snack-bar";
-import { modifyCurrentMediaData } from "@/global-state/media";
+import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
 import { getNavigationStatus } from "@/global-state/navigation";
 
 const ResolutionConfirmationModal = defineAsyncComponent({
@@ -157,7 +157,10 @@ const updateMediaData = (mediaData: MediaData | null) => {
     updateResolutions(mediaData.resolutions || []);
 };
 
-onMounted(updateMediaData);
+onMounted(() => {
+    updateMediaData(getCurrentMediaData());
+});
+
 onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, updateMediaData);
 
 /**
