@@ -93,6 +93,10 @@
     --fa: "\f303";
 }
 
+.fa-paste {
+    --fa: "\f0ea";
+}
+
 .fa-user-check {
     --fa: "\f4fc";
 }
@@ -311,6 +315,10 @@
 
 .fa-arrow-up {
     --fa: "\f062";
+}
+
+.fa-copy {
+    --fa: "\f0c5";
 }
 
 .fa-volume-mute {

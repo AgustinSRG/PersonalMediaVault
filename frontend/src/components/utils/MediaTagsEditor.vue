@@ -17,6 +17,39 @@
             </div>
         </div>
         <div v-if="canWrite">
+            <div class="form-group">
+                <button
+                    v-if="mediaTags.length > 0"
+                    type="button"
+                    :disabled="busy"
+                    class="btn btn-primary btn-xs btn-mr"
+                    :class="{ 'btn-mr': tagsToPaste.length > 0 }"
+                    @click="copyTags"
+                >
+                    <i class="fas fa-copy"></i> {{ $t("Copy tags") }}
+                </button>
+
+                <button
+                    v-if="tagsToPaste.length > 0"
+                    type="button"
+                    :disabled="busy"
+                    class="btn btn-primary btn-xs btn-mr"
+                    :title="$t('Paste tags') + ': ' + tagsToPaste.join(', ')"
+                    @click="pasteTags"
+                >
+                    <i class="fas fa-paste"></i> {{ $t("Paste tags") }}
+                </button>
+
+                <button
+                    v-if="tagsToPaste.length > 0"
+                    type="button"
+                    :disabled="busy"
+                    class="btn btn-primary btn-xs btn-mr"
+                    @click="clearTagsClipboard"
+                >
+                    <i class="fas fa-broom"></i> {{ $t("Clear clipboard") }}
+                </button>
+            </div>
             <div class="form-group media-tags">
                 <div class="media-tags-finder">
                     <input
@@ -33,7 +66,7 @@
                     />
                 </div>
                 <div class="media-tags-adder">
-                    <button type="button" :disabled="!tagFilter" class="btn btn-primary btn-xs" @click="onAddTagButtonClicked">
+                    <button type="button" :disabled="!tagFilter || busy" class="btn btn-primary btn-xs" @click="onAddTagButtonClicked">
                         <i class="fas fa-plus"></i> {{ $t("Add tag") }}
                     </button>
                 </div>
@@ -66,13 +99,24 @@ import { useRequestId } from "@/composables/use-request-id";
 import { useTagSuggestions } from "@/composables/use-tag-suggestions";
 import { useTagNames } from "@/composables/use-tags-names";
 import { useUserPermissions } from "@/composables/use-user-permissions";
-import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_MEDIA_UPDATE } from "@/global-state/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED,
+} from "@/global-state/app-events";
 import { setLastUsedTag } from "@/local-storage/app-preferences";
 import { indicateTagCreation, indicateTagDeletion } from "@/global-state/tags";
-import { makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
+import { makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
+import { computed, defineAsyncComponent, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { getCurrentMediaData, modifyCurrentMediaData } from "@/global-state/media";
+import {
+    copyCurrentMediaTagsIntoTagsEditorClipboard,
+    getTagsEditorClipboardContent,
+    setTagsEditorClipboardContent,
+} from "@/global-state/tags-editor-clipboard";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -359,6 +403,12 @@ const onTagAddKeyDown = (e: KeyboardEvent) => {
                 tagFilter.value = tagSuggestions.value[0].name;
             }
         }
+    } else if (["c", "C"].includes(e.key) && e.ctrlKey && e.altKey && mediaTags.value.length > 0) {
+        e.preventDefault();
+        copyTags();
+    } else if (["v", "V"].includes(e.key) && e.ctrlKey && e.altKey && tagsToPaste.value.length > 0) {
+        e.preventDefault();
+        pasteTags();
     } else if (e.key === "ArrowRight") {
         if (props.allowNavigation) {
             if (!tagFilter.value) {
@@ -385,5 +435,144 @@ const onTagAddKeyDown = (e: KeyboardEvent) => {
             suggestionElem.focus();
         }
     }
+};
+
+// Tags in clipboard
+const tagsInClipboard = ref(getTagsEditorClipboardContent());
+
+onApplicationEvent(EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED, (tags) => {
+    tagsInClipboard.value = tags.slice();
+});
+
+// Tags to be pasted
+const tagsToPaste = computed(() => {
+    const mediaTagsNamesSet = new Set(mediaTags.value.map((t) => getTagName(t)));
+    return tagsInClipboard.value.filter((t) => !mediaTagsNamesSet.has(t));
+});
+
+/**
+ * Copies the tags
+ */
+const copyTags = () => {
+    copyCurrentMediaTagsIntoTagsEditorClipboard();
+    showSnackBar($t("Tags list copied into internal clipboard"));
+};
+
+/**
+ * Adds a tag for bulk tag adding
+ * (no busy checking, promise-based)
+ * @param tag The tag to add
+ */
+const addTagInBulk = (tag: string) => {
+    return new Promise<boolean>((resolve) => {
+        const mediaData = getCurrentMediaData();
+
+        if (!mediaData) {
+            return resolve(false);
+        }
+
+        const mediaId = mediaData.id;
+
+        makeApiRequest(apiTagsTagMedia(mediaId, tag))
+            .onSuccess((res) => {
+                if (mediaTags.value.indexOf(res.id) === -1) {
+                    mediaTags.value.push(res.id);
+                }
+
+                indicateTagCreation(res.id, res.name);
+
+                modifyCurrentMediaData(mediaId, (metadata) => {
+                    // Update cached media data
+                    if (!metadata.tags.includes(res.id)) {
+                        metadata.tags.push(res.id);
+                    }
+                });
+
+                resolve(true);
+            })
+            .onCancel(() => {
+                busy.value = false;
+
+                resolve(false);
+            })
+            .onRequestError((err, handleErr) => {
+                busy.value = false;
+
+                handleErr(err, {
+                    unauthorized,
+                    invalidTagName: () => {
+                        setError($t("Invalid tag name") + ": " + tag);
+                    },
+                    badRequest,
+                    accessDenied,
+                    serverError,
+                    networkError,
+                });
+
+                resolve(false);
+            })
+            .onUnexpectedError((err) => {
+                setError(err.message);
+                console.error(err);
+                busy.value = false;
+
+                resolve(false);
+            });
+    });
+};
+
+/**
+ * Inserts tags all at once
+ * @param tags The list of tags
+ */
+const insertTagsInBulk = async (tags: string[]) => {
+    const results = await Promise.all(tags.map((t) => addTagInBulk(t)));
+
+    const success = !results.includes(false);
+
+    if (success) {
+        showSnackBar($t("Added tags") + ": " + tags.join(", "));
+    }
+
+    updateTagSuggestions();
+
+    emit("tags-update");
+};
+
+/**
+ * Adds tags from the clipboard
+ */
+const pasteTags = () => {
+    if (tagsToPaste.value.length === 0) {
+        return;
+    }
+
+    if (tagsToPaste.value.length === 1) {
+        addTag(tagsToPaste.value[0], false);
+        return;
+    }
+
+    if (busy.value) {
+        return;
+    }
+
+    busy.value = true;
+
+    insertTagsInBulk(tagsToPaste.value)
+        .then(() => {
+            busy.value = false;
+        })
+        .catch((err) => {
+            console.error(err);
+            busy.value = false;
+        });
+};
+
+/**
+ * Clears the tags clipboard
+ */
+const clearTagsClipboard = () => {
+    setTagsEditorClipboardContent([]);
+    showSnackBar($t("Cleared tags from internal clipboard"));
 };
 </script>

@@ -251,6 +251,11 @@ export const EVENT_NAME_UPLOAD_LIST_CLEAR = "upload-list-clear";
 export const EVENT_NAME_HOME_SCROLL_CHANGED = "home-page-scroll-changed";
 
 /**
+ * Event triggered when the tags editor clipboard content changes
+ */
+export const EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED = "tags-editor-clipboard-changed";
+
+/**
  * Mapping of App events
  *
  * Maps each event name to the type of appropriate handler function
@@ -527,6 +532,12 @@ export type AppEventsMap = {
      * Event triggered when the scroll in the home page changed
      */
     [EVENT_NAME_HOME_SCROLL_CHANGED]: () => void;
+
+    /**
+     * Event triggered when the tags editor clipboard content changes
+     * @param tags New content for the tags editor clipboard
+     */
+    [EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED]: (tags: string[]) => void;
 };
 
 /**
