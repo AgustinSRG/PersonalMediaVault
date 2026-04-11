@@ -401,6 +401,10 @@ const done = () => {
 
             // Change thumbnail
             emit("done", file);
+
+            busy.value = false;
+
+            close();
         }, "image/png");
     } catch (ex) {
         busy.value = false;
@@ -408,10 +412,6 @@ const done = () => {
         onImageError();
         return;
     }
-
-    busy.value = false;
-
-    close();
 };
 
 /**
