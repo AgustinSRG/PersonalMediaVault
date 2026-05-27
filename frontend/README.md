@@ -28,18 +28,24 @@ In order to run a development server to test the frontend, use:
 npm run serve
 ```
 
+In development, you need the backend running on another port. Make sure to set the `VITE_DEV_TEST_HOST` environment variable in the `.env.local` file so the frontend knows how to connect to the backend in development mode:
+
+```conf
+VITE_DEV_TEST_HOST=http://127.0.0.1:8000
+```
+
 In order to lint the code and test the typescript sources, type:
 
 ```sh
 npm test
 ```
 
-## Prettier
+## Linter and prettier
 
-This project uses prettier to automatically stylize the code. For that, use the following script:
+This project uses [Eslint](https://eslint.org/) as the linter and [Prettier](https://prettier.io/) to automatically stylize the code. In order to run both, type the following command:
 
 ```sh
-npm run prettier
+npm run lint
 ```
 
 ## Internationalization
