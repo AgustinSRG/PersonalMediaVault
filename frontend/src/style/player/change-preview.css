@@ -23,12 +23,3 @@
 .player-media-change-preview-title {
     font-weight: bold;
 }
-
-.player-media-change-preview-type {
-    padding-top: 0.5rem;
-    font-size: small;
-}
-
-.player-min .player-media-change-preview-type {
-    font-size: x-small;
-}

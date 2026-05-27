@@ -1,11 +1,5 @@
 /* Style for upload controls */
 
-.upload-options-container {
-    border: dotted 2px var(--theme-border-color);
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
 .upload-box {
     display: flex;
 

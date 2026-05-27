@@ -310,10 +310,6 @@
     outline: none;
 }
 
-.modal-body.no-padding {
-    padding: 0;
-}
-
 .modal-title.about-modal-title {
     display: flex;
     justify-content: left;
@@ -324,11 +320,6 @@
     width: 32px;
     height: 32px;
     margin-right: 0.5rem;
-}
-
-.modal-body.with-menu.limited-size {
-    max-height: 300px;
-    overflow-y: auto;
 }
 
 .modal-menu-item-icon .unchecked {
@@ -386,8 +377,7 @@
 
 @media (max-width: 370px) {
     .modal-container.modal-container-corner,
-    .modal-container.modal-container-corner.modal-container-help,
-    .modal-container.modal-container-corner.modal-container-account {
+    .modal-container.modal-container-corner.modal-container-help {
         padding-right: 16px;
     }
 }

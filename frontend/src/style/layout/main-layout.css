@@ -10,10 +10,6 @@
 
 /* Skip to main content */
 
-.main-content-skip:focus {
-    outline: none;
-}
-
 .skip-to-main-content {
     padding: 1rem;
     border: solid 1px var(--theme-border-color);

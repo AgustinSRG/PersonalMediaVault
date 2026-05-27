@@ -44,10 +44,6 @@
     padding: 0.5rem;
 }
 
-.btn.btn-read {
-    margin-left: 0.25rem;
-}
-
 .media-description-view.reading .media-description-paragraph {
     cursor: pointer;
 }

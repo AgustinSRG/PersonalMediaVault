@@ -22,11 +22,6 @@
     font-size: 10px;
 }
 
-.btn-xxs {
-    font-size: 12px;
-    padding: 7px 10px;
-}
-
 .btn-mr {
     margin-right: 0.5rem;
     margin-bottom: 0.5rem;
@@ -34,10 +29,6 @@
 
 .btn i {
     margin-right: 12px;
-}
-
-.btn.btn-xxs i {
-    margin-right: 5px;
 }
 
 .btn:disabled {
@@ -114,10 +105,6 @@
 .form-control.form-textarea {
     resize: vertical;
     height: auto;
-}
-
-.form-control.form-textarea.no-resize {
-    resize: none;
 }
 
 textarea.form-control::-webkit-resizer {

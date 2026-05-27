@@ -92,11 +92,6 @@
     overflow-x: auto;
 }
 
-.home-page-row-content-inner {
-    display: flex;
-    flex-direction: row;
-}
-
 .home-add-row-form {
     padding: 0.75rem 0.5rem;
 }

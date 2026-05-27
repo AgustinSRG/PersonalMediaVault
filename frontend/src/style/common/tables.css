@@ -54,10 +54,6 @@
     border-top: none;
 }
 
-.table.table-vmiddle td {
-    vertical-align: middle;
-}
-
 .table-btn {
     display: inline-block;
     width: 32px;

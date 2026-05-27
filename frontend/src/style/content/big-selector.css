@@ -51,25 +51,6 @@
     font-weight: 400;
 }
 
-.big-selector-clear-btn {
-    display: inline-block;
-    width: 2rem;
-    height: 100%;
-    box-shadow: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    color: var(--theme-fg-color);
-    background: var(--search-input-inner-background);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.big-selector-clear-btn:not(:disabled):hover {
-    color: var(--theme-btn-hover-color);
-}
-
 .big-selector-chevron {
     height: 100%;
     display: flex;
