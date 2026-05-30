@@ -1,24 +1,5 @@
 /* Video player */
 
-.video-player {
-    background: var(--player-bg-color);
-    color: var(--theme-fg-color);
-
-    display: block;
-    position: relative;
-    overflow: hidden;
-
-    width: 100%;
-    height: 100%;
-
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
 .video-scroller {
     position: absolute;
     top: 0;
@@ -41,19 +22,6 @@
     left: 0;
     pointer-events: none;
     visibility: hidden;
-}
-
-.video-player.no-controls {
-    cursor: none;
-}
-
-.video-player.full-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
 }
 
 /* Scroll bar */

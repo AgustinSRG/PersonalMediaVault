@@ -1,7 +1,7 @@
 <template>
     <div
         ref="container"
-        class="audio-player player-settings-no-trap"
+        class="audio-player player-main player-settings-no-trap"
         :class="{
             'player-min': min,
             'no-controls': !showControls || !userControls,

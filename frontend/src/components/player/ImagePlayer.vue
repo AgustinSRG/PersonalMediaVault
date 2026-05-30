@@ -1,6 +1,6 @@
 <template>
     <div
-        class="image-player player-settings-no-trap"
+        class="image-player player-main player-settings-no-trap"
         :class="{
             'player-min': min,
             'no-controls': !showControls,

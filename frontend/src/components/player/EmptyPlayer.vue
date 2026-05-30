@@ -1,6 +1,6 @@
 <template>
     <div
-        class="empty-player"
+        class="empty-player player-main"
         :class="{
             'player-min': min,
             'full-screen': fullscreen,

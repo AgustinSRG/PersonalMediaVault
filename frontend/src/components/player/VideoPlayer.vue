@@ -1,7 +1,7 @@
 <template>
     <div
         ref="container"
-        class="video-player player-settings-no-trap"
+        class="video-player player-main player-settings-no-trap"
         :class="{
             'player-min': min,
             'no-controls': !showControls || !userControls,
