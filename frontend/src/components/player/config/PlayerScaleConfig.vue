@@ -40,7 +40,7 @@ import { clickOnEnter } from "@/utils/events";
 import { renderScale } from "@/utils/player-config";
 
 // Default values for player scale
-const DEFAULT_PLAYER_SCALES = [1, 1.25, 1.5, 1.75, 2, 4, 8];
+const DEFAULT_PLAYER_SCALES = [0.25, 0.5, 0.75, 1, 1.5, 2, 4, 8];
 
 // Translation
 const { $t } = useI18n();

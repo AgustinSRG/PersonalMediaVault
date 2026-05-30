@@ -9,11 +9,21 @@
     overflow: auto;
 }
 
+.video-scroller.small-scale {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .video-player video {
     position: absolute;
     top: 0;
     left: 0;
     pointer-events: none;
+}
+
+.video-scroller.small-scale video {
+    position: relative;
 }
 
 .video-player audio {

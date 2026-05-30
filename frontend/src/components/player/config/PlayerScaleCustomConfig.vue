@@ -15,7 +15,7 @@
                         v-model.number="scaleNum"
                         type="range"
                         class="form-range"
-                        :min="100"
+                        :min="10"
                         :max="800"
                         :step="1"
                         @input="updateScaleNum"

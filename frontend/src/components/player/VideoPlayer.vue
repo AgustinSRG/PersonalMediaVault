@@ -18,7 +18,13 @@
         @contextmenu="onContextMenu"
         @wheel="onMouseWheel"
     >
-        <div ref="videoScroller" class="video-scroller" @mousedown="grabScrollWithMouse" @touchstart="onScrollerTouchStart">
+        <div
+            ref="videoScroller"
+            class="video-scroller"
+            :class="{ 'small-scale': scale < 1 }"
+            @mousedown="grabScrollWithMouse"
+            @touchstart="onScrollerTouchStart"
+        >
             <video
                 v-if="videoURL"
                 ref="videoElement"
@@ -1255,6 +1261,42 @@ const onScaleUpdated = () => {
     }
 };
 
+// Min video scale (10%)
+const MIN_VIDEO_SCALE = 0.1;
+
+// Max video scale (x8)
+const MAX_VIDEO_SCALE = 8;
+
+// Video scale step (10%)
+const VIDEO_SCALE_STEP = 0.1;
+
+// Video scale small step (1%)
+const VIDEO_SCALE_STEP_SMALL = 0.1;
+
+/**
+ * Scales the video up
+ * @param smallStep True for small step
+ */
+const scaleUpVideo = (smallStep?: boolean) => {
+    const oldScaleValue = scale.value;
+    const step = smallStep ? VIDEO_SCALE_STEP_SMALL : VIDEO_SCALE_STEP;
+    const newScaleValue = Math.min(MAX_VIDEO_SCALE, oldScaleValue + step);
+
+    scale.value = Math.round(newScaleValue / step) * step;
+};
+
+/**
+ * Scales the video down
+ * @param smallStep True for small step
+ */
+const scaleDownVideo = (smallStep?: boolean) => {
+    const oldScaleValue = scale.value;
+    const step = smallStep ? VIDEO_SCALE_STEP_SMALL : VIDEO_SCALE_STEP;
+    const newScaleValue = Math.max(MIN_VIDEO_SCALE, oldScaleValue - step);
+
+    scale.value = Math.round(newScaleValue / step) * step;
+};
+
 /**
  * Mouse wheel event handler to change the player scale
  * @param e The mouse wheel event
@@ -1263,10 +1305,11 @@ const onMouseWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
         e.preventDefault();
         e.stopPropagation();
+
         if (e.deltaY > 0) {
-            scale.value = Math.max(1, scale.value - 0.1);
+            scaleDownVideo();
         } else {
-            scale.value = Math.min(8, scale.value + 0.1);
+            scaleUpVideo();
         }
 
         showSnackBar($t("Scale") + ": " + renderScale(scale.value));
@@ -2206,14 +2249,14 @@ useGlobalKeyboardHandler((event: KeyboardEvent): boolean => {
             userControls.value = !userControls.value;
             break;
         case "+":
-            scale.value = Math.min(8, scale.value + (shifting ? 0.01 : 0.1));
+            scaleUpVideo(shifting);
 
             showSnackBar($t("Scale") + ": " + renderScale(scale.value));
 
             onScaleUpdated();
             break;
         case "-":
-            scale.value = Math.max(1, scale.value - (shifting ? 0.01 : 0.1));
+            scaleDownVideo(shifting);
 
             showSnackBar($t("Scale") + ": " + renderScale(scale.value));
 
