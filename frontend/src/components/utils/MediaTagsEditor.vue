@@ -206,6 +206,10 @@ const requestId = useRequestId();
  * @param resetTagInput True to reset the tag input
  */
 const addTag = (tag: string, resetTagInput: boolean) => {
+    if (!tag) {
+        return;
+    }
+
     if (busy.value) {
         return;
     }
