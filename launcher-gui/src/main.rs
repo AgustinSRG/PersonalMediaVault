@@ -25,6 +25,9 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Set XDG application ID for Wayland
+    _ = slint::set_xdg_app_id("pmv");
+
     // Instantiate the screens
 
     let main_window = MainWindow::new()?;
