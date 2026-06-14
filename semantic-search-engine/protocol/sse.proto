@@ -1,0 +1,75 @@
+// Semantic Search Engine Protocol
+
+syntax = "proto3";
+
+package pmv.sse;
+
+option go_package = "github.com/AgustinSRG/PersonalMediaVault/semantic-search-engine/protocol/sse-proto-go";
+
+// Request for the model metadata
+message ClipModelMetadataRequest {
+    // API key to access the service
+    string api_key = 1;
+}
+
+// Response with the model metadata
+message ClipModelMetadataResponse {
+    // Model name
+    string name = 1;
+
+    // Number of model dimensions
+    uint32 dimensions = 2;
+}
+
+// A response with an embedding
+message ClipEmbeddingResponse {
+    // The list of features of the resulting vector
+    repeated double features = 1;
+}
+
+// Request for text embedding
+message ClipTextEmbeddingRequest {
+    // The text to be embedded into a vector
+    string text = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Initialization message for image embedding
+message ClipImageEmbeddingRequestInit {
+    // Image mime type. Example: image/png
+    string mime_type = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Chunk message for image embedding
+message ClipImageEmbeddingRequestChunk {
+    // Part of the bytes of the image
+    bytes image_chunk = 1;
+}
+
+// Request for image embedding
+message ClipImageEmbeddingRequest {
+    oneof image_embedding_oneof {
+        // Init message (sent as the first message of the stream)
+        ClipImageEmbeddingRequestInit init = 1;
+
+        // Chunk message (send chunks of 2MB max with the image bytes in order)
+        ClipImageEmbeddingRequestChunk chunk = 2;
+    }
+}
+
+// Semantic search engine service
+service SemanticSearchEngineService {
+    // Gets model metadata
+    rpc GetModelMetadata(ClipModelMetadataRequest) returns (ClipModelMetadataResponse);
+
+    // Encode text
+    rpc EncodeText(ClipTextEmbeddingRequest) returns (ClipEmbeddingResponse);
+
+    // Encode image
+    rpc EncodeImage(stream ClipImageEmbeddingRequest) returns (ClipEmbeddingResponse);
+}

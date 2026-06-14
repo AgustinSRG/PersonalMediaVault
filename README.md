@@ -301,6 +301,7 @@ Exec=konsole --separate -e 'pmv .'
 - [Frontend](./frontend): Uses the HTTP API to access the vault, providing a web interface to the user.
 - [Backup tool](./backup-tool): Tool to make backups of media vaults (copies the new files and replaces the old ones, using the last modified date).
 - [Launcher](./launcher): CLI program to launch the web app. This component is made in order to make it easier to use in local, when you do not have the backend configured as a system service.
+- [Semantic Search Engine](./semantic-search-engine): An internal server to run embedding models in order to perform the semantic search functionality.
 - [Installation Packages](./packages): Collection of installation packages for multiple operating systems.
 
 ## Project motivation
