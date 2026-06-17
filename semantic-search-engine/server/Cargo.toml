@@ -8,9 +8,11 @@ clap = { version = "4.6.1", features = ["derive"] }
 log = "0.4.32"
 open_clip_inference = "0.4.0"
 ort = "2.0.0-rc.12"
+prost = "0.14.4"
 sha2 = "0.11.0"
 simple_logger = {version = "5.2.0", features = ["stderr"] }
 tokio = { version = "1.52.3", features = ["full"] }
+tokio-stream = "0.1.18"
 tonic = "0.14.6"
 tonic-prost = "0.14.6"
 

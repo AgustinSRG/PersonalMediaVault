@@ -1,10 +1,14 @@
 // Main
 
-use std::{path::PathBuf, str::FromStr};
+mod grpc;
+
+use std::{path::PathBuf, process::exit, str::FromStr};
 
 use clap::Parser;
 
-use log::{info, warn};
+use log::{error, warn};
+
+pub use grpc::*;
 
 /// Command line interface
 #[derive(Parser)]
@@ -32,7 +36,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         _ = simple_logger::init_with_level(log::Level::Info);
     }
 
-    info!("Hello, world!");
+    let server = SemanticSearchEngineGrpcServer::new();
+
+    if let Err(e) = server.run().await {
+        error!("Could not start the server: {}", e);
+        exit(1);
+    }
 
     Ok(())
 }
