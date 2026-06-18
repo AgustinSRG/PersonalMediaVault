@@ -1,14 +1,16 @@
 // Main
 
 mod grpc;
+mod model;
 
 use std::{path::PathBuf, process::exit, str::FromStr};
 
 use clap::Parser;
 
-use log::{error, warn};
+use log::{error, info, warn};
 
 pub use grpc::*;
+pub use model::*;
 
 /// Command line interface
 #[derive(Parser)]
@@ -36,7 +38,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         _ = simple_logger::init_with_level(log::Level::Info);
     }
 
-    let server = SemanticSearchEngineGrpcServer::new();
+    let model = match LoadedClipModel::load(&cli.model_path) {
+        Ok(m) => m,
+        Err(e) => {
+            error!(
+                "Could not load model from {}: {}",
+                cli.model_path.to_string_lossy(),
+                e
+            );
+            exit(1);
+        }
+    };
+
+    info!(
+        "Loaded model from '{}'. Embeddings size: {}",
+        cli.model_path.to_string_lossy(),
+        model.get_embed_dim()
+    );
+
+    let server = SemanticSearchEngineGrpcServer::new(model);
 
     if let Err(e) = server.run().await {
         error!("Could not start the server: {}", e);

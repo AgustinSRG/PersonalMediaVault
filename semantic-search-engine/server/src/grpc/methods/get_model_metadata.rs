@@ -9,5 +9,7 @@ pub async fn get_model_metadata(
     server: &SemanticSearchEngineGrpcServer,
     request: Request<ClipModelMetadataRequest>,
 ) -> Result<Response<ClipModelMetadataResponse>, Status> {
-    Err(Status::not_found("Not implemented"))
+    Ok(Response::new(ClipModelMetadataResponse {
+        embed_dim: server.model.get_embed_dim(),
+    }))
 }
