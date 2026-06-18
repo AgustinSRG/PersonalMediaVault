@@ -72,10 +72,8 @@ func (x *ClipModelMetadataRequest) GetApiKey() string {
 // Response with the model metadata
 type ClipModelMetadataResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Model name
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Number of model dimensions
-	Dimensions    uint32 `protobuf:"varint,2,opt,name=dimensions,proto3" json:"dimensions,omitempty"`
+	// Number of dimensions for embedding vectors
+	EmbedDim      uint32 `protobuf:"varint,2,opt,name=embed_dim,json=embedDim,proto3" json:"embed_dim,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,16 +108,9 @@ func (*ClipModelMetadataResponse) Descriptor() ([]byte, []int) {
 	return file_sse_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ClipModelMetadataResponse) GetName() string {
+func (x *ClipModelMetadataResponse) GetEmbedDim() uint32 {
 	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *ClipModelMetadataResponse) GetDimensions() uint32 {
-	if x != nil {
-		return x.Dimensions
+		return x.EmbedDim
 	}
 	return 0
 }
@@ -417,12 +408,9 @@ const file_sse_proto_rawDesc = "" +
 	"\n" +
 	"\tsse.proto\x12\apmv.sse\"3\n" +
 	"\x18ClipModelMetadataRequest\x12\x17\n" +
-	"\aapi_key\x18\x01 \x01(\tR\x06apiKey\"O\n" +
-	"\x19ClipModelMetadataResponse\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1e\n" +
-	"\n" +
-	"dimensions\x18\x02 \x01(\rR\n" +
-	"dimensions\"3\n" +
+	"\aapi_key\x18\x01 \x01(\tR\x06apiKey\"8\n" +
+	"\x19ClipModelMetadataResponse\x12\x1b\n" +
+	"\tembed_dim\x18\x02 \x01(\rR\bembedDim\"3\n" +
 	"\x15ClipEmbeddingResponse\x12\x1a\n" +
 	"\bfeatures\x18\x01 \x03(\x01R\bfeatures\"G\n" +
 	"\x18ClipTextEmbeddingRequest\x12\x12\n" +

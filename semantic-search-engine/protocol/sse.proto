@@ -14,11 +14,8 @@ message ClipModelMetadataRequest {
 
 // Response with the model metadata
 message ClipModelMetadataResponse {
-    // Model name
-    string name = 1;
-
-    // Number of model dimensions
-    uint32 dimensions = 2;
+    // Number of dimensions for embedding vectors
+    uint32 embed_dim = 2;
 }
 
 // A response with an embedding
