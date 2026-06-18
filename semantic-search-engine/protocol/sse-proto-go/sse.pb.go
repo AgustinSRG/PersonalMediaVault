@@ -119,7 +119,7 @@ func (x *ClipModelMetadataResponse) GetEmbedDim() uint32 {
 type ClipEmbeddingResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The list of features of the resulting vector
-	Features      []float64 `protobuf:"fixed64,1,rep,packed,name=features,proto3" json:"features,omitempty"`
+	Features      []float32 `protobuf:"fixed32,1,rep,packed,name=features,proto3" json:"features,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -154,7 +154,7 @@ func (*ClipEmbeddingResponse) Descriptor() ([]byte, []int) {
 	return file_sse_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ClipEmbeddingResponse) GetFeatures() []float64 {
+func (x *ClipEmbeddingResponse) GetFeatures() []float32 {
 	if x != nil {
 		return x.Features
 	}
@@ -412,7 +412,7 @@ const file_sse_proto_rawDesc = "" +
 	"\x19ClipModelMetadataResponse\x12\x1b\n" +
 	"\tembed_dim\x18\x02 \x01(\rR\bembedDim\"3\n" +
 	"\x15ClipEmbeddingResponse\x12\x1a\n" +
-	"\bfeatures\x18\x01 \x03(\x01R\bfeatures\"G\n" +
+	"\bfeatures\x18\x01 \x03(\x02R\bfeatures\"G\n" +
 	"\x18ClipTextEmbeddingRequest\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12\x17\n" +
 	"\aapi_key\x18\x02 \x01(\tR\x06apiKey\"U\n" +

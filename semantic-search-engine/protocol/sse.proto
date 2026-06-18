@@ -21,7 +21,7 @@ message ClipModelMetadataResponse {
 // A response with an embedding
 message ClipEmbeddingResponse {
     // The list of features of the resulting vector
-    repeated double features = 1;
+    repeated float features = 1;
 }
 
 // Request for text embedding
