@@ -1,6 +1,6 @@
 // CLIP model loader
 
-use std::path::PathBuf;
+use std::path::Path;
 
 use open_clip_inference::Clip;
 
@@ -13,7 +13,7 @@ pub struct LoadedClipModel {
 
 impl LoadedClipModel {
     /// Loads the model from a directory
-    pub fn load(path: &PathBuf) -> Result<LoadedClipModel, ClipModelLoadError> {
+    pub fn load(path: &Path) -> Result<LoadedClipModel, ClipModelLoadError> {
         let clip = Clip::from_local_dir(path).build()?;
 
         Ok(LoadedClipModel { clip })
