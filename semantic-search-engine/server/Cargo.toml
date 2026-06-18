@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
+image = "0.25.10"
 log = "0.4.32"
 open_clip_inference = "0.4.0"
 ort = "2.0.0-rc.12"

@@ -1,3 +1,4 @@
+use log::{debug, error};
 use tonic::{Request, Response, Status};
 
 use crate::grpc::{
@@ -21,16 +22,21 @@ pub async fn encode_text(
         return Err(Status::invalid_argument("Text cannot be empty"));
     }
 
+    debug!("Encoding text: {text}");
+
     let clip = server.model.get_clip();
 
     let embedding = match clip.text.embed_text(&text) {
         Ok(em) => em,
         Err(e) => {
+            error!("Model error: {e}");
             return Err(Status::internal(format!("Model error: {e}")));
         }
     };
 
     let features: Vec<f32> = embedding.to_vec();
+
+    debug!("Text: {}, Vector: {:?}", text, features);
 
     Ok(Response::new(ClipEmbeddingResponse { features }))
 }

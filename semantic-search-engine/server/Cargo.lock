@@ -2129,6 +2129,7 @@ name = "pmv-sse"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "image",
  "log",
  "open_clip_inference",
  "ort",
