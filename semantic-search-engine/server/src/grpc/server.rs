@@ -8,7 +8,7 @@ use tokio_stream::wrappers::TcpListenerStream;
 use tonic::{Request, Response, Status, transport::Server};
 
 use crate::{
-    LoadedClipModel,
+    GrpcServerAuth, LoadedClipModel,
     grpc::{
         api::{
             ClipEmbeddingResponse, ClipImageEmbeddingRequest, ClipModelMetadataRequest,
@@ -25,6 +25,9 @@ use crate::{
 pub struct SemanticSearchEngineGrpcServer {
     /// Model
     pub model: LoadedClipModel,
+
+    /// Auth
+    pub auth: GrpcServerAuth,
 }
 
 #[tonic::async_trait]
@@ -52,8 +55,8 @@ impl SemanticSearchEngineService for SemanticSearchEngineGrpcServer {
 }
 
 impl SemanticSearchEngineGrpcServer {
-    pub fn new(model: LoadedClipModel) -> Self {
-        Self { model }
+    pub fn new(model: LoadedClipModel, auth: GrpcServerAuth) -> Self {
+        Self { model, auth }
     }
 
     pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {

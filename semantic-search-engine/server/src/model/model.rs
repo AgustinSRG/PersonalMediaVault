@@ -1,14 +1,14 @@
 // CLIP model loader
 
-use std::{path::PathBuf, sync::Arc};
+use std::path::PathBuf;
 
 use open_clip_inference::Clip;
 
-use crate::{ClipModelLoadError, api::ClipModelMetadataResponse};
+use crate::ClipModelLoadError;
 
 /// Loaded CLIP model
 pub struct LoadedClipModel {
-    clip: Arc<Clip>,
+    clip: Clip,
 }
 
 impl LoadedClipModel {
@@ -16,14 +16,12 @@ impl LoadedClipModel {
     pub fn load(path: &PathBuf) -> Result<LoadedClipModel, ClipModelLoadError> {
         let clip = Clip::from_local_dir(path).build()?;
 
-        Ok(LoadedClipModel {
-            clip: Arc::new(clip),
-        })
+        Ok(LoadedClipModel { clip })
     }
 
     /// Gets the CLIP instance
-    pub fn get_clip(&self) -> Arc<Clip> {
-        self.clip.clone()
+    pub fn get_clip(&self) -> &Clip {
+        &self.clip
     }
 
     // Gets dimensions of embedding vectors

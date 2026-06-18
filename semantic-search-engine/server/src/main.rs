@@ -2,8 +2,9 @@
 
 mod grpc;
 mod model;
+mod utils;
 
-use std::{path::PathBuf, process::exit, str::FromStr};
+use std::{env, path::PathBuf, process::exit, str::FromStr};
 
 use clap::Parser;
 
@@ -11,6 +12,7 @@ use log::{error, info, warn};
 
 pub use grpc::*;
 pub use model::*;
+pub use utils::*;
 
 /// Command line interface
 #[derive(Parser)]
@@ -56,7 +58,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         model.get_embed_dim()
     );
 
-    let server = SemanticSearchEngineGrpcServer::new(model);
+    let api_key = env::var("API_KEY").unwrap_or("".to_string());
+
+    if api_key.is_empty() {
+        warn!("API_KEY is empty. The GRPC server is unprotected.")
+    }
+
+    let server = SemanticSearchEngineGrpcServer::new(model, GrpcServerAuth::new(api_key));
 
     if let Err(e) = server.run().await {
         error!("Could not start the server: {}", e);
