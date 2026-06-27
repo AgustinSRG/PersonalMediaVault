@@ -46,6 +46,10 @@ impl VectorDatabase {
         self.pool.clone()
     }
 
+    pub fn get_dimensions(&self) -> u32 {
+        self.dimensions
+    }
+
     async fn migrate(&self) -> Result<(), VectorDatabaseError> {
         let config_table_exists = self.check_table_exists("config").await?;
 
@@ -137,7 +141,7 @@ impl VectorDatabase {
             Ok(version.to_string())
         });
 
-       handle.await?
+        handle.await?
     }
 
     async fn create_vectors_table(&self) -> Result<(), VectorDatabaseError> {

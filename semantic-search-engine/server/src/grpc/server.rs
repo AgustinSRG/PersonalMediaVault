@@ -9,6 +9,10 @@ use tonic::{Request, Response, Status, transport::Server};
 
 use crate::{
     GrpcServerAuth, LoadedClipModel, VectorDatabase,
+    api::{
+        DeleteVectorsRequest, EmptyResponse, GetVectorsByMediaRequest, InsertVectorsRequest,
+        QueryVectorsRequest, VectorListResponse,
+    },
     grpc::{
         api::{
             ClipEmbeddingResponse, ClipImageEmbeddingRequest, ClipModelMetadataRequest,
@@ -17,7 +21,10 @@ use crate::{
                 SemanticSearchEngineService, SemanticSearchEngineServiceServer,
             },
         },
-        methods::{encode_image, encode_text, get_model_metadata},
+        methods::{
+            delete_vectors, encode_image, encode_text, get_model_metadata, get_vectors_by_media,
+            insert_vectors, query_vectors,
+        },
     },
 };
 
@@ -54,6 +61,34 @@ impl SemanticSearchEngineService for SemanticSearchEngineGrpcServer {
         request: Request<tonic::Streaming<ClipImageEmbeddingRequest>>,
     ) -> Result<Response<ClipEmbeddingResponse>, Status> {
         encode_image(self, request).await
+    }
+
+    async fn get_vectors_by_media(
+        &self,
+        request: Request<GetVectorsByMediaRequest>,
+    ) -> Result<Response<VectorListResponse>, Status> {
+        get_vectors_by_media(self, request).await
+    }
+
+    async fn query_vectors(
+        &self,
+        request: Request<QueryVectorsRequest>,
+    ) -> Result<Response<VectorListResponse>, Status> {
+        query_vectors(self, request).await
+    }
+
+    async fn insert_vectors(
+        &self,
+        request: Request<InsertVectorsRequest>,
+    ) -> Result<Response<EmptyResponse>, Status> {
+        insert_vectors(self, request).await
+    }
+
+    async fn delete_vectors(
+        &self,
+        request: Request<DeleteVectorsRequest>,
+    ) -> Result<Response<EmptyResponse>, Status> {
+        delete_vectors(self, request).await
     }
 }
 
