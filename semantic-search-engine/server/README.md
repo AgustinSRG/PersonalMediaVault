@@ -9,7 +9,7 @@ The GRPC server will bind on a random free port and the chosen port will be prin
 **Usage:**
 
 ```
-pmv-sse [OPTIONS] <MODEL-PATH>
+pmv-sse [OPTIONS] <MODEL-PATH> <SQLITE-DB-PATH>
 ```
 
 **Options:**
@@ -20,12 +20,14 @@ pmv-sse [OPTIONS] <MODEL-PATH>
 
 The **Model path** must be the path to the folder containing the ONXX OpenCLIP compatible model. More information: https://github.com/RuurdBijlsma/open-clip-inference-rs#model-support
 
+The **SQLite Database Path** is the path to a sqlite database file where all the vectors will be stored.
+
 ## Environment variables
 
-| Environment variable | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
-| `API_KEY`            | A secret API key to restrict access to the internal service. |
-
+| Environment variable       | Description                                                  |
+| -------------------------- | ------------------------------------------------------------ |
+| `API_KEY`                  | A secret API key to restrict access to the internal service. |
+| `SQLITE_CIPHER_PASSPHRASE` | An encryption passphrase for the sqlite database.            |
 
 ## Building
 

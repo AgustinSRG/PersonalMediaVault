@@ -10,8 +10,12 @@ log = "0.4.32"
 open_clip_inference = "0.4.0"
 ort = "2.0.0-rc.12"
 prost = "0.14.4"
+r2d2 = "0.8.10"
+r2d2_sqlite = "0.34.0"
+rusqlite = { version = "0.39.0", features = ["bundled-sqlcipher"] }
 sha2 = "0.11.0"
-simple_logger = {version = "5.2.0", features = ["stderr"] }
+simple_logger = { version = "5.2.0", features = ["stderr"] }
+sqlite-vec = "0.1.9"
 tokio = { version = "1.52.3", features = ["full"] }
 tokio-stream = "0.1.18"
 tonic = "0.14.6"
