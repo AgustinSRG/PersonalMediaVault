@@ -21,9 +21,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SemanticSearchEngineService_GetModelMetadata_FullMethodName = "/pmv.sse.SemanticSearchEngineService/GetModelMetadata"
-	SemanticSearchEngineService_EncodeText_FullMethodName       = "/pmv.sse.SemanticSearchEngineService/EncodeText"
-	SemanticSearchEngineService_EncodeImage_FullMethodName      = "/pmv.sse.SemanticSearchEngineService/EncodeImage"
+	SemanticSearchEngineService_GetModelMetadata_FullMethodName  = "/pmv.sse.SemanticSearchEngineService/GetModelMetadata"
+	SemanticSearchEngineService_EncodeText_FullMethodName        = "/pmv.sse.SemanticSearchEngineService/EncodeText"
+	SemanticSearchEngineService_EncodeImage_FullMethodName       = "/pmv.sse.SemanticSearchEngineService/EncodeImage"
+	SemanticSearchEngineService_GetVectorsByMedia_FullMethodName = "/pmv.sse.SemanticSearchEngineService/GetVectorsByMedia"
+	SemanticSearchEngineService_QueryVectors_FullMethodName      = "/pmv.sse.SemanticSearchEngineService/QueryVectors"
+	SemanticSearchEngineService_InsertVectors_FullMethodName     = "/pmv.sse.SemanticSearchEngineService/InsertVectors"
+	SemanticSearchEngineService_DeleteVectors_FullMethodName     = "/pmv.sse.SemanticSearchEngineService/DeleteVectors"
 )
 
 // SemanticSearchEngineServiceClient is the client API for SemanticSearchEngineService service.
@@ -38,6 +42,14 @@ type SemanticSearchEngineServiceClient interface {
 	EncodeText(ctx context.Context, in *ClipTextEmbeddingRequest, opts ...grpc.CallOption) (*ClipEmbeddingResponse, error)
 	// Encode image
 	EncodeImage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ClipImageEmbeddingRequest, ClipEmbeddingResponse], error)
+	// Get stored vectors by media
+	GetVectorsByMedia(ctx context.Context, in *GetVectorsByMediaRequest, opts ...grpc.CallOption) (*VectorListResponse, error)
+	// Query vectors sorted by distance
+	QueryVectors(ctx context.Context, in *QueryVectorsRequest, opts ...grpc.CallOption) (*VectorListResponse, error)
+	// Insert vectors
+	InsertVectors(ctx context.Context, in *InsertVectorsRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	// Deletes vectors
+	DeleteVectors(ctx context.Context, in *DeleteVectorsRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
 }
 
 type semanticSearchEngineServiceClient struct {
@@ -81,6 +93,46 @@ func (c *semanticSearchEngineServiceClient) EncodeImage(ctx context.Context, opt
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SemanticSearchEngineService_EncodeImageClient = grpc.ClientStreamingClient[ClipImageEmbeddingRequest, ClipEmbeddingResponse]
 
+func (c *semanticSearchEngineServiceClient) GetVectorsByMedia(ctx context.Context, in *GetVectorsByMediaRequest, opts ...grpc.CallOption) (*VectorListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VectorListResponse)
+	err := c.cc.Invoke(ctx, SemanticSearchEngineService_GetVectorsByMedia_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *semanticSearchEngineServiceClient) QueryVectors(ctx context.Context, in *QueryVectorsRequest, opts ...grpc.CallOption) (*VectorListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VectorListResponse)
+	err := c.cc.Invoke(ctx, SemanticSearchEngineService_QueryVectors_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *semanticSearchEngineServiceClient) InsertVectors(ctx context.Context, in *InsertVectorsRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, SemanticSearchEngineService_InsertVectors_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *semanticSearchEngineServiceClient) DeleteVectors(ctx context.Context, in *DeleteVectorsRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, SemanticSearchEngineService_DeleteVectors_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SemanticSearchEngineServiceServer is the server API for SemanticSearchEngineService service.
 // All implementations must embed UnimplementedSemanticSearchEngineServiceServer
 // for forward compatibility.
@@ -93,6 +145,14 @@ type SemanticSearchEngineServiceServer interface {
 	EncodeText(context.Context, *ClipTextEmbeddingRequest) (*ClipEmbeddingResponse, error)
 	// Encode image
 	EncodeImage(grpc.ClientStreamingServer[ClipImageEmbeddingRequest, ClipEmbeddingResponse]) error
+	// Get stored vectors by media
+	GetVectorsByMedia(context.Context, *GetVectorsByMediaRequest) (*VectorListResponse, error)
+	// Query vectors sorted by distance
+	QueryVectors(context.Context, *QueryVectorsRequest) (*VectorListResponse, error)
+	// Insert vectors
+	InsertVectors(context.Context, *InsertVectorsRequest) (*EmptyResponse, error)
+	// Deletes vectors
+	DeleteVectors(context.Context, *DeleteVectorsRequest) (*EmptyResponse, error)
 	mustEmbedUnimplementedSemanticSearchEngineServiceServer()
 }
 
@@ -111,6 +171,18 @@ func (UnimplementedSemanticSearchEngineServiceServer) EncodeText(context.Context
 }
 func (UnimplementedSemanticSearchEngineServiceServer) EncodeImage(grpc.ClientStreamingServer[ClipImageEmbeddingRequest, ClipEmbeddingResponse]) error {
 	return status.Error(codes.Unimplemented, "method EncodeImage not implemented")
+}
+func (UnimplementedSemanticSearchEngineServiceServer) GetVectorsByMedia(context.Context, *GetVectorsByMediaRequest) (*VectorListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetVectorsByMedia not implemented")
+}
+func (UnimplementedSemanticSearchEngineServiceServer) QueryVectors(context.Context, *QueryVectorsRequest) (*VectorListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method QueryVectors not implemented")
+}
+func (UnimplementedSemanticSearchEngineServiceServer) InsertVectors(context.Context, *InsertVectorsRequest) (*EmptyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method InsertVectors not implemented")
+}
+func (UnimplementedSemanticSearchEngineServiceServer) DeleteVectors(context.Context, *DeleteVectorsRequest) (*EmptyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteVectors not implemented")
 }
 func (UnimplementedSemanticSearchEngineServiceServer) mustEmbedUnimplementedSemanticSearchEngineServiceServer() {
 }
@@ -177,6 +249,78 @@ func _SemanticSearchEngineService_EncodeImage_Handler(srv interface{}, stream gr
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SemanticSearchEngineService_EncodeImageServer = grpc.ClientStreamingServer[ClipImageEmbeddingRequest, ClipEmbeddingResponse]
 
+func _SemanticSearchEngineService_GetVectorsByMedia_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVectorsByMediaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SemanticSearchEngineServiceServer).GetVectorsByMedia(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SemanticSearchEngineService_GetVectorsByMedia_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SemanticSearchEngineServiceServer).GetVectorsByMedia(ctx, req.(*GetVectorsByMediaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SemanticSearchEngineService_QueryVectors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVectorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SemanticSearchEngineServiceServer).QueryVectors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SemanticSearchEngineService_QueryVectors_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SemanticSearchEngineServiceServer).QueryVectors(ctx, req.(*QueryVectorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SemanticSearchEngineService_InsertVectors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InsertVectorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SemanticSearchEngineServiceServer).InsertVectors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SemanticSearchEngineService_InsertVectors_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SemanticSearchEngineServiceServer).InsertVectors(ctx, req.(*InsertVectorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SemanticSearchEngineService_DeleteVectors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteVectorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SemanticSearchEngineServiceServer).DeleteVectors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SemanticSearchEngineService_DeleteVectors_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SemanticSearchEngineServiceServer).DeleteVectors(ctx, req.(*DeleteVectorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SemanticSearchEngineService_ServiceDesc is the grpc.ServiceDesc for SemanticSearchEngineService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -191,6 +335,22 @@ var SemanticSearchEngineService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EncodeText",
 			Handler:    _SemanticSearchEngineService_EncodeText_Handler,
+		},
+		{
+			MethodName: "GetVectorsByMedia",
+			Handler:    _SemanticSearchEngineService_GetVectorsByMedia_Handler,
+		},
+		{
+			MethodName: "QueryVectors",
+			Handler:    _SemanticSearchEngineService_QueryVectors_Handler,
+		},
+		{
+			MethodName: "InsertVectors",
+			Handler:    _SemanticSearchEngineService_InsertVectors_Handler,
+		},
+		{
+			MethodName: "DeleteVectors",
+			Handler:    _SemanticSearchEngineService_DeleteVectors_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -23,6 +23,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Type of embedding
+type EmbeddingType int32
+
+const (
+	// Embedded text
+	EmbeddingType_TEXT EmbeddingType = 0
+	// Embedded image
+	EmbeddingType_IMAGE EmbeddingType = 1
+)
+
+// Enum value maps for EmbeddingType.
+var (
+	EmbeddingType_name = map[int32]string{
+		0: "TEXT",
+		1: "IMAGE",
+	}
+	EmbeddingType_value = map[string]int32{
+		"TEXT":  0,
+		"IMAGE": 1,
+	}
+)
+
+func (x EmbeddingType) Enum() *EmbeddingType {
+	p := new(EmbeddingType)
+	*p = x
+	return p
+}
+
+func (x EmbeddingType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (EmbeddingType) Descriptor() protoreflect.EnumDescriptor {
+	return file_sse_proto_enumTypes[0].Descriptor()
+}
+
+func (EmbeddingType) Type() protoreflect.EnumType {
+	return &file_sse_proto_enumTypes[0]
+}
+
+func (x EmbeddingType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use EmbeddingType.Descriptor instead.
+func (EmbeddingType) EnumDescriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{0}
+}
+
 // Request for the model metadata
 type ClipModelMetadataRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -402,6 +451,446 @@ func (*ClipImageEmbeddingRequest_Init) isClipImageEmbeddingRequest_ImageEmbeddin
 
 func (*ClipImageEmbeddingRequest_Chunk) isClipImageEmbeddingRequest_ImageEmbeddingOneof() {}
 
+// Request to get vectors by media resource
+type GetVectorsByMediaRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the media resource
+	MediaId       uint64 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetVectorsByMediaRequest) Reset() {
+	*x = GetVectorsByMediaRequest{}
+	mi := &file_sse_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetVectorsByMediaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetVectorsByMediaRequest) ProtoMessage() {}
+
+func (x *GetVectorsByMediaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetVectorsByMediaRequest.ProtoReflect.Descriptor instead.
+func (*GetVectorsByMediaRequest) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetVectorsByMediaRequest) GetMediaId() uint64 {
+	if x != nil {
+		return x.MediaId
+	}
+	return 0
+}
+
+// Request to query vectors
+type QueryVectorsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Embedding features
+	Features []float32 `protobuf:"fixed32,1,rep,packed,name=features,proto3" json:"features,omitempty"`
+	// Limit
+	Limit uint64 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	// Offset
+	Offset *uint64 `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
+	// Embedding type
+	EmbeddingType *EmbeddingType `protobuf:"varint,4,opt,name=embedding_type,json=embeddingType,proto3,enum=pmv.sse.EmbeddingType,oneof" json:"embedding_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QueryVectorsRequest) Reset() {
+	*x = QueryVectorsRequest{}
+	mi := &file_sse_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryVectorsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryVectorsRequest) ProtoMessage() {}
+
+func (x *QueryVectorsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryVectorsRequest.ProtoReflect.Descriptor instead.
+func (*QueryVectorsRequest) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *QueryVectorsRequest) GetFeatures() []float32 {
+	if x != nil {
+		return x.Features
+	}
+	return nil
+}
+
+func (x *QueryVectorsRequest) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *QueryVectorsRequest) GetOffset() uint64 {
+	if x != nil && x.Offset != nil {
+		return *x.Offset
+	}
+	return 0
+}
+
+func (x *QueryVectorsRequest) GetEmbeddingType() EmbeddingType {
+	if x != nil && x.EmbeddingType != nil {
+		return *x.EmbeddingType
+	}
+	return EmbeddingType_TEXT
+}
+
+// List item for a vector
+type VectorListItem struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the vector
+	VectorId uint64 `protobuf:"varint,1,opt,name=vector_id,json=vectorId,proto3" json:"vector_id,omitempty"`
+	// ID of the media resource
+	MediaId uint64 `protobuf:"varint,2,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	// Embedding type
+	EmbeddingType EmbeddingType `protobuf:"varint,3,opt,name=embedding_type,json=embeddingType,proto3,enum=pmv.sse.EmbeddingType" json:"embedding_type,omitempty"`
+	// Data hash
+	DataHash      string `protobuf:"bytes,4,opt,name=data_hash,json=dataHash,proto3" json:"data_hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VectorListItem) Reset() {
+	*x = VectorListItem{}
+	mi := &file_sse_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VectorListItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VectorListItem) ProtoMessage() {}
+
+func (x *VectorListItem) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VectorListItem.ProtoReflect.Descriptor instead.
+func (*VectorListItem) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *VectorListItem) GetVectorId() uint64 {
+	if x != nil {
+		return x.VectorId
+	}
+	return 0
+}
+
+func (x *VectorListItem) GetMediaId() uint64 {
+	if x != nil {
+		return x.MediaId
+	}
+	return 0
+}
+
+func (x *VectorListItem) GetEmbeddingType() EmbeddingType {
+	if x != nil {
+		return x.EmbeddingType
+	}
+	return EmbeddingType_TEXT
+}
+
+func (x *VectorListItem) GetDataHash() string {
+	if x != nil {
+		return x.DataHash
+	}
+	return ""
+}
+
+// Response with a list of vectors
+type VectorListResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// List of vectors
+	Vectors       []*VectorListItem `protobuf:"bytes,1,rep,name=vectors,proto3" json:"vectors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VectorListResponse) Reset() {
+	*x = VectorListResponse{}
+	mi := &file_sse_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VectorListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VectorListResponse) ProtoMessage() {}
+
+func (x *VectorListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VectorListResponse.ProtoReflect.Descriptor instead.
+func (*VectorListResponse) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *VectorListResponse) GetVectors() []*VectorListItem {
+	if x != nil {
+		return x.Vectors
+	}
+	return nil
+}
+
+// Request to insert a vector
+type InsertVectorRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the media resource
+	MediaId uint64 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	// Embedding type
+	EmbeddingType EmbeddingType `protobuf:"varint,2,opt,name=embedding_type,json=embeddingType,proto3,enum=pmv.sse.EmbeddingType" json:"embedding_type,omitempty"`
+	// Data hash
+	DataHash string `protobuf:"bytes,3,opt,name=data_hash,json=dataHash,proto3" json:"data_hash,omitempty"`
+	// Embedding features
+	Features      []float32 `protobuf:"fixed32,4,rep,packed,name=features,proto3" json:"features,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InsertVectorRequest) Reset() {
+	*x = InsertVectorRequest{}
+	mi := &file_sse_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InsertVectorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InsertVectorRequest) ProtoMessage() {}
+
+func (x *InsertVectorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InsertVectorRequest.ProtoReflect.Descriptor instead.
+func (*InsertVectorRequest) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *InsertVectorRequest) GetMediaId() uint64 {
+	if x != nil {
+		return x.MediaId
+	}
+	return 0
+}
+
+func (x *InsertVectorRequest) GetEmbeddingType() EmbeddingType {
+	if x != nil {
+		return x.EmbeddingType
+	}
+	return EmbeddingType_TEXT
+}
+
+func (x *InsertVectorRequest) GetDataHash() string {
+	if x != nil {
+		return x.DataHash
+	}
+	return ""
+}
+
+func (x *InsertVectorRequest) GetFeatures() []float32 {
+	if x != nil {
+		return x.Features
+	}
+	return nil
+}
+
+// Request to insert multiple vectors
+type InsertVectorsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Requests to insert vectors
+	Requests      []*InsertVectorRequest `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InsertVectorsRequest) Reset() {
+	*x = InsertVectorsRequest{}
+	mi := &file_sse_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InsertVectorsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InsertVectorsRequest) ProtoMessage() {}
+
+func (x *InsertVectorsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InsertVectorsRequest.ProtoReflect.Descriptor instead.
+func (*InsertVectorsRequest) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *InsertVectorsRequest) GetRequests() []*InsertVectorRequest {
+	if x != nil {
+		return x.Requests
+	}
+	return nil
+}
+
+// Request to delete vectors
+type DeleteVectorsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// List of IDs of vectors to delete
+	VectorIds     []uint64 `protobuf:"varint,1,rep,packed,name=vector_ids,json=vectorIds,proto3" json:"vector_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteVectorsRequest) Reset() {
+	*x = DeleteVectorsRequest{}
+	mi := &file_sse_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteVectorsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteVectorsRequest) ProtoMessage() {}
+
+func (x *DeleteVectorsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteVectorsRequest.ProtoReflect.Descriptor instead.
+func (*DeleteVectorsRequest) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteVectorsRequest) GetVectorIds() []uint64 {
+	if x != nil {
+		return x.VectorIds
+	}
+	return nil
+}
+
+// Empty message for action methods
+type EmptyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EmptyResponse) Reset() {
+	*x = EmptyResponse{}
+	mi := &file_sse_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EmptyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EmptyResponse) ProtoMessage() {}
+
+func (x *EmptyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sse_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EmptyResponse.ProtoReflect.Descriptor instead.
+func (*EmptyResponse) Descriptor() ([]byte, []int) {
+	return file_sse_proto_rawDescGZIP(), []int{14}
+}
+
 var File_sse_proto protoreflect.FileDescriptor
 
 const file_sse_proto_rawDesc = "" +
@@ -425,12 +914,46 @@ const file_sse_proto_rawDesc = "" +
 	"\x19ClipImageEmbeddingRequest\x12<\n" +
 	"\x04init\x18\x01 \x01(\v2&.pmv.sse.ClipImageEmbeddingRequestInitH\x00R\x04init\x12?\n" +
 	"\x05chunk\x18\x02 \x01(\v2'.pmv.sse.ClipImageEmbeddingRequestChunkH\x00R\x05chunkB\x17\n" +
-	"\x15image_embedding_oneof2\x9e\x02\n" +
+	"\x15image_embedding_oneof\"5\n" +
+	"\x18GetVectorsByMediaRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\x04R\amediaId\"\xc6\x01\n" +
+	"\x13QueryVectorsRequest\x12\x1a\n" +
+	"\bfeatures\x18\x01 \x03(\x02R\bfeatures\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x04R\x05limit\x12\x1b\n" +
+	"\x06offset\x18\x03 \x01(\x04H\x00R\x06offset\x88\x01\x01\x12B\n" +
+	"\x0eembedding_type\x18\x04 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeH\x01R\rembeddingType\x88\x01\x01B\t\n" +
+	"\a_offsetB\x11\n" +
+	"\x0f_embedding_type\"\xa4\x01\n" +
+	"\x0eVectorListItem\x12\x1b\n" +
+	"\tvector_id\x18\x01 \x01(\x04R\bvectorId\x12\x19\n" +
+	"\bmedia_id\x18\x02 \x01(\x04R\amediaId\x12=\n" +
+	"\x0eembedding_type\x18\x03 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeR\rembeddingType\x12\x1b\n" +
+	"\tdata_hash\x18\x04 \x01(\tR\bdataHash\"G\n" +
+	"\x12VectorListResponse\x121\n" +
+	"\avectors\x18\x01 \x03(\v2\x17.pmv.sse.VectorListItemR\avectors\"\xa8\x01\n" +
+	"\x13InsertVectorRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\x04R\amediaId\x12=\n" +
+	"\x0eembedding_type\x18\x02 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeR\rembeddingType\x12\x1b\n" +
+	"\tdata_hash\x18\x03 \x01(\tR\bdataHash\x12\x1a\n" +
+	"\bfeatures\x18\x04 \x03(\x02R\bfeatures\"P\n" +
+	"\x14InsertVectorsRequest\x128\n" +
+	"\brequests\x18\x01 \x03(\v2\x1c.pmv.sse.InsertVectorRequestR\brequests\"5\n" +
+	"\x14DeleteVectorsRequest\x12\x1d\n" +
+	"\n" +
+	"vector_ids\x18\x01 \x03(\x04R\tvectorIds\"\x0f\n" +
+	"\rEmptyResponse*$\n" +
+	"\rEmbeddingType\x12\b\n" +
+	"\x04TEXT\x10\x00\x12\t\n" +
+	"\x05IMAGE\x10\x012\xce\x04\n" +
 	"\x1bSemanticSearchEngineService\x12Y\n" +
 	"\x10GetModelMetadata\x12!.pmv.sse.ClipModelMetadataRequest\x1a\".pmv.sse.ClipModelMetadataResponse\x12O\n" +
 	"\n" +
 	"EncodeText\x12!.pmv.sse.ClipTextEmbeddingRequest\x1a\x1e.pmv.sse.ClipEmbeddingResponse\x12S\n" +
-	"\vEncodeImage\x12\".pmv.sse.ClipImageEmbeddingRequest\x1a\x1e.pmv.sse.ClipEmbeddingResponse(\x01BWZUgithub.com/AgustinSRG/PersonalMediaVault/semantic-search-engine/protocol/sse-proto-gob\x06proto3"
+	"\vEncodeImage\x12\".pmv.sse.ClipImageEmbeddingRequest\x1a\x1e.pmv.sse.ClipEmbeddingResponse(\x01\x12S\n" +
+	"\x11GetVectorsByMedia\x12!.pmv.sse.GetVectorsByMediaRequest\x1a\x1b.pmv.sse.VectorListResponse\x12I\n" +
+	"\fQueryVectors\x12\x1c.pmv.sse.QueryVectorsRequest\x1a\x1b.pmv.sse.VectorListResponse\x12F\n" +
+	"\rInsertVectors\x12\x1d.pmv.sse.InsertVectorsRequest\x1a\x16.pmv.sse.EmptyResponse\x12F\n" +
+	"\rDeleteVectors\x12\x1d.pmv.sse.DeleteVectorsRequest\x1a\x16.pmv.sse.EmptyResponseBWZUgithub.com/AgustinSRG/PersonalMediaVault/semantic-search-engine/protocol/sse-proto-gob\x06proto3"
 
 var (
 	file_sse_proto_rawDescOnce sync.Once
@@ -444,30 +967,53 @@ func file_sse_proto_rawDescGZIP() []byte {
 	return file_sse_proto_rawDescData
 }
 
-var file_sse_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_sse_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_sse_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_sse_proto_goTypes = []any{
-	(*ClipModelMetadataRequest)(nil),       // 0: pmv.sse.ClipModelMetadataRequest
-	(*ClipModelMetadataResponse)(nil),      // 1: pmv.sse.ClipModelMetadataResponse
-	(*ClipEmbeddingResponse)(nil),          // 2: pmv.sse.ClipEmbeddingResponse
-	(*ClipTextEmbeddingRequest)(nil),       // 3: pmv.sse.ClipTextEmbeddingRequest
-	(*ClipImageEmbeddingRequestInit)(nil),  // 4: pmv.sse.ClipImageEmbeddingRequestInit
-	(*ClipImageEmbeddingRequestChunk)(nil), // 5: pmv.sse.ClipImageEmbeddingRequestChunk
-	(*ClipImageEmbeddingRequest)(nil),      // 6: pmv.sse.ClipImageEmbeddingRequest
+	(EmbeddingType)(0),                     // 0: pmv.sse.EmbeddingType
+	(*ClipModelMetadataRequest)(nil),       // 1: pmv.sse.ClipModelMetadataRequest
+	(*ClipModelMetadataResponse)(nil),      // 2: pmv.sse.ClipModelMetadataResponse
+	(*ClipEmbeddingResponse)(nil),          // 3: pmv.sse.ClipEmbeddingResponse
+	(*ClipTextEmbeddingRequest)(nil),       // 4: pmv.sse.ClipTextEmbeddingRequest
+	(*ClipImageEmbeddingRequestInit)(nil),  // 5: pmv.sse.ClipImageEmbeddingRequestInit
+	(*ClipImageEmbeddingRequestChunk)(nil), // 6: pmv.sse.ClipImageEmbeddingRequestChunk
+	(*ClipImageEmbeddingRequest)(nil),      // 7: pmv.sse.ClipImageEmbeddingRequest
+	(*GetVectorsByMediaRequest)(nil),       // 8: pmv.sse.GetVectorsByMediaRequest
+	(*QueryVectorsRequest)(nil),            // 9: pmv.sse.QueryVectorsRequest
+	(*VectorListItem)(nil),                 // 10: pmv.sse.VectorListItem
+	(*VectorListResponse)(nil),             // 11: pmv.sse.VectorListResponse
+	(*InsertVectorRequest)(nil),            // 12: pmv.sse.InsertVectorRequest
+	(*InsertVectorsRequest)(nil),           // 13: pmv.sse.InsertVectorsRequest
+	(*DeleteVectorsRequest)(nil),           // 14: pmv.sse.DeleteVectorsRequest
+	(*EmptyResponse)(nil),                  // 15: pmv.sse.EmptyResponse
 }
 var file_sse_proto_depIdxs = []int32{
-	4, // 0: pmv.sse.ClipImageEmbeddingRequest.init:type_name -> pmv.sse.ClipImageEmbeddingRequestInit
-	5, // 1: pmv.sse.ClipImageEmbeddingRequest.chunk:type_name -> pmv.sse.ClipImageEmbeddingRequestChunk
-	0, // 2: pmv.sse.SemanticSearchEngineService.GetModelMetadata:input_type -> pmv.sse.ClipModelMetadataRequest
-	3, // 3: pmv.sse.SemanticSearchEngineService.EncodeText:input_type -> pmv.sse.ClipTextEmbeddingRequest
-	6, // 4: pmv.sse.SemanticSearchEngineService.EncodeImage:input_type -> pmv.sse.ClipImageEmbeddingRequest
-	1, // 5: pmv.sse.SemanticSearchEngineService.GetModelMetadata:output_type -> pmv.sse.ClipModelMetadataResponse
-	2, // 6: pmv.sse.SemanticSearchEngineService.EncodeText:output_type -> pmv.sse.ClipEmbeddingResponse
-	2, // 7: pmv.sse.SemanticSearchEngineService.EncodeImage:output_type -> pmv.sse.ClipEmbeddingResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5,  // 0: pmv.sse.ClipImageEmbeddingRequest.init:type_name -> pmv.sse.ClipImageEmbeddingRequestInit
+	6,  // 1: pmv.sse.ClipImageEmbeddingRequest.chunk:type_name -> pmv.sse.ClipImageEmbeddingRequestChunk
+	0,  // 2: pmv.sse.QueryVectorsRequest.embedding_type:type_name -> pmv.sse.EmbeddingType
+	0,  // 3: pmv.sse.VectorListItem.embedding_type:type_name -> pmv.sse.EmbeddingType
+	10, // 4: pmv.sse.VectorListResponse.vectors:type_name -> pmv.sse.VectorListItem
+	0,  // 5: pmv.sse.InsertVectorRequest.embedding_type:type_name -> pmv.sse.EmbeddingType
+	12, // 6: pmv.sse.InsertVectorsRequest.requests:type_name -> pmv.sse.InsertVectorRequest
+	1,  // 7: pmv.sse.SemanticSearchEngineService.GetModelMetadata:input_type -> pmv.sse.ClipModelMetadataRequest
+	4,  // 8: pmv.sse.SemanticSearchEngineService.EncodeText:input_type -> pmv.sse.ClipTextEmbeddingRequest
+	7,  // 9: pmv.sse.SemanticSearchEngineService.EncodeImage:input_type -> pmv.sse.ClipImageEmbeddingRequest
+	8,  // 10: pmv.sse.SemanticSearchEngineService.GetVectorsByMedia:input_type -> pmv.sse.GetVectorsByMediaRequest
+	9,  // 11: pmv.sse.SemanticSearchEngineService.QueryVectors:input_type -> pmv.sse.QueryVectorsRequest
+	13, // 12: pmv.sse.SemanticSearchEngineService.InsertVectors:input_type -> pmv.sse.InsertVectorsRequest
+	14, // 13: pmv.sse.SemanticSearchEngineService.DeleteVectors:input_type -> pmv.sse.DeleteVectorsRequest
+	2,  // 14: pmv.sse.SemanticSearchEngineService.GetModelMetadata:output_type -> pmv.sse.ClipModelMetadataResponse
+	3,  // 15: pmv.sse.SemanticSearchEngineService.EncodeText:output_type -> pmv.sse.ClipEmbeddingResponse
+	3,  // 16: pmv.sse.SemanticSearchEngineService.EncodeImage:output_type -> pmv.sse.ClipEmbeddingResponse
+	11, // 17: pmv.sse.SemanticSearchEngineService.GetVectorsByMedia:output_type -> pmv.sse.VectorListResponse
+	11, // 18: pmv.sse.SemanticSearchEngineService.QueryVectors:output_type -> pmv.sse.VectorListResponse
+	15, // 19: pmv.sse.SemanticSearchEngineService.InsertVectors:output_type -> pmv.sse.EmptyResponse
+	15, // 20: pmv.sse.SemanticSearchEngineService.DeleteVectors:output_type -> pmv.sse.EmptyResponse
+	14, // [14:21] is the sub-list for method output_type
+	7,  // [7:14] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_sse_proto_init() }
@@ -479,18 +1025,20 @@ func file_sse_proto_init() {
 		(*ClipImageEmbeddingRequest_Init)(nil),
 		(*ClipImageEmbeddingRequest_Chunk)(nil),
 	}
+	file_sse_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sse_proto_rawDesc), len(file_sse_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   7,
+			NumEnums:      1,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_sse_proto_goTypes,
 		DependencyIndexes: file_sse_proto_depIdxs,
+		EnumInfos:         file_sse_proto_enumTypes,
 		MessageInfos:      file_sse_proto_msgTypes,
 	}.Build()
 	File_sse_proto = out.File

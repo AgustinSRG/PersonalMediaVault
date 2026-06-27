@@ -266,4 +266,35 @@ impl VectorDatabase {
 
         handle.await?
     }
+
+    pub async fn query_vectors_filtered_by_type(
+        &self,
+        vector_type: u8,
+        vector: Vec<f32>,
+        offset: i64,
+        limit: i64,
+    ) -> Result<Vec<StoredVector>, VectorDatabaseError> {
+        let pool = self.get_pool();
+
+        let handle = task::spawn_blocking(move || {
+            let conn = pool.get()?;
+
+            let mut stmt = conn.prepare("SELECT id, distance, media_id, vector_type, data_hash FROM vectors WHERE vector_type = ?1 AND embedding MATCH ?2 ORDER BY distance LIMIT ?3 OFFSET ?4")?;
+
+            let vectors = stmt
+                .query_map((vector_type, vector.as_bytes(), limit, offset), |row| {
+                    Ok(StoredVector {
+                        id: row.get::<usize, i64>(0)? as u64,
+                        media_id: row.get::<usize, i64>(2)? as u64,
+                        vector_type: row.get::<usize, u8>(3)?,
+                        data_hash: row.get::<usize, String>(4)?,
+                    })
+                })?
+                .collect::<std::result::Result<Vec<StoredVector>, rusqlite::Error>>()?;
+
+            Ok(vectors)
+        });
+
+        handle.await?
+    }
 }
