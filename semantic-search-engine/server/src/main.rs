@@ -52,6 +52,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         _ = simple_logger::init_with_level(log::Level::Info);
     }
 
+    info!("Loading model from: {}", cli.model_path.to_string_lossy());
+
+    let model_integrity = match compute_model_integrity(&cli.model_path).await {
+        Ok(i) => i,
+        Err(e) => {
+            error!(
+                "Could not load model from {}: {}",
+                cli.model_path.to_string_lossy(),
+                e
+            );
+            exit(1);
+        }
+    };
+
     let model = match LoadedClipModel::load(&cli.model_path) {
         Ok(m) => m,
         Err(e) => {
@@ -67,8 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let model_dimensions = model.get_embed_dim();
 
     info!(
-        "Loaded model from '{}'. Embeddings size: {}",
+        "Loaded model from '{}'. Integrity: {}, Embeddings size: {}",
         cli.model_path.to_string_lossy(),
+        model_integrity,
         model_dimensions,
     );
 
@@ -81,11 +96,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let max_db_pool_size = cli.max_db_pool_size.unwrap_or(DEFAULT_DB_MAX_POOL_SIZE);
 
+    let db_path = cli.sqlite_db_path.to_string_lossy().to_string();
+
+    info!("Loading database from: {db_path}");
+
     let db = match VectorDatabase::new(VectorDatabaseConfig {
         path: cli.sqlite_db_path,
         passphrase: db_passphrase,
         vector_dimensions: model_dimensions,
         pool_max_size: max_db_pool_size,
+        model_integrity,
     })
     .await
     {
@@ -95,6 +115,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             exit(1);
         }
     };
+
+    info!("Loaded database from: {db_path}");
 
     let api_key = env::var("API_KEY").unwrap_or("".to_string());
 

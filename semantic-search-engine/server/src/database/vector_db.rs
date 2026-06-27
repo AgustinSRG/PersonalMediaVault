@@ -1,5 +1,6 @@
 // Vector database
 
+use log::debug;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
@@ -18,6 +19,8 @@ pub struct VectorDatabase {
     pool: Pool<SqliteConnectionManager>,
 
     dimensions: u32,
+
+    model_integrity: String,
 }
 
 impl VectorDatabase {
@@ -35,6 +38,7 @@ impl VectorDatabase {
         let db = Self {
             pool,
             dimensions: config.vector_dimensions,
+            model_integrity: config.model_integrity,
         };
 
         db.migrate().await?;
@@ -51,18 +55,58 @@ impl VectorDatabase {
     }
 
     async fn migrate(&self) -> Result<(), VectorDatabaseError> {
+        debug!("Migrating database...");
+
         let config_table_exists = self.check_table_exists("config").await?;
 
         if !config_table_exists {
+            debug!("Config table does not exists. Creating...");
             self.create_config_table().await?;
         }
 
-        let db_version = self.get_db_version().await?;
+        let expected_db_version = format!("{}:{}", DB_VERSION, self.model_integrity);
 
-        if db_version != DB_VERSION {
-            self.drop_table("vectors").await?;
-            self.create_vectors_table().await?;
+        debug!("Expected database version: {}", expected_db_version);
+
+        let db_version_opt = self.get_db_version().await?;
+
+        match db_version_opt {
+            Some(v) => {
+                if v != expected_db_version {
+                    debug!("Stored version does not match the expected one");
+
+                    self.re_create_vectors_table().await?;
+
+                    debug!("Updating version...");
+
+                    self.update_db_version(expected_db_version).await?;
+                } else {
+                    debug!("Stored version matches the expected one");
+                }
+            }
+            None => {
+                debug!("No database version set");
+
+                self.re_create_vectors_table().await?;
+
+                debug!("Setting version...");
+
+                self.insert_db_version(expected_db_version).await?;
+            }
         }
+
+        debug!("Database migration completed");
+
+        Ok(())
+    }
+
+    async fn re_create_vectors_table(&self) -> Result<(), VectorDatabaseError> {
+        debug!("Re-creating vectors table...");
+
+        self.drop_table("vectors").await?;
+        self.create_vectors_table().await?;
+
+        debug!("Re-created vectors table");
 
         Ok(())
     }
@@ -120,7 +164,7 @@ impl VectorDatabase {
         handle.await?
     }
 
-    async fn get_db_version(&self) -> Result<String, VectorDatabaseError> {
+    async fn get_db_version(&self) -> Result<Option<String>, VectorDatabaseError> {
         let pool = self.get_pool();
 
         let handle = task::spawn_blocking(move || {
@@ -133,12 +177,46 @@ impl VectorDatabase {
                 .collect::<std::result::Result<Vec<String>, rusqlite::Error>>()?;
 
             if versions.is_empty() {
-                return Ok("".to_string());
+                return Ok(None);
             }
 
             let version = versions.first().map_or("", |v| v);
 
-            Ok(version.to_string())
+            Ok(Some(version.to_string()))
+        });
+
+        handle.await?
+    }
+
+    async fn insert_db_version(&self, version: String) -> Result<(), VectorDatabaseError> {
+        let pool = self.get_pool();
+
+        let handle = task::spawn_blocking(move || {
+            let conn = pool.get()?;
+
+            conn.execute(
+                "INSERT INTO config(key, value) VALUES (?, ?)",
+                ("version", version),
+            )?;
+
+            Ok(())
+        });
+
+        handle.await?
+    }
+
+    async fn update_db_version(&self, version: String) -> Result<(), VectorDatabaseError> {
+        let pool = self.get_pool();
+
+        let handle = task::spawn_blocking(move || {
+            let conn = pool.get()?;
+
+            conn.execute(
+                "UPDATE config SET value = ?1 WHERE key = ?2",
+                (version, "version"),
+            )?;
+
+            Ok(())
         });
 
         handle.await?

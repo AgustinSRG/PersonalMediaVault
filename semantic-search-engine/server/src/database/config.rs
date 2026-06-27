@@ -18,4 +18,7 @@ pub struct VectorDatabaseConfig {
 
     // Max size of the database pool
     pub pool_max_size: u32,
+
+    // Model integrity
+    pub model_integrity: String,
 }
