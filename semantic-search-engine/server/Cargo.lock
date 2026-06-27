@@ -2205,6 +2205,7 @@ dependencies = [
  "tonic-build",
  "tonic-prost",
  "tonic-prost-build",
+ "zerocopy",
 ]
 
 [[package]]

@@ -9,3 +9,6 @@ pub use config::*;
 
 mod error;
 pub use error::*;
+
+mod stored_vector;
+pub use stored_vector::*;

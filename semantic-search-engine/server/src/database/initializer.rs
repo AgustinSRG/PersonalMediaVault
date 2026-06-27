@@ -5,6 +5,7 @@ use sqlite_vec::sqlite3_vec_init;
 
 pub fn initialize_sqlite_vector_extension() {
     unsafe {
+        #[allow(clippy::missing_transmute_annotations)]
         sqlite3_auto_extension(Some(std::mem::transmute(sqlite3_vec_init as *const ())));
     }
 }

@@ -20,6 +20,7 @@ tokio = { version = "1.52.3", features = ["full"] }
 tokio-stream = "0.1.18"
 tonic = "0.14.6"
 tonic-prost = "0.14.6"
+zerocopy = "0.8.52"
 
 [build-dependencies]
 tonic-build = "0.14.6"
