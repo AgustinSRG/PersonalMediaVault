@@ -455,7 +455,9 @@ func (*ClipImageEmbeddingRequest_Chunk) isClipImageEmbeddingRequest_ImageEmbeddi
 type GetVectorsByMediaRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// ID of the media resource
-	MediaId       uint64 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	MediaId uint64 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	// API key to access the service
+	ApiKey        string `protobuf:"bytes,2,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -497,6 +499,13 @@ func (x *GetVectorsByMediaRequest) GetMediaId() uint64 {
 	return 0
 }
 
+func (x *GetVectorsByMediaRequest) GetApiKey() string {
+	if x != nil {
+		return x.ApiKey
+	}
+	return ""
+}
+
 // Request to query vectors
 type QueryVectorsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -508,6 +517,8 @@ type QueryVectorsRequest struct {
 	Offset *uint64 `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
 	// Embedding type
 	EmbeddingType *EmbeddingType `protobuf:"varint,4,opt,name=embedding_type,json=embeddingType,proto3,enum=pmv.sse.EmbeddingType,oneof" json:"embedding_type,omitempty"`
+	// API key to access the service
+	ApiKey        string `protobuf:"bytes,5,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -568,6 +579,13 @@ func (x *QueryVectorsRequest) GetEmbeddingType() EmbeddingType {
 		return *x.EmbeddingType
 	}
 	return EmbeddingType_TEXT
+}
+
+func (x *QueryVectorsRequest) GetApiKey() string {
+	if x != nil {
+		return x.ApiKey
+	}
+	return ""
 }
 
 // List item for a vector
@@ -766,7 +784,9 @@ func (x *InsertVectorRequest) GetFeatures() []float32 {
 type InsertVectorsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Requests to insert vectors
-	Requests      []*InsertVectorRequest `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
+	Requests []*InsertVectorRequest `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
+	// API key to access the service
+	ApiKey        string `protobuf:"bytes,2,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -806,6 +826,13 @@ func (x *InsertVectorsRequest) GetRequests() []*InsertVectorRequest {
 		return x.Requests
 	}
 	return nil
+}
+
+func (x *InsertVectorsRequest) GetApiKey() string {
+	if x != nil {
+		return x.ApiKey
+	}
+	return ""
 }
 
 // Request to delete vectors
@@ -914,14 +941,16 @@ const file_sse_proto_rawDesc = "" +
 	"\x19ClipImageEmbeddingRequest\x12<\n" +
 	"\x04init\x18\x01 \x01(\v2&.pmv.sse.ClipImageEmbeddingRequestInitH\x00R\x04init\x12?\n" +
 	"\x05chunk\x18\x02 \x01(\v2'.pmv.sse.ClipImageEmbeddingRequestChunkH\x00R\x05chunkB\x17\n" +
-	"\x15image_embedding_oneof\"5\n" +
+	"\x15image_embedding_oneof\"N\n" +
 	"\x18GetVectorsByMediaRequest\x12\x19\n" +
-	"\bmedia_id\x18\x01 \x01(\x04R\amediaId\"\xc6\x01\n" +
+	"\bmedia_id\x18\x01 \x01(\x04R\amediaId\x12\x17\n" +
+	"\aapi_key\x18\x02 \x01(\tR\x06apiKey\"\xdf\x01\n" +
 	"\x13QueryVectorsRequest\x12\x1a\n" +
 	"\bfeatures\x18\x01 \x03(\x02R\bfeatures\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x04R\x05limit\x12\x1b\n" +
 	"\x06offset\x18\x03 \x01(\x04H\x00R\x06offset\x88\x01\x01\x12B\n" +
-	"\x0eembedding_type\x18\x04 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeH\x01R\rembeddingType\x88\x01\x01B\t\n" +
+	"\x0eembedding_type\x18\x04 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeH\x01R\rembeddingType\x88\x01\x01\x12\x17\n" +
+	"\aapi_key\x18\x05 \x01(\tR\x06apiKeyB\t\n" +
 	"\a_offsetB\x11\n" +
 	"\x0f_embedding_type\"\xa4\x01\n" +
 	"\x0eVectorListItem\x12\x1b\n" +
@@ -935,9 +964,10 @@ const file_sse_proto_rawDesc = "" +
 	"\bmedia_id\x18\x01 \x01(\x04R\amediaId\x12=\n" +
 	"\x0eembedding_type\x18\x02 \x01(\x0e2\x16.pmv.sse.EmbeddingTypeR\rembeddingType\x12\x1b\n" +
 	"\tdata_hash\x18\x03 \x01(\tR\bdataHash\x12\x1a\n" +
-	"\bfeatures\x18\x04 \x03(\x02R\bfeatures\"P\n" +
+	"\bfeatures\x18\x04 \x03(\x02R\bfeatures\"i\n" +
 	"\x14InsertVectorsRequest\x128\n" +
-	"\brequests\x18\x01 \x03(\v2\x1c.pmv.sse.InsertVectorRequestR\brequests\"5\n" +
+	"\brequests\x18\x01 \x03(\v2\x1c.pmv.sse.InsertVectorRequestR\brequests\x12\x17\n" +
+	"\aapi_key\x18\x02 \x01(\tR\x06apiKey\"5\n" +
 	"\x14DeleteVectorsRequest\x12\x1d\n" +
 	"\n" +
 	"vector_ids\x18\x01 \x03(\x04R\tvectorIds\"\x0f\n" +

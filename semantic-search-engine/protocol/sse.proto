@@ -72,6 +72,9 @@ enum EmbeddingType {
 message GetVectorsByMediaRequest {
     // ID of the media resource
     uint64 media_id = 1;
+
+    // API key to access the service
+    string api_key = 2;
 }
 
 // Request to query vectors
@@ -87,6 +90,9 @@ message QueryVectorsRequest {
 
     // Embedding type
     optional EmbeddingType embedding_type = 4;
+
+    // API key to access the service
+    string api_key = 5;
 }
 
 // List item for a vector
@@ -129,12 +135,18 @@ message InsertVectorRequest {
 message InsertVectorsRequest {
     // Requests to insert vectors
     repeated InsertVectorRequest requests = 1;
+
+    // API key to access the service
+    string api_key = 2;
 }
 
 // Request to delete vectors
 message DeleteVectorsRequest {
     // List of IDs of vectors to delete
     repeated uint64 vector_ids = 1;
+
+    // API key to access the service
+    string api_key = 2;
 }
 
 // Empty message for action methods
