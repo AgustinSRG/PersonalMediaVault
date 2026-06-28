@@ -1,8 +1,12 @@
 # Semantic search engine server
 
-This server is responsible for loading an OpenCLIP model and exposing a GRPC server to use it.
+This server is responsible for running the sematic search capabilities of PersonalMediaVault:
+
+ - It loads an OpenClip model and exposes encoding methods to the backend.
+ - It stores vectors into a SQLite database and exposes methods to insert, delete and fix vectors.
 
 The GRPC server will bind on a random free port and the chosen port will be printed to the standard output.
+The backend can then read this port and communicate as the GRPC client with this server.
 
 ## Command line usage
 

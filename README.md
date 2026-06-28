@@ -5,6 +5,7 @@
 [![Launcher (CLI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
 [![Launcher (GUI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml)
 [![Backup tool](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
+[![SSE](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/sse.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/sse.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 
 Self-hosted web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
@@ -35,6 +36,7 @@ Self-hosted web application to store media files (video, audio and pictures) in 
 - Video timeline slices: Divide long videos in sections to quickly navigate through them.
 - Image annotations: Add comments to images.
 - Attachments: Upload any file attached to your media to preserve them in the encrypted vault. This can be used to preserve a copy of the raw media file, before the encoding.
+- Semantic search: Use an open source embeddings model to perform semantic search on your images.
 
 ## Run in a container
 
