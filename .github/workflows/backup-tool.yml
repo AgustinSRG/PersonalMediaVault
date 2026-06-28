@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
     paths:
       - backup-tool/**
-      - .github/workflows/**
+      - .github/workflows/backup-tool.yml
   pull_request:
     branches: [ "master" ]
     paths:

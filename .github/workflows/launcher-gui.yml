@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
     paths:
       - launcher-gui/**
-      - .github/workflows/**
+      - .github/workflows/launcher-gui.yml
   pull_request:
     branches: [ "master" ]
     paths:
