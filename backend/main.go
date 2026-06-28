@@ -353,16 +353,10 @@ func printHelp() {
 	fmt.Println("    SEMANTIC SEARCH CONFIG (ENV VARIABLES):")
 	fmt.Println("        SEMANTIC_SEARCH_ENABLED    Set it to 'YES' to enable semantic search.")
 	fmt.Println("                                   The rest of the options must be configured. Otherwise you will get an error.")
-	fmt.Println("        QDRANT_HOST                Host of the Qdrant database.")
-	fmt.Println("        QDRANT_PORT                GRPC port of the Qdrant database. Default: '6334'")
-	fmt.Println("        QDRANT_API_KEY             API key for the Qdrant database.")
-	fmt.Println("        QDRANT_USE_TLS             Set it to 'YES' in order to use TLS to connect to the Qdrant database.")
-	fmt.Println("        QDRANT_INITIAL_SCAN        By default, when the vault is unlocked,")
-	fmt.Println("                                   a task to scan for missing media in the Qdrant database will be created.")
-	fmt.Println("                                   Set this variable to 'NO' to disable it.")
-	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
-	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
-	fmt.Println("        CLIP_IMAGE_SIZE_LIMIT_MB   Limit on size (MB) before the images are discarded from being encoded by CLIP. Default: '20'")
+	fmt.Println("        SSE_BIN_PATH               Path to the semantic search engine binary (pmv-sse).")
+	fmt.Println("        SSE_MODEL_PATH             Path to the OpenClip model (must be ONNX-compatible)")
+	fmt.Println("        SSE_IMAGE_SIZE_LIMIT_MB    Limit on size (MB) before the images are discarded from being encoded for semantic search.")
+	fmt.Println("                                   By default: 20 MB")
 }
 
 // Prints version to standard output

@@ -80,14 +80,9 @@ Also, here is the list environment variables to configure semantic search:
 | Variable Name | Description |
 |---|---|
 | SEMANTIC_SEARCH_ENABLED | Set it to `YES` to enable semantic search. The rest of the options must be configured. Otherwise you will get an error. |
-| QDRANT_HOST | Host of the Qdrant database. |
-| QDRANT_PORT | GRPC port of the Qdrant database. Default: `6334` |
-| QDRANT_API_KEY | API key for the Qdrant database. |
-| QDRANT_USE_TLS | Set it to `YES` in order to use TLS to connect to the Qdrant database. |
-| QDRANT_INITIAL_SCAN | By default, when the vault is unlocked, a task to scan for missing media in the Qdrant database will be created. Set this variable to `NO` to disable it. |
-| CLIP_API_BASE | Base URL of the CLIP API (provided by `pmv-ai-service`). Example: `http://localhost:5000/clip` |
-| CLIP_API_AUTH | Value of the `Authorization` header in order to use the CLIP API. |
-| CLIP_IMAGE_SIZE_LIMIT_MB | Limit on size (MB) before the images are discarded from being encoded by CLIP. Default: `20` |
+| SSE_BIN_PATH | Path to the semantic search engine binary (pmv-sse). |
+| SSE_MODEL_PATH | Path to the OpenClip model (must be ONNX-compatible) |
+| SSE_IMAGE_SIZE_LIMIT_MB | Limit on size (MB) before the images are discarded from being encoded for semantic search. Default: `20` |
 
 ## Documentation
 
