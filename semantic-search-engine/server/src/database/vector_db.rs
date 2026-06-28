@@ -233,10 +233,10 @@ impl VectorDatabase {
                 &format!(
                     "CREATE VIRTUAL TABLE vectors USING vec0(
                         id INTEGER PRIMARY KEY,
-                        media_id INTEGER,
-                        vector_type INTEGER,
-                        data_hash TEXT,
-                        embedding float[{dimensions}]
+                        media_id INTEGER NOT NULL,
+                        vector_type INTEGER NOT NULL,
+                        data_hash TEXT NOT NULL,
+                        embedding float[{dimensions}] NOT NULL,
                     )"
                 ),
                 params![],
