@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -525,6 +526,15 @@ func (vc *VaultController) Start() bool {
 
 	if vc.launchConfig.hasSSL() {
 		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
+	}
+
+	if vc.launchConfig.SemanticSearchEnabled {
+		cmd.Env = append(cmd.Env,
+			"SEMANTIC_SEARCH_ENABLED=YES",
+			"SSE_IMAGE_SIZE_LIMIT_MB"+fmt.Sprint(vc.launchConfig.getSemanticSearchLimitMB()),
+			"SSE_BIN_PATH="+SSE_BIN,
+			"SSE_MODEL_PATH"+vc.launchConfig.SemanticSearchModelPath,
+		)
 	}
 
 	cmd.Stderr = logFile
@@ -1361,6 +1371,258 @@ func (vc *VaultController) disableSSL() bool {
 	if vc.launchConfig.Port == 443 {
 		vc.launchConfig.Port = 80
 	}
+
+	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	} else {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
+		return true
+	}
+}
+
+func (vc *VaultController) SetupSSE() bool {
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "SetupSSEAsk",
+			Other: "Do you want to setup semantic search for your vault?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !checkYesNoAnswer(ans) {
+		return false
+	}
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypeModelPath",
+			Other: "Type the absolute path in your file system to text embedding model you want to use.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "EnsureSSEModel",
+			Other: "Make sure the model is compatible with OpenCLIP and ONNX.",
+		},
+	})
+	fmt.Println(msg)
+
+	if vc.launchConfig.SemanticSearchModelPath != "" {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSEModelCurrentValue",
+				Other: "Current value: {{.CurrentVal}}",
+			},
+			TemplateData: map[string]interface{}{
+				"CurrentVal": vc.launchConfig.SemanticSearchModelPath,
+			},
+		})
+		fmt.Println(msg)
+
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSEModelPath",
+				Other: "Model path (empty to use current value)",
+			},
+		})
+		fmt.Print(msg + ": ")
+	} else {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSEModelPathNew",
+				Other: "Model path",
+			},
+		})
+		fmt.Print(msg + ": ")
+	}
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	modelPath := ans
+
+	if modelPath == "" || !folderExists(modelPath) {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ErrorSSEModelPath",
+				Other: "Error: Model path not found",
+			},
+		})
+		fmt.Println(msg)
+
+		return false
+	}
+
+	semanticSearchLimitMB := vc.launchConfig.getSemanticSearchLimitMB()
+	semanticSearchLimitMBdone := false
+
+	for !semanticSearchLimitMBdone {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSESemanticSearchLimitMBInput",
+				Other: "Max size for images in MB ({{.Size}} MB)",
+			},
+			TemplateData: map[string]interface{}{
+				"Size": fmt.Sprint(semanticSearchLimitMB),
+			},
+		})
+		fmt.Print(msg + ": ")
+
+		ans, err = vc.consoleReader.ReadString('\n')
+		if err != nil {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
+			os.Exit(1)
+		}
+
+		ans = strings.TrimSpace(ans)
+
+		if ans != "" {
+			parsed, err := strconv.Atoi(ans)
+
+			if err != nil || parsed < 0 {
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorInvalidSemanticSearchLimitMB",
+						Other: "Error: The input must be a positive number",
+					},
+				})
+				fmt.Println(msg)
+
+				continue
+			}
+
+			semanticSearchLimitMB = parsed
+		}
+
+		semanticSearchLimitMBdone = true
+	}
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "SSEModelPathView",
+			Other: "Model path: {{.Folder}}",
+		},
+		TemplateData: map[string]interface{}{
+			"Folder": modelPath,
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "SemanticSearchLimitMBView",
+			Other: "Max size for images in MB: {{.Limit}} MB",
+		},
+		TemplateData: map[string]interface{}{
+			"Limit": fmt.Sprint(semanticSearchLimitMB),
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "IsCorrectAsk",
+			Other: "Is this correct?",
+		},
+	})
+	ynMsg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !checkYesNoAnswer(ans) {
+		return false
+	}
+
+	vc.launchConfig.SemanticSearchEnabled = true
+	vc.launchConfig.SemanticSearchModelPath = modelPath
+	vc.launchConfig.SemanticSearchLimitMB = semanticSearchLimitMB
 
 	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
