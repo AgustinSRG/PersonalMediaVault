@@ -30,6 +30,9 @@ pub use select_tls_paths::*;
 mod select_backup_path;
 pub use select_backup_path::*;
 
+mod select_sse_path;
+pub use select_sse_path::*;
+
 mod vault_tools;
 pub use vault_tools::*;
 

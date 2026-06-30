@@ -220,6 +220,28 @@ export component MainWindow inherits Window {
     /// Callback to update the FFMpeg config
     callback update-ffmpeg();
 
+    /// SSE enabled?
+    in-out property <bool> sse-enabled: false;
+
+    /// Model path
+    in-out property <string> model-path: "";
+    in-out property <bool> model-path-invalid: false;
+    in-out property <string> model-path-missing-file: "";
+
+    /// Callback to select the model path
+    callback select-model-path();
+
+    /// Max size for images (MB)
+    in-out property <string> img-max-size: "1024";
+    in-out property <bool> img-max-size-invalid: false;
+
+    // Dirty and saved for SSE
+    in-out property <bool> dirty-sse: false;
+    in-out property <bool> saved-sse: false;
+
+    /// Callback to update the SSE config
+    callback update-sse();
+
     /// Cache size
     in-out property <string> cache-size: "1024";
     in-out property <bool> cache-size-invalid: false;
@@ -441,6 +463,15 @@ export component MainWindow inherits Window {
                 dirty-ffmpeg <=> root.dirty-ffmpeg;
                 saved-ffmpeg <=> root.saved-ffmpeg;
 
+                sse-enabled <=> sse-enabled;
+                model-path <=> model-path;
+                model-path-invalid <=> model-path-invalid;
+                model-path-missing-file <=> model-path-missing-file;
+                img-max-size <=> img-max-size;
+                img-max-size-invalid <=> img-max-size-invalid;
+                dirty-sse <=> root.dirty-sse;
+                saved-sse <=> root.saved-sse;
+
                 cache-size <=> root.cache-size;
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
@@ -517,6 +548,13 @@ export component MainWindow inherits Window {
                 }
                 update-ffmpeg => {
                     root.update-ffmpeg();
+                }
+
+                select-model-path => {
+                    root.select-model-path();
+                }
+                update-sse => {
+                    root.update-sse();
                 }
 
                 update-other => {

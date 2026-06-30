@@ -19,7 +19,8 @@ use crate::{
     log_debug,
     models::{FFmpegBadInstallationError, FFmpegConfig, UserSettings},
     utils::{
-        find_pmv_daemon_binary, find_pmv_frontend, load_ffmpeg_config, set_clipboard_contents,
+        find_pmv_daemon_binary, find_pmv_frontend, find_sse_binary, load_ffmpeg_config,
+        set_clipboard_contents,
     },
     FatalErrorType, LauncherStatus, MainWindow,
 };
@@ -46,6 +47,11 @@ pub fn run_worker_thread(
 
                 "pmvd".to_string()
             }
+        };
+
+        let sse_binary = match find_sse_binary() {
+            Ok(b) => b,
+            Err(_) => "".to_string(),
         };
 
         let frontend_path = match find_pmv_frontend() {
@@ -85,6 +91,7 @@ pub fn run_worker_thread(
 
         let mut status = WorkerThreadStatus::new(
             daemon_binary,
+            sse_binary,
             frontend_path,
             ffmpeg_config,
             user_settings,
@@ -235,6 +242,27 @@ pub fn run_worker_thread(
                             win.set_busy(false);
                         });
                     }
+                    LauncherWorkerMessage::UpdateSseConfig {
+                        enabled,
+                        model_path,
+                        max_img_size,
+                    } => {
+                        update_config_sse(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            SseConfigDetails {
+                                enabled,
+                                model_path,
+                                max_img_size,
+                            },
+                        );
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
                     LauncherWorkerMessage::UpdateOtherConfig {
                         cache_size,
                         log_requests,
@@ -268,8 +296,22 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::SelectTlsKey => {
                         select_tls_key(window_handle.clone());
                     }
-                    LauncherWorkerMessage::RunTool { tool, username, password } => {
-                        run_vault_tool(&mut status, &sender, &window_handle, tool, username, password);
+                    LauncherWorkerMessage::SelectSseModelPath => {
+                        select_sse_model_path(window_handle.clone());
+                    }
+                    LauncherWorkerMessage::RunTool {
+                        tool,
+                        username,
+                        password,
+                    } => {
+                        run_vault_tool(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            tool,
+                            username,
+                            password,
+                        );
                         let wh = window_handle.clone();
                         let _ = slint::invoke_from_event_loop(move || {
                             let win = wh.unwrap();

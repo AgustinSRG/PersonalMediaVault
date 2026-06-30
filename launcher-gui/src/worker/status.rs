@@ -17,6 +17,7 @@ use crate::{
 
 pub struct WorkerThreadStatus {
     pub daemon_binary: String,
+    pub sse_binary: String,
     pub frontend_path: String,
 
     pub ffmpeg_config: FFmpegConfig,
@@ -49,6 +50,7 @@ pub struct WorkerThreadStatus {
 impl WorkerThreadStatus {
     pub fn new(
         daemon_binary: String,
+        sse_binary: String,
         frontend_path: String,
         ffmpeg_config: FFmpegConfig,
         user_settings: UserSettings,
@@ -56,6 +58,7 @@ impl WorkerThreadStatus {
     ) -> WorkerThreadStatus {
         WorkerThreadStatus {
             daemon_binary,
+            sse_binary,
             frontend_path,
             ffmpeg_config,
 

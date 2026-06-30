@@ -22,6 +22,8 @@ impl CacheSize {
     }
 }
 
+const DEFAULT_SSE_LIMIT_MB: u32 = 20;
+
 /// Represents the configuration for the launcher
 /// for a given vault path
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -51,6 +53,15 @@ pub struct LauncherConfig {
     pub log_requests: bool,
 
     #[serde(default)]
+    pub sse_enabled: bool,
+
+    #[serde(default)]
+    pub sse_model_path: String,
+
+    #[serde(default)]
+    pub sse_limit_mb: i32,
+
+    #[serde(default)]
     pub debug: bool,
 }
 
@@ -63,6 +74,14 @@ impl LauncherConfig {
 
     pub fn has_ssl(&self) -> bool {
         !self.ssl_cert.is_empty() && !self.ssl_key.is_empty()
+    }
+
+    pub fn get_sse_limit_mb(&self) -> u32 {
+        if self.sse_limit_mb > 0 {
+            self.sse_limit_mb as u32
+        } else {
+            DEFAULT_SSE_LIMIT_MB
+        }
     }
 
     pub fn get_health_check_url(&self, launcher_tag: &str) -> String {

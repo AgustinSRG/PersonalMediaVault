@@ -42,6 +42,45 @@ pub fn find_pmv_daemon_binary() -> Result<String, ()> {
     Err(()) // Not found
 }
 
+/// Finds the location of the SSE binary
+pub fn find_sse_binary() -> Result<String, ()> {
+    let mut dir = get_dirname();
+    dir.push("bin");
+    dir.push(get_binary_name("pmv-sse"));
+
+    let mut final_path = dir.to_string_lossy().to_string();
+
+    if file_exists(&final_path) {
+        return Ok(final_path);
+    }
+
+    let p = Path::new("/usr/bin/pmv-sse").to_string_lossy().to_string();
+
+    if file_exists(&p) {
+        return Ok(p);
+    }
+
+    dir = match path::absolute(".") {
+        Ok(d) => d,
+        Err(_) => {
+            return Err(());
+        }
+    };
+
+    dir.pop();
+    dir.push("semantic-search-engine");
+    dir.push("server");
+    dir.push(get_binary_name("pmv-sse"));
+
+    final_path = dir.to_string_lossy().to_string();
+
+    if file_exists(&final_path) {
+        return Ok(final_path);
+    }
+
+    Err(()) // Not found
+}
+
 /// Finds the location of the frontend
 pub fn find_pmv_frontend() -> Result<String, ()> {
     let mut dir = get_dirname();

@@ -114,6 +114,28 @@ export component VaultOpenView inherits VerticalLayout {
     /// Callback to update the FFMpeg config
     callback update-ffmpeg();
 
+    /// SSE enabled?
+    in-out property <bool> sse-enabled: false;
+
+    /// Model path
+    in-out property <string> model-path: "";
+    in-out property <bool> model-path-invalid: false;
+    in-out property <string> model-path-missing-file: "";
+
+    /// Callback to select the model path
+    callback select-model-path();
+
+    /// Max size for images (MB)
+    in-out property <string> img-max-size: "1024";
+    in-out property <bool> img-max-size-invalid: false;
+
+    // Dirty and saved for SSE
+    in-out property <bool> dirty-sse: false;
+    in-out property <bool> saved-sse: false;
+
+    /// Callback to update the SSE config
+    callback update-sse();
+
     /// Cache size
     in-out property <string> cache-size: "1024";
     in-out property <bool> cache-size-invalid: false;
@@ -268,6 +290,15 @@ export component VaultOpenView inherits VerticalLayout {
                 dirty-ffmpeg <=> root.dirty-ffmpeg;
                 saved-ffmpeg <=> root.saved-ffmpeg;
 
+                sse-enabled <=> sse-enabled;
+                model-path <=> model-path;
+                model-path-invalid <=> model-path-invalid;
+                model-path-missing-file <=> model-path-missing-file;
+                img-max-size <=> img-max-size;
+                img-max-size-invalid <=> img-max-size-invalid;
+                dirty-sse <=> root.dirty-sse;
+                saved-sse <=> root.saved-sse;
+
                 cache-size <=> root.cache-size;
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
@@ -287,6 +318,9 @@ export component VaultOpenView inherits VerticalLayout {
                 select-ffprobe-path => {
                     root.select-ffprobe-path();
                 }
+                select-model-path => {
+                    root.select-model-path();
+                }
                 reset-config => {
                     root.reset-config();
                 }
@@ -298,6 +332,9 @@ export component VaultOpenView inherits VerticalLayout {
                 }
                 update-ffmpeg => {
                     root.update-ffmpeg();
+                }
+                update-sse => {
+                    root.update-sse();
                 }
                 update-other => {
                     root.update-other();
@@ -311,7 +348,7 @@ export component VaultOpenView inherits VerticalLayout {
                 busy: busy || tool-status == VaultToolStatus.running;
 
                 backup-status <=> backup-status;
-                
+
                 backup-path <=> backup-path;
                 backup-path-invalid <=> backup-path-invalid;
                 encryption-key <=> encryption-key;

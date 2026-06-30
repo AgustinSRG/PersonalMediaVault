@@ -159,6 +159,37 @@ pub fn update_config_ffmpeg(
     run_vault(status, sender, window_handle, false);
 }
 
+pub struct SseConfigDetails {
+    pub enabled: bool,
+    pub model_path: String,
+    pub max_img_size: i32,
+}
+
+pub fn update_config_sse(
+    status: &mut WorkerThreadStatus,
+    sender: &Sender<LauncherWorkerMessage>,
+    window_handle: &Weak<MainWindow>,
+    details: SseConfigDetails,
+) {
+    status.launcher_config.sse_enabled = details.enabled;
+    status.launcher_config.sse_model_path = details.model_path;
+    status.launcher_config.sse_limit_mb = details.max_img_size;
+
+    status.save_launcher_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_sse(true);
+            win.set_dirty_sse(false);
+        });
+    }
+
+    run_vault(status, sender, window_handle, false);
+}
+
 pub struct OtherConfigDetails {
     pub cache_size: i32,
     pub log_requests: bool,
