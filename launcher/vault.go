@@ -1510,6 +1510,23 @@ func (vc *VaultController) SetupSSE() bool {
 		return false
 	}
 
+	validModelPath, missingFileModel := ValidateSemanticSearchModel(modelPath)
+
+	if !validModelPath {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ErrorSSEModelPathMissing",
+				Other: "Error: Model is missing necessary files. File not found: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": missingFileModel,
+			},
+		})
+		fmt.Println(msg)
+
+		return false
+	}
+
 	semanticSearchLimitMB := vc.launchConfig.getSemanticSearchLimitMB()
 	semanticSearchLimitMBdone := false
 
