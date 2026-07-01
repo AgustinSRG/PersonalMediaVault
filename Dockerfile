@@ -4,7 +4,11 @@
 
 # Build backend
 
-FROM golang:alpine AS backend_builder
+FROM golang:latest AS backend_builder
+
+    ## Copy backend SSE library
+    RUN mkdir -p /root/semantic-search-engine/protocol
+    ADD semantic-search-engine/protocol/sse-proto-go /root/semantic-search-engine/protocol/sse-proto-go
 
     ## Copy backend
     ADD backend /root/backend
@@ -25,20 +29,43 @@ FROM node:alpine AS frontend_builder
     RUN npm install
     RUN npm run build
 
+# Build semantic search engine server
+
+FROM rust:latest AS sse_server_builder
+
+    ## Install dependencies
+    RUN apt update
+    RUN apt install -y protobuf-compiler
+
+    ## Copy source code
+    ADD semantic-search-engine/server /root/server
+
+    ## Copy protocol files
+    RUN mkdir -p protocol
+    ADD semantic-search-engine/protocol/sse.proto /root/protocol/sse.proto
+
+    ## Compile
+    WORKDIR /root/server
+    RUN cargo build --release
+
 # Prepare runner
 
-FROM alpine AS runner
+FROM debian AS runner
 
-    ## Install common libraries
-    RUN apk add gcompat
+    ## Update dependencies sources
+    RUN apt update
 
     ## Install FFMPEG
-    RUN apk add --no-cache ffmpeg
+    RUN apt install -y ffmpeg
     ENV FFMPEG_PATH=/usr/bin/ffmpeg
     ENV FFPROBE_PATH=/usr/bin/ffprobe
 
     ## Copy backend binary
     COPY --from=backend_builder /root/backend/pmvd /usr/bin/pmvd
+
+    ## Copy SSE server binary
+    COPY --from=sse_server_builder /root/server/target/release/pmv-sse /usr/bin/pmv-sse
+    ENV SSE_BIN_PATH=/usr/bin/pmv-sse
 
     ## Copy frontend
     RUN mkdir -p /usr/lib/pmv/
