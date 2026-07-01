@@ -1534,7 +1534,7 @@ func (vc *VaultController) SetupSSE() bool {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "SSESemanticSearchLimitMBInput",
-				Other: "Max size for images in MB ({{.Size}} MB)",
+				Other: "Max size for images in MB: ({{.Size}} MB",
 			},
 			TemplateData: map[string]interface{}{
 				"Size": fmt.Sprint(semanticSearchLimitMB),
@@ -1640,6 +1640,81 @@ func (vc *VaultController) SetupSSE() bool {
 	vc.launchConfig.SemanticSearchEnabled = true
 	vc.launchConfig.SemanticSearchModelPath = modelPath
 	vc.launchConfig.SemanticSearchLimitMB = semanticSearchLimitMB
+
+	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	} else {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
+		return true
+	}
+}
+
+func (vc *VaultController) DisableSSE() bool {
+	if !vc.launchConfig.SemanticSearchEnabled {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSENotEnabled",
+				Other: "Semantic search is not enabled for this vault.",
+			},
+		})
+		fmt.Println(msg)
+		return false
+	}
+
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "DisableSSEAsk",
+			Other: "Do you want to disable semantic search for your vault?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !checkYesNoAnswer(ans) {
+		return false
+	}
+
+	vc.launchConfig.SemanticSearchEnabled = false
 
 	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 

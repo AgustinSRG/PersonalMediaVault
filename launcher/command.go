@@ -591,7 +591,7 @@ func runCommand(cmdText string, vc *VaultController) {
 		if vc.launchConfig.SemanticSearchEnabled {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 				DefaultMessage: &i18n.Message{
-					ID:    "SematicSearchDisabled",
+					ID:    "SematicSearchEnabled",
 					Other: "Semantic search is enabled.",
 				},
 			})
@@ -629,6 +629,10 @@ func runCommand(cmdText string, vc *VaultController) {
 		}
 	case "sse-setup", "semantic-search-setup":
 		if vc.SetupSSE() {
+			askRestart(vc)
+		}
+	case "sse-disable", "semantic-search-disable":
+		if vc.DisableSSE() {
 			askRestart(vc)
 		}
 	case "help", "h", "commands", "man", "?":
@@ -904,6 +908,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSSESetup",
 			Other: "sse-setup - Sets up semantic search for the vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSEDisable",
+			Other: "sse-disable - Disables semantic search for the vault",
 		},
 	})
 	manList = append(manList, msg)
