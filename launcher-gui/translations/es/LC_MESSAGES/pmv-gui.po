@@ -335,27 +335,27 @@ msgctxt "CreateVaultView"
 msgid "Continue"
 msgstr "Continuar"
 
-#: ui/vault-open.slint:210
+#: ui/vault-open.slint:232
 msgctxt "VaultOpenView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/vault-open.slint:217
+#: ui/vault-open.slint:239
 msgctxt "VaultOpenView"
 msgid "Status"
 msgstr "Estado"
 
-#: ui/vault-open.slint:242
+#: ui/vault-open.slint:264
 msgctxt "VaultOpenView"
 msgid "Configuration"
 msgstr "Configuración"
 
-#: ui/vault-open.slint:309
+#: ui/vault-open.slint:346
 msgctxt "VaultOpenView"
 msgid "Backup"
 msgstr "Copia de seguridad"
 
-#: ui/vault-open.slint:357
+#: ui/vault-open.slint:394
 msgctxt "VaultOpenView"
 msgid "Other Tools"
 msgstr "Otras herramientas"
@@ -469,27 +469,27 @@ msgctxt "VaultStatusView"
 msgid "Open log file"
 msgstr "Abrir fichero de log"
 
-#: ui/vault-config.slint:104
+#: ui/vault-config.slint:127
 msgctxt "VaultConfigView"
 msgid "Vault configuration"
 msgstr "Configuración de la galería"
 
-#: ui/vault-config.slint:117
+#: ui/vault-config.slint:140
 msgctxt "VaultConfigView"
 msgid "Host & Port"
 msgstr "Host y puerto"
 
-#: ui/vault-config.slint:134
+#: ui/vault-config.slint:157
 msgctxt "VaultConfigView"
 msgid "TLS"
 msgstr "TLS"
 
-#: ui/vault-config.slint:157
+#: ui/vault-config.slint:180
 msgctxt "VaultConfigView"
 msgid "FFmpeg"
 msgstr "FFmpeg"
 
-#: ui/vault-config.slint:181
+#: ui/vault-config.slint:225
 msgctxt "VaultConfigView"
 msgid "Other"
 msgstr "Otros"
@@ -963,7 +963,9 @@ msgstr "Borrar ficheros basura"
 #: ui/vault-tools.slint:116
 msgctxt "VaultToolsView"
 msgid "With this tool you can remove trash files from the vault folder."
-msgstr "Con esta herramienta puede borrar los archivos basura que se encuentren en el directorio de la galería."
+msgstr ""
+"Con esta herramienta puede borrar los archivos basura que se encuentren en "
+"el directorio de la galería."
 
 #: ui/vault-tools.slint:139
 msgctxt "VaultToolsView"
@@ -974,4 +976,54 @@ msgstr "Usuario principal"
 msgctxt "VaultToolsView"
 msgid "Password"
 msgstr "Contraseña"
+
+#: ui/vault-config.slint:204
+msgctxt "VaultConfigView"
+msgid "Semantic Search"
+msgstr "Búsqueda Semántica"
+
+#: ui/vault-config-sse.slint:51
+msgctxt "VaultConfigSseView"
+msgid "Enable semantic search for the vault"
+msgstr "Habilitar la búsqueda semántica para la galería"
+
+#: ui/vault-config-sse.slint:75
+msgctxt "VaultConfigSseView"
+msgid "OpenCLIP model path"
+msgstr "Ruta al modelo OpenCLIP"
+
+#: ui/vault-config-sse.slint:97
+msgctxt "VaultConfigSseView"
+msgid "Find"
+msgstr "Buscar"
+
+#: ui/vault-config-sse.slint:113
+msgctxt "VaultConfigSseView"
+msgid "Invalid OpenCLIP model: Missing file"
+msgstr "Modelo OpenCLIP no válido: Falta el fichero"
+
+#: ui/vault-config-sse.slint:114
+msgctxt "VaultConfigSseView"
+msgid "Invalid OpenCLIP model: Folder not found"
+msgstr "Modelo OpenCLIP no válido: Ruta no encontrada"
+
+#: ui/vault-config-sse.slint:125
+msgctxt "VaultConfigSseView"
+msgid "Max size for images (MB)"
+msgstr "Tamaño máximo para imágenes (MB)"
+
+#: ui/vault-config-sse.slint:147
+msgctxt "VaultConfigSseView"
+msgid "Invalid max size. Must be a number greater or equal to 0."
+msgstr "Tamaño máximo no válido. Debe ser un número mayor o igual a 0."
+
+#: ui/vault-config-sse.slint:163
+msgctxt "VaultConfigSseView"
+msgid "Apply changes"
+msgstr "Aplicar cambios"
+
+#: ui/vault-config-sse.slint:176
+msgctxt "VaultConfigSseView"
+msgid "Configuration changes successfully saved!"
+msgstr "¡Cambios en la configuración guardados!"
 
