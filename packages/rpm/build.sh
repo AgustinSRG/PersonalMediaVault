@@ -12,7 +12,11 @@ cd ../backup-tool
 echo "Building backup tool..."
 ./build-production.sh
 
-cd ../launcher
+cd ../semantic-search-engine/server
+echo "Building semantic search engine..."
+./build-production.sh
+
+cd ../../launcher
 echo "Building launcher..."
 ./build-production.sh
 
@@ -54,6 +58,7 @@ cp ../../backend/pmvd ${PMV_PKG_FOLDER}/usr/bin/pmvd
 cp ../../backup-tool/pmv-backup ${PMV_PKG_FOLDER}/usr/bin/pmv-backup
 cp ../../launcher/pmv ${PMV_PKG_FOLDER}/usr/bin/pmv
 cp ../../launcher-gui/target/release/pmv-gui ${PMV_PKG_FOLDER}/usr/bin/pmv-gui
+cp ../../semantic-search-engine/server/target/release/pmv-sse ${PMV_PKG_FOLDER}/usr/bin/pmv-sse
 
 mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
 

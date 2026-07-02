@@ -21,6 +21,9 @@ Copy-Item -Path "..\..\backend\pmvd.exe" -Destination "PersonalMediaVault\bin\pm
 # Copy backup tool
 Copy-Item -Path "..\..\backup-tool\pmv-backup.exe" -Destination "PersonalMediaVault\bin\pmv-backup.exe" -Force
 
+# Copy semantic search engine
+Copy-Item -Path "..\..\semantic-search-engine\server\target\release\pmv-sse.exe" -Destination "PersonalMediaVault\pmv-sse.exe" -Force
+
 # Copy launcher
 Copy-Item -Path "..\..\launcher\pmv.exe" -Destination "PersonalMediaVault\pmv.exe" -Force
 
