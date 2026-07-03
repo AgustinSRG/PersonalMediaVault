@@ -5,11 +5,11 @@ use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
 use tokio::task;
-use zerocopy::IntoBytes;
+use zerocopy::{IntoBytes, TryFromBytes};
 
 use crate::{
-    NewStoredVector, SqlCipherVecInitializer, StoredVector, VectorDatabaseConfig,
-    VectorDatabaseError,
+    NewStoredVector, SqlCipherVecInitializer, StoredVector, StoredVectorWithDistance,
+    VectorDatabaseConfig, VectorDatabaseError,
 };
 
 const DB_VERSION: &str = "v1";
@@ -234,21 +234,10 @@ impl VectorDatabase {
                     "CREATE VIRTUAL TABLE vectors USING vec0(
                         id INTEGER PRIMARY KEY,
                         media_id INTEGER NOT NULL,
-                        vector_type INTEGER NOT NULL,
                         data_hash TEXT NOT NULL,
-                        embedding float[{dimensions}] NOT NULL,
+                        embedding float[{dimensions}],
                     )"
                 ),
-                params![],
-            )?;
-
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS vectors_ix_media_id ON vectors (media_id)",
-                params![],
-            )?;
-
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS vectors_ix_vector_type ON vectors (vector_type)",
                 params![],
             )?;
 
@@ -265,8 +254,12 @@ impl VectorDatabase {
             let conn = pool.get()?;
 
             conn.execute(
-                "INSERT INTO vectors(media_id, vector_type, data_hash, embedding) VALUES (?, ?, ?, ?)",
-                (vector.media_id as i64, vector.vector_type, &vector.data_hash, vector.embeddings.as_bytes()),
+                "INSERT INTO vectors(media_id, data_hash, embedding) VALUES (?, ?, ?)",
+                (
+                    vector.media_id as i64,
+                    &vector.data_hash,
+                    vector.embeddings.as_bytes(),
+                ),
             )?;
 
             Ok(())
@@ -298,22 +291,50 @@ impl VectorDatabase {
         let handle = task::spawn_blocking(move || {
             let conn = pool.get()?;
 
-            let mut stmt = conn.prepare(
-                "SELECT id, media_id, vector_type, data_hash FROM vectors WHERE media_id=?1",
-            )?;
+            let mut stmt =
+                conn.prepare("SELECT id, media_id, data_hash FROM vectors WHERE media_id=?1")?;
 
             let vectors = stmt
                 .query_map([media_id as i64], |row| {
                     Ok(StoredVector {
                         id: row.get::<usize, i64>(0)? as u64,
                         media_id: row.get::<usize, i64>(1)? as u64,
-                        vector_type: row.get::<usize, u8>(2)?,
-                        data_hash: row.get::<usize, String>(3)?,
+                        data_hash: row.get::<usize, String>(2)?,
                     })
                 })?
                 .collect::<std::result::Result<Vec<StoredVector>, rusqlite::Error>>()?;
 
             Ok(vectors)
+        });
+
+        handle.await?
+    }
+
+    pub async fn get_vector_embeddings(
+        &self,
+        id: u64,
+    ) -> Result<Option<Vec<f32>>, VectorDatabaseError> {
+        let pool = self.get_pool();
+
+        let handle = task::spawn_blocking(move || {
+            let conn = pool.get()?;
+
+            let mut stmt = conn.prepare("SELECT embedding FROM vectors WHERE id=?1")?;
+
+            let mut vectors: Vec<Vec<f32>> = stmt
+                .query_map([id as i64], |row| {
+                    let value_ref = row.get_ref(0)?;
+                    let raw_bytes: &[u8] = value_ref.as_blob()?;
+
+                    // Correct Zerocopy 0.8 method:
+                    let f32_slice: &[f32] = <[f32]>::try_ref_from_bytes(raw_bytes)
+                        .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?; // Fails if unaligned or wrong size
+
+                    Ok(f32_slice.to_vec())
+                })?
+                .collect::<std::result::Result<Vec<Vec<f32>>, rusqlite::Error>>()?;
+
+            Ok(vectors.pop())
         });
 
         handle.await?
@@ -322,59 +343,59 @@ impl VectorDatabase {
     pub async fn query_vectors(
         &self,
         vector: Vec<f32>,
-        offset: i64,
+        continuation_token: Option<f32>,
         limit: i64,
-    ) -> Result<Vec<StoredVector>, VectorDatabaseError> {
+    ) -> Result<Vec<StoredVectorWithDistance>, VectorDatabaseError> {
         let pool = self.get_pool();
 
         let handle = task::spawn_blocking(move || {
             let conn = pool.get()?;
 
-            let mut stmt = conn.prepare("SELECT id, distance, media_id, vector_type, data_hash FROM vectors WHERE embedding MATCH ?1 ORDER BY distance LIMIT ?2 OFFSET ?3")?;
+            match continuation_token {
+                Some(ct) => {
+                    let mut stmt = conn.prepare(
+                        "SELECT id, media_id, data_hash, distance
+                        FROM vectors
+                        WHERE embedding MATCH ?1
+                        AND k = ?2
+                        AND distance > ?3",
+                    )?;
 
-            let vectors = stmt
-                .query_map((vector.as_bytes(), limit, offset), |row| {
-                    Ok(StoredVector {
-                        id: row.get::<usize, i64>(0)? as u64,
-                        media_id: row.get::<usize, i64>(2)? as u64,
-                        vector_type: row.get::<usize, u8>(3)?,
-                        data_hash: row.get::<usize, String>(4)?,
-                    })
-                })?
-                .collect::<std::result::Result<Vec<StoredVector>, rusqlite::Error>>()?;
+                    let vectors = stmt
+                        .query_map((vector.as_bytes(), limit, ct), |row| {
+                            Ok(StoredVectorWithDistance {
+                                id: row.get::<usize, i64>(0)? as u64,
+                                media_id: row.get::<usize, i64>(1)? as u64,
+                                data_hash: row.get::<usize, String>(2)?,
+                                distance: row.get::<usize, f32>(3)?,
+                            })
+                        })?
+                        .collect::<std::result::Result<Vec<StoredVectorWithDistance>, rusqlite::Error>>()?;
 
-            Ok(vectors)
-        });
+                    Ok(vectors)
+                }
+                None => {
+                    let mut stmt = conn.prepare(
+                        "SELECT id, media_id, data_hash, distance
+                        FROM vectors
+                        WHERE embedding MATCH ?1
+                        AND k = ?2",
+                    )?;
 
-        handle.await?
-    }
+                    let vectors = stmt
+                        .query_map((vector.as_bytes(), limit), |row| {
+                            Ok(StoredVectorWithDistance {
+                                id: row.get::<usize, i64>(0)? as u64,
+                                media_id: row.get::<usize, i64>(1)? as u64,
+                                data_hash: row.get::<usize, String>(2)?,
+                                distance: row.get::<usize, f32>(3)?,
+                            })
+                        })?
+                        .collect::<std::result::Result<Vec<StoredVectorWithDistance>, rusqlite::Error>>()?;
 
-    pub async fn query_vectors_filtered_by_type(
-        &self,
-        vector_type: u8,
-        vector: Vec<f32>,
-        offset: i64,
-        limit: i64,
-    ) -> Result<Vec<StoredVector>, VectorDatabaseError> {
-        let pool = self.get_pool();
-
-        let handle = task::spawn_blocking(move || {
-            let conn = pool.get()?;
-
-            let mut stmt = conn.prepare("SELECT id, distance, media_id, vector_type, data_hash FROM vectors WHERE vector_type = ?1 AND embedding MATCH ?2 ORDER BY distance LIMIT ?3 OFFSET ?4")?;
-
-            let vectors = stmt
-                .query_map((vector_type, vector.as_bytes(), limit, offset), |row| {
-                    Ok(StoredVector {
-                        id: row.get::<usize, i64>(0)? as u64,
-                        media_id: row.get::<usize, i64>(2)? as u64,
-                        vector_type: row.get::<usize, u8>(3)?,
-                        data_hash: row.get::<usize, String>(4)?,
-                    })
-                })?
-                .collect::<std::result::Result<Vec<StoredVector>, rusqlite::Error>>()?;
-
-            Ok(vectors)
+                    Ok(vectors)
+                }
+            }
         });
 
         handle.await?

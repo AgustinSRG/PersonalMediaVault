@@ -3,7 +3,6 @@ use tonic::{Request, Response, Status};
 use crate::{
     api::{GetVectorsByMediaRequest, VectorListItem, VectorListResponse},
     grpc::SemanticSearchEngineGrpcServer,
-    int_to_embedding_type,
 };
 
 pub async fn get_vectors_by_media(
@@ -29,9 +28,9 @@ pub async fn get_vectors_by_media(
             .map(|v| VectorListItem {
                 vector_id: v.id,
                 media_id: v.media_id,
-                embedding_type: int_to_embedding_type(v.vector_type).into(),
                 data_hash: v.data_hash.clone(),
             })
             .collect(),
+        continuation_token: None,
     }))
 }

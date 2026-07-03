@@ -10,8 +10,8 @@ use tonic::{Request, Response, Status, transport::Server};
 use crate::{
     GrpcServerAuth, LoadedClipModel, VectorDatabase,
     api::{
-        DeleteVectorsRequest, EmptyResponse, GetVectorsByMediaRequest, InsertVectorsRequest,
-        QueryVectorsRequest, VectorListResponse,
+        DeleteVectorsRequest, EmptyResponse, GetVectorEmbeddingsRequest, GetVectorsByMediaRequest,
+        InsertVectorsRequest, QueryVectorsRequest, VectorListResponse,
     },
     grpc::{
         api::{
@@ -22,8 +22,8 @@ use crate::{
             },
         },
         methods::{
-            delete_vectors, encode_image, encode_text, get_model_metadata, get_vectors_by_media,
-            insert_vectors, query_vectors,
+            delete_vectors, encode_image, encode_text, get_model_metadata, get_vector_embeddings,
+            get_vectors_by_media, insert_vectors, query_vectors,
         },
     },
 };
@@ -63,6 +63,13 @@ impl SemanticSearchEngineService for SemanticSearchEngineGrpcServer {
         encode_image(self, request).await
     }
 
+    async fn get_vector_embeddings(
+        &self,
+        request: Request<GetVectorEmbeddingsRequest>,
+    ) -> Result<Response<ClipEmbeddingResponse>, Status> {
+        get_vector_embeddings(self, request).await
+    }
+
     async fn get_vectors_by_media(
         &self,
         request: Request<GetVectorsByMediaRequest>,
@@ -98,7 +105,7 @@ impl SemanticSearchEngineGrpcServer {
     }
 
     pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-        let addr: SocketAddr = "127.0.0.0:0".parse()?;
+        let addr: SocketAddr = "127.0.0.1:0".parse()?;
 
         let listener = TcpListener::bind(addr).await?;
 

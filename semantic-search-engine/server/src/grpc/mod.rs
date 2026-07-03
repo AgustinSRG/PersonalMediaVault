@@ -9,6 +9,3 @@ mod server;
 pub use server::*;
 
 mod methods;
-
-mod utils;
-pub use utils::*;

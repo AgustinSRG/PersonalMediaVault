@@ -7,6 +7,9 @@ pub use encode_text::*;
 mod encode_image;
 pub use encode_image::*;
 
+mod get_vector_embeddings;
+pub use get_vector_embeddings::*;
+
 mod get_vectors_by_media;
 pub use get_vectors_by_media::*;
 

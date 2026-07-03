@@ -49,11 +49,12 @@ pub async fn encode_image(
 
     let mime_type = first_msg.mime_type;
 
-    let image_format: ImageFormat = match mime_type.as_str() {
-        "image/png" => ImageFormat::Png,
-        "image/jpg" | "image/jpeg" => ImageFormat::Jpeg,
-        "image/gif" => ImageFormat::Gif,
-        "image/webp" => ImageFormat::WebP,
+    let image_format: Option<ImageFormat> = match mime_type.as_str() {
+        "image/any" => None,
+        "image/png" => Some(ImageFormat::Png),
+        "image/jpg" | "image/jpeg" => Some(ImageFormat::Jpeg),
+        "image/gif" => Some(ImageFormat::Gif),
+        "image/webp" => Some(ImageFormat::WebP),
         _ => {
             return Err(Status::invalid_argument("Unsupported image type"));
         }
@@ -97,12 +98,27 @@ pub async fn encode_image(
         return Err(Status::invalid_argument("Empty image file"));
     }
 
-    let img = match ImageReader::with_format(Cursor::new(bytes), image_format).decode() {
-        Ok(i) => i,
-        Err(e) => {
-            debug!("Error decoding image: {e}");
-            return Err(Status::invalid_argument("Invalid image file"));
-        }
+    let img = match image_format {
+        Some(format) => match ImageReader::with_format(Cursor::new(bytes), format).decode() {
+            Ok(i) => i,
+            Err(e) => {
+                debug!("Error decoding image: {e}");
+                return Err(Status::invalid_argument("Invalid image file"));
+            }
+        },
+        None => match ImageReader::new(Cursor::new(bytes)).with_guessed_format() {
+            Ok(r) => match r.decode() {
+                Ok(i) => i,
+                Err(e) => {
+                    debug!("Error decoding image: {e}");
+                    return Err(Status::invalid_argument("Invalid image file"));
+                }
+            },
+            Err(e) => {
+                debug!("Error decoding image: {e}");
+                return Err(Status::invalid_argument("Invalid image file"));
+            }
+        },
     };
 
     debug!(
@@ -125,11 +141,11 @@ pub async fn encode_image(
     let features: Vec<f32> = embedding.to_vec();
 
     debug!(
-        "Image: {} [{} x {}], Vector: {:?}",
+        "Encoded image Image: {} [{} x {}], Vector size: {}",
         mime_type,
         img.width(),
         img.height(),
-        features
+        features.len()
     );
 
     Ok(Response::new(ClipEmbeddingResponse { features }))

@@ -1,10 +1,8 @@
 use tonic::{Request, Response, Status};
 
 use crate::{
-    api::{EmbeddingType, QueryVectorsRequest, VectorListItem, VectorListResponse},
-    embedding_type_to_int,
+    api::{QueryVectorsRequest, VectorListItem, VectorListResponse},
     grpc::SemanticSearchEngineGrpcServer,
-    int_to_embedding_type,
 };
 
 pub async fn query_vectors(
@@ -23,33 +21,18 @@ pub async fn query_vectors(
 
     let limit = msg.limit as i64;
 
-    let offset = msg.offset.unwrap_or(0) as i64;
-
-    let res = match msg.embedding_type {
-        Some(embedding_type) => match server
-            .db
-            .query_vectors_filtered_by_type(
-                embedding_type_to_int(
-                    &EmbeddingType::try_from(embedding_type).unwrap_or(EmbeddingType::Text),
-                ),
-                msg.features,
-                offset,
-                limit,
-            )
-            .await
-        {
-            Ok(l) => l,
-            Err(err) => {
-                return Err(Status::internal(err.to_string()));
-            }
-        },
-        None => match server.db.query_vectors(msg.features, offset, limit).await {
-            Ok(l) => l,
-            Err(err) => {
-                return Err(Status::internal(err.to_string()));
-            }
-        },
+    let res = match server
+        .db
+        .query_vectors(msg.features, msg.continuation_token, limit)
+        .await
+    {
+        Ok(l) => l,
+        Err(err) => {
+            return Err(Status::internal(err.to_string()));
+        }
     };
+
+    let continuation_token = res.last().map(|v| v.distance);
 
     Ok(Response::new(VectorListResponse {
         vectors: res
@@ -57,9 +40,9 @@ pub async fn query_vectors(
             .map(|v| VectorListItem {
                 vector_id: v.id,
                 media_id: v.media_id,
-                embedding_type: int_to_embedding_type(v.vector_type).into(),
                 data_hash: v.data_hash.clone(),
             })
             .collect(),
+        continuation_token,
     }))
 }

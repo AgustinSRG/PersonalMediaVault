@@ -3,7 +3,6 @@ use tonic::{Request, Response, Status};
 use crate::{
     NewStoredVector,
     api::{EmptyResponse, InsertVectorsRequest},
-    embedding_type_to_int,
     grpc::SemanticSearchEngineGrpcServer,
 };
 
@@ -28,7 +27,6 @@ pub async fn insert_vectors(
             .db
             .insert_vector(NewStoredVector {
                 media_id: vector_request.media_id,
-                vector_type: embedding_type_to_int(&vector_request.embedding_type()),
                 data_hash: vector_request.data_hash,
                 embeddings: vector_request.features,
             })

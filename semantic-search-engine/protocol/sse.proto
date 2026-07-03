@@ -59,15 +59,6 @@ message ClipImageEmbeddingRequest {
     }
 }
 
-// Type of embedding
-enum EmbeddingType {
-    // Embedded text
-    TEXT = 0;
-
-    // Embedded image
-    IMAGE = 1;
-}
-
 // Request to get vectors by media resource
 message GetVectorsByMediaRequest {
     // ID of the media resource
@@ -85,14 +76,11 @@ message QueryVectorsRequest {
     // Limit
     uint64 limit = 2;
 
-    // Offset
-    optional uint64 offset = 3;
-
-    // Embedding type
-    optional EmbeddingType embedding_type = 4;
+    // Continuation token
+    optional float continuation_token = 3;
 
     // API key to access the service
-    string api_key = 5;
+    string api_key = 4;
 }
 
 // List item for a vector
@@ -103,17 +91,17 @@ message VectorListItem {
     // ID of the media resource
     uint64 media_id = 2;
 
-    // Embedding type
-    EmbeddingType embedding_type = 3;
-
     // Data hash
-    string data_hash = 4;
+    string data_hash = 3;
 }
 
 // Response with a list of vectors
 message VectorListResponse {
     // List of vectors
     repeated VectorListItem vectors = 1;
+
+    // Continuation token
+    optional float continuation_token = 2;
 }
 
 // Request to insert a vector
@@ -121,20 +109,26 @@ message InsertVectorRequest {
     // ID of the media resource
     uint64 media_id = 1;
 
-    // Embedding type
-    EmbeddingType embedding_type = 2;
-
     // Data hash
-    string data_hash = 3;
+    string data_hash = 2;
 
     // Embedding features
-    repeated float features = 4;
+    repeated float features = 3;
 }
 
 // Request to insert multiple vectors
 message InsertVectorsRequest {
     // Requests to insert vectors
     repeated InsertVectorRequest requests = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Request to get the embeddings of a stored vector
+message GetVectorEmbeddingsRequest {
+    // IF od the vector to retrieve embeddings
+    uint64 vector_id = 1;
 
     // API key to access the service
     string api_key = 2;
@@ -162,6 +156,9 @@ service SemanticSearchEngineService {
 
     // Encode image
     rpc EncodeImage(stream ClipImageEmbeddingRequest) returns (ClipEmbeddingResponse);
+
+    // Get embeddings of stored vector
+    rpc GetVectorEmbeddings(GetVectorEmbeddingsRequest) returns (ClipEmbeddingResponse);
 
     // Get stored vectors by media
     rpc GetVectorsByMedia(GetVectorsByMediaRequest) returns (VectorListResponse);

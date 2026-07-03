@@ -8,20 +8,28 @@ pub struct StoredVector {
     /// Media ID
     pub media_id: u64,
 
-    /// Vector type
-    pub vector_type: u8,
+    /// Data hash
+    pub data_hash: String,
+}
+
+pub struct StoredVectorWithDistance {
+    /// Vector ID
+    pub id: u64,
+
+    /// Media ID
+    pub media_id: u64,
 
     /// Data hash
     pub data_hash: String,
+
+    // Distance
+    pub distance: f32,
 }
 
 /// New stored vector
 pub struct NewStoredVector {
     /// Media ID
     pub media_id: u64,
-
-    /// Vector type
-    pub vector_type: u8,
 
     /// Data hash
     pub data_hash: String,

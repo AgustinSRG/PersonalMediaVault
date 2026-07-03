@@ -36,7 +36,7 @@ pub async fn encode_text(
 
     let features: Vec<f32> = embedding.to_vec();
 
-    debug!("Text: {}, Vector: {:?}", text, features);
+    debug!("Text: {}, Vector size: {}", text, features.len());
 
     Ok(Response::new(ClipEmbeddingResponse { features }))
 }
