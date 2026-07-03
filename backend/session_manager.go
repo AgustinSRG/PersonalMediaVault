@@ -116,7 +116,7 @@ func (sm *SessionManager) CreateSession(options CreateSessionOptions) (string, e
 		LogError(err)
 	}
 
-	// Call semantic search system to run the initial scan job
+	// Call semantic search system to run the initialization process
 	if sm.vault.semanticSearch != nil {
 		sm.vault.semanticSearch.OnNewSession(&newSession)
 	}

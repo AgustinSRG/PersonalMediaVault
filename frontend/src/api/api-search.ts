@@ -87,7 +87,7 @@ export function apiAdvancedSearch(
     tagMode: "allof" | "anyof" | "noneof",
     tags: string[],
     order: "asc" | "desc",
-    continueRef: number,
+    continueRef: string,
     limit: number,
 ): RequestParams<AdvancedSearchResults, CommonAuthenticatedErrorHandler> {
     return {

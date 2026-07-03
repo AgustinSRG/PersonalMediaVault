@@ -111,14 +111,6 @@
 
             <div v-else-if="mode === 'semantic'">
                 <div class="form-group">
-                    <label>{{ $t("Semantic search mode") }}:</label>
-                    <select v-model="onlyImages" class="form-control form-select form-control-full-width" @change="onOnlyImagesChanged">
-                        <option :value="false">{{ $t("Search by title and image content") }}</option>
-                        <option :value="true">{{ $t("Search only image content (ignore titles)") }}</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label>{{ $t("Type what you are looking for") }}:</label>
                     <input
                         v-model="textSearch"
@@ -207,12 +199,7 @@ import AlbumSelect from "../utils/AlbumSelect.vue";
 import MediaItem from "../utils/MediaItem.vue";
 import TagIdList from "../utils/TagIdList.vue";
 import type { SearchMode } from "@/local-storage/app-preferences";
-import {
-    getPreferredSearchMode,
-    getSemanticSearchOnlyImages,
-    setPreferredSearchMode,
-    setSemanticSearchOnlyImages,
-} from "@/local-storage/app-preferences";
+import { getPreferredSearchMode, setPreferredSearchMode } from "@/local-storage/app-preferences";
 import { apiSemanticSearch, apiSemanticSearchEncodeImage, apiSemanticSearchEncodeText } from "@/api/api-semantic-search";
 import { useRequestId } from "@/composables/use-request-id";
 import { useI18n } from "@/composables/use-i18n";
@@ -554,7 +541,7 @@ const totalPages = ref(0);
 const progress = ref(0);
 
 // Reference to continue loading more results
-const continueRef = ref<number | null>(null);
+const continueRef = ref<string | null>(null);
 
 // Length of the full list
 const fullListLength = ref(0);
@@ -624,9 +611,6 @@ const vector = ref([]);
 
 // True if the vector has been loaded
 const vectorLoaded = ref(false);
-
-// True to use only image vectors
-const onlyImages = ref(getSemanticSearchOnlyImages());
 
 // The current uploaded image file to search by image
 const imageFile = shallowRef<File | null>(null);
@@ -979,7 +963,6 @@ const loadSemantic = () => {
             vector: vector.value,
             limit: pageSize,
             continuationToken: continueRef.value,
-            vectorType: onlyImages.value ? "image" : "any",
         }),
     )
         .onSuccess((result) => {
@@ -1124,7 +1107,6 @@ const loadSemanticImage = () => {
             vector: vector.value,
             limit: pageSize,
             continuationToken: continueRef.value,
-            vectorType: "image",
         }),
     )
         .onSuccess((result) => {
@@ -1590,14 +1572,6 @@ const setMode = (newMode: SearchMode) => {
 
     startSearch();
     autoFocus();
-};
-
-/**
- * Called when the onlyImages value is changed by the user
- */
-const onOnlyImagesChanged = () => {
-    setSemanticSearchOnlyImages(onlyImages.value);
-    startSearch();
 };
 
 /**

@@ -10,11 +10,6 @@ import type { AdvancedSearchResults } from "./models";
 const API_GROUP_PREFIX = "/search/semantic";
 
 /**
- * Semantic search vector type (vector origin)
- */
-export type SemanticSearchVectorType = "text" | "image" | "any";
-
-/**
  * Semantic search query parameters
  */
 export interface SearchMediaSemanticBody {
@@ -22,11 +17,6 @@ export interface SearchMediaSemanticBody {
      * The vector to perform the search
      */
     vector: number[];
-
-    /**
-     * Vector type filter
-     */
-    vectorType?: SemanticSearchVectorType;
 
     /**
      * Max number of results
@@ -37,7 +27,7 @@ export interface SearchMediaSemanticBody {
     /**
      * Continuation token
      */
-    continuationToken?: number;
+    continuationToken?: string;
 }
 
 /**

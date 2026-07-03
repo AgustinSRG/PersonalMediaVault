@@ -2498,8 +2498,7 @@ paths:
           description: "Order. Can be 'asc' or 'desc'. Descendant by default."
         - in: query
           name: "continue"
-          type: number
-          format: int64
+          type: string
           description: Reference of the last item to continue fetching more items
         - in: query
           name: "limit"
@@ -4475,8 +4474,7 @@ definitions:
           format: int32
           description: "Max number of results to get. Max: 256."
         continuationToken:
-          type: number
-          format: int64
+          type: string
           description: "Continuation token in order to fetch more results from a previous query"
       required:
         - vector
@@ -4493,8 +4491,7 @@ definitions:
           format: int64
           description: Number of scanned items
         continue:
-          type: number
-          format: int64
+          type: string
           description: Reference of the last item to continue fetching more items.
         items:
           type: array

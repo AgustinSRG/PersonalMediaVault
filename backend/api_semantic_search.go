@@ -9,15 +9,16 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 const MAX_RESULTS_SEMANTIC = 10000
 
 type SearchMediaSemanticBody struct {
 	Vector            []float32 `json:"vector"`
-	VectorType        string    `json:"vectorType"`
 	Limit             uint32    `json:"limit"`
-	ContinuationToken uint32    `json:"continuationToken"`
+	ContinuationToken string    `json:"continuationToken"`
 }
 
 func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request) {
@@ -37,7 +38,7 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 			Scanned:  0,
 			Count:    0,
 			Items:    make([]*MediaListAPIItem, 0),
-			Continue: 0,
+			Continue: "",
 		}
 
 		jsonResult, err := json.Marshal(res)
@@ -59,7 +60,7 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 			Scanned:  0,
 			Count:    0,
 			Items:    make([]*MediaListAPIItem, 0),
-			Continue: 0,
+			Continue: "",
 		}
 
 		jsonResult, err := json.Marshal(res)
@@ -86,8 +87,8 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 		return
 	}
 
-	if p.Vector == nil || len(p.Vector) != int(semanticSearchStatus.clipModelDimensions) {
-		ReturnAPIError(response, 400, "INVALID_VECTOR_SIZE", "The size of the vectors are expected to be "+fmt.Sprint(semanticSearchStatus.clipModelDimensions))
+	if p.Vector == nil || len(p.Vector) != int(semanticSearchStatus.dimensions) {
+		ReturnAPIError(response, 400, "INVALID_VECTOR_SIZE", "The size of the vectors are expected to be "+fmt.Sprint(semanticSearchStatus.dimensions))
 		return
 	}
 
@@ -99,15 +100,23 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 
 	limit := p.Limit
 
-	var vectorType *QdrantIndexedVectorType = nil
+	continuationTokenParts := strings.Split(p.ContinuationToken, ";")
+	scanned := int64(0)
+	var internalContinuationToken *float32 = nil
 
-	switch p.VectorType {
-	case "text":
-		vectorTypeVal := VECTOR_TYPE_TEXT
-		vectorType = &vectorTypeVal
-	case "image":
-		vectorTypeVal := VECTOR_TYPE_IMAGE
-		vectorType = &vectorTypeVal
+	if len(continuationTokenParts) == 2 {
+		s, err := strconv.ParseInt(continuationTokenParts[0], 10, 32)
+
+		if err == nil {
+			scanned = s
+		}
+
+		f, err := strconv.ParseFloat(continuationTokenParts[1], 32)
+
+		if err == nil {
+			f2 := float32(f)
+			internalContinuationToken = &f2
+		}
 	}
 
 	// Count
@@ -136,20 +145,16 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 
 	// Calculate offset
 
-	if vectorType == nil {
-		total_count = total_count * 2
-	}
-
 	if total_count > MAX_RESULTS_SEMANTIC {
 		total_count = MAX_RESULTS_SEMANTIC
 	}
 
-	if p.ContinuationToken > uint32(total_count) {
+	if uint32(scanned) > uint32(total_count) {
 		res := AdvancedSearchResultResponse{
 			Scanned:  0,
 			Count:    0,
 			Items:    make([]*MediaListAPIItem, 0),
-			Continue: 0,
+			Continue: "",
 		}
 
 		jsonResult, err := json.Marshal(res)
@@ -166,11 +171,10 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 
 	// Find results
 
-	vectors, err := semanticSearch.QueryVectors(request.Context(), &SemanticSearchQuery{
-		Vector:     p.Vector,
-		VectorType: vectorType,
-		Limit:      uint64(limit),
-		Offset:     uint64(p.ContinuationToken),
+	vectors, nextInternalCt, err := semanticSearch.QueryVectors(request.Context(), &SemanticSearchQuery{
+		Vector:            p.Vector,
+		Limit:             uint64(limit),
+		ContinuationToken: internalContinuationToken,
 	})
 
 	if err != nil {
@@ -186,10 +190,16 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 		mediaIdList[i] = vectors[i].Media
 	}
 
-	scanned := int64(p.ContinuationToken) + int64(len(mediaIdList))
+	scanned += int64(len(mediaIdList))
 
-	if scanned > total_count || len(mediaIdList) == 0 {
+	if scanned > total_count || len(mediaIdList) == 0 || nextInternalCt == nil {
 		scanned = total_count
+	}
+
+	nextContinuationToken := ""
+
+	if nextInternalCt != nil {
+		nextContinuationToken = fmt.Sprint(scanned) + ";" + fmt.Sprint(*nextInternalCt)
 	}
 
 	// Read meta of media items
@@ -204,7 +214,7 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 		Scanned:  scanned,
 		Count:    total_count,
 		Items:    mediaItemsInfo,
-		Continue: uint64(scanned),
+		Continue: nextContinuationToken,
 	}
 
 	jsonResult, err := json.Marshal(result)
@@ -276,7 +286,7 @@ func api_searchMediaSemanticEncodeText(response http.ResponseWriter, request *ht
 
 	// Encode
 
-	vector, err := semanticSearch.ClipEncodeText(p.Text)
+	vector, err := semanticSearch.ClipEncodeText(request.Context(), p.Text)
 
 	if err != nil {
 		LogError(err)
@@ -378,7 +388,7 @@ func api_searchMediaSemanticEncodeImage(response http.ResponseWriter, request *h
 
 	// Encode
 
-	vector, isInvalidImageError, err := semanticSearch.ClipEncodeImage(image)
+	vector, isInvalidImageError, err := semanticSearch.ClipEncodeImage(request.Context(), image)
 
 	if isInvalidImageError {
 		ReturnAPIError(response, 400, "INVALID_IMAGE", "Invalid image received")

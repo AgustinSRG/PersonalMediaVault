@@ -472,28 +472,9 @@ export function setPreferredSearchMode(mode: SearchMode) {
     saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
 }
 
-const LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES = "app-pref-search-semantic-images";
-
-/**
- * Gets the app preference to search only images in semantic search
- * @returns The preference value
- */
-export function getSemanticSearchOnlyImages(): boolean {
-    return fetchFromLocalStorageCache(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, true);
-}
-
-/**
- * Sets the app preference to search only images in semantic search
- * @param b The preference value
- */
-export function setSemanticSearchOnlyImages(b: boolean) {
-    saveIntoLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, b);
-}
-
 /**
  * Clears preferences for the search page
  */
 export function clearSearchPreferences() {
     clearLocalStorage(LS_KEY_SEARCH_MODE);
-    clearLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES);
 }
