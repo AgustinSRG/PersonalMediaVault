@@ -459,6 +459,37 @@ func (s *SemanticSearchSystem) ClipEncodeImage(ctx context.Context, image []byte
 	return s.clipEncodeImageInternal(ctx, image)
 }
 
+// Gets specific vector stored in the semantic search database
+func (s *SemanticSearchSystem) GetIndexedVector(ctx context.Context, vectorId uint64) (vector []float32, err error) {
+	client := s.GetClient()
+
+	if client == nil {
+		return nil, errors.New("grpc client is not available")
+	}
+
+	response, err := client.GetVectorEmbeddings(ctx, &sse_proto.GetVectorEmbeddingsRequest{
+		ApiKey:   s.apiKey,
+		VectorId: vectorId,
+	})
+
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			// Now you can check the specific codes
+			switch st.Code() {
+			case codes.NotFound:
+				return nil, nil
+			default:
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return response.Features, nil
+}
+
 // Indexed vector
 type SemanticSearchIndexedVector struct {
 	// The ID of the vector

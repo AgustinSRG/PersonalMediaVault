@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 const MAX_RESULTS_SEMANTIC = 10000
@@ -399,6 +401,91 @@ func api_searchMediaSemanticEncodeImage(response http.ResponseWriter, request *h
 		LogError(err)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	// Response
+
+	result := SearchMediaSemanticEncodeResponse{
+		Vector: vector,
+	}
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
+func api_searchMediaSemanticGetMediaEmbeddings(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	// Check if system is available
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch == nil {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	semanticSearchStatus := semanticSearch.GetStatus()
+
+	if !semanticSearchStatus.available {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	// Params
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["id"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	// Get embeddings
+
+	embeddings, err := semanticSearch.GetIndexedVectors(request.Context(), media_id)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if len(embeddings) == 0 {
+		ReturnAPIError(response, 404, "EMBEDDINGS_NOT_FOUND", "The specific media ID has no indexed embeddings yet.")
+		return
+	}
+
+	vectorId := embeddings[0].Id
+
+	vector, err := semanticSearch.GetIndexedVector(request.Context(), vectorId)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if vector == nil {
+		ReturnAPIError(response, 404, "EMBEDDINGS_NOT_FOUND", "The specific media ID has no indexed embeddings yet.")
 		return
 	}
 

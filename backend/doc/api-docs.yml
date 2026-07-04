@@ -4126,7 +4126,7 @@ paths:
         404:
           description: Not found (Semantic search system unavailable)
         200:
-          description: Search results
+          description: Vector
           schema:
             $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
 
@@ -4174,7 +4174,53 @@ paths:
         413:
           description: Image file too large (The default is 20MB, but it can be changed in the backend settings)
         200:
-          description: Search results
+          description: Vector
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
+  
+  "/api/search/semantic/embeddings/{id}":
+    post:
+      summary: Retrieves the embeddings for a media asset
+      description: |-
+        Retrieves the features of the stored vector
+        for a specific media.
+      tags:
+        - semantic_search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * SYSTEM_UNAVAILABLE - Semantic search system unavailable
+                    * EMBEDDINGS_NOT_FOUND - No embeddings found for the media
+                enum:
+                  - SYSTEM_UNAVAILABLE
+                  - EMBEDDINGS_NOT_FOUND
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Vector
           schema:
             $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
 
