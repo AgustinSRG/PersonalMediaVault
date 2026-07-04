@@ -439,9 +439,9 @@ export function clearUploadPreferences() {
     clearLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS);
 }
 
-export type SearchMode = "basic" | "adv" | "semantic" | "image";
+export type SearchMode = "basic" | "adv" | "semantic" | "image" | "similar-to-current";
 
-const DEFAULT_SEARCH_MODE = "basic";
+export const DEFAULT_SEARCH_MODE = "basic";
 
 const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 
@@ -453,11 +453,11 @@ const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 export function getPreferredSearchMode(semanticSearchAvailable: boolean): SearchMode {
     const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE, DEFAULT_SEARCH_MODE) + "";
 
-    if (!["basic", "adv", "semantic", "image"].includes(searchMode)) {
+    if (!["basic", "adv", "semantic", "image", "similar-to-current"].includes(searchMode)) {
         return DEFAULT_SEARCH_MODE;
     }
 
-    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image")) {
+    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image" || searchMode === "similar-to-current")) {
         return DEFAULT_SEARCH_MODE;
     }
 
@@ -470,6 +470,41 @@ export function getPreferredSearchMode(semanticSearchAvailable: boolean): Search
  */
 export function setPreferredSearchMode(mode: SearchMode) {
     saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
+
+    if (!["basic", "adv", "semantic"].includes(mode)) {
+        setPreferredSearchModeUnconditional(mode);
+    }
+}
+
+const LS_KEY_SEARCH_MODE_UC = "app-pref-search-mode-unconditional";
+
+/**
+ * Gets the preferred search mode for media
+ * (unconditional mode)
+ * @param semanticSearchAvailable True if semantic search is available
+ * @returns The search mode
+ */
+export function getPreferredSearchModeUnconditional(semanticSearchAvailable: boolean): SearchMode {
+    const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE_UC, DEFAULT_SEARCH_MODE) + "";
+
+    if (!["basic", "adv", "semantic"].includes(searchMode)) {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    if (!semanticSearchAvailable && searchMode === "semantic") {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    return searchMode as SearchMode;
+}
+
+/**
+ * Sets the preferred search mode for media
+ * (unconditional mode)
+ * @param mode The search mode
+ */
+export function setPreferredSearchModeUnconditional(mode: SearchMode) {
+    saveIntoLocalStorage(LS_KEY_SEARCH_MODE_UC, mode);
 }
 
 /**
@@ -477,4 +512,5 @@ export function setPreferredSearchMode(mode: SearchMode) {
  */
 export function clearSearchPreferences() {
     clearLocalStorage(LS_KEY_SEARCH_MODE);
+    clearLocalStorage(LS_KEY_SEARCH_MODE_UC);
 }

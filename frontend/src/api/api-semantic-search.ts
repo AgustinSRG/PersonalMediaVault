@@ -163,3 +163,42 @@ export function apiSemanticSearchEncodeImage(
         },
     };
 }
+
+/**
+ * Error handler for the semantic search get embedding API
+ */
+export type SemanticSearchGetEmbeddingErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * No embeddings found
+     */
+    noEmbeddingsFound: () => void;
+
+    /**
+     * Semantic search service not yet available
+     */
+    notAvailable: () => void;
+};
+
+/**
+ * Retrieves the stored embedding for
+ * a specific media asset
+ * @param mediaId ID of the media
+ * @returns The request parameters
+ */
+export function apiSemanticSearchGetEmbedding(
+    mediaId: number,
+): RequestParams<SearchMediaSemanticEncodeResponse, SemanticSearchGetEmbeddingErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/embeddings/${mediaId}`),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(404, "EMBEDDINGS_NOT_FOUND", handler.noEmbeddingsFound)
+                .add(404, "*", handler.notAvailable)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}

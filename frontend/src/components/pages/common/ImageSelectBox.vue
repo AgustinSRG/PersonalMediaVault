@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="form-group">
         <input ref="hiddenFileInput" type="file" class="file-hidden" name="image-select" @change="onImageFileChanged" />
         <div
             class="upload-box auto-focus"
