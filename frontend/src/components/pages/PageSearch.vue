@@ -194,6 +194,7 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
+    EVENT_NAME_SEARCH_BY_SIMILARITY,
 } from "@/global-state/app-events";
 import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -1750,6 +1751,10 @@ const setMode = (newMode: SearchMode) => {
     startSearch();
     autoFocus();
 };
+
+onApplicationEvent(EVENT_NAME_SEARCH_BY_SIMILARITY, () => {
+    setMode("similar-to-current");
+});
 
 /**
  * Find the index of the current media in the list
