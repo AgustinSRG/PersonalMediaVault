@@ -660,14 +660,14 @@ func (s *SemanticSearchSystem) removeMediaFromIndex(media_id uint64) {
 	}
 }
 
-func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_asset uint64, key []byte) (image []byte, err error) {
+func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, assetId uint64, assetExtension string, key []byte) (image []byte, err error) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
 		return nil, nil
 	}
 
-	found, asset_path, asset_lock := media.AcquireAsset(original_asset, ASSET_SINGLE_FILE)
+	found, asset_path, asset_lock := media.AcquireAsset(assetId, ASSET_SINGLE_FILE)
 
 	if !found {
 		GetVault().media.ReleaseMediaResource(media_id)
@@ -680,7 +680,7 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 	if err != nil {
 		asset_lock.EndRead()
-		media.ReleaseAsset(original_asset)
+		media.ReleaseAsset(assetId)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return nil, errors.New("error reading asset file (" + asset_path + "): " + err.Error())
@@ -693,7 +693,7 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 		rs.Close()
 		asset_lock.EndRead()
-		media.ReleaseAsset(original_asset)
+		media.ReleaseAsset(assetId)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return imageData, err
@@ -701,14 +701,14 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 	// Image too big, decrypt into a temporal file for encoding
 
-	tempFile := GetTemporalFileName("png", false)
+	tempFile := GetTemporalFileName(assetExtension, false)
 
 	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
 
 	if err != nil {
 		rs.Close()
 		asset_lock.EndRead()
-		media.ReleaseAsset(original_asset)
+		media.ReleaseAsset(assetId)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return nil, err
@@ -726,7 +726,7 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 			rs.Close()
 			asset_lock.EndRead()
-			media.ReleaseAsset(original_asset)
+			media.ReleaseAsset(assetId)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return nil, err
@@ -748,7 +748,7 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 			rs.Close()
 			asset_lock.EndRead()
-			media.ReleaseAsset(original_asset)
+			media.ReleaseAsset(assetId)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return nil, err
@@ -759,7 +759,7 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 	rs.Close()
 
 	asset_lock.EndRead()
-	media.ReleaseAsset(original_asset)
+	media.ReleaseAsset(assetId)
 	GetVault().media.ReleaseMediaResource(media_id)
 
 	// Probe the image
@@ -878,49 +878,98 @@ func (s *SemanticSearchSystem) addOrUpdateMediaIndex(media_id uint64, key []byte
 
 	vectorsToInsert := make([]*SemanticSearchIndexedVector, 0)
 
-	// Image
+	switch meta.Type {
+	case MediaTypeImage:
+		// For images, use the original asset
+		actualImageHash := fmt.Sprint(meta.OriginalAsset)
 
-	actualImageHash := fmt.Sprint(meta.OriginalAsset)
+		if actualImageHash != imageHash || len(vectors) != 1 {
+			// Re-index of image vector required
 
-	if actualImageHash != imageHash || len(vectors) != 1 {
-		// Re-index of image vector required
-
-		if log_debug_enabled && actualImageHash != imageHash {
-			LogDebug("Data hash mismatch (" + actualImageHash + " != " + imageHash + ")")
-		}
-
-		err = s.DeleteVectors(context.Background(), vectors)
-
-		if err != nil {
-			LogErrorMsg("Error deleting vectors: " + err.Error())
-			return
-		}
-
-		if meta.Type == MediaTypeImage && meta.OriginalEncoded {
-			image, err := s.extractImageFromMedia(media_id, meta.OriginalAsset, key)
-
-			if err != nil {
-				LogError(err)
+			if log_debug_enabled && actualImageHash != imageHash {
+				LogDebug("Data hash mismatch (" + actualImageHash + " != " + imageHash + ") for #" + fmt.Sprint(media_id))
 			}
 
-			if image != nil {
-				features, isInvalidImageError, err := s.ClipEncodeImage(context.Background(), image)
+			err = s.DeleteVectors(context.Background(), vectors)
 
-				if isInvalidImageError {
-					LogErrorMsg("Invalid image when encoding for indexing. media_id=" + fmt.Sprint(media_id) + ", asset_id=" + fmt.Sprint(meta.OriginalAsset))
-					return
-				} else if err != nil {
-					LogErrorMsg("Error encoding image: " + err.Error())
-					return
-				} else {
-					vectorImage, err := NewSemanticSearchIndexedVector(features, media_id, actualImageHash)
+			if err != nil {
+				LogErrorMsg("Error deleting vectors: " + err.Error())
+				return
+			}
 
-					if err != nil {
-						LogErrorMsg("Error creating vector: " + err.Error())
+			if meta.OriginalEncoded {
+				image, err := s.extractImageFromMedia(media_id, meta.OriginalAsset, "png", key)
+
+				if err != nil {
+					LogError(err)
+				}
+
+				if image != nil {
+					features, isInvalidImageError, err := s.ClipEncodeImage(context.Background(), image)
+
+					if isInvalidImageError {
+						LogErrorMsg("Invalid image when encoding for indexing. media_id=" + fmt.Sprint(media_id) + ", asset_id=" + fmt.Sprint(meta.OriginalAsset))
 						return
-					}
+					} else if err != nil {
+						LogErrorMsg("Error encoding image: " + err.Error())
+						return
+					} else {
+						vectorImage, err := NewSemanticSearchIndexedVector(features, media_id, actualImageHash)
 
-					vectorsToInsert = append(vectorsToInsert, vectorImage)
+						if err != nil {
+							LogErrorMsg("Error creating vector: " + err.Error())
+							return
+						}
+
+						vectorsToInsert = append(vectorsToInsert, vectorImage)
+					}
+				}
+			}
+		}
+	default:
+		// For other media types, use the thumbnail
+		actualImageHash := fmt.Sprint(meta.ThumbnailAsset)
+
+		if actualImageHash != imageHash || len(vectors) != 1 {
+			// Re-index of image vector required
+
+			if log_debug_enabled && actualImageHash != imageHash {
+				LogDebug("Data hash mismatch (" + actualImageHash + " != " + imageHash + ") for #" + fmt.Sprint(media_id))
+			}
+
+			err = s.DeleteVectors(context.Background(), vectors)
+
+			if err != nil {
+				LogErrorMsg("Error deleting vectors: " + err.Error())
+				return
+			}
+
+			if meta.ThumbnailReady {
+				image, err := s.extractImageFromMedia(media_id, meta.ThumbnailAsset, "jpg", key)
+
+				if err != nil {
+					LogError(err)
+				}
+
+				if image != nil {
+					features, isInvalidImageError, err := s.ClipEncodeImage(context.Background(), image)
+
+					if isInvalidImageError {
+						LogErrorMsg("Invalid image when encoding for indexing. media_id=" + fmt.Sprint(media_id) + ", asset_id=" + fmt.Sprint(meta.ThumbnailAsset))
+						return
+					} else if err != nil {
+						LogErrorMsg("Error encoding image: " + err.Error())
+						return
+					} else {
+						vectorImage, err := NewSemanticSearchIndexedVector(features, media_id, actualImageHash)
+
+						if err != nil {
+							LogErrorMsg("Error creating vector: " + err.Error())
+							return
+						}
+
+						vectorsToInsert = append(vectorsToInsert, vectorImage)
+					}
 				}
 			}
 		}
