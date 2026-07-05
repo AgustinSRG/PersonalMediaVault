@@ -30,7 +30,7 @@ pub async fn get_vector_embeddings(
     };
     let features: Vec<f32> = embedding.to_vec();
 
-    debug!("ID: {}, Vector: {:?}", msg.vector_id, features);
+    debug!("ID: {}, Vector size: {}", msg.vector_id, features.len());
 
     Ok(Response::new(ClipEmbeddingResponse { features }))
 }

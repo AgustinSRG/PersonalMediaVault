@@ -1,10 +1,9 @@
 // CLIP model loader
 
-use std::path::Path;
-
-use open_clip_inference::Clip;
-
 use crate::ClipModelLoadError;
+use open_clip_inference::Clip;
+use ort::ep::{CUDA, ROCm, TensorRT};
+use std::path::Path;
 
 /// Loaded CLIP model
 pub struct LoadedClipModel {
@@ -14,7 +13,13 @@ pub struct LoadedClipModel {
 impl LoadedClipModel {
     /// Loads the model from a directory
     pub fn load(path: &Path) -> Result<LoadedClipModel, ClipModelLoadError> {
-        let clip = Clip::from_local_dir(path).build()?;
+        let clip = Clip::from_local_dir(path)
+            .with_execution_providers(&[
+                TensorRT::default().build(),
+                CUDA::default().build(),
+                ROCm::default().build(),
+            ])
+            .build()?;
 
         Ok(LoadedClipModel { clip })
     }
