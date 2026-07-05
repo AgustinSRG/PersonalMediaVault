@@ -490,10 +490,8 @@ func (s *SemanticSearchSystem) GetIndexedVector(ctx context.Context, vectorId ui
 	return response.Features, nil
 }
 
-// Indexed vector
-type SemanticSearchIndexedVector struct {
-	// The ID of the vector
-	Id uint64
+// Vector to insert
+type SemanticSearchVectorToInsert struct {
 	// The media ID
 	Media uint64
 	// A hash of the data
@@ -502,8 +500,18 @@ type SemanticSearchIndexedVector struct {
 	Vector []float32
 }
 
-func NewSemanticSearchIndexedVector(vector []float32, media_id uint64, dataHash string) (*SemanticSearchIndexedVector, error) {
-	return &SemanticSearchIndexedVector{
+// Stored vector
+type SemanticSearchStoredVector struct {
+	// The ID of the vector
+	Id uint64
+	// The media ID
+	Media uint64
+	// A hash of the data
+	DataHash string
+}
+
+func NewSemanticSearchIndexedVector(vector []float32, media_id uint64, dataHash string) (*SemanticSearchVectorToInsert, error) {
+	return &SemanticSearchVectorToInsert{
 		Media:    media_id,
 		DataHash: dataHash,
 		Vector:   vector,
@@ -511,7 +519,7 @@ func NewSemanticSearchIndexedVector(vector []float32, media_id uint64, dataHash 
 }
 
 // Finds all the indexed vectors for a specific media
-func (s *SemanticSearchSystem) GetIndexedVectors(ctx context.Context, media uint64) ([]*SemanticSearchIndexedVector, error) {
+func (s *SemanticSearchSystem) GetIndexedVectors(ctx context.Context, media uint64) ([]*SemanticSearchStoredVector, error) {
 	client := s.GetClient()
 
 	if client == nil {
@@ -527,10 +535,10 @@ func (s *SemanticSearchSystem) GetIndexedVectors(ctx context.Context, media uint
 		return nil, err
 	}
 
-	result := make([]*SemanticSearchIndexedVector, len(response.Vectors))
+	result := make([]*SemanticSearchStoredVector, len(response.Vectors))
 
 	for i, vector := range response.Vectors {
-		result[i] = &SemanticSearchIndexedVector{
+		result[i] = &SemanticSearchStoredVector{
 			Id:       vector.VectorId,
 			Media:    vector.MediaId,
 			DataHash: vector.DataHash,
@@ -553,7 +561,7 @@ type SemanticSearchQuery struct {
 }
 
 // Performs a vector query to the vector database
-func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *SemanticSearchQuery) ([]*SemanticSearchIndexedVector, *float32, error) {
+func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *SemanticSearchQuery) ([]*SemanticSearchStoredVector, *float32, error) {
 	client := s.GetClient()
 
 	if client == nil {
@@ -573,10 +581,10 @@ func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *Semantic
 		return nil, nil, err
 	}
 
-	result := make([]*SemanticSearchIndexedVector, len(response.Vectors))
+	result := make([]*SemanticSearchStoredVector, len(response.Vectors))
 
 	for i, vector := range response.Vectors {
-		result[i] = &SemanticSearchIndexedVector{
+		result[i] = &SemanticSearchStoredVector{
 			Id:       vector.VectorId,
 			Media:    vector.MediaId,
 			DataHash: vector.DataHash,
@@ -587,7 +595,7 @@ func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *Semantic
 }
 
 // Deletes vectors by IDs
-func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*SemanticSearchIndexedVector) error {
+func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*SemanticSearchStoredVector) error {
 	if len(vectors) == 0 {
 		return nil
 	}
@@ -615,7 +623,7 @@ func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*Sem
 // Inserts vectors into the database
 // ctx - The execution context
 // vectors - List of vectors to insert. make sure all vectors contain a non-nil 'Vector' field
-func (s *SemanticSearchSystem) InsertVectors(ctx context.Context, vectors []*SemanticSearchIndexedVector) error {
+func (s *SemanticSearchSystem) InsertVectors(ctx context.Context, vectors []*SemanticSearchVectorToInsert) error {
 	if len(vectors) == 0 {
 		return nil
 	}
@@ -876,7 +884,7 @@ func (s *SemanticSearchSystem) addOrUpdateMediaIndex(media_id uint64, key []byte
 		return
 	}
 
-	vectorsToInsert := make([]*SemanticSearchIndexedVector, 0)
+	vectorsToInsert := make([]*SemanticSearchVectorToInsert, 0)
 
 	switch meta.Type {
 	case MediaTypeImage:
