@@ -26,3 +26,8 @@ zerocopy = "0.8.52"
 [build-dependencies]
 tonic-build = "0.14.6"
 tonic-prost-build = "0.14.6"
+
+[profile.release]
+strip = true # Strip symbols from release binary
+lto = true # Link time optimizations
+panic = "abort" # Abort on panic (the program should never panic anyway)

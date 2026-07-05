@@ -28,3 +28,8 @@ normalize-path = "0.2.1"
 [build-dependencies]
 slint-build = "1.12.1"
 winres = "0.1.12"
+
+[profile.release]
+strip = true # Strip symbols from release binary
+lto = true # Link time optimizations
+panic = "abort" # Abort on panic (the program should never panic anyway)
