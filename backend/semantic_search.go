@@ -139,10 +139,13 @@ func CreateSemanticSearchSystem(config *SemanticSearchConfig, vaultPath string) 
 		return nil, err
 	}
 
+	// Ensure semantic_search folder exists
+	_ = os.MkdirAll(path.Join(vaultPath, "semantic_search"), FOLDER_PERMISSION)
+
 	return &SemanticSearchSystem{
 		sseBinPath:     config.SseBinPath,
 		modelPath:      config.ModelPath,
-		dbPath:         path.Join(vaultPath, "semantic-search.db"),
+		dbPath:         path.Join(vaultPath, "semantic_search", "db"),
 		imageSizeLimit: config.ImageSizeLimit,
 		apiKey:         apiKey,
 

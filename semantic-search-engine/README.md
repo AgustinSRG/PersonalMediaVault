@@ -24,7 +24,7 @@ The internal server runs an [SQLite](https://sqlite.org/) database, with the fol
 - [sqlite-vec](https://github.com/asg017/sqlite-vec) - Extension to store vectors in the database and query by distance.
 - [sqlcipher](https://github.com/sqlcipher/sqlcipher) - Extension to encrypt the database, in order to protect it the same way the rest of the vault is protected.
 
-The database is stored inside the vault folder, with name `semantic-search.db`.
+The database is stored inside the vault folder, in a subfolder named `semantic_search`, in a file named `db`.
 
 The database is encrypted with a passphrase generated from the vault key:
 
