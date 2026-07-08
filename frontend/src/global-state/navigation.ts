@@ -370,8 +370,9 @@ function onStatusUpdate(replaceState?: boolean) {
 /**
  * Navigates to a page
  * @param page The page to navigate to
+ * @param searchParams Search parameters
  */
-export function navigationGoToPage(page: NavigationStatusPage) {
+export function navigationGoToPage(page: NavigationStatusPage, searchParams?: string) {
     tryPreventableExit(() => {
         NavigationState.page = page;
 
@@ -387,7 +388,7 @@ export function navigationGoToPage(page: NavigationStatusPage) {
             NavigationState.listSplitMode = true;
         }
 
-        NavigationState.searchParams = "";
+        NavigationState.searchParams = searchParams || "";
 
         updateLayout();
 
@@ -660,11 +661,12 @@ export function navigationCloseAlbum() {
 /**
  * Changes search parameters
  * @param params The new params to set
+ * @param replaceState Replace the current state
  */
-export function navigationChangeSearchParams(params: string) {
+export function navigationChangeSearchParams(params: string, replaceState?: boolean) {
     NavigationState.searchParams = params;
 
-    onStatusUpdate();
+    onStatusUpdate(replaceState);
 }
 
 /**

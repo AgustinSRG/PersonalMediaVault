@@ -439,7 +439,20 @@ export function clearUploadPreferences() {
     clearLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS);
 }
 
+/**
+ * Search mode for search page
+ */
 export type SearchMode = "basic" | "adv" | "semantic" | "image" | "similar-to-current";
+
+/**
+ * List of available search modes
+ */
+export const SEARCH_MODES: SearchMode[] = ["basic", "adv", "semantic", "image", "similar-to-current"];
+
+/**
+ * List of available search modes (unconditional)
+ */
+export const SEARCH_MODES_UNCONDITIONAL: SearchMode[] = ["basic", "adv", "semantic"];
 
 export const DEFAULT_SEARCH_MODE = "basic";
 
@@ -453,7 +466,7 @@ const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 export function getPreferredSearchMode(semanticSearchAvailable: boolean): SearchMode {
     const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE, DEFAULT_SEARCH_MODE) + "";
 
-    if (!["basic", "adv", "semantic", "image", "similar-to-current"].includes(searchMode)) {
+    if (!SEARCH_MODES.includes(searchMode as SearchMode)) {
         return DEFAULT_SEARCH_MODE;
     }
 
@@ -471,7 +484,7 @@ export function getPreferredSearchMode(semanticSearchAvailable: boolean): Search
 export function setPreferredSearchMode(mode: SearchMode) {
     saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
 
-    if (!["basic", "adv", "semantic"].includes(mode)) {
+    if (SEARCH_MODES_UNCONDITIONAL.includes(mode)) {
         setPreferredSearchModeUnconditional(mode);
     }
 }
@@ -487,7 +500,7 @@ const LS_KEY_SEARCH_MODE_UC = "app-pref-search-mode-unconditional";
 export function getPreferredSearchModeUnconditional(semanticSearchAvailable: boolean): SearchMode {
     const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE_UC, DEFAULT_SEARCH_MODE) + "";
 
-    if (!["basic", "adv", "semantic"].includes(searchMode)) {
+    if (!SEARCH_MODES_UNCONDITIONAL.includes(searchMode as SearchMode)) {
         return DEFAULT_SEARCH_MODE;
     }
 

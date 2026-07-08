@@ -256,11 +256,6 @@ export const EVENT_NAME_HOME_SCROLL_CHANGED = "home-page-scroll-changed";
 export const EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED = "tags-editor-clipboard-changed";
 
 /**
- * Event triggered when the user chooses to search bu similarity
- */
-export const EVENT_NAME_SEARCH_BY_SIMILARITY = "search-by-similarity";
-
-/**
  * Mapping of App events
  *
  * Maps each event name to the type of appropriate handler function
@@ -543,11 +538,6 @@ export type AppEventsMap = {
      * @param tags New content for the tags editor clipboard
      */
     [EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED]: (tags: string[]) => void;
-
-    /**
-     * Even triggered when the user chooses to search by similarity
-     */
-    [EVENT_NAME_SEARCH_BY_SIMILARITY]: () => void;
 };
 
 /**

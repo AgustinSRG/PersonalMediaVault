@@ -194,7 +194,6 @@ import {
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
     EVENT_NAME_UNAUTHORIZED,
-    EVENT_NAME_SEARCH_BY_SIMILARITY,
 } from "@/global-state/app-events";
 import { checkMediaListForNewTags, getTagsVersion, resolveTagName } from "@/global-state/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -214,6 +213,7 @@ import {
     DEFAULT_SEARCH_MODE,
     getPreferredSearchMode,
     getPreferredSearchModeUnconditional,
+    SEARCH_MODES,
     setPreferredSearchMode,
 } from "@/local-storage/app-preferences";
 import {
@@ -470,6 +470,7 @@ const searchParams = ref(getNavigationStatus().searchParams);
  * Page search parameters
  */
 type PageSearchParameters = {
+    mode: SearchMode;
     textSearch: string;
     tags: number[];
 };
@@ -483,6 +484,7 @@ const parsePageSearchParameters = (): PageSearchParameters => {
 
     if (props.inModal || !navSearchParams) {
         return {
+            mode: getPreferredSearchMode(getAuthStatus().semanticSearchAvailable),
             textSearch: "",
             tags: [],
         };
@@ -490,7 +492,13 @@ const parsePageSearchParameters = (): PageSearchParameters => {
 
     const parts = navSearchParams.split("~");
 
-    const tags = parts[0]
+    let mode = (parts[0] || "") as SearchMode;
+
+    if (!SEARCH_MODES.includes(mode)) {
+        mode = DEFAULT_SEARCH_MODE;
+    }
+
+    const tags = (parts[1] || "")
         .split("-")
         .filter((p) => !!p)
         .map((p) => parseInt(p, 10))
@@ -508,32 +516,57 @@ const parsePageSearchParameters = (): PageSearchParameters => {
         filteredTags.push(tag);
     }
 
-    const textSearch = parts.slice(1).join("~").substring(0, 128).trim();
+    const textSearch = parts.slice(2).join("~").substring(0, 128).trim();
 
     return {
+        mode,
         tags: filteredTags,
         textSearch,
     };
 };
 
 /**
+ * Loads search parameters
+ */
+const loadSearchParams = () => {
+    const parsedParams = parsePageSearchParameters();
+
+    mode.value = parsedParams.mode;
+    if (mode.value === "similar-to-current" && currentMedia.value < 0) {
+        mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
+    }
+
+    textSearch.value = parsedParams.textSearch;
+    if (textSearch.value != "" && (mode.value === "image" || mode.value === "similar-to-current")) {
+        mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
+    }
+
+    tags.value = parsedParams.tags;
+
+    updateSearchParams(true);
+};
+
+/**
  * Updates the search parameters
  */
-const updateSearchParams = () => {
+const updateSearchParams = (replaceState?: boolean) => {
     if (props.inModal) {
         return;
     }
 
     let newSearchParams = "";
 
-    if (tags.value.length > 0 || textSearch.value.length > 0) {
-        newSearchParams = tags.value.join("-") + (textSearch.value ? "~" + textSearch.value : "");
+    if (mode.value !== DEFAULT_SEARCH_MODE || tags.value.length > 0 || textSearch.value.length > 0) {
+        newSearchParams = mode.value;
+        if (tags.value.length > 0 || textSearch.value.length > 0) {
+            newSearchParams += "~" + tags.value.join("-") + (textSearch.value ? "~" + textSearch.value : "");
+        }
     }
 
     searchParams.value = newSearchParams;
 
-    if (getNavigationStatus().searchParams !== newSearchParams) {
-        navigationChangeSearchParams(newSearchParams);
+    if (getNavigationStatus().page === "search" && getNavigationStatus().searchParams !== newSearchParams) {
+        navigationChangeSearchParams(newSearchParams, replaceState);
     }
 };
 
@@ -736,18 +769,8 @@ const startSearch = () => {
 };
 
 onMounted(() => {
-    // Parse initial search parameters
-    const parsedParams = parsePageSearchParameters();
-    textSearch.value = parsedParams.textSearch;
-    if (textSearch.value != "" && (mode.value === "image" || mode.value === "similar-to-current")) {
-        mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
-    }
-    if (mode.value === "similar-to-current" && currentMedia.value < 0) {
-        mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
-    }
-    tags.value = parsedParams.tags;
-
-    updateSearchParams();
+    // Load initial search parameters
+    loadSearchParams();
 
     // Start searching
     startSearch();
@@ -777,10 +800,7 @@ onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
     }
 
     if (!props.inModal && searchParams.value !== navStatus.searchParams) {
-        const parsedParams = parsePageSearchParameters();
-        textSearch.value = parsedParams.textSearch;
-        tags.value = parsedParams.tags;
-        updateSearchParams();
+        loadSearchParams();
         startSearch();
         autoFocus();
     } else if (changed && mode.value === "similar-to-current") {
@@ -1748,13 +1768,10 @@ const setMode = (newMode: SearchMode) => {
         textSearch.value = "";
     }
 
+    updateSearchParams();
     startSearch();
     autoFocus();
 };
-
-onApplicationEvent(EVENT_NAME_SEARCH_BY_SIMILARITY, () => {
-    setMode("similar-to-current");
-});
 
 /**
  * Find the index of the current media in the list

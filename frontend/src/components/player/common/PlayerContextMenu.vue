@@ -164,9 +164,8 @@ import { useFocusTrap } from "@/composables/use-focus-trap";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
 import { loadCurrentMedia } from "@/global-state/media";
 import { onApplicationEvent } from "@/composables/on-app-event";
-import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_SEARCH_BY_SIMILARITY } from "@/global-state/app-events";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import { getAuthStatus } from "@/global-state/auth";
-import { setPreferredSearchMode } from "@/local-storage/app-preferences";
 import { navigationGoToPage } from "@/global-state/navigation";
 
 // Ref to the container element
@@ -472,9 +471,7 @@ const download = () => {
  * Opens similar to current media find
  */
 const openFindSimilar = () => {
-    setPreferredSearchMode("similar-to-current");
-    navigationGoToPage("search");
-    emitAppEvent(EVENT_NAME_SEARCH_BY_SIMILARITY);
+    navigationGoToPage("search", "similar-to-current");
     hide();
 };
 
