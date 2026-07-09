@@ -18,6 +18,7 @@ mod worker;
 
 use control::*;
 use normalize_path::NormalizePath;
+use slint::set_xdg_app_id;
 
 use crate::{
     models::UserSettings,
@@ -25,12 +26,12 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // Set XDG application ID for Wayland
-    _ = slint::set_xdg_app_id("pmv");
-
-    // Instantiate the screens
+    // Create main window
 
     let main_window = MainWindow::new()?;
+
+    // Set XDG application ID for Wayland
+    set_xdg_app_id("pmv")?;
 
     // Create channel for worker
 
