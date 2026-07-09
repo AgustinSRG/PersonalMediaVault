@@ -1,3 +1,7 @@
+# Script to copy assets before building the MSI installer
+
+# Abort on error
+$ErrorActionPreference = "Stop"
 
 # Remove old folder
 Remove-Item -ErrorAction Ignore -Path "PersonalMediaVault" -Recurse
