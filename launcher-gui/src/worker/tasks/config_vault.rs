@@ -50,6 +50,12 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
             win.set_saved_ffmpeg(false);
             win.set_dirty_ffmpeg(false);
 
+            win.set_sse_enabled(launcher_config.sse_enabled);
+            win.set_model_path(launcher_config.sse_model_path.into());
+            win.set_model_path_invalid(false);
+            win.set_img_max_size(launcher_config.sse_limit_mb.to_string().into());
+            win.set_img_max_size_invalid(false);
+
             win.set_cache_size(launcher_config.cache_size.as_i32().to_string().into());
             win.set_cache_size_invalid(false);
 
