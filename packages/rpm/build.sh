@@ -145,6 +145,7 @@ echo "%files" >> ${SPEC_FILE}
 echo '/usr/bin/pmvd' >> ${SPEC_FILE}
 echo '/usr/bin/pmv' >> ${SPEC_FILE}
 echo '/usr/bin/pmv-backup' >> ${SPEC_FILE}
+echo '/usr/bin/pmv-sse' >> ${SPEC_FILE}
 echo '/usr/bin/pmv-gui' >> ${SPEC_FILE}
 echo '/usr/lib/pmv/www/' >> ${SPEC_FILE}
 echo '/usr/share/pixmaps/pmv.svg' >> ${SPEC_FILE}
