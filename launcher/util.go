@@ -5,6 +5,7 @@ package main
 import (
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 )
@@ -67,4 +68,28 @@ func CopyFile(src, dst string) (int64, error) {
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
+}
+
+var SSE_MODEL_FILES []string = []string{
+	"model_config.json",
+	"open_clip_config.json",
+	"tokenizer.json",
+	"tokenizer_config.json",
+	"special_tokens_map.json",
+	"text.onnx",
+	"text.onnx.data",
+	"visual.onnx",
+	"visual.onnx.data",
+}
+
+func ValidateSemanticSearchModel(p string) (bool, string) {
+	for _, file := range SSE_MODEL_FILES {
+		finalPath := path.Join(p, file)
+
+		if !fileExists(finalPath) {
+			return false, file
+		}
+	}
+
+	return true, ""
 }

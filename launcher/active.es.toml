@@ -38,6 +38,10 @@ other = "Los cambios en la configuración se han guardado correctamente."
 hash = "sha1-c32c05b370532551d1b26c1e617cea135646a22d"
 other = "Se ha configurado la dirección de escucha: {{.Address}}"
 
+[DisableSSEAsk]
+hash = "sha1-05c9e2ef75c8df23ade3fb4e65d85d5232720ba3"
+other = "¿Desea desactivar la búsqueda semántica para su galería?"
+
 [DisableSSLAsk]
 hash = "sha1-bed20db79e8f5de88053154ab90df34aaacfc1b2"
 other = "¿Desea deshabilitar SSL en su galería multimedia?"
@@ -45,6 +49,10 @@ other = "¿Desea deshabilitar SSL en su galería multimedia?"
 [EnsurePEM]
 hash = "sha1-4c458fee9fb497107f49f4abbdd19206bb16048e"
 other = "Asegúrese de que se encuentre en formato PEM."
+
+[EnsureSSEModel]
+hash = "sha1-2e7c488f57dcf76d5bb8a5c659a7eef533c93f1d"
+other = "Asegúrese de que el modelo es compatible con OpenCLIP y ONNX."
 
 [EnterPassword]
 hash = "sha1-21ae00b975ec8967a36310716cbb3afcd0d9b889"
@@ -114,6 +122,10 @@ other = "Uso: host [nombre de host] - Establece un host para acceder desde el na
 hash = "sha1-595aa75a597d4c9e514117a7132adc4d59ee3ab6"
 other = "El par de claves SSL no es correcto. Puede arreglarlo con 'ssl-setup'."
 
+[ErrorInvalidSemanticSearchLimitMB]
+hash = "sha1-38bce09733ce9c561ad8bd6d17e1810265ab8844"
+other = "Error: La entrada debe ser un número positivo"
+
 [ErrorLocalUsage]
 hash = "sha1-9c2861ada182b97f428ec7d4461bd92b35dd78bd"
 other = "Uso: local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
@@ -153,6 +165,14 @@ other = "Error: No se pudo encontrar el binario de análisis multimedia (ffprobe
 [ErrorReEncryptUsage]
 hash = "sha1-4f754e00694106c002970e3f55d1eb233bc9c218"
 other = "Uso del comando: re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
+
+[ErrorSSEModelPath]
+hash = "sha1-5228ec18ebe8701672f1562fe3ea7b9abb712f4d"
+other = "Error: No se encontró la ruta del modelo."
+
+[ErrorSSEModelPathMissing]
+hash = "sha1-52b2865028a5451129fe12c2a0404edb3ac75734"
+other = "Error: Al modelo le faltan archivos necesarios. Archivo no encontrado: {{.File}}"
 
 [ErrorUsernameBlank]
 hash = "sha1-f8972d2e27e924acd24bb202834eba57fb6842d3"
@@ -314,6 +334,18 @@ other = "recover - Reinicia la galería, re-indexando los elementos perdidos"
 hash = "sha1-c96e956f8731fc808db8df4da2735a316ad8c083"
 other = "restart - Reinicia la galería"
 
+[ManualCommandSSECheck]
+hash = "sha1-c4b3761d20307b8b6f53e158a259ddf0099c21a7"
+other = "sse - Comprueba la configuración actual de la búsqueda semántica"
+
+[ManualCommandSSEDisable]
+hash = "sha1-918ae5c0c6f5c34ad2eeefd994a51a18f42a9846"
+other = "sse-disable - Deshabilita la búsqueda semántica para la galería"
+
+[ManualCommandSSESetup]
+hash = "sha1-06c987533f04dcd4179e322af52dd5811f7dcbb0"
+other = "sse-setup - Configura la búsqueda semántica para la galería"
+
 [ManualCommandSSL]
 hash = "sha1-65dcb4a53970d373d2c2b78a93eabe115611e5a4"
 other = "ssl - Imprime la configuración de SSL"
@@ -378,6 +410,30 @@ other = "Repita la contraseña"
 hash = "sha1-6f4e4bb91fbe51f136ec9aa5c37ca5306a4d42eb"
 other = "¿Reiniciar la galería?"
 
+[SSEModelCurrentValue]
+hash = "sha1-192e0164e9c70e266ea9341e23970366f6a72c7b"
+other = "Valor actual: {{.CurrentVal}}"
+
+[SSEModelPath]
+hash = "sha1-816616a54f3ea64fcf68080755288804f1af197d"
+other = "Ruta del modelo (dejar vacío para usar el valor actual)"
+
+[SSEModelPathNew]
+hash = "sha1-c6e8447d3f9faa6941f7756e1f5b70e79b3767fb"
+other = "Ruta del modelo"
+
+[SSEModelPathView]
+hash = "sha1-4d5f52686e8ff346e46fc7cbea999dc95925c2a2"
+other = "Ruta del modelo: {{.Folder}}"
+
+[SSENotEnabled]
+hash = "sha1-fc8e4365458b9c527e69327ed781ca86c846d81f"
+other = "La búsqueda semántica no está habilitada para esta galería."
+
+[SSESemanticSearchLimitMBInput]
+hash = "sha1-5ac9863a4bb86e3f9cb816f82addf2f522943979"
+other = "Tamaño máximo para imágenes en MB: ({{.Size}} MB"
+
 [SSLCertFile]
 hash = "sha1-7cafd0033937cfc73d4fb79cb08549e691e4d985"
 other = "Certificado SSL: {{.File}}"
@@ -398,9 +454,25 @@ other = "La galería no tiene SSL habilitado."
 hash = "sha1-c90259e834f5f2b6f7d090ff91d27b29693ecbe3"
 other = "Clave privada SSL: {{.File}}"
 
+[SemanticSearchLimitMBView]
+hash = "sha1-094248727a63e5d65eed99632d17bf0e99761da1"
+other = "Tamaño máximo para imágenes en MB: {{.Limit}} MB"
+
+[SematicSearchDisabled]
+hash = "sha1-57fe49b4ae41ff7c0c25b46656f96001b77e84e7"
+other = "La búsqueda semántica está actualmente desactivada."
+
+[SematicSearchEnabled]
+hash = "sha1-fd82c5acb4f08f95762f92a469879d28735981a6"
+other = "La búsqueda semántica está habilitada."
+
 [SetupFFMpegAsk]
 hash = "sha1-7f2d51b8eb7f9d40b6573e416213163f6e46a8a7"
 other = "Desea cambiar la configuración de FFMpeg?"
+
+[SetupSSEAsk]
+hash = "sha1-a61a43c44239596125a66e1a987fa464750529e0"
+other = "¿Desea configurar la búsqueda semántica para su galería?"
 
 [SetupSSLAsk]
 hash = "sha1-6e571b8dfbbb06d36e5de07edee2dc533b159ce5"
@@ -429,6 +501,10 @@ other = "Escriba la ruta completa en su sistema de archivos al binario FFMpeg qu
 [TypeFFProbePath]
 hash = "sha1-e15d8a850d349817006653126111973d92864a80"
 other = "Escriba la ruta completa en su sistema de archivos al binario FFProbe que desee usar."
+
+[TypeModelPath]
+hash = "sha1-2b37e11de656f998537a1b1de860832f18663489"
+other = "Escriba la ruta absoluta en su sistema de archivos al modelo de incrustación de texto que desea utilizar."
 
 [TypePrivateKeyPath]
 hash = "sha1-2eb9f45faf4b0b41ea878709f2c8b3bfeb65b719"

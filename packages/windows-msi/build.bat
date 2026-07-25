@@ -12,7 +12,13 @@ echo Building backup tool...
 
 call build-production.bat
 
-cd "..\launcher"
+cd "..\semantic-search-engine\server"
+
+echo Building semantic search engine...
+
+call build-production.bat
+
+cd "..\..\launcher"
 
 echo Building launcher...
 

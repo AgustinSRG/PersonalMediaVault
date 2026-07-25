@@ -258,6 +258,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/search/semantic", api_searchMediaSemantic).Methods("POST")
 	apiRouter.HandleFunc("/search/semantic/encoder/text", api_searchMediaSemanticEncodeText).Methods("POST")
 	apiRouter.HandleFunc("/search/semantic/encoder/image", api_searchMediaSemanticEncodeImage).Methods("POST")
+	apiRouter.HandleFunc("/search/semantic/embeddings/{id:[0-9]+}", api_searchMediaSemanticGetMediaEmbeddings).Methods("GET")
 
 	// Is Test?
 	if isTest {

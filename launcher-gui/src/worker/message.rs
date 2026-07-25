@@ -52,6 +52,11 @@ pub enum LauncherWorkerMessage {
         ffprobe_path: String,
         video_codec: String,
     },
+    UpdateSseConfig {
+        enabled: bool,
+        model_path: String,
+        max_img_size: i32,
+    },
     UpdateOtherConfig {
         cache_size: i32,
         log_requests: bool,
@@ -61,6 +66,7 @@ pub enum LauncherWorkerMessage {
     SelectFFprobeBinary,
     SelectTlsCert,
     SelectTlsKey,
+    SelectSseModelPath,
 
     SelectBackupPath,
 

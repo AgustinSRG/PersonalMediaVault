@@ -39,4 +39,7 @@ pub use size_display::*;
 mod no_window;
 pub use no_window::*;
 
+mod sse_models;
+pub use sse_models::*;
+
 mod debug;

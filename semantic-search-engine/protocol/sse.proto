@@ -1,0 +1,174 @@
+// Semantic Search Engine Protocol
+
+syntax = "proto3";
+
+package pmv.sse;
+
+option go_package = "github.com/AgustinSRG/PersonalMediaVault/semantic-search-engine/protocol/sse-proto-go";
+
+// Request for the model metadata
+message ClipModelMetadataRequest {
+    // API key to access the service
+    string api_key = 1;
+}
+
+// Response with the model metadata
+message ClipModelMetadataResponse {
+    // Number of dimensions for embedding vectors
+    uint32 embed_dim = 2;
+}
+
+// A response with an embedding
+message ClipEmbeddingResponse {
+    // The list of features of the resulting vector
+    repeated float features = 1;
+}
+
+// Request for text embedding
+message ClipTextEmbeddingRequest {
+    // The text to be embedded into a vector
+    string text = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Initialization message for image embedding
+message ClipImageEmbeddingRequestInit {
+    // Image mime type. Example: image/png
+    string mime_type = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Chunk message for image embedding
+message ClipImageEmbeddingRequestChunk {
+    // Part of the bytes of the image
+    bytes image_chunk = 1;
+}
+
+// Request for image embedding
+message ClipImageEmbeddingRequest {
+    oneof image_embedding_oneof {
+        // Init message (sent as the first message of the stream)
+        ClipImageEmbeddingRequestInit init = 1;
+
+        // Chunk message (send chunks of 2MB max with the image bytes in order)
+        ClipImageEmbeddingRequestChunk chunk = 2;
+    }
+}
+
+// Request to get vectors by media resource
+message GetVectorsByMediaRequest {
+    // ID of the media resource
+    uint64 media_id = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Request to query vectors
+message QueryVectorsRequest {
+    // Embedding features
+    repeated float features = 1;
+
+    // Limit
+    uint64 limit = 2;
+
+    // Continuation token
+    optional float continuation_token = 3;
+
+    // API key to access the service
+    string api_key = 4;
+}
+
+// List item for a vector
+message VectorListItem {
+    // ID of the vector
+    uint64 vector_id = 1;
+
+    // ID of the media resource
+    uint64 media_id = 2;
+
+    // Data hash
+    string data_hash = 3;
+}
+
+// Response with a list of vectors
+message VectorListResponse {
+    // List of vectors
+    repeated VectorListItem vectors = 1;
+
+    // Continuation token
+    optional float continuation_token = 2;
+}
+
+// Request to insert a vector
+message InsertVectorRequest {
+    // ID of the media resource
+    uint64 media_id = 1;
+
+    // Data hash
+    string data_hash = 2;
+
+    // Embedding features
+    repeated float features = 3;
+}
+
+// Request to insert multiple vectors
+message InsertVectorsRequest {
+    // Requests to insert vectors
+    repeated InsertVectorRequest requests = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Request to get the embeddings of a stored vector
+message GetVectorEmbeddingsRequest {
+    // IF od the vector to retrieve embeddings
+    uint64 vector_id = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Request to delete vectors
+message DeleteVectorsRequest {
+    // List of IDs of vectors to delete
+    repeated uint64 vector_ids = 1;
+
+    // API key to access the service
+    string api_key = 2;
+}
+
+// Empty message for action methods
+message EmptyResponse {}
+
+// Semantic search engine service
+service SemanticSearchEngineService {
+    // Gets model metadata
+    rpc GetModelMetadata(ClipModelMetadataRequest) returns (ClipModelMetadataResponse);
+
+    // Encode text
+    rpc EncodeText(ClipTextEmbeddingRequest) returns (ClipEmbeddingResponse);
+
+    // Encode image
+    rpc EncodeImage(stream ClipImageEmbeddingRequest) returns (ClipEmbeddingResponse);
+
+    // Get embeddings of stored vector
+    rpc GetVectorEmbeddings(GetVectorEmbeddingsRequest) returns (ClipEmbeddingResponse);
+
+    // Get stored vectors by media
+    rpc GetVectorsByMedia(GetVectorsByMediaRequest) returns (VectorListResponse);
+
+    // Query vectors sorted by distance
+    rpc QueryVectors(QueryVectorsRequest) returns (VectorListResponse);
+
+    // Insert vectors
+    rpc InsertVectors(InsertVectorsRequest) returns (EmptyResponse);
+
+    // Deletes vectors
+    rpc DeleteVectors(DeleteVectorsRequest) returns (EmptyResponse);
+}

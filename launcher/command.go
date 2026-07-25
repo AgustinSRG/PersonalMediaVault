@@ -587,6 +587,54 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
+	case "sse", "sse-check", "semantic-search", "semantic-search-check":
+		if vc.launchConfig.SemanticSearchEnabled {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SematicSearchEnabled",
+					Other: "Semantic search is enabled.",
+				},
+			})
+			fmt.Println(msg)
+
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SSEModelPathView",
+					Other: "Model path: {{.Folder}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Folder": vc.launchConfig.SemanticSearchModelPath,
+				},
+			})
+			fmt.Println(msg)
+
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SemanticSearchLimitMBView",
+					Other: "Max size for images in MB: {{.Limit}} MB",
+				},
+				TemplateData: map[string]interface{}{
+					"Limit": fmt.Sprint(vc.launchConfig.getSemanticSearchLimitMB()),
+				},
+			})
+			fmt.Println(msg)
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SematicSearchDisabled",
+					Other: "Semantic search is currently disabled.",
+				},
+			})
+			fmt.Println(msg)
+		}
+	case "sse-setup", "semantic-search-setup":
+		if vc.SetupSSE() {
+			askRestart(vc)
+		}
+	case "sse-disable", "semantic-search-disable":
+		if vc.DisableSSE() {
+			askRestart(vc)
+		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
 	case "exit", "quit", "q":
@@ -844,6 +892,30 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandKeyRecover",
 			Other: "key-recover - Recovers access to the vault, using a backup of the encryption key",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSECheck",
+			Other: "sse - Checks the current semantic search configuration",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSESetup",
+			Other: "sse-setup - Sets up semantic search for the vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSEDisable",
+			Other: "sse-disable - Disables semantic search for the vault",
 		},
 	})
 	manList = append(manList, msg)

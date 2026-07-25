@@ -260,8 +260,6 @@ const load = () => {
     clearNamedTimeout(loadRequestId);
     abortNamedApiRequest(loadRequestId);
 
-    scrollToTop();
-
     setNamedTimeout(loadRequestId, LOADER_DISPLAY_DELAY, () => {
         loading.value = true;
     });
@@ -280,7 +278,9 @@ const load = () => {
 
             groups.value = newGroups;
 
-            scrollToCurrentRow();
+            if (!restoreCurrentScroll()) {
+                scrollToCurrentRow();
+            }
         })
         .onRequestError((err, handleErr) => {
             handleErr(err, {
@@ -479,29 +479,37 @@ const storedScroll = ref(0);
 const shouldRestoreStoreScroll = ref(false);
 
 /**
- * Scrolls the page to the top,
- * or to the stored scroll level.
- */
-const scrollToTop = () => {
-    let scroll = 0;
-
-    if (shouldRestoreStoreScroll.value) {
-        scroll = storedScroll.value * (container.value?.scrollHeight || 1);
-        shouldRestoreStoreScroll.value = false;
-    }
-
-    if (container.value) {
-        container.value.scrollTop = scroll;
-    }
-};
-
-/**
  * Stores current scroll level
  * in order to restore it later
  */
 const storeCurrentScroll = () => {
     storedScroll.value = (container.value?.scrollTop || 0) / (container.value?.scrollHeight || 1);
     shouldRestoreStoreScroll.value = true;
+
+    // On the next tick, set the scroll to avoid flashing
+    nextTick(() => {
+        if (container.value) {
+            if (container.value) {
+                container.value.scrollTop = storedScroll.value * (container.value?.scrollHeight || 1);
+            }
+        }
+    });
+};
+
+/**
+ * Restores current scroll
+ * @returns True if the scroll was restored
+ */
+const restoreCurrentScroll = (): boolean => {
+    if (shouldRestoreStoreScroll.value) {
+        shouldRestoreStoreScroll.value = false;
+
+        if (container.value) {
+            container.value.scrollTop = storedScroll.value * (container.value?.scrollHeight || 1);
+        }
+    } else {
+        return false;
+    }
 };
 
 // Scrolling to current row?
@@ -514,6 +522,7 @@ const scrollToCurrentRow = () => {
     if (scrollingToCurrent) {
         return;
     }
+
     scrollingToCurrent = true;
 
     const backState = getHomePageBackStatePage();

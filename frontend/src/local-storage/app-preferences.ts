@@ -439,9 +439,22 @@ export function clearUploadPreferences() {
     clearLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS);
 }
 
-export type SearchMode = "basic" | "adv" | "semantic" | "image";
+/**
+ * Search mode for search page
+ */
+export type SearchMode = "basic" | "adv" | "semantic" | "image" | "similar-to-current";
 
-const DEFAULT_SEARCH_MODE = "basic";
+/**
+ * List of available search modes
+ */
+export const SEARCH_MODES: SearchMode[] = ["basic", "adv", "semantic", "image", "similar-to-current"];
+
+/**
+ * List of available search modes (unconditional)
+ */
+export const SEARCH_MODES_UNCONDITIONAL: SearchMode[] = ["basic", "adv", "semantic"];
+
+export const DEFAULT_SEARCH_MODE = "basic";
 
 const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 
@@ -453,11 +466,11 @@ const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 export function getPreferredSearchMode(semanticSearchAvailable: boolean): SearchMode {
     const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE, DEFAULT_SEARCH_MODE) + "";
 
-    if (!["basic", "adv", "semantic", "image"].includes(searchMode)) {
+    if (!SEARCH_MODES.includes(searchMode as SearchMode)) {
         return DEFAULT_SEARCH_MODE;
     }
 
-    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image")) {
+    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image" || searchMode === "similar-to-current")) {
         return DEFAULT_SEARCH_MODE;
     }
 
@@ -470,24 +483,41 @@ export function getPreferredSearchMode(semanticSearchAvailable: boolean): Search
  */
 export function setPreferredSearchMode(mode: SearchMode) {
     saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
+
+    if (SEARCH_MODES_UNCONDITIONAL.includes(mode)) {
+        setPreferredSearchModeUnconditional(mode);
+    }
 }
 
-const LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES = "app-pref-search-semantic-images";
+const LS_KEY_SEARCH_MODE_UC = "app-pref-search-mode-unconditional";
 
 /**
- * Gets the app preference to search only images in semantic search
- * @returns The preference value
+ * Gets the preferred search mode for media
+ * (unconditional mode)
+ * @param semanticSearchAvailable True if semantic search is available
+ * @returns The search mode
  */
-export function getSemanticSearchOnlyImages(): boolean {
-    return fetchFromLocalStorageCache(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, true);
+export function getPreferredSearchModeUnconditional(semanticSearchAvailable: boolean): SearchMode {
+    const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE_UC, DEFAULT_SEARCH_MODE) + "";
+
+    if (!SEARCH_MODES_UNCONDITIONAL.includes(searchMode as SearchMode)) {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    if (!semanticSearchAvailable && searchMode === "semantic") {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    return searchMode as SearchMode;
 }
 
 /**
- * Sets the app preference to search only images in semantic search
- * @param b The preference value
+ * Sets the preferred search mode for media
+ * (unconditional mode)
+ * @param mode The search mode
  */
-export function setSemanticSearchOnlyImages(b: boolean) {
-    saveIntoLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, b);
+export function setPreferredSearchModeUnconditional(mode: SearchMode) {
+    saveIntoLocalStorage(LS_KEY_SEARCH_MODE_UC, mode);
 }
 
 /**
@@ -495,5 +525,5 @@ export function setSemanticSearchOnlyImages(b: boolean) {
  */
 export function clearSearchPreferences() {
     clearLocalStorage(LS_KEY_SEARCH_MODE);
-    clearLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES);
+    clearLocalStorage(LS_KEY_SEARCH_MODE_UC);
 }

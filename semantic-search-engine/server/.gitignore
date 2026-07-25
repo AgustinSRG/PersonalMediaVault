@@ -1,0 +1,6 @@
+/target
+/temp
+/release
+*.exe
+/pmv-sse
+/models

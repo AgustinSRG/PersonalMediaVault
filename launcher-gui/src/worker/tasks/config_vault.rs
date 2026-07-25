@@ -50,6 +50,12 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
             win.set_saved_ffmpeg(false);
             win.set_dirty_ffmpeg(false);
 
+            win.set_sse_enabled(launcher_config.sse_enabled);
+            win.set_model_path(launcher_config.sse_model_path.into());
+            win.set_model_path_invalid(false);
+            win.set_img_max_size(launcher_config.sse_limit_mb.to_string().into());
+            win.set_img_max_size_invalid(false);
+
             win.set_cache_size(launcher_config.cache_size.as_i32().to_string().into());
             win.set_cache_size_invalid(false);
 
@@ -153,6 +159,37 @@ pub fn update_config_ffmpeg(
 
             win.set_saved_ffmpeg(true);
             win.set_dirty_ffmpeg(false);
+        });
+    }
+
+    run_vault(status, sender, window_handle, false);
+}
+
+pub struct SseConfigDetails {
+    pub enabled: bool,
+    pub model_path: String,
+    pub max_img_size: i32,
+}
+
+pub fn update_config_sse(
+    status: &mut WorkerThreadStatus,
+    sender: &Sender<LauncherWorkerMessage>,
+    window_handle: &Weak<MainWindow>,
+    details: SseConfigDetails,
+) {
+    status.launcher_config.sse_enabled = details.enabled;
+    status.launcher_config.sse_model_path = details.model_path;
+    status.launcher_config.sse_limit_mb = details.max_img_size;
+
+    status.save_launcher_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_sse(true);
+            win.set_dirty_sse(false);
         });
     }
 

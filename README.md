@@ -5,6 +5,7 @@
 [![Launcher (CLI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
 [![Launcher (GUI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml)
 [![Backup tool](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
+[![SSE](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/sse.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/sse.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 
 Self-hosted web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
@@ -35,14 +36,13 @@ Self-hosted web application to store media files (video, audio and pictures) in 
 - Video timeline slices: Divide long videos in sections to quickly navigate through them.
 - Image annotations: Add comments to images.
 - Attachments: Upload any file attached to your media to preserve them in the encrypted vault. This can be used to preserve a copy of the raw media file, before the encoding.
+- Semantic search: Use an open source embeddings model to perform semantic search on your images.
 
 ## Run in a container
 
 Running the vault in an isolated container is the most secure way of running it, gives access to all the features and allows for a fine-grained configuration. 
 
 However, this may be a bit complex for non technical users. So, if you only need a local vault, go to the [Installation packages](#installation-packages) section instead.
-
-Note: If you wish to enable AI features, use the compose file present in the [packages/docker-compose-with-ai](./packages/docker-compose-with-ai) folder instead.
 
 You will need a container management system, for example [Docker](https://www.docker.com/) or [Podman](https://podman.io/). In the documentation, Docker commands are being used, so, if you are using Podman, make sure to replace `docker` for `podman` before running them.
 
@@ -64,13 +64,18 @@ services:
     volumes:
       - ${VAULT_PATH:-./vault}:/vault
       - ${VAULT_SSL_PATH:-./ssl}:/ssl:ro
+      - ${SSE_MODEL_PATH:-./open-clip-model}:/open-clip-model:ro
     environment:
       - USING_PROXY=${USING_PROXY:-NO}
       - VAULT_INITIAL_USER=${VAULT_INITIAL_USER:-admin}
       - VAULT_INITIAL_PASSWORD=${VAULT_INITIAL_PASSWORD:-changeme}
       - SSL_CERT=${SSL_CERT:-}
       - SSL_KEY=${SSL_KEY:-}
-    command: --daemon
+      - SEMANTIC_SEARCH_ENABLED=${SEMANTIC_SEARCH_ENABLED:-NO}
+      - SSE_MODEL_PATH=/open-clip-model
+      - SSE_IMAGE_SIZE_LIMIT_MB=${SSE_IMAGE_SIZE_LIMIT_MB:-20}
+    command:
+      --daemon
       --clean
       --port 8000
       --skip-lock
@@ -125,7 +130,7 @@ USING_PROXY=NO
 #
 # If the vault has no users, an initial user will be created
 #
-# Set VAULT_INITIAL_USER and VAULT_INITIAL_PASSWORD
+# Set VAULT_INITIAL_USER and VAULT_INITIAL_PASSWORD 
 # for the username and password respectively
 #
 # Make sure to change them the first time you log into the vault.
@@ -147,10 +152,28 @@ VAULT_CACHE_SIZE=1024
 #
 #   --log-requests - Enables request logging
 #   --debug - Enables debug logging (useful for troubleshooting)
-#   --fix-consistency - Fixes vault consistency at startup (takes some time)
+#   --check-trash - Checks the vault (at startup) in order to find trash files. This option requires the vault credentials passed in the environment variables 'VAULT_USER' and 'VAULT_PASSWORD', in order to decrypt the vault files.
+#   --remove-trash - Removes the trash files. Combine this option with '--check-trash'.
 #   --recover - Recovers non-indexed media assets.
 
 VAULT_EXTRA_OPTIONS=--log-requests
+
+# Enable semantic search?
+# This option can be YES or NO
+# If set to YES, make sure to also set the model
+SEMANTIC_SEARCH_ENABLED=NO
+
+# OpenCLIP model path
+# First, download a model (you can find models in Hugging face)
+# Hugging face search link: https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=onnx&other=clip
+# Change this variable to point to the model folder
+SSE_MODEL_PATH=./open-clip-model
+
+# Max size for images before they cannot be longer encoded
+# The size is set in MegaBytes (no decimals allowed)
+# This limits the memory usage of the daemon
+# If you plan to work with very large images, make sure to set this to a high value
+SSE_IMAGE_SIZE_LIMIT_MB=20
 ```
 </details><br>
 
@@ -301,6 +324,7 @@ Exec=konsole --separate -e 'pmv .'
 - [Frontend](./frontend): Uses the HTTP API to access the vault, providing a web interface to the user.
 - [Backup tool](./backup-tool): Tool to make backups of media vaults (copies the new files and replaces the old ones, using the last modified date).
 - [Launcher](./launcher): CLI program to launch the web app. This component is made in order to make it easier to use in local, when you do not have the backend configured as a system service.
+- [Semantic Search Engine](./semantic-search-engine): An internal server to run embedding models in order to perform the semantic search functionality.
 - [Installation Packages](./packages): Collection of installation packages for multiple operating systems.
 
 ## Project motivation

@@ -135,6 +135,14 @@
                     <td class="td-right"></td>
                 </tr>
 
+                <tr v-if="semanticSearchAvailable" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="openFindSimilar">
+                    <td>
+                        <i class="fas fa-search icon-config"></i>
+                        <span class="context-entry-title">{{ $t("Find similar media") }}</span>
+                    </td>
+                    <td class="td-right"></td>
+                </tr>
+
                 <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="refreshMedia">
                     <td>
                         <i class="fas fa-sync-alt icon-config"></i>
@@ -155,6 +163,10 @@ import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
 import { loadCurrentMedia } from "@/global-state/media";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
+import { getAuthStatus } from "@/global-state/auth";
+import { navigationGoToPage } from "@/global-state/navigation";
 
 // Ref to the container element
 const container = useTemplateRef("container");
@@ -164,6 +176,13 @@ const { $t } = useI18n();
 
 // User permissions
 const { canWrite } = useUserPermissions();
+
+// True if semantic search is available
+const semanticSearchAvailable = ref(getAuthStatus().semanticSearchAvailable);
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
+    semanticSearchAvailable.value = newAuthStatus.semanticSearchAvailable;
+});
 
 // Shown model
 const shown = defineModel<boolean>("shown");
@@ -445,6 +464,14 @@ const download = () => {
 
     link.click();
 
+    hide();
+};
+
+/**
+ * Opens similar to current media find
+ */
+const openFindSimilar = () => {
+    navigationGoToPage("search", "similar-to-current");
     hide();
 };
 

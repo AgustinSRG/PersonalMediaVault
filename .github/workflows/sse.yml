@@ -1,0 +1,39 @@
+name: SSE
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - semantic-search-engine/server/**
+      - .github/workflows/sse.yml
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - semantic-search-engine/server/**
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
+
+    - name: Install library dependencies
+      run: sudo apt update && sudo apt install libfreetype-dev libfontconfig-dev libssl-dev pkg-config
+
+    - name: Run Clippy
+      working-directory: ./semantic-search-engine/server
+      run: cargo clippy
+
+    - name: Run Tests
+      working-directory: ./semantic-search-engine/server
+      run: cargo test --verbose

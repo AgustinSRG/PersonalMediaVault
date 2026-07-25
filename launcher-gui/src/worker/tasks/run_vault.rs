@@ -150,6 +150,23 @@ pub fn run_vault(
                 "".to_string()
             },
         )
+        .env(
+            "SEMANTIC_SEARCH_ENABLED",
+            if status.launcher_config.sse_enabled {
+                "YES".to_string()
+            } else {
+                "NO".to_string()
+            },
+        )
+        .env("SSE_BIN_PATH", status.sse_binary.clone())
+        .env(
+            "SSE_MODEL_PATH",
+            status.launcher_config.sse_model_path.clone(),
+        )
+        .env(
+            "SSE_IMAGE_SIZE_LIMIT_MB",
+            status.launcher_config.get_sse_limit_mb().to_string(),
+        )
         .before_spawn(command_no_window)
         .stderr_to_stdout()
         .stdout_file(log_file)

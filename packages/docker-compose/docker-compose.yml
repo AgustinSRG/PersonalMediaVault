@@ -8,12 +8,16 @@ services:
     volumes:
       - ${VAULT_PATH:-./vault}:/vault
       - ${VAULT_SSL_PATH:-./ssl}:/ssl:ro
+      - ${SSE_MODEL_PATH:-./open-clip-model}:/open-clip-model:ro
     environment:
       - USING_PROXY=${USING_PROXY:-NO}
       - VAULT_INITIAL_USER=${VAULT_INITIAL_USER:-admin}
       - VAULT_INITIAL_PASSWORD=${VAULT_INITIAL_PASSWORD:-changeme}
       - SSL_CERT=${SSL_CERT:-}
       - SSL_KEY=${SSL_KEY:-}
+      - SEMANTIC_SEARCH_ENABLED=${SEMANTIC_SEARCH_ENABLED:-NO}
+      - SSE_MODEL_PATH=/open-clip-model
+      - SSE_IMAGE_SIZE_LIMIT_MB=${SSE_IMAGE_SIZE_LIMIT_MB:-20}
     command:
       --daemon
       --clean

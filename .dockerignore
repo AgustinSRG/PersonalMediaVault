@@ -2,6 +2,8 @@
 
 backend/pmvd.exe
 backend/pmvd
+frontend/dist
+semantic-search-engine/server/target
 
 # Ignore temp files
 
@@ -22,4 +24,5 @@ backend/.env
 
 # Others
 
+semantic-search-engine/server/models
 backend/TODO.txt

@@ -88,6 +88,11 @@ function main() {
             .replace(/version = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `version = "${VERSION}"`);
     });
 
+    updateFile(Path.resolve(__dirname, "semantic-search-engine", "server", "Cargo.toml"), contents => {
+        return contents
+            .replace(/version = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `version = "${VERSION}"`);
+    });
+
     updateFile(Path.resolve(__dirname, "packages", "windows-msi", "make-wix.bat"), contents => {
         return contents
             .replace(/PersonalMediaVault\-[0-9]+\.[0-9]+\.[0-9]+\-x64\.msi/, `PersonalMediaVault-${VERSION}-x64.msi`);

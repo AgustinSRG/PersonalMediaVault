@@ -12,7 +12,11 @@ cd ../backup-tool
 echo "Building backup tool..."
 ./build-production.sh
 
-cd ../launcher
+cd ../semantic-search-engine/server
+echo "Building semantic search engine..."
+./build-production.sh
+
+cd ../../launcher
 echo "Building launcher..."
 ./build-production.sh
 
@@ -29,9 +33,9 @@ cd ../packages/rpm
 
 # Create compressed package
 
-PMV_VERSION_MAJOR=5
-PMV_VERSION_MINOR=3
-PMV_VERSION_REVISION=1
+PMV_VERSION_MAJOR=6
+PMV_VERSION_MINOR=0
+PMV_VERSION_REVISION=0
 
 PMV_PKG_NAME=personalmediavault-${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}
 
@@ -54,6 +58,7 @@ cp ../../backend/pmvd ${PMV_PKG_FOLDER}/usr/bin/pmvd
 cp ../../backup-tool/pmv-backup ${PMV_PKG_FOLDER}/usr/bin/pmv-backup
 cp ../../launcher/pmv ${PMV_PKG_FOLDER}/usr/bin/pmv
 cp ../../launcher-gui/target/release/pmv-gui ${PMV_PKG_FOLDER}/usr/bin/pmv-gui
+cp ../../semantic-search-engine/server/target/release/pmv-sse ${PMV_PKG_FOLDER}/usr/bin/pmv-sse
 
 mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
 

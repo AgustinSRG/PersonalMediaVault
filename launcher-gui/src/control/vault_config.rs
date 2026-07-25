@@ -2,11 +2,11 @@
 
 use std::sync::mpsc::Sender;
 
-use slint::ComponentHandle;
+use slint::{ComponentHandle, ToSharedString};
 
 use crate::{
     models::FFmpegConfig,
-    utils::{check_ffmpeg_codec, file_exists},
+    utils::{check_ffmpeg_codec, file_exists, validate_sse_model},
     worker::LauncherWorkerMessage,
     MainWindow,
 };
@@ -49,6 +49,16 @@ pub fn setup_callbacks_vault_config(ui: &MainWindow, worker_sender: Sender<Launc
             let ui = ui_handle.unwrap();
             ui.set_busy(true);
             let _ = sender.send(LauncherWorkerMessage::SelectTlsKey);
+        }
+    });
+
+    ui.on_select_model_path({
+        let ui_handle = ui.as_weak();
+        let sender = worker_sender.clone();
+        move || {
+            let ui = ui_handle.unwrap();
+            ui.set_busy(true);
+            let _ = sender.send(LauncherWorkerMessage::SelectSseModelPath);
         }
     });
 
@@ -172,6 +182,61 @@ pub fn setup_callbacks_vault_config(ui: &MainWindow, worker_sender: Sender<Launc
                 ffmpeg_path,
                 ffprobe_path,
                 video_codec,
+            });
+        }
+    });
+
+    ui.on_update_sse({
+        let ui_handle = ui.as_weak();
+        let sender = worker_sender.clone();
+        move || {
+            let ui = ui_handle.unwrap();
+
+            let enabled = ui.get_sse_enabled();
+
+            let model_path = ui.get_model_path().to_string();
+
+            let max_img_size = match ui.get_img_max_size().as_str().parse::<i32>() {
+                Ok(p) => p,
+                Err(_) => {
+                    ui.set_img_max_size_invalid(true);
+                    return;
+                }
+            };
+
+            if max_img_size <= 0 {
+                ui.set_img_max_size_invalid(true);
+                return;
+            }
+
+            ui.set_img_max_size_invalid(false);
+
+            if enabled {
+                if model_path.is_empty() {
+                    ui.set_model_path_invalid(true);
+                    ui.set_model_path_missing_file("".to_shared_string());
+                    return;
+                }
+
+                let (model_path_valid, model_path_missing_file) = validate_sse_model(&model_path);
+
+                if !model_path_valid {
+                    ui.set_model_path_invalid(true);
+                    ui.set_model_path_missing_file(model_path_missing_file.to_shared_string());
+                    return;
+                }
+
+                ui.set_model_path_invalid(false);
+            } else {
+                ui.set_model_path_invalid(false);
+            }
+
+            ui.set_busy(true);
+
+            let _ = sender.send(LauncherWorkerMessage::UpdateSseConfig {
+                enabled,
+                model_path,
+                max_img_size,
             });
         }
     });

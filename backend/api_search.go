@@ -307,7 +307,7 @@ type AdvancedSearchResultResponse struct {
 	Scanned  int64               `json:"scanned"`
 	Count    int64               `json:"total_count"`
 	Items    []*MediaListAPIItem `json:"items"`
-	Continue uint64              `json:"continue"`
+	Continue string              `json:"continue"`
 }
 
 func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
@@ -392,7 +392,7 @@ func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
 			Scanned:  0,
 			Count:    0,
 			Items:    make([]*MediaListAPIItem, 0),
-			Continue: 0,
+			Continue: "",
 		}
 
 		jsonResult, err := json.Marshal(result)
@@ -411,7 +411,7 @@ func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
 	// Scan
 
 	mediaIdList := make([]uint64, 0)
-	newContinueRef := uint64(0)
+	newContinueRef := ""
 
 	finished := false
 
@@ -431,7 +431,7 @@ func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
 			finished = true
 		} else {
 			mediaIdList = append(mediaIdList, next)
-			newContinueRef = next
+			newContinueRef = fmt.Sprint(next)
 		}
 	}
 

@@ -82,11 +82,10 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 	semanticSearchConfig := LoadSemanticSearchConfig()
 
 	if semanticSearchConfig != nil && semanticSearchConfig.Enabled {
-		semanticSearchSubSystem, err := CreateSemanticSearchSystem(semanticSearchConfig, vault.credentials.GetFingerprint())
+		semanticSearchSubSystem, err := CreateSemanticSearchSystem(semanticSearchConfig, base_path)
 
 		if err == nil {
 			vault.semanticSearch = semanticSearchSubSystem
-			semanticSearchSubSystem.Initialize()
 		} else {
 			LogErrorMsg("Semantic Search Sub-system failed to initialize: " + err.Error())
 		}

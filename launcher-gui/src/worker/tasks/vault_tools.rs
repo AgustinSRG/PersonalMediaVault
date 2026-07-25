@@ -64,13 +64,10 @@ pub fn run_vault_tool(
         .before_spawn(command_no_window)
         .stdin_null();
 
-    match tool {
-        VaultSelectedTool::Clean => {
-            cmd = cmd
-                .env("VAULT_USER", username)
-                .env("VAULT_PASSWORD", password)
-        }
-        _ => {}
+    if tool == VaultSelectedTool::Clean {
+        cmd = cmd
+            .env("VAULT_USER", username)
+            .env("VAULT_PASSWORD", password)
     }
 
     let handle = match cmd.start() {
@@ -115,7 +112,7 @@ fn find_tool_error_in_output(o: &str) -> Option<String> {
     let lines: Vec<&str> = o
         .split("\n")
         .map(|l| l.trim())
-        .filter(|l| l.len() > 0)
+        .filter(|l| !l.is_empty())
         .collect();
 
     for line in lines {

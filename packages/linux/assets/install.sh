@@ -5,6 +5,7 @@
 cp -f ./usr/bin/pmv /usr/bin/pmv
 cp -f ./usr/bin/pmvd /usr/bin/pmvd
 cp -f ./usr/bin/pmv-backup /usr/bin/pmv-backup
+cp -f ./usr/bin/pmv-sse /usr/bin/pmv-sse
 cp -f ./usr/bin/pmv-gui /usr/bin/pmv-gui
 
 cp -f ./usr/share/pixmaps/pmv.svg /usr/share/pixmaps/pmv.svg

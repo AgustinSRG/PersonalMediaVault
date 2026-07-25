@@ -909,6 +909,7 @@ const togglePlayImmediate = () => {
     displayConfig.value = false;
     displayAttachments.value = false;
     displayRelatedMedia.value = false;
+    autoPlayApplied.value = true;
 };
 
 /**
@@ -944,6 +945,7 @@ const togglePlay = () => {
     displayConfig.value = false;
     displayAttachments.value = false;
     displayRelatedMedia.value = false;
+    autoPlayApplied.value = true;
 };
 
 /**
@@ -1770,6 +1772,7 @@ const onVideoTimeUpdate = (ev: Event) => {
  */
 const onCanPlay = () => {
     loading.value = false;
+    onWaitForBuffer(false);
 
     if (autoPlayApplied.value) {
         if (playing.value) {

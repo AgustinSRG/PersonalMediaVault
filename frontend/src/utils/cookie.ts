@@ -10,5 +10,5 @@
 export function setAssetsSessionCookie(name: string, value: string) {
     const date = new Date();
     date.setFullYear(date.getFullYear() + 1);
-    document.cookie = name + "=" + value + ";path=/assets/;SameSite=Strict";
+    document.cookie = name + "=" + value + ";path=/assets/;SameSite=Strict" + (document.location.protocol === "https:" ? ";Secure" : "");
 }

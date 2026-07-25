@@ -343,7 +343,7 @@ const loadAlbumSearch = () => {
  * Searches media elements
  * @param continueRef The continuation token reference
  */
-const searchNext = (continueRef: number | null) => {
+const searchNext = (continueRef: string | null) => {
     abortNamedApiRequest(batchRequestId);
 
     makeNamedApiRequest(batchRequestId, apiAdvancedSearch(getTagMode(), getTagList(), "asc", continueRef, PAGE_SIZE))

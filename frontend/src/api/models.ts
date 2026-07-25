@@ -660,7 +660,7 @@ export interface AdvancedSearchResults {
     /**
      * Reference of the last item, in order continue fetching more items
      */
-    continue: number;
+    continue: string;
 
     /**
      * List of page items

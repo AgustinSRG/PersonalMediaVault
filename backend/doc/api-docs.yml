@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 5.3.1
+  version: 6.0.0
 
 # cSpell:ignore allof, anyof, noneof, gyan
 
@@ -2498,8 +2498,7 @@ paths:
           description: "Order. Can be 'asc' or 'desc'. Descendant by default."
         - in: query
           name: "continue"
-          type: number
-          format: int64
+          type: string
           description: Reference of the last item to continue fetching more items
         - in: query
           name: "limit"
@@ -4127,7 +4126,7 @@ paths:
         404:
           description: Not found (Semantic search system unavailable)
         200:
-          description: Search results
+          description: Vector
           schema:
             $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
 
@@ -4175,7 +4174,53 @@ paths:
         413:
           description: Image file too large (The default is 20MB, but it can be changed in the backend settings)
         200:
-          description: Search results
+          description: Vector
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
+  
+  "/api/search/semantic/embeddings/{id}":
+    post:
+      summary: Retrieves the embeddings for a media asset
+      description: |-
+        Retrieves the features of the stored vector
+        for a specific media.
+      tags:
+        - semantic_search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * SYSTEM_UNAVAILABLE - Semantic search system unavailable
+                    * EMBEDDINGS_NOT_FOUND - No embeddings found for the media
+                enum:
+                  - SYSTEM_UNAVAILABLE
+                  - EMBEDDINGS_NOT_FOUND
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Vector
           schema:
             $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
 
@@ -4475,8 +4520,7 @@ definitions:
           format: int32
           description: "Max number of results to get. Max: 256."
         continuationToken:
-          type: number
-          format: int64
+          type: string
           description: "Continuation token in order to fetch more results from a previous query"
       required:
         - vector
@@ -4493,8 +4537,7 @@ definitions:
           format: int64
           description: Number of scanned items
         continue:
-          type: number
-          format: int64
+          type: string
           description: Reference of the last item to continue fetching more items.
         items:
           type: array

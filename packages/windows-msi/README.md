@@ -11,6 +11,7 @@ The following software is required to build the installer:
 - [NodeJS](https://nodejs.org/) - Last stable version
 - [FFmpeg](https://ffmpeg.org/)
 - [Rust](https://www.rust-lang.org/)
+- [Perl](https://strawberryperl.com/)
 
 Make sure you have installed in `C:\ffmpeg\bin` the binaries `ffmpeg.exe` and `ffprobe.exe`.
 

@@ -14,19 +14,31 @@ import (
 var (
 	BACKEND_BIN   = ""
 	BACKUP_BIN    = ""
+	SSE_BIN       = ""
 	FRONTEND_PATH = ""
 )
 
 type LauncherConfig struct {
-	Path        string `json:"path"`
-	HostName    string `json:"hostname"`
-	Port        int    `json:"port"`
-	Local       bool   `json:"local"`
-	SSL_Cert    string `json:"ssl_cert"`
-	SSL_Key     string `json:"ssl_key"`
-	CacheSize   *int   `json:"cache_size"`
-	LogRequests bool   `json:"log_requests"`
-	Debug       bool   `json:"debug"`
+	Path                    string `json:"path"`
+	HostName                string `json:"hostname"`
+	Port                    int    `json:"port"`
+	Local                   bool   `json:"local"`
+	SSL_Cert                string `json:"ssl_cert"`
+	SSL_Key                 string `json:"ssl_key"`
+	CacheSize               *int   `json:"cache_size"`
+	LogRequests             bool   `json:"log_requests"`
+	Debug                   bool   `json:"debug"`
+	SemanticSearchEnabled   bool   `json:"sse_enabled"`
+	SemanticSearchModelPath string `json:"sse_model_path"`
+	SemanticSearchLimitMB   int    `json:"sse_limit_mb"`
+}
+
+func (c *LauncherConfig) getSemanticSearchLimitMB() int {
+	if c.SemanticSearchLimitMB > 0 {
+		return c.SemanticSearchLimitMB
+	} else {
+		return 20
+	}
 }
 
 func (c *LauncherConfig) hasSSL() bool {
@@ -105,6 +117,22 @@ func detectLauncherPaths() {
 				})
 				fmt.Println(msg)
 				os.Exit(1)
+			}
+		}
+	}
+
+	// SSE
+
+	SSE_BIN = path.Join(getDirName(), "bin", getBinaryFileName("pmv-sse"))
+
+	if !fileExists(SSE_BIN) {
+		SSE_BIN = path.Join("/usr/bin", getBinaryFileName("pmv-sse"))
+
+		if !fileExists(SSE_BIN) {
+			SSE_BIN = path.Join("..", "semantic-search-engine", "server", getBinaryFileName("pmv-sse"))
+
+			if !fileExists(SSE_BIN) {
+				SSE_BIN = ""
 			}
 		}
 	}
