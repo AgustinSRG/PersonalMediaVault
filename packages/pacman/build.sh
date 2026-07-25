@@ -110,6 +110,7 @@ echo '    cd "$srcdir/$pkgname-$pkgver"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/bin/pmvd "${pkgdir}/usr/bin/pmvd"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/bin/pmv "${pkgdir}/usr/bin/pmv"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/bin/pmv-backup "${pkgdir}/usr/bin/pmv-backup"' >> ${PKG_BUILD_FILE}
+echo '    install -Dm755 usr/bin/pmv-sse "${pkgdir}/usr/bin/pmv-sse"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/bin/pmv-gui "${pkgdir}/usr/bin/pmv-gui"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/share/pixmaps/pmv.svg "${pkgdir}/usr/share/pixmaps/pmv.svg"' >> ${PKG_BUILD_FILE}
 echo '    install -Dm755 usr/share/applications/pmv.desktop "${pkgdir}/usr/share/applications/pmv.desktop"' >> ${PKG_BUILD_FILE}
