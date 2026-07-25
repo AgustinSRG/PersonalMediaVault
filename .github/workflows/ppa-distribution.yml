@@ -35,10 +35,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.22.x
+          go-version: 1.25.x
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
 
       - name: Install library dependencies
         run: sudo apt update && sudo apt install libfreetype-dev libfontconfig-dev libssl-dev pkg-config
@@ -46,7 +49,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Install GPG
         run: sudo apt install -y gpg
