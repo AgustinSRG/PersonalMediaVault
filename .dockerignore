@@ -4,6 +4,7 @@ backend/pmvd.exe
 backend/pmvd
 frontend/dist
 semantic-search-engine/server/target
+semantic-search-engine/server/models
 
 # Ignore temp files
 
