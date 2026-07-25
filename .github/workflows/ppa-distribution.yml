@@ -30,10 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v7
         with:
           go-version: 1.25.x
 
@@ -47,7 +47,7 @@ jobs:
         run: sudo apt update && sudo apt install libfreetype-dev libfontconfig-dev libssl-dev pkg-config
 
       - name: Install NodeJS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
 
@@ -86,4 +86,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

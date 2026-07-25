@@ -18,16 +18,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v7
       with:
         go-version: 1.25.x
 
     - name: Set up ffmpeg 
       id: ffmpeg
-      uses: FedericoCarboni/setup-ffmpeg@v2
+      uses: FedericoCarboni/setup-ffmpeg@v3
+      with:
+        ffmpeg-version: release
 
     - name: Build
       working-directory: ./backend
@@ -37,5 +39,5 @@ jobs:
       working-directory: ./backend
       run: go test -v ./...
       env:
-        FFMPEG_PATH: ${{ steps.ffmpeg.outputs.ffmpeg-path }}
-        FFPROBE_PATH: ${{ steps.ffmpeg.outputs.ffprobe-path }}
+        FFMPEG_PATH: ${{ steps.ffmpeg.outputs.ffmpeg-path }}/ffmpeg
+        FFPROBE_PATH: ${{ steps.ffmpeg.outputs.ffmpeg-path }}/ffprobe
