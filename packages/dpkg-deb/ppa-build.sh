@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cd ppa
 
 # Create Key.gpg

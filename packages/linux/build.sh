@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Build project
 
 echo "Building project: PersonalMediaVault"
