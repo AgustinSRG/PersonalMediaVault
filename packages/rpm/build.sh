@@ -128,6 +128,7 @@ echo 'mkdir -p $RPM_BUILD_ROOT/usr/share/applications' >> ${SPEC_FILE}
 echo 'cp usr/bin/pmvd $RPM_BUILD_ROOT/usr/bin/pmvd' >> ${SPEC_FILE}
 echo 'cp usr/bin/pmv $RPM_BUILD_ROOT/usr/bin/pmv' >> ${SPEC_FILE}
 echo 'cp usr/bin/pmv-backup $RPM_BUILD_ROOT/usr/bin/pmv-backup' >> ${SPEC_FILE}
+echo 'cp usr/bin/pmv-sse $RPM_BUILD_ROOT/usr/bin/pmv-sse' >> ${SPEC_FILE}
 echo 'cp usr/bin/pmv-gui $RPM_BUILD_ROOT/usr/bin/pmv-gui' >> ${SPEC_FILE}
 echo 'cp -r usr/lib/pmv/www $RPM_BUILD_ROOT/usr/lib/pmv/www' >> ${SPEC_FILE}
 echo 'cp usr/share/pixmaps/pmv.svg $RPM_BUILD_ROOT/usr/share/pixmaps/pmv.svg' >> ${SPEC_FILE}
