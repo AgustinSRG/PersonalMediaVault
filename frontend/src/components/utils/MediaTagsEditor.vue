@@ -251,6 +251,10 @@ const addTag = (tag: string, resetTagInput: boolean) => {
                 }
             });
 
+            emitAppEvent("media-meta-change", mediaId, {
+                tags: mediaTags.value,
+            });
+
             emit("tags-update");
 
             focusInput(!resetTagInput);
@@ -324,6 +328,10 @@ const removeTag = (tag: number) => {
                         return t !== tag;
                     });
                 }
+            });
+
+            emitAppEvent("media-meta-change", mediaId, {
+                tags: mediaTags.value,
             });
 
             emit("tags-update");
@@ -490,6 +498,10 @@ const addTagInBulk = (tag: string) => {
                     if (!metadata.tags.includes(res.id)) {
                         metadata.tags.push(res.id);
                     }
+                });
+
+                emitAppEvent("media-meta-change", mediaId, {
+                    tags: mediaTags.value,
                 });
 
                 resolve(true);

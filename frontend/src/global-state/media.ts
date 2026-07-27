@@ -209,4 +209,8 @@ export function updateListItemFromPartialMetadata(item: MediaListItem, partialMe
     if (partialMeta.thumbnail !== undefined) {
         item.thumbnail = partialMeta.thumbnail;
     }
+
+    if (partialMeta.tags !== undefined) {
+        item.tags = partialMeta.tags.slice();
+    }
 }
