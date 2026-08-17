@@ -17,6 +17,9 @@ export component VaultConfigSseView inherits VerticalLayout {
     /// Callback to select the model path
     callback select-model-path();
 
+    // Callback to pull pre-determined model
+    callback pull-pre-determined-model();
+
     /// Max size for images (MB)
     in-out property <string> img-max-size: "20";
     in-out property <bool> img-max-size-invalid: false;
@@ -102,6 +105,28 @@ export component VaultConfigSseView inherits VerticalLayout {
                                 root.select-model-path();
                             }
                         }
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Pull pre-determined model");
+                            icon: @image-url("../assets/icons/cloud-download.svg");
+                            colorize-icon: true;
+                            enabled: !busy && sse-enabled;
+                            clicked => {
+                                root.pull-pre-determined-model();
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
                     }
                 }
 

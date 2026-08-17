@@ -389,6 +389,16 @@ pub fn run_worker_thread(
                     } => {
                         set_user_settings(&mut status, &window_handle, locale_index, theme_index);
                     }
+                    LauncherWorkerMessage::PullOpenClipModel { size_index } => {
+                        pull_pre_determined_open_clip_model(
+                            &mut status,
+                            &window_handle,
+                            size_index,
+                        );
+                    }
+                    LauncherWorkerMessage::CancelPullOpenClipModel => {
+                        status.cancel_model_pull();
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);

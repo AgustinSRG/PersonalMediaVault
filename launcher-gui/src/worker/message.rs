@@ -52,6 +52,10 @@ pub enum LauncherWorkerMessage {
         ffprobe_path: String,
         video_codec: String,
     },
+    PullOpenClipModel {
+        size_index: usize,
+    },
+    CancelPullOpenClipModel,
     UpdateSseConfig {
         enabled: bool,
         model_path: String,

@@ -241,6 +241,40 @@ pub fn setup_callbacks_vault_config(ui: &MainWindow, worker_sender: Sender<Launc
         }
     });
 
+    ui.on_pull_model({
+        let ui_handle = ui.as_weak();
+        let sender = worker_sender.clone();
+
+        move || {
+            let ui = ui_handle.unwrap();
+
+            let size_index = ui.get_clip_pre_determined_model_size_index() as usize;
+
+            ui.set_pull_model_error("".into());
+
+            ui.set_download_progress(0.0);
+            ui.set_downloading_model(false);
+
+            ui.set_busy(true);
+
+            let _ = sender.send(LauncherWorkerMessage::PullOpenClipModel { size_index });
+        }
+    });
+
+    ui.on_cancel_pull_model({
+        let ui_handle = ui.as_weak();
+        let sender = worker_sender.clone();
+
+        move || {
+            let ui = ui_handle.unwrap();
+
+            ui.set_downloading_model(false);
+            ui.set_pull_model_error("".into());
+
+            let _ = sender.send(LauncherWorkerMessage::CancelPullOpenClipModel);
+        }
+    });
+
     ui.on_update_other({
         let ui_handle = ui.as_weak();
         let sender = worker_sender.clone();

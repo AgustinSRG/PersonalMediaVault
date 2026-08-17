@@ -23,6 +23,7 @@ import { InitialConfigView } from "initial-config.slint";
 import { CreateVaultView } from "create-vault.slint";
 import { VaultOpenView } from "vault-open.slint";
 import { UserSettingsPopupWindow } from "settings-popup.slint";
+import { ModelPullPopup } from "model-pull-popup.slint";
 
 export { 
     LauncherStatus,
@@ -230,6 +231,24 @@ export component MainWindow inherits Window {
 
     /// Callback to select the model path
     callback select-model-path();
+
+    /// Index of the size (small, medium, large) of the pre-determined OpenCLIP model
+    in-out property <int> clip-pre-determined-model-size-index: 0;
+
+    /// Downloading model?
+    in property <bool> downloading-model: false;
+
+    /// Progress of the download
+    in property <float> download-progress: 0;
+
+    /// Pull model
+    callback pull-model();
+
+    /// Cancel pull model
+    callback cancel-pull-model();
+
+    /// Error when pulling a model
+    in property <string> pull-model-error: "";
 
     /// Max size for images (MB)
     in-out property <string> img-max-size: "20";
@@ -553,6 +572,9 @@ export component MainWindow inherits Window {
                 select-model-path => {
                     root.select-model-path();
                 }
+                pull-pre-determined-model => {
+                    popup-clip-model.show();
+                }
                 update-sse => {
                     root.update-sse();
                 }
@@ -610,5 +632,36 @@ export component MainWindow inherits Window {
                 popup.close();
             }
         }
+    }
+
+    popup-clip-model := PopupWindow {
+        close-policy: PopupClosePolicy.no-auto-close;
+
+        width: 32rem;
+        height: 18rem;
+
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        ModelPullPopup {
+            busy: busy;
+            clip-pre-determined-model-size-index <=> root.clip-pre-determined-model-size-index;
+            downloading-model: root.downloading-model;
+            download-progress: root.download-progress;
+            pull-model-error: root.pull-model-error;
+
+            pull-model => {
+                root.pull-model();
+            }
+
+            cancel => {
+                root.cancel-pull-model();
+                popup-clip-model.close();
+            }
+        }
+    }
+
+    public function close-popup-clip-model() {
+        popup-clip-model.close();
     }
 }

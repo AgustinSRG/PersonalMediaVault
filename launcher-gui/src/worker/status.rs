@@ -1,10 +1,11 @@
 // Worker thread status
 
-use std::sync::{mpsc::Receiver, Arc};
+use std::sync::{mpsc::Receiver, Arc, Mutex};
 
 use arboard::Clipboard;
 use duct::Handle;
 use pidlock::Pidlock;
+use tokio_util::sync::CancellationToken;
 
 use crate::{
     log_debug,
@@ -45,6 +46,8 @@ pub struct WorkerThreadStatus {
 
     pub user_settings: UserSettings,
     pub dark_theme_default: bool,
+
+    pub pull_model_cancellation: Arc<Mutex<Option<CancellationToken>>>,
 }
 
 impl WorkerThreadStatus {
@@ -85,6 +88,8 @@ impl WorkerThreadStatus {
 
             user_settings,
             dark_theme_default,
+
+            pull_model_cancellation: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -100,5 +105,21 @@ impl WorkerThreadStatus {
         if let Err(e) = write_ffmpeg_to_config_file(&self.ffmpeg_config) {
             log_debug!("Error: {e}");
         }
+    }
+
+    pub fn make_pull_model_cancellation_token(&mut self) -> Arc<Mutex<Option<CancellationToken>>> {
+        self.pull_model_cancellation = Arc::new(Mutex::new(Some(CancellationToken::new())));
+
+        self.pull_model_cancellation.clone()
+    }
+
+    pub fn cancel_model_pull(&mut self) {
+        let mut ct = self.pull_model_cancellation.lock().unwrap();
+
+        if let Some(token) = ct.as_ref() {
+            token.cancel();
+        }
+
+        *ct = None;
     }
 }

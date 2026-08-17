@@ -47,3 +47,6 @@ pub use backup::*;
 
 mod set_user_settings;
 pub use set_user_settings::*;
+
+mod pull_openclip_model;
+pub use pull_openclip_model::*;

@@ -1,0 +1,137 @@
+import { Button, ComboBox, Palette, ProgressIndicator } from "std-widgets.slint";
+
+export component ModelPullPopup inherits Rectangle {
+    background: Palette.alternate-background;
+    border-radius: 8px;
+
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Index of the size (small, medium, large) of the pre-determined OpenCLIP model
+    in-out property <int> clip-pre-determined-model-size-index: 0;
+
+    /// Downloading model?
+    in property <bool> downloading-model: false;
+
+    /// Progress of the download
+    in property <float> download-progress: 0;
+
+    /// Pull model
+    callback pull-model();
+
+    /// Error when pulling a model
+    in property <string> pull-model-error: "";
+
+    /// Pull model
+    callback cancel();
+
+    VerticalLayout {
+        spacing: 1rem;
+        padding: 1rem;
+
+        alignment: LayoutAlignment.center;
+
+        Text {
+            text: @tr("Pull a pre-determined OpenCLIP model");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            HorizontalLayout {
+                alignment: LayoutAlignment.space-around;
+
+                 GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.5rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Model size") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+
+                            ComboBox {
+                                enabled: !busy;
+                                model: [@tr("Small") + " (405 MB)", @tr("Medium") + " (1 GB)", @tr("Big") + " (4.6 GB)"];
+                                current-index <=> root.clip-pre-determined-model-size-index;
+                            }
+                        }
+                    }
+                 }
+            }
+        }
+
+        if downloading-model: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            Text {
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+
+                text: @tr("Downloading model...");
+            }
+        }
+
+        if downloading-model: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            ProgressIndicator {
+                width: 24rem;
+                height: 0.75rem;
+                progress: download-progress;
+                indeterminate: download-progress == 0.0;
+            }
+        }
+
+        if pull-model-error != "": HorizontalLayout {
+            Text {
+                text: @tr("Error") + ": " + pull-model-error;
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+                color: red;
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+            spacing: 0.75rem;
+
+            Button {
+                text: @tr("Pull model");
+                icon: @image-url("../assets/icons/cloud-download.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy && !downloading-model;
+                clicked => {
+                    root.pull-model();
+                }
+            }
+
+            Button {
+                text: @tr("Cancel");
+                icon: @image-url("../assets/icons/close.svg");
+                primary: false;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.cancel();
+                }
+            }
+        }
+    }
+}

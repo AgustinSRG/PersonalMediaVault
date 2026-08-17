@@ -91,6 +91,9 @@ export component VaultConfigView inherits VerticalLayout {
     /// Callback to select the model path
     callback select-model-path();
 
+    // Callback to pull pre-determined model
+    callback pull-pre-determined-model();
+
     /// Max size for images (MB)
     in-out property <string> img-max-size: "20";
     in-out property <bool> img-max-size-invalid: false;
@@ -214,6 +217,9 @@ export component VaultConfigView inherits VerticalLayout {
                 saved <=> saved-sse;
                 select-model-path => {
                     root.select-model-path();
+                }
+                pull-pre-determined-model => {
+                    root.pull-pre-determined-model();
                 }
                 save => {
                     root.update-sse();
