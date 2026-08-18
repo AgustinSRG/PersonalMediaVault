@@ -253,6 +253,7 @@ pub fn setup_callbacks_vault_config(ui: &MainWindow, worker_sender: Sender<Launc
             ui.set_pull_model_error("".into());
 
             ui.set_download_progress(0.0);
+            ui.set_download_progress_txt("".into());
             ui.set_downloading_model(false);
 
             ui.set_busy(true);

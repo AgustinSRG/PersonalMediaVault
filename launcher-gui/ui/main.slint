@@ -241,6 +241,9 @@ export component MainWindow inherits Window {
     /// Progress of the download
     in property <float> download-progress: 0;
 
+    // Progress of the download (txt)
+    in property <string> download-progress-txt: "";
+
     /// Pull model
     callback pull-model();
 
@@ -648,6 +651,7 @@ export component MainWindow inherits Window {
             clip-pre-determined-model-size-index <=> root.clip-pre-determined-model-size-index;
             downloading-model: root.downloading-model;
             download-progress: root.download-progress;
+            download-progress-txt: root.download-progress-txt;
             pull-model-error: root.pull-model-error;
 
             pull-model => {

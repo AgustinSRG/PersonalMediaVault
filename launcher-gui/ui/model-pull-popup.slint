@@ -16,6 +16,9 @@ export component ModelPullPopup inherits Rectangle {
     /// Progress of the download
     in property <float> download-progress: 0;
 
+    // Progress of the download (txt)
+    in property <string> download-progress-txt: "";
+
     /// Pull model
     callback pull-model();
 
@@ -80,7 +83,7 @@ export component ModelPullPopup inherits Rectangle {
                 wrap: TextWrap.word-wrap;
                 horizontal-alignment: center;
 
-                text: @tr("Downloading model...");
+                text: @tr("Downloading model") + "..." + download-progress-txt;
             }
         }
 

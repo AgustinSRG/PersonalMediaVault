@@ -9,7 +9,12 @@ use hf_hub::{progress::ProgressHandler, repository::RepoTreeEntry, HFClient};
 use slint::Weak;
 use tokio_util::sync::CancellationToken;
 
-use crate::{log_debug, utils::file_exists, worker::WorkerThreadStatus, MainWindow};
+use crate::{
+    log_debug,
+    utils::{display_size, file_exists},
+    worker::WorkerThreadStatus,
+    MainWindow,
+};
 
 // Get the common name for the model
 fn get_pre_determined_model_name(index: usize) -> &'static str {
@@ -72,17 +77,33 @@ impl ProgressHandler for ModelDownloadProgressHandler {
                 return;
             }
         };
-        let progress = if self.total_bytes == 0 {
-            0.0
-        } else {
-            ((self.bytes_done + event_progress) as f32) / (self.total_bytes as f32)
-        };
-
-        let _ = slint::invoke_from_event_loop(move || {
-            let win = wh.unwrap();
-            win.set_download_progress(progress);
-        });
+        report_progress(wh, self.bytes_done + event_progress, self.total_bytes);
     }
+}
+
+fn report_progress(wh: Weak<MainWindow>, bytes_done: u64, total_bytes: u64) {
+    let progress = if total_bytes == 0 {
+        0.0
+    } else {
+        ((bytes_done) as f32) / (total_bytes as f32)
+    };
+
+    let progress_txt = if total_bytes == 0 {
+        "".to_string()
+    } else {
+        format!(
+            " {}% - {} / {}",
+            (bytes_done * 100).checked_div(total_bytes).unwrap_or(0),
+            display_size(bytes_done),
+            display_size(total_bytes)
+        )
+    };
+
+    let _ = slint::invoke_from_event_loop(move || {
+        let win = wh.unwrap();
+        win.set_download_progress(progress);
+        win.set_download_progress_txt(progress_txt.into());
+    });
 }
 
 fn get_clip_model_details(index: usize) -> Result<PreDeterminedOpenClipModel, String> {
@@ -261,19 +282,7 @@ async fn download_model_hf(
 
         bytes_done += file.file_size;
 
-        let progress = if total_bytes == 0 {
-            0.0
-        } else {
-            (bytes_done as f32) / (total_bytes as f32)
-        };
-
-        log_debug!("Progress: {}.", progress);
-
-        let wh = window_handle.clone();
-        let _ = slint::invoke_from_event_loop(move || {
-            let win = wh.unwrap();
-            win.set_download_progress(progress);
-        });
+        report_progress(window_handle.clone(), bytes_done, total_bytes);
     }
 
     // Mark as completed
