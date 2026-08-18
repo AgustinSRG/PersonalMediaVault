@@ -12,7 +12,7 @@ msgstr ""
 "Language: es\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ui/main.slint:43
+#: ui/main.slint:44
 msgctxt "MainWindow"
 msgid "PersonalMediaVault Launcher"
 msgstr "Lanzador de PersonalMediaVault"
@@ -335,27 +335,27 @@ msgctxt "CreateVaultView"
 msgid "Continue"
 msgstr "Continuar"
 
-#: ui/vault-open.slint:232
+#: ui/vault-open.slint:235
 msgctxt "VaultOpenView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/vault-open.slint:239
+#: ui/vault-open.slint:242
 msgctxt "VaultOpenView"
 msgid "Status"
 msgstr "Estado"
 
-#: ui/vault-open.slint:264
+#: ui/vault-open.slint:267
 msgctxt "VaultOpenView"
 msgid "Configuration"
 msgstr "Configuración"
 
-#: ui/vault-open.slint:346
+#: ui/vault-open.slint:352
 msgctxt "VaultOpenView"
 msgid "Backup"
 msgstr "Copia de seguridad"
 
-#: ui/vault-open.slint:394
+#: ui/vault-open.slint:400
 msgctxt "VaultOpenView"
 msgid "Other Tools"
 msgstr "Otras herramientas"
@@ -469,27 +469,27 @@ msgctxt "VaultStatusView"
 msgid "Open log file"
 msgstr "Abrir fichero de log"
 
-#: ui/vault-config.slint:127
+#: ui/vault-config.slint:130
 msgctxt "VaultConfigView"
 msgid "Vault configuration"
 msgstr "Configuración de la galería"
 
-#: ui/vault-config.slint:140
+#: ui/vault-config.slint:143
 msgctxt "VaultConfigView"
 msgid "Host & Port"
 msgstr "Host y puerto"
 
-#: ui/vault-config.slint:157
+#: ui/vault-config.slint:160
 msgctxt "VaultConfigView"
 msgid "TLS"
 msgstr "TLS"
 
-#: ui/vault-config.slint:180
+#: ui/vault-config.slint:183
 msgctxt "VaultConfigView"
 msgid "FFmpeg"
 msgstr "FFmpeg"
 
-#: ui/vault-config.slint:225
+#: ui/vault-config.slint:231
 msgctxt "VaultConfigView"
 msgid "Other"
 msgstr "Otros"
@@ -977,53 +977,103 @@ msgctxt "VaultToolsView"
 msgid "Password"
 msgstr "Contraseña"
 
-#: ui/vault-config.slint:204
+#: ui/vault-config.slint:207
 msgctxt "VaultConfigView"
 msgid "Semantic Search"
 msgstr "Búsqueda Semántica"
 
-#: ui/vault-config-sse.slint:51
+#: ui/vault-config-sse.slint:54
 msgctxt "VaultConfigSseView"
 msgid "Enable semantic search for the vault"
 msgstr "Habilitar la búsqueda semántica para la galería"
 
-#: ui/vault-config-sse.slint:75
+#: ui/vault-config-sse.slint:78
 msgctxt "VaultConfigSseView"
 msgid "OpenCLIP model path"
 msgstr "Ruta al modelo OpenCLIP"
 
-#: ui/vault-config-sse.slint:97
+#: ui/vault-config-sse.slint:100
 msgctxt "VaultConfigSseView"
 msgid "Find"
 msgstr "Buscar"
 
-#: ui/vault-config-sse.slint:113
+#: ui/vault-config-sse.slint:138
 msgctxt "VaultConfigSseView"
 msgid "Invalid OpenCLIP model: Missing file"
 msgstr "Modelo OpenCLIP no válido: Falta el fichero"
 
-#: ui/vault-config-sse.slint:114
+#: ui/vault-config-sse.slint:139
 msgctxt "VaultConfigSseView"
 msgid "Invalid OpenCLIP model: Folder not found"
 msgstr "Modelo OpenCLIP no válido: Ruta no encontrada"
 
-#: ui/vault-config-sse.slint:125
+#: ui/vault-config-sse.slint:150
 msgctxt "VaultConfigSseView"
 msgid "Max size for images (MB)"
 msgstr "Tamaño máximo para imágenes (MB)"
 
-#: ui/vault-config-sse.slint:147
+#: ui/vault-config-sse.slint:172
 msgctxt "VaultConfigSseView"
 msgid "Invalid max size. Must be a number greater or equal to 0."
 msgstr "Tamaño máximo no válido. Debe ser un número mayor o igual a 0."
 
-#: ui/vault-config-sse.slint:163
+#: ui/vault-config-sse.slint:188
 msgctxt "VaultConfigSseView"
 msgid "Apply changes"
 msgstr "Aplicar cambios"
 
-#: ui/vault-config-sse.slint:176
+#: ui/vault-config-sse.slint:201
 msgctxt "VaultConfigSseView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
+
+#: ui/vault-config-sse.slint:119
+msgctxt "VaultConfigSseView"
+msgid "Pull pre-determined model"
+msgstr "Descargar modelo pre-determinado"
+
+#: ui/model-pull-popup.slint:38
+msgctxt "ModelPullPopup"
+msgid "Pull a pre-determined OpenCLIP model"
+msgstr "Descargar un modelo OpenCLIP pre-determinado"
+
+#: ui/model-pull-popup.slint:58
+msgctxt "ModelPullPopup"
+msgid "Model size"
+msgstr "Tamaño del modelo"
+
+#: ui/model-pull-popup.slint:68
+msgctxt "ModelPullPopup"
+msgid "Small"
+msgstr "Pequeño"
+
+#: ui/model-pull-popup.slint:68
+msgctxt "ModelPullPopup"
+msgid "Medium"
+msgstr "Mediano"
+
+#: ui/model-pull-popup.slint:68
+msgctxt "ModelPullPopup"
+msgid "Big"
+msgstr "Grande"
+
+#: ui/model-pull-popup.slint:86
+msgctxt "ModelPullPopup"
+msgid "Downloading model"
+msgstr "Descargando modelo"
+
+#: ui/model-pull-popup.slint:105
+msgctxt "ModelPullPopup"
+msgid "Error"
+msgstr "Error"
+
+#: ui/model-pull-popup.slint:118
+msgctxt "ModelPullPopup"
+msgid "Pull model"
+msgstr "Descargar modelo"
+
+#: ui/model-pull-popup.slint:129
+msgctxt "ModelPullPopup"
+msgid "Cancel"
+msgstr "Cancelar"
 
