@@ -56,6 +56,9 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
             win.set_img_max_size(launcher_config.sse_limit_mb.to_string().into());
             win.set_img_max_size_invalid(false);
 
+            win.set_saved_sse(false);
+            win.set_dirty_sse(false);
+
             win.set_cache_size(launcher_config.cache_size.as_i32().to_string().into());
             win.set_cache_size_invalid(false);
 
