@@ -265,7 +265,7 @@ async fn download_model_hf(
         log_debug!("File size: {}.", file.file_size);
 
         tokio::select! {
-            _ = model_client
+            r = model_client
                 .download_file()
                 .filename(file.filename)
 
@@ -274,7 +274,18 @@ async fn download_model_hf(
                     bytes_done,
                     total_bytes,
                     window_handle.clone(),
-                )).send() => {}
+                )).send() => {
+                    if let Err(e) = r {
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_pull_model_error(e.to_string().into());
+                            win.set_downloading_model(false);
+                        });
+                        drop_cancellation_token(cancellation_token);
+                        return;
+                    }
+                }
             _ = ct.cancelled() => {
                 return;
             }
