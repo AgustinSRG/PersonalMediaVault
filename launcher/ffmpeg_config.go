@@ -16,8 +16,8 @@ import (
 )
 
 type FFmpegConfig struct {
-	FFProbePath string `json:"ffmpeg_path"`
-	FFMpegPath  string `json:"ffprobe_path"`
+	FFProbePath string `json:"ffprobe_path"`
+	FFMpegPath  string `json:"ffmpeg_path"`
 	VideoCodec  string `json:"video_codec"`
 }
 
