@@ -96,7 +96,7 @@
             </table>
         </div>
 
-        <div v-if="canWrite">
+        <form v-if="canWrite" @submit="onSubmit">
             <div class="form-group">
                 <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
                 <input
@@ -124,7 +124,7 @@
                 <input v-model="srtName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
             </div>
             <div class="form-group">
-                <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile" @click="addSubtitles">
+                <button v-if="!busy" type="submit" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile">
                     <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
                 </button>
                 <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
@@ -135,7 +135,7 @@
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
                 </button>
             </div>
-        </div>
+        </form>
 
         <SubtitlesDeleteModal
             v-model:display="displaySubtitlesDelete"
@@ -264,8 +264,8 @@ const selectSRTFile = () => {
 const setFile = (file: File) => {
     srtFile.value = file;
     srtFileName.value = file.name;
-    srtId.value = (file.name.split(".")[0] || "").toLowerCase();
-    srtName.value = srtId.value.toUpperCase();
+    srtId.value = srtId.value || (file.name.split(".").slice(-2)[0] || "").toLowerCase();
+    srtName.value = srtName.value || srtId.value.toUpperCase();
 };
 
 /**
@@ -306,6 +306,15 @@ const uploading = ref(false);
 
 // Upload progress
 const uploadProgress = ref(0);
+
+/**
+ * Form submit handler
+ */
+const onSubmit = (e: Event) => {
+    e.preventDefault();
+
+    addSubtitles();
+};
 
 /**
  * Adds a new subtitles file

@@ -95,7 +95,7 @@
             </table>
         </div>
 
-        <div v-if="canWrite">
+        <form v-if="canWrite" @submit="onSubmit">
             <div class="form-group">
                 <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
                 <input
@@ -123,13 +123,7 @@
                 <input v-model="audioName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
             </div>
             <div class="form-group">
-                <button
-                    v-if="!busy"
-                    type="button"
-                    class="btn btn-primary"
-                    :disabled="!audioId || !audioName || !audioFile"
-                    @click="addAudio"
-                >
+                <button v-if="!busy" type="submit" class="btn btn-primary" :disabled="!audioId || !audioName || !audioFile">
                     <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
                 </button>
                 <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
@@ -140,7 +134,7 @@
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
                 </button>
             </div>
-        </div>
+        </form>
 
         <AudioTrackDeleteModal
             v-model:display="displayAudioTrackDelete"
@@ -268,8 +262,8 @@ const selectAudioFile = () => {
 const setFile = (file: File) => {
     audioFile.value = file;
     audioFileName.value = file.name;
-    audioId.value = (file.name.split(".")[0] || "").toLowerCase();
-    audioName.value = audioId.value.toUpperCase();
+    audioId.value = audioId.value || (file.name.split(".").slice(-2)[0] || "").toLowerCase();
+    audioName.value = audioName.value || audioId.value.toUpperCase();
 };
 
 /**
@@ -310,6 +304,15 @@ const uploading = ref(false);
 
 // Upload progress
 const uploadProgress = ref(0);
+
+/**
+ * Form submit handler
+ */
+const onSubmit = (e: Event) => {
+    e.preventDefault();
+
+    addAudio();
+};
 
 /**
  * Adds an audio file
