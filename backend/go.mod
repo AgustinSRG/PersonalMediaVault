@@ -7,25 +7,25 @@ require (
 	github.com/AgustinSRG/encrypted-storage v1.0.1
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/AgustinSRG/go-disk-usage v1.0.0
+	github.com/AgustinSRG/go-swap-files v1.0.0
 	github.com/AgustinSRG/gorilla-handlers v1.0.1
 	github.com/gorilla/mux v1.8.1
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/pquerna/otp v1.5.0
 	github.com/vansante/go-ffprobe v1.1.0
-	golang.org/x/term v0.45.0
-	google.golang.org/grpc v1.82.1
+	golang.org/x/term v0.46.0
+	google.golang.org/grpc v1.83.2
 )
 
 require (
-	github.com/AgustinSRG/go-swap-files v1.0.0 // indirect
 	github.com/boombuler/barcode v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 )
 
 replace github.com/AgustinSRG/PersonalMediaVault/semantic-search-engine/protocol/sse-proto-go => ../semantic-search-engine/protocol/sse-proto-go
