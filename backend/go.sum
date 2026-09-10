@@ -4,6 +4,8 @@ github.com/AgustinSRG/go-child-process-manager v1.0.1 h1:wZpPE0LAXc5rzlU028CDt/K
 github.com/AgustinSRG/go-child-process-manager v1.0.1/go.mod h1:JgXUSAhyOo1awWbBKGVJ4fU9a5Q6JBo4eR+sXqmYC1w=
 github.com/AgustinSRG/go-disk-usage v1.0.0 h1:jrakCwcR1SEkzn47Ulic9SfFqBPx44QfjT6qp85g7mk=
 github.com/AgustinSRG/go-disk-usage v1.0.0/go.mod h1:ubDo63h2O9AH1w2sO0e12gLdQyriPNMTufnHuqi1JzM=
+github.com/AgustinSRG/go-swap-files v1.0.0 h1:5T1EelpNHnIp79L13BBANS8B3QFA1NCyTUnTQLJMVnk=
+github.com/AgustinSRG/go-swap-files v1.0.0/go.mod h1:ONOM2QyhNH0u+vGkAxwc1n9Ox4jVbnOq+pvOOnnU4XA=
 github.com/AgustinSRG/gorilla-handlers v1.0.1 h1:DQ2Qa3og7L2y8o+8nFlljM8RGQsmc+q+VqOeI99Ws3M=
 github.com/AgustinSRG/gorilla-handlers v1.0.1/go.mod h1:oaUdSM10+SE1Dfi5kmNkLAvnko7HRymSZC+ysiqSF1o=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
@@ -56,6 +58,8 @@ golang.org/x/net v0.57.0 h1:K5+3DljvIuDG9/Jv9rvyMywYNFCQ9RSUY6OOTTkT+tE=
 golang.org/x/net v0.57.0/go.mod h1:KpXc8iv+r3XplLAG/f7Jsf9RPszJzdR0f58q9vGOuEU=
 golang.org/x/sys v0.47.0 h1:o7XGOvZQCADBQQ4Y7VNq2dRWQR7JmOUW8Kxx4ZsNgWs=
 golang.org/x/sys v0.47.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=
+golang.org/x/sys v0.48.0 h1:bbX/i/6MgT9BVLM9RT1thmxL04yeTAhbEz4SyadbXoo=
+golang.org/x/sys v0.48.0/go.mod h1:hNLxWAXmnKAxqDtdwIYC4bM9oQPEecfsnNMuSxOs3og=
 golang.org/x/term v0.45.0 h1:NwWyBmoJCbfTHpxrWoZ9C6/VxOf7ic219I8xZZFdrf0=
 golang.org/x/term v0.45.0/go.mod h1:9aqxs0blBcrm/n0L9QW0aRVD+ktan8ssZromtqJC43w=
 golang.org/x/text v0.40.0 h1:Ub2Z6/xjgF1WrYQz2nuITOEegKFtiIy+rieRJ5lHZKs=

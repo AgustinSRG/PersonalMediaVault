@@ -92,8 +92,9 @@ func (lock *ReadWriteLock) StartWrite() {
 	}
 }
 
-// Finish a write operation, unlocking the resource
-func (lock *ReadWriteLock) EndWrite() {
+// Unlocks the resource after a write
+// Still holds the write_mutex lock. Use UnlockWriteMutex() later
+func (lock *ReadWriteLock) EndWritePartial() {
 	lock.lock.Lock()
 
 	lock.writing = false
@@ -110,9 +111,17 @@ func (lock *ReadWriteLock) EndWrite() {
 	}
 
 	lock.lock.Unlock()
+}
 
-	// Unlock write mutex, so other write threads can continue
+// Unlock write mutex, so other write threads can continue
+func (lock *ReadWriteLock) UnlockWriteMutex() {
 	lock.write_mutex.Unlock()
+}
+
+// Finish a write operation, unlocking the resource
+func (lock *ReadWriteLock) EndWrite() {
+	lock.EndWritePartial()
+	lock.UnlockWriteMutex()
 }
 
 // Starts a read operation

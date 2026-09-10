@@ -19,6 +19,18 @@ type VaultIndexWriteResource struct {
 	path string           // Path to a temp file where changes are pre-made
 }
 
+func (vmi *VaultMainIndex) GetSwapFile() string {
+	return vmi.file + ".swap"
+}
+
+func (vmi *VaultMainIndex) GetCopyFile() string {
+	return vmi.file + ".copy"
+}
+
+func (vmi *VaultMainIndex) GetWritePendingFile() string {
+	return vmi.file + ".write.tmp"
+}
+
 // Initializes the index file manager
 // file - Path to the index file to manage
 func (vmi *VaultMainIndex) Initialize(file string) error {
@@ -28,19 +40,64 @@ func (vmi *VaultMainIndex) Initialize(file string) error {
 	if _, err := os.Stat(file); err == nil {
 		return nil // File exists
 	} else if errors.Is(err, os.ErrNotExist) {
-		// Create empty index
+		// Check swap file
 
-		f, err := OpenIndexedListForWriting(file)
+		swapFile := vmi.GetSwapFile()
+
+		if _, err := os.Stat(swapFile); err == nil {
+			err = os.Rename(swapFile, file)
+
+			if err != nil {
+				return err
+			}
+
+			return nil // Swap file restored
+		} else if errors.Is(err, os.ErrNotExist) {
+			// Create empty index
+
+			f, err := OpenIndexedListForWriting(file)
+
+			if err != nil {
+				return err
+			}
+
+			defer f.Close()
+
+			err = f.Initialize()
+
+			if err != nil {
+				return err
+			}
+
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func (vmi *VaultMainIndex) prepareCopyFile(copyFile string) error {
+	if _, err := os.Stat(copyFile); err == nil {
+		// Copy file already exists
+		return nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		// Copy file not found, create it
+
+		tmpFile := GetTemporalFileName("index", true)
+
+		_, err := CopyFile(vmi.file, tmpFile)
 
 		if err != nil {
 			return err
 		}
 
-		defer f.Close()
-
-		err = f.Initialize()
+		err = os.Rename(tmpFile, copyFile)
 
 		if err != nil {
+			_ = os.Remove(tmpFile)
+
 			return err
 		}
 
@@ -55,19 +112,30 @@ func (vmi *VaultMainIndex) Initialize(file string) error {
 func (vmi *VaultMainIndex) StartWrite() (*VaultIndexWriteResource, error) {
 	vmi.lock.RequestWrite() // Request write
 
-	// Make temp file
-	tmpFile := GetTemporalFileName("index", true)
+	// Prepare a copy of the file
 
-	// Copy file
-	_, err := CopyFile(vmi.file, tmpFile)
+	copyFile := vmi.GetCopyFile()
+
+	err := vmi.prepareCopyFile(copyFile)
 
 	if err != nil {
 		vmi.lock.EndWrite()
 		return nil, err
 	}
 
-	// Open temp file for writing
-	fd, err := OpenIndexedListForWriting(tmpFile)
+	// Move the file for writing
+
+	writeTmpFile := vmi.GetWritePendingFile()
+
+	err = os.Rename(copyFile, writeTmpFile)
+
+	if err != nil {
+		vmi.lock.EndWrite()
+		return nil, err
+	}
+
+	// Open file for writing
+	fd, err := OpenIndexedListForWriting(writeTmpFile)
 
 	if err != nil {
 		vmi.lock.EndWrite()
@@ -76,7 +144,7 @@ func (vmi *VaultMainIndex) StartWrite() (*VaultIndexWriteResource, error) {
 
 	result := VaultIndexWriteResource{
 		file: fd,
-		path: tmpFile,
+		path: writeTmpFile,
 	}
 
 	return &result, nil
@@ -89,12 +157,51 @@ func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 
 	vmi.lock.StartWrite()
 
-	// Move temp file to original path
-	err := RenameAndReplace(res.path, vmi.file)
+	// Swap files to apply changes in index file
+	err := SwapFiles(vmi.file, res.path, vmi.GetSwapFile())
 
-	vmi.lock.EndWrite()
+	if err != nil {
+		vmi.lock.EndWrite()
 
-	return err
+		return err
+	}
+
+	vmi.lock.EndWritePartial()
+	defer vmi.lock.UnlockWriteMutex()
+
+	// Apply changes to the swapped file
+
+	fileRead, err := OpenIndexedListForReading(vmi.file)
+
+	if err != nil {
+		return err
+	}
+
+	defer fileRead.Close()
+
+	fileWrite, err := OpenIndexedListForWriting(res.path)
+
+	if err != nil {
+		return err
+	}
+
+	err = fileWrite.CopyTrackedChanges(fileRead, res.file)
+
+	fileWrite.Close()
+
+	if err != nil {
+		return err
+	}
+
+	// Once changes were copied, move to copy file
+
+	err = RenameAndReplace(res.path, vmi.GetCopyFile())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Deletes index file
@@ -102,10 +209,16 @@ func (vmi *VaultMainIndex) Delete() error {
 	vmi.lock.RequestWrite()
 	vmi.lock.StartWrite()
 
+	defer vmi.lock.EndWrite()
+
 	// Remove index
 	err := os.Remove(vmi.file)
 
-	vmi.lock.EndWrite()
+	copyFile := vmi.GetCopyFile()
+
+	if _, err := os.Stat(copyFile); err == nil {
+		_ = os.Remove(copyFile)
+	}
 
 	return err
 }

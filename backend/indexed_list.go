@@ -9,13 +9,17 @@ package main
 
 import (
 	"encoding/binary"
+	"io"
 	"math/rand"
 	"os"
 )
 
 // Indexed list file
 type IndexedListFile struct {
-	f *os.File // File descriptor
+	f                  *os.File // File descriptor
+	sizeChanged        bool     // Changed size?
+	valuesChanged      bool     // Changed values?
+	valuesChangedIndex int64    // First changed value
 }
 
 // Opens index file for writing
@@ -28,7 +32,9 @@ func OpenIndexedListForWriting(file string) (*IndexedListFile, error) {
 	}
 
 	i := IndexedListFile{
-		f: f,
+		f:             f,
+		sizeChanged:   false,
+		valuesChanged: false,
 	}
 
 	return &i, nil
@@ -99,6 +105,8 @@ func (file *IndexedListFile) Initialize() error {
 		return err
 	}
 
+	file.sizeChanged = true
+
 	return nil
 }
 
@@ -123,9 +131,10 @@ func (file *IndexedListFile) ReadValue(index int64) (uint64, error) {
 }
 
 // Writes a value
+// (internal: do not call outside this file)
 // index - Index in the sorted list
 // value - Value to write
-func (file *IndexedListFile) WriteValue(index int64, value uint64) error {
+func (file *IndexedListFile) writeValue(index int64, value uint64) error {
 	_, err := file.f.Seek(8+(index*8), 0)
 
 	if err != nil {
@@ -272,7 +281,7 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 			return false, 0, err
 		}
 
-		err = file.WriteValue(i, tempVal)
+		err = file.writeValue(i, tempVal)
 		if err != nil {
 			return false, 0, err
 		}
@@ -296,6 +305,17 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 
 	if err != nil {
 		return false, 0, err
+	}
+
+	// Mark changes
+
+	file.sizeChanged = true
+
+	if file.valuesChanged {
+		file.valuesChangedIndex = minInt64(index, file.valuesChangedIndex)
+	} else {
+		file.valuesChanged = true
+		file.valuesChangedIndex = index
 	}
 
 	return true, index, nil
@@ -346,7 +366,7 @@ func (file *IndexedListFile) RemoveIndex(index int64, count int64) (int64, error
 			return 0, err
 		}
 
-		err = file.WriteValue(i, val)
+		err = file.writeValue(i, val)
 
 		if err != nil {
 			return 0, err
@@ -375,6 +395,17 @@ func (file *IndexedListFile) RemoveIndex(index int64, count int64) (int64, error
 
 	if err != nil {
 		return 0, err
+	}
+
+	// Mark changes
+
+	file.sizeChanged = true
+
+	if file.valuesChanged {
+		file.valuesChangedIndex = minInt64(index, file.valuesChangedIndex)
+	} else {
+		file.valuesChanged = true
+		file.valuesChangedIndex = index
 	}
 
 	return count - 1, err
@@ -523,4 +554,74 @@ func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, er
 	}
 
 	return result[0:resultCount], nil
+}
+
+// Copies the changes made to another index file
+// source - Source file to read the changes
+// trackedChanges - File tracking the changes
+func (file *IndexedListFile) CopyTrackedChanges(source *IndexedListFile, trackedChanges *IndexedListFile) error {
+	sourceSize, err := source.Count()
+
+	if err != nil {
+		return err
+	}
+
+	if trackedChanges.sizeChanged {
+		err = file.f.Truncate(8 + 8*sourceSize)
+
+		if err != nil {
+			return err
+		}
+
+		// Rewind to the start of the file
+		_, err = file.f.Seek(0, 0)
+
+		if err != nil {
+			return err
+		}
+
+		// Write size
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(sourceSize))
+		_, err = file.f.Write(b)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if trackedChanges.valuesChanged {
+		index := trackedChanges.valuesChangedIndex
+
+		startingByte := 8 + (index * 8)
+
+		// Seek both files
+		_, err = source.f.Seek(startingByte, 0)
+
+		if err != nil {
+			return err
+		}
+
+		_, err = file.f.Seek(startingByte, 0)
+
+		if err != nil {
+			return err
+		}
+
+		// Copy bytes
+
+		buf := make([]byte, 32*1024)
+
+		_, err := io.CopyBuffer(file.f, source.f, buf)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	file.sizeChanged = trackedChanges.sizeChanged
+	file.valuesChanged = trackedChanges.valuesChanged
+	file.valuesChangedIndex = trackedChanges.valuesChangedIndex
+
+	return nil
 }

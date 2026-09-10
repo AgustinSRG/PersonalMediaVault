@@ -3,12 +3,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	swap_files "github.com/AgustinSRG/go-swap-files"
 )
 
 const (
@@ -104,6 +107,49 @@ func RenameAndReplace(tmpFile string, destFile string) error {
 	return err
 }
 
+// Swaps 2 files
+// If it fails, tries again up to 3 times, waiting 500 ms (this is to wait for any other program to unlock the file)
+// file1 - File 1
+// file2 - File 2
+// swapFile - Intermediate file
+// returns the error
+func SwapFiles(file1 string, file2 string, swapFile string) error {
+	retriesLeft := 3
+	var err error = nil
+
+	for retriesLeft > 0 {
+		err = swap_files.SwapFiles(file1, file2, swapFile)
+
+		if err == nil {
+			return nil
+		}
+
+		if _, err := os.Stat(file1); errors.Is(err, os.ErrNotExist) {
+			if _, err := os.Stat(swapFile); err == nil {
+				// Step 3 failed
+				// Restore file1 if swapFile exists but file1 got removed
+				err = os.Rename(swapFile, file1)
+
+				if err == nil {
+					return nil
+				}
+			}
+		} else if _, err := os.Stat(file2); errors.Is(err, os.ErrNotExist) {
+			if _, err := os.Stat(swapFile); err == nil {
+				// Step 2 failed
+				// Restore file2 if swapFile exists but file2 got removed
+				_ = os.Rename(swapFile, file2)
+			}
+		}
+
+		retriesLeft--
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return err
+}
+
 // Checks if an album list has repeated elements, and removes them
 // list - The media IDs list
 // Returns the list without repeated elements
@@ -124,4 +170,12 @@ func AlbumListPruneRepeatedElements(list []uint64) []uint64 {
 	}
 
 	return res
+}
+
+func minInt64(a int64, b int64) int64 {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }
