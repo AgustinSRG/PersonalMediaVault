@@ -11,18 +11,10 @@
 }
 
 .player-subtitles-container.pos-top {
-    top: calc(57px + var(--subtitles-margin));
-}
-
-.player-subtitles-container.pos-top.controls-hidden {
     top: var(--subtitles-margin);
 }
 
 .player-subtitles-container.pos-bottom {
-    bottom: calc(60px + var(--subtitles-margin));
-}
-
-.player-subtitles-container.pos-bottom.controls-hidden {
     bottom: var(--subtitles-margin);
 }
 

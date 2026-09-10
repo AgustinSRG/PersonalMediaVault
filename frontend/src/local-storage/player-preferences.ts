@@ -510,7 +510,7 @@ export function getSubtitlesOptions(): SubtitlesOptions {
         allowLineBreaks: true,
         bg: "0",
         pos: "bottom",
-        margin: 0,
+        margin: 46,
     };
 
     const parsedOptions: unknown = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_OPTIONS, null);
