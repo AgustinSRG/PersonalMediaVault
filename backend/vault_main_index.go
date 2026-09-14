@@ -79,32 +79,44 @@ func (vmi *VaultMainIndex) Initialize(file string) error {
 }
 
 func (vmi *VaultMainIndex) prepareCopyFile(copyFile string) error {
-	if _, err := os.Stat(copyFile); err == nil {
-		// Copy file already exists
-		return nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		// Copy file not found, create it
+	statFile, err := os.Stat(vmi.file)
 
-		tmpFile := GetTemporalFileName("index", true)
-
-		_, err := CopyFile(vmi.file, tmpFile)
-
-		if err != nil {
-			return err
-		}
-
-		err = os.Rename(tmpFile, copyFile)
-
-		if err != nil {
-			_ = os.Remove(tmpFile)
-
-			return err
-		}
-
-		return nil
-	} else {
+	if err != nil {
 		return err
 	}
+
+	statCopyFile, err := os.Stat(copyFile)
+
+	if err == nil {
+		if statFile.Size() == statCopyFile.Size() && !statFile.ModTime().After(statCopyFile.ModTime()) {
+			// Copy file already exists and seems correct
+			return nil
+		} else {
+			LogWarning("Possibly corrupted copy file discarded: " + copyFile)
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	// Copy file not found, create it
+
+	tmpFile := GetTemporalFileName("index", true)
+
+	_, err = CopyFile(vmi.file, tmpFile)
+
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(tmpFile, copyFile)
+
+	if err != nil {
+		_ = os.Remove(tmpFile)
+
+		return err
+	}
+
+	return nil
 }
 
 // Starts write operation
