@@ -213,7 +213,9 @@ const onAlbumPosUpdate = (ctx: AlbumMediaPositionContext) => {
     nextTick(scrollToSelected);
 };
 
-onMounted(onAlbumPosUpdate);
+onMounted(() => {
+    onAlbumPosUpdate(getCurrentAlbumMediaPositionContext());
+});
 onApplicationEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, onAlbumPosUpdate);
 
 // Ref to the album body element
