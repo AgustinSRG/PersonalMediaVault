@@ -79,7 +79,7 @@ export function setUserSelectedResolutionVideo(metadata: MediaData, index: numbe
             height: 0,
             fps: 0,
         };
-    } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+    } else if (metadata && metadata.resolutions && metadata.resolutions[index]) {
         r = {
             original: false,
             width: metadata.resolutions[index].width,
