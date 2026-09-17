@@ -15,6 +15,7 @@ import {
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import type { Album, AlbumListItemMin } from "@/api/models";
 import type { NavigationStatusPage } from "@/global-state/navigation";
+import type { SessionDuration } from "@/api/api-auth";
 
 export type ColorThemeName = "light" | "dark";
 
@@ -37,6 +38,32 @@ export function getTheme(): ColorThemeName {
 export function setTheme(theme: ColorThemeName) {
     saveIntoLocalStorage(LS_KEY_THEME, theme);
     emitAppEvent(EVENT_NAME_THEME_CHANGED, theme);
+}
+
+const DEFAULT_SESSION_DURATION: SessionDuration = "day";
+
+const LS_KEY_SESSION_DURATION = "app-pref-session-duration";
+
+/**
+ * Gets the preferred session duration
+ * @returns The preferred session duration
+ */
+export function getPreferredSessionDuration(): SessionDuration {
+    const duration = fetchFromLocalStorageCache(LS_KEY_SESSION_DURATION, DEFAULT_SESSION_DURATION);
+
+    if (!["day", "week", "month", "year"].includes(duration)) {
+        return DEFAULT_SESSION_DURATION;
+    }
+
+    return duration;
+}
+
+/**
+ * Sets the preferred session duration
+ * @param duration The preferred session duration
+ */
+export function setPreferredSessionDuration(duration: SessionDuration) {
+    saveIntoLocalStorage(LS_KEY_SESSION_DURATION, duration);
 }
 
 const LS_KEY_FAVORITE_ALBUMS = "app-pref-albums-fav";
@@ -407,6 +434,7 @@ export function clearLastUsedTags() {
  */
 export function clearPagePreferences() {
     clearLocalStorage(LS_KEY_THEME);
+    clearLocalStorage(LS_KEY_SESSION_DURATION);
     emitAppEvent(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
 
     ["home", "media", "random", "random", "albums", "upload", "search"].forEach(resetPagePreferences);

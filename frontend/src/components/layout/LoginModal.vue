@@ -48,7 +48,12 @@
                     </div>
                     <div class="form-group">
                         <label>{{ $t("Session duration") }}:</label>
-                        <select v-model="duration" name="session-duration" class="form-control form-control-full-width form-select">
+                        <select
+                            v-model="duration"
+                            name="session-duration"
+                            class="form-control form-control-full-width form-select"
+                            @change="onDurationChanged"
+                        >
                             <option :value="'day'">1 {{ $t("day") }}</option>
                             <option :value="'week'">1 {{ $t("week") }} | 7 {{ $t("days") }}</option>
                             <option :value="'month'">1 {{ $t("month") }} | 30 {{ $t("days") }}</option>
@@ -92,7 +97,6 @@
 </template>
 
 <script setup lang="ts">
-import type { SessionDuration } from "@/api/api-auth";
 import { apiAuthLogin } from "@/api/api-auth";
 import { apiInvitesLogin } from "@/api/api-invites";
 import { makeApiRequest } from "@asanrom/request-browser";
@@ -104,6 +108,7 @@ import { useInterval } from "@/composables/use-interval";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useI18n } from "@/composables/use-i18n";
 import { handleAuthenticatedNewSession } from "@/global-state/auth";
+import { getPreferredSessionDuration, setPreferredSessionDuration } from "@/local-storage/app-preferences.ts";
 
 // Translation function
 const { $t } = useI18n();
@@ -115,7 +120,14 @@ const username = ref("");
 const password = ref("");
 
 // Session duration
-const duration = ref<SessionDuration>("day");
+const duration = ref(getPreferredSessionDuration());
+
+/**
+ * Called whenever the user changes the session duration in the select
+ */
+const onDurationChanged = () => {
+    setPreferredSessionDuration(duration.value);
+};
 
 // TFA required?
 const tfaRequired = ref(false);
