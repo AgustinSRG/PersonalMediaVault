@@ -137,6 +137,7 @@
         </form>
 
         <AudioTrackDeleteModal
+            v-if="displayAudioTrackDelete"
             v-model:display="displayAudioTrackDelete"
             :track-to-delete="trackToDelete"
             @confirm="removeAudioConfirm"

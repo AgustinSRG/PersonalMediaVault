@@ -138,6 +138,7 @@
         </form>
 
         <SubtitlesDeleteModal
+            v-if="displaySubtitlesDelete"
             v-model:display="displaySubtitlesDelete"
             :subtitle-to-delete="subtitleToDelete"
             @confirm="removeSubtitlesConfirm"

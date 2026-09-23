@@ -112,6 +112,7 @@
         </div>
 
         <AttachmentDeleteModal
+            v-if="displayAttachmentDelete"
             v-model:display="displayAttachmentDelete"
             :attachment-to-delete="attachmentToDelete"
             @confirm="removeAttachmentConfirm"
