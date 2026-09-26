@@ -267,7 +267,7 @@ watch(imageMediaId, () => {
         if (imageMediaId.value >= 0) {
             imageFile.value = null;
             loadImageThumbnail();
-        } else if (!imageFile.value) {
+        } else if (imageUrlFromId.value >= 0) {
             clearImageUrl();
         }
     }
