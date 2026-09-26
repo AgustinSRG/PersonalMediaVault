@@ -225,7 +225,7 @@ import { getCurrentAlbumData } from "@/global-state/album";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { getAuthStatus, isVaultLocked } from "@/global-state/auth";
 import { getNavigationStatus, isPageVisible, navigationChangeSearchParams, navigationClickOnMedia } from "@/global-state/navigation";
-import { updateListItemFromPartialMetadata } from "@/global-state/media";
+import { getCurrentMediaId, updateListItemFromPartialMetadata } from "@/global-state/media";
 
 const ImageSelectBox = defineAsyncComponent({
     loader: () => import("./common/ImageSelectBox.vue"),
@@ -263,6 +263,11 @@ const props = defineProps({
      * True if the page is being displayed in a modal
      */
     inModal: Boolean,
+
+    /**
+     * True for defaulting to search by image using the current media
+     */
+    defaultSearchByCurrentImage: Boolean,
 
     /**
      * Optional set of elements to remove from the list
@@ -792,6 +797,11 @@ const startSearch = () => {
 onMounted(() => {
     // Load initial search parameters
     loadSearchParams();
+
+    if (props.defaultSearchByCurrentImage && semanticSearchAvailable.value) {
+        imageInternalId.value = getCurrentMediaId();
+        mode.value = "image";
+    }
 
     // Start searching
     startSearch();

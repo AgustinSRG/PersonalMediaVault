@@ -23,6 +23,7 @@
             <div class="modal-body no-padding">
                 <PageSearch
                     :in-modal="true"
+                    :default-search-by-current-image="true"
                     :min="false"
                     :no-album="-1"
                     :page-size="pageSize"
