@@ -6,7 +6,7 @@
             :class="{ 'rounded-corners-cells': roundedCorners }"
             :style="{
                 '--row-size': rowSize,
-                '--row-size-min': rowSizeMin,
+                '--row-size-min': rowSize,
                 '--min-cell-size': minItemSize + 'px',
                 '--max-cell-size': maxItemSize + 'px',
                 '--cell-padding': padding + 'px',
@@ -14,24 +14,33 @@
         >
             <div class="modal-header">
                 <div class="modal-title">
-                    {{ $t("Add related media") }}
+                    {{ $t("Select an image to find similar results") }}
                 </div>
-                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body no-padding">
+                <div class="horizontal-filter-menu two-child modal-top-menu">
+                    <a href="javascript:;" class="horizontal-filter-menu-item selected" :title="$t('Search')"
+                        ><i class="fas fa-search"></i> {{ $t("Search") }}</a
+                    >
+                    <a href="javascript:;" class="horizontal-filter-menu-item" :title="$t('Select file')" @click="openFileSelectDialog"
+                        ><i class="fas fa-upload"></i> {{ $t("Select file") }}</a
+                    >
+                </div>
+                <input ref="hiddenFileInput" type="file" class="file-hidden" name="image-select" @change="onImageFileChanged" />
                 <PageSearch
                     :in-modal="true"
+                    :no-search-by-image="true"
+                    :skip-media-with-no-thumbnail="true"
                     :min="false"
-                    :no-album="-1"
                     :page-size="pageSize"
                     :display-titles="displayTitles"
                     :row-size="rowSize"
                     :row-size-min="rowSizeMin"
                     :min-items-size="minItemSize"
                     :max-items-size="maxItemSize"
-                    :remove-media-from-list="mediaElements"
                     :scroll-key="scrollKey"
                     @select-media="selectMedia"
                 ></PageSearch>
@@ -48,8 +57,7 @@
 
 <script setup lang="ts">
 import ModalDialogContainer from "./common/ModalDialogContainer.vue";
-import type { PropType } from "vue";
-import { computed, ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef } from "vue";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import { emitAppEvent, EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/global-state/app-events";
 import type { MediaListItem } from "@/api/models";
@@ -57,6 +65,18 @@ import { useI18n } from "@/composables/use-i18n";
 import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { getUniqueStringId } from "@/utils/unique-id.ts";
+
+const emit = defineEmits<{
+    /**
+     * Event to select a media
+     */
+    (e: "select-media", mid: number, thumbnail: string): void;
+
+    /**
+     * Event to select a file
+     */
+    (e: "select-file", file: File): void;
+}>();
 
 // Translation function
 const { $t } = useI18n();
@@ -70,46 +90,18 @@ const container = useTemplateRef("container");
 // Modal composable
 const { close, scrollToTop } = useModal(display, container);
 
-// Props
-const props = defineProps({
-    /**
-     * Media ID
-     */
-    mid: {
-        type: Number,
-        required: true,
-    },
-
-    /**
-     * Related media array
-     */
-    relatedMedia: {
-        type: Array as PropType<MediaListItem[]>,
-        required: true,
-    },
-});
-
-// Events
-const emit = defineEmits<{
-    /**
-     * Emitted when media is added
-     * @param media The media element
-     * @param callback The callback to call in order to indicate the media was added
-     */
-    (e: "add-media", media: MediaListItem, callback: () => void): void;
-}>();
-
 /**
- * Call when the user selects a media element
- * @param m Media element
- * @param callback Callback
+ * Called when the user selects a media element
+ * @param m The media element
+ * @param callback The callback
  */
 const selectMedia = (m: MediaListItem, callback: () => void) => {
-    emit("add-media", m, callback);
-};
+    emit("select-media", m.id, m.thumbnail || "");
 
-// Set of media elements not to show
-const mediaElements = computed(() => new Set<number>((props.relatedMedia || []).map((e) => e.id).concat(props.mid)));
+    callback();
+
+    close();
+};
 
 // Page preferences
 const { pageSize, rowSize, rowSizeMin, minItemSize, maxItemSize, padding, displayTitles, roundedCorners } = usePagePreferences("search");
@@ -125,6 +117,8 @@ const scrollKey = getUniqueStringId();
  * @param e The event
  */
 const onPageScroll = (e: Event) => {
+    e.stopPropagation();
+
     pageScroll.value = (e.target as HTMLElement).scrollTop;
 
     emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e, scrollKey);
@@ -137,5 +131,30 @@ const goTop = () => {
     emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, scrollKey);
 
     scrollToTop();
+};
+
+// Hidden file input element
+const hiddenFileInput = useTemplateRef("hiddenFileInput");
+
+/**
+ * Opens the dialog to select an image file
+ */
+const openFileSelectDialog = () => {
+    if (hiddenFileInput.value) {
+        hiddenFileInput.value.value = null;
+        hiddenFileInput.value.click();
+    }
+};
+
+/**
+ * Event handler for 'change' on the file input
+ * @param e The event
+ */
+const onImageFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        emit("select-file", data[0]);
+        close();
+    }
 };
 </script>

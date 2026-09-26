@@ -54,6 +54,7 @@
                     :min-items-size="minItemSize"
                     :max-items-size="maxItemSize"
                     :remove-media-from-list="mediaElements"
+                    :scroll-key="scrollKey"
                     @select-media="selectMedia"
                 ></PageSearch>
                 <PageAlbums
@@ -98,6 +99,7 @@ import { useModal } from "@/composables/use-modal";
 import { usePagePreferences } from "@/composables/use-page-preferences";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { showSnackBar } from "@/global-state/snack-bar";
+import { getUniqueStringId } from "@/utils/unique-id.ts";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -309,6 +311,9 @@ const selectAlbum = (albumId: number, callback: () => void) => {
 // Page scroll
 const pageScroll = ref(0);
 
+// Scroll key
+const scrollKey = getUniqueStringId();
+
 /**
  * Event handler for 'scroll'
  * @param e The event
@@ -317,7 +322,7 @@ const onPageScroll = (e: Event) => {
     pageScroll.value = (e.target as HTMLElement).scrollTop;
 
     if (!isAlbums.value) {
-        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e, scrollKey);
     }
 };
 
@@ -326,7 +331,7 @@ const onPageScroll = (e: Event) => {
  */
 const goTop = () => {
     if (!isAlbums.value) {
-        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+        emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, scrollKey);
     }
 
     scrollToTop();

@@ -26,23 +26,13 @@
                 </button>
 
                 <button
-                    v-if="semanticSearchAvailable"
+                    v-if="semanticSearchAvailable && !noSearchByImage"
                     type="button"
                     class="page-option"
                     :class="{ current: mode === 'image' }"
                     @click="setMode('image')"
                 >
                     {{ $t("Search by image") }}
-                </button>
-
-                <button
-                    v-if="semanticSearchAvailable && currentMedia >= 0"
-                    type="button"
-                    class="page-option"
-                    :class="{ current: mode === 'similar-to-current' }"
-                    @click="setMode('similar-to-current')"
-                >
-                    {{ $t("Similar to current") }}
                 </button>
             </div>
 
@@ -137,14 +127,16 @@
             <ImageSelectBox
                 v-else-if="mode === 'image'"
                 v-model:image-file="imageFile"
+                v-model:image-media-id="imageInternalId"
                 :loading="loading"
                 :vector-loaded="vectorLoaded"
                 :image-error="imageError"
+                @update:image-media-id="updateSearchParams(false)"
                 @start-search="startSearch"
             ></ImageSelectBox>
         </form>
 
-        <div class="search-results tags-focus-skip" tabindex="-1" @keydown="onTagsSkipKeyDown">
+        <div ref="containerResults" class="search-results tags-focus-skip" tabindex="-1" @keydown="onTagsSkipKeyDown">
             <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
@@ -162,8 +154,8 @@
                     v-for="(item, i) in row.items"
                     :key="i"
                     :item="item"
-                    :current="currentMedia == item.id"
-                    :last-current="lastCurrentMedia === item.id"
+                    :current="currentMedia == item.id && !inModal"
+                    :last-current="lastCurrentMedia === item.id && !inModal"
                     :display-titles="displayTitles"
                     @go="goToMedia(item)"
                 ></MediaItem>
@@ -242,6 +234,9 @@ const ImageSelectBox = defineAsyncComponent({
 // Ref to the container element
 const container = useTemplateRef("container");
 
+// Ref to the results container element
+const containerResults = useTemplateRef("containerResults");
+
 // Ref to the top container
 const topContainer = computed<HTMLElement>(() => {
     if (props.inModal) {
@@ -268,6 +263,11 @@ const props = defineProps({
      * True if the page is being displayed in a modal
      */
     inModal: Boolean,
+
+    /**
+     * True if the search by image feature should be disabled
+     */
+    noSearchByImage: Boolean,
 
     /**
      * Optional set of elements to remove from the list
@@ -328,6 +328,16 @@ const props = defineProps({
         type: Number,
         required: true,
     },
+
+    /**
+     * Scroll key for in-modal search pages
+     */
+    scrollKey: String,
+
+    /**
+     * Skip media with no thumbnail?
+     */
+    skipMediaWithNoThumbnail: Boolean,
 });
 
 // Emits
@@ -456,7 +466,11 @@ const onPageScroll = (e: Event) => {
     listScroller.checkElementScroll(e.target as HTMLElement);
 };
 
-onApplicationEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, (e: Event) => {
+onApplicationEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, (e: Event, scrollKey: string) => {
+    if (scrollKey !== props.scrollKey) {
+        return;
+    }
+
     listScroller.checkElementScroll(e.target as HTMLElement);
 });
 
@@ -471,6 +485,7 @@ const searchParams = ref(getNavigationStatus().searchParams);
  */
 type PageSearchParameters = {
     mode: SearchMode;
+    imageMediaId: number;
     textSearch: string;
     tags: number[];
 };
@@ -485,6 +500,7 @@ const parsePageSearchParameters = (): PageSearchParameters => {
     if (props.inModal || !navSearchParams) {
         return {
             mode: getPreferredSearchMode(getAuthStatus().semanticSearchAvailable),
+            imageMediaId: -1,
             textSearch: "",
             tags: [],
         };
@@ -493,6 +509,18 @@ const parsePageSearchParameters = (): PageSearchParameters => {
     const parts = navSearchParams.split("~");
 
     let mode = (parts[0] || "") as SearchMode;
+
+    let imageMediaId = -1;
+
+    if (mode.startsWith("image.")) {
+        imageMediaId = parseInt(mode.split(".")[1], 10);
+
+        if (isNaN(imageMediaId) || !isFinite(imageMediaId) || imageMediaId < 0) {
+            imageMediaId = -1;
+        }
+
+        mode = "image";
+    }
 
     if (!SEARCH_MODES.includes(mode)) {
         mode = DEFAULT_SEARCH_MODE;
@@ -520,6 +548,7 @@ const parsePageSearchParameters = (): PageSearchParameters => {
 
     return {
         mode,
+        imageMediaId,
         tags: filteredTags,
         textSearch,
     };
@@ -532,12 +561,14 @@ const loadSearchParams = () => {
     const parsedParams = parsePageSearchParameters();
 
     mode.value = parsedParams.mode;
-    if (mode.value === "similar-to-current" && currentMedia.value < 0) {
-        mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
+    if (mode.value === "image" && props.noSearchByImage) {
+        mode.value = "semantic";
     }
 
+    imageInternalId.value = parsedParams.imageMediaId;
+
     textSearch.value = parsedParams.textSearch;
-    if (textSearch.value != "" && (mode.value === "image" || mode.value === "similar-to-current")) {
+    if (textSearch.value != "" && mode.value === "image") {
         mode.value = getPreferredSearchModeUnconditional(semanticSearchAvailable.value);
     }
 
@@ -557,7 +588,7 @@ const updateSearchParams = (replaceState?: boolean) => {
     let newSearchParams = "";
 
     if (mode.value !== DEFAULT_SEARCH_MODE || tags.value.length > 0 || textSearch.value.length > 0) {
-        newSearchParams = mode.value;
+        newSearchParams = mode.value + (mode.value === "image" && imageInternalId.value >= 0 ? "." + imageInternalId.value : "");
         if (tags.value.length > 0 || textSearch.value.length > 0) {
             newSearchParams += "~" + tags.value.join("-") + (textSearch.value ? "~" + textSearch.value : "");
         }
@@ -665,6 +696,9 @@ const vector = ref([]);
 
 // True if the vector has been loaded
 const vectorLoaded = ref(false);
+
+// Internal image for image semantic search
+const imageInternalId = ref(-1);
 
 // The current uploaded image file to search by image
 const imageFile = shallowRef<File | null>(null);
@@ -780,14 +814,6 @@ onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
     const changed = currentMedia.value !== navStatus.media;
     currentMedia.value = navStatus.media;
 
-    if (navStatus.media >= 0) {
-        lastCurrentMedia.value = navStatus.media;
-    } else {
-        if (mode.value === "similar-to-current") {
-            setMode(getPreferredSearchModeUnconditional(semanticSearchAvailable.value));
-        }
-    }
-
     if (!props.inModal) {
         if (changed) {
             nextTick(() => {
@@ -803,15 +829,13 @@ onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
         loadSearchParams();
         startSearch();
         autoFocus();
-    } else if (changed && mode.value === "similar-to-current") {
-        startSearch();
     }
 });
 
 onApplicationEvent(EVENT_NAME_AUTH_CHANGED, (newAuthStatus) => {
     semanticSearchAvailable.value = newAuthStatus.semanticSearchAvailable;
 
-    if ((mode.value === "semantic" || mode.value === "image" || mode.value === "similar-to-current") && !semanticSearchAvailable.value) {
+    if ((mode.value === "semantic" || mode.value === "image") && !semanticSearchAvailable.value) {
         setMode(DEFAULT_SEARCH_MODE);
     }
 
@@ -834,10 +858,10 @@ const cancel = () => {
 const continueSearch = () => {
     if (mode.value === "semantic" && textSearch.value) {
         loadSemantic();
+    } else if (mode.value === "image" && imageInternalId.value >= 0) {
+        loadSemanticImageFromVault();
     } else if (mode.value === "image" && imageFile.value) {
-        loadSemanticImage();
-    } else if (mode.value === "similar-to-current" && currentMedia.value >= 0) {
-        loadSemanticSimilarToCurrent();
+        loadSemanticImageFile();
     } else if (albumSearch.value >= 0 && mode.value === "adv") {
         loadAlbumSearch();
     } else {
@@ -1132,7 +1156,7 @@ const loadSemanticVector = () => {
 /**
  * Performs a semantic search query using an image
  */
-const loadSemanticImage = () => {
+const loadSemanticImageFile = () => {
     if (!vectorLoaded.value) {
         loadSemanticImageVector();
         return;
@@ -1184,7 +1208,7 @@ const loadSemanticImage = () => {
                 }
             } else if (result.scanned < result.total_count) {
                 // Maybe there are more items
-                loadSemanticImage();
+                loadSemanticImageFile();
             } else {
                 loading.value = false;
                 finished.value = true;
@@ -1207,14 +1231,14 @@ const loadSemanticImage = () => {
                 },
                 temporalError: () => {
                     // Retry
-                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImage);
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFile);
                 },
             });
         })
         .onUnexpectedError((err) => {
             console.error(err);
             // Retry
-            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImage);
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFile);
         });
 };
 
@@ -1241,7 +1265,7 @@ const loadSemanticImageVector = () => {
             vector.value = result.vector;
             vectorLoaded.value = true;
 
-            loadSemanticImage();
+            loadSemanticImageFile();
         })
         .onRequestError((err, handleErr) => {
             handleErr(err, {
@@ -1286,11 +1310,12 @@ const loadSemanticImageVector = () => {
 };
 
 /**
- * Performs a semantic search query using the current media
+ * Performs a semantic search query using
+ * an image stored in the vault
  */
-const loadSemanticSimilarToCurrent = () => {
+const loadSemanticImageFromVault = () => {
     if (!vectorLoaded.value) {
-        loadSemanticCurrentMediaVector();
+        loadSemanticImageFromVaultVector();
         return;
     }
 
@@ -1340,7 +1365,7 @@ const loadSemanticSimilarToCurrent = () => {
                 }
             } else if (result.scanned < result.total_count) {
                 // Maybe there are more items
-                loadSemanticSimilarToCurrent();
+                loadSemanticImageFromVault();
             } else {
                 loading.value = false;
                 finished.value = true;
@@ -1363,22 +1388,22 @@ const loadSemanticSimilarToCurrent = () => {
                 },
                 temporalError: () => {
                     // Retry
-                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticSimilarToCurrent);
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFromVault);
                 },
             });
         })
         .onUnexpectedError((err) => {
             console.error(err);
             // Retry
-            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticSimilarToCurrent);
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFromVault);
         });
 };
 
 /**
- * Loads the vector from the current media
- * in order to search by current media similarity.
+ * Loads the vector from a media stored in the vault
+ * in order to search by image similarity.
  */
-const loadSemanticCurrentMediaVector = () => {
+const loadSemanticImageFromVaultVector = () => {
     clearNamedTimeout(loadRequestId);
     abortNamedApiRequest(loadRequestId);
 
@@ -1392,12 +1417,12 @@ const loadSemanticCurrentMediaVector = () => {
         return; // Vault is locked
     }
 
-    makeNamedApiRequest(loadRequestId, apiSemanticSearchGetEmbedding(currentMedia.value))
+    makeNamedApiRequest(loadRequestId, apiSemanticSearchGetEmbedding(imageInternalId.value))
         .onSuccess((result) => {
             vector.value = result.vector;
             vectorLoaded.value = true;
 
-            loadSemanticSimilarToCurrent();
+            loadSemanticImageFromVault();
         })
         .onRequestError((err, handleErr) => {
             handleErr(err, {
@@ -1420,14 +1445,14 @@ const loadSemanticCurrentMediaVector = () => {
                 },
                 temporalError: () => {
                     // Retry
-                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticCurrentMediaVector);
+                    setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFromVaultVector);
                 },
             });
         })
         .onUnexpectedError((err) => {
             console.error(err);
             // Retry
-            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticCurrentMediaVector);
+            setNamedTimeout(loadRequestId, LOAD_RETRY_DELAY, loadSemanticImageFromVaultVector);
         });
 };
 
@@ -1497,6 +1522,10 @@ const filterElements = (results: MediaListItem[]) => {
     const resultsToAdd: MediaListItem[] = [];
 
     for (const e of results) {
+        if (!e.thumbnail && props.skipMediaWithNoThumbnail) {
+            continue;
+        }
+
         if (blacklist.has(e.id)) {
             continue;
         }
@@ -1682,13 +1711,23 @@ const goTop = () => {
     }
 };
 
-onApplicationEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, goTop);
+onApplicationEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, (scrollKey: string) => {
+    if (scrollKey !== props.scrollKey) {
+        return;
+    }
+
+    goTop();
+});
 
 /**
  * Scrolls to the current media element
  * @returns true if there is a current media element, false otherwise
  */
 const scrollToCurrentMedia = (): boolean => {
+    if (props.inModal) {
+        return false;
+    }
+
     if (!mediaIndexMap.has(currentMedia.value)) {
         return false;
     }
@@ -1699,7 +1738,7 @@ const scrollToCurrentMedia = (): boolean => {
     }
 
     nextTick(() => {
-        const currentElem = container.value?.querySelector(".search-result-item.current");
+        const currentElem = containerResults.value?.querySelector(".search-result-item.current");
         if (currentElem) {
             currentElem.scrollIntoView();
         }
@@ -1712,6 +1751,10 @@ const scrollToCurrentMedia = (): boolean => {
  * Scrolls to the last known current media element
  */
 const scrollToLastCurrentMedia = () => {
+    if (props.inModal) {
+        return;
+    }
+
     nextTick(() => {
         if (!mediaIndexMap.has(lastCurrentMedia.value)) {
             return;
@@ -1724,7 +1767,7 @@ const scrollToLastCurrentMedia = () => {
         }
 
         nextTick(() => {
-            const currentElem = container.value?.querySelector(".search-result-item.last-current");
+            const currentElem = containerResults.value?.querySelector(".search-result-item.last-current");
             if (currentElem) {
                 currentElem.scrollIntoView();
             }

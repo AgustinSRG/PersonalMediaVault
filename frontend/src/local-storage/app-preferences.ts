@@ -470,12 +470,12 @@ export function clearUploadPreferences() {
 /**
  * Search mode for search page
  */
-export type SearchMode = "basic" | "adv" | "semantic" | "image" | "similar-to-current";
+export type SearchMode = "basic" | "adv" | "semantic" | "image";
 
 /**
  * List of available search modes
  */
-export const SEARCH_MODES: SearchMode[] = ["basic", "adv", "semantic", "image", "similar-to-current"];
+export const SEARCH_MODES: SearchMode[] = ["basic", "adv", "semantic", "image"];
 
 /**
  * List of available search modes (unconditional)
@@ -498,7 +498,7 @@ export function getPreferredSearchMode(semanticSearchAvailable: boolean): Search
         return DEFAULT_SEARCH_MODE;
     }
 
-    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image" || searchMode === "similar-to-current")) {
+    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image")) {
         return DEFAULT_SEARCH_MODE;
     }
 

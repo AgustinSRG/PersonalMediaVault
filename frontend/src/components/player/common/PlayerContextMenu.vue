@@ -162,7 +162,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { useUserPermissions } from "@/composables/use-user-permissions";
 import { useFocusTrap } from "@/composables/use-focus-trap";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
-import { loadCurrentMedia } from "@/global-state/media";
+import { getCurrentMediaId, loadCurrentMedia } from "@/global-state/media";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { EVENT_NAME_AUTH_CHANGED } from "@/global-state/app-events";
 import { getAuthStatus } from "@/global-state/auth";
@@ -471,7 +471,7 @@ const download = () => {
  * Opens similar to current media find
  */
 const openFindSimilar = () => {
-    navigationGoToPage("search", "similar-to-current");
+    navigationGoToPage("search", "image." + getCurrentMediaId());
     hide();
 };
 

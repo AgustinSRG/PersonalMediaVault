@@ -159,6 +159,7 @@
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
+            :scroll-key="scrollKey"
         ></PageSearch>
         <PageAlbums
             v-if="isDisplayed && page === 'albums'"
@@ -202,6 +203,7 @@ import {
     navigationExpandPage,
     navigationGoToPageConditionalSplit,
 } from "@/global-state/navigation";
+import { getUniqueStringId } from "@/utils/unique-id.ts";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -486,11 +488,14 @@ const uploadMedia = () => {
 // Current page scroll
 const pageScroll = ref(0);
 
+// Scroll key
+const scrollKey = getUniqueStringId();
+
 /**
  * Goes to the top of the scrolled section of the page
  */
 const goToTop = () => {
-    emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+    emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, scrollKey);
 };
 
 /**

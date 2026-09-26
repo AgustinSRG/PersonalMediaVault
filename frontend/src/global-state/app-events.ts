@@ -346,14 +346,16 @@ export type AppEventsMap = {
 
     /**
      * Event triggered when the user requests going to the top of the advanced search page
+     * @param key The scroll key
      */
-    [EVENT_NAME_ADVANCED_SEARCH_GO_TOP]: () => void;
+    [EVENT_NAME_ADVANCED_SEARCH_GO_TOP]: (key: string) => void;
 
     /**
      * Event triggered when the advanced search container is scrolled
      * @param e The scroll event
+     * @param key The scroll key
      */
-    [EVENT_NAME_ADVANCED_SEARCH_SCROLL]: (e: Event) => void;
+    [EVENT_NAME_ADVANCED_SEARCH_SCROLL]: (e: Event, key: string) => void;
 
     /**
      * Event triggered when the user makes changes to the basic metadata of the current media
