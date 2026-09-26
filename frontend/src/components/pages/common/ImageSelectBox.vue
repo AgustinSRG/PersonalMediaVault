@@ -1,5 +1,6 @@
 <template>
     <div class="form-group">
+        <input ref="hiddenFileInput" type="file" class="file-hidden" name="image-select" @change="onImageFileChanged" />
         <div
             class="upload-box auto-focus"
             :class="{ dragging: imageDragging }"
@@ -24,13 +25,6 @@
                 {{ $t("Drop an image here or click to open the file selection dialog.") }}
             </div>
         </div>
-
-        <ImageSelectModal
-            v-if="displaySelectModal"
-            v-model:display="displaySelectModal"
-            @select-media="setImageMediaId"
-            @select-file="setImageFile"
-        ></ImageSelectModal>
     </div>
 </template>
 
@@ -45,11 +39,7 @@ import { getAssetURL } from "@/utils/api";
 import { clickOnEnter } from "@/utils/events";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from "vue";
-
-const ImageSelectModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/ImageSelectModal.vue"),
-});
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
 // Translation
 const { $t } = useI18n();
@@ -79,9 +69,6 @@ const emit = defineEmits<{
      */
     (e: "start-search"): void;
 }>();
-
-// Display select modal
-const displaySelectModal = ref(false);
 
 // Image file model
 const imageFile = defineModel<File | null>("imageFile");
@@ -140,11 +127,29 @@ const onDrop = (e: DragEvent) => {
     }
 };
 
+// Hidden file input element
+const hiddenFileInput = useTemplateRef("hiddenFileInput");
+
 /**
- * User clicked the box, open the modal to select an image
+ * User clicked on the upload box.
+ * The file input must be triggered.
  */
 const clickToSelect = () => {
-    displaySelectModal.value = true;
+    if (hiddenFileInput.value) {
+        hiddenFileInput.value.value = null;
+        hiddenFileInput.value.click();
+    }
+};
+
+/**
+ * Event handler for 'change' on the file input
+ * @param e The event
+ */
+const onImageFileChanged = (e: InputEvent) => {
+    const data = (e.target as HTMLInputElement).files;
+    if (data && data.length > 0) {
+        setImageFile(data[0]);
+    }
 };
 
 /**
@@ -156,6 +161,7 @@ const clearImageUrl = () => {
     }
 
     imageUrl.value = null;
+    imageUrlFromId.value = -1;
 };
 
 // Ensure the image URL is revoked before the component unmounts
@@ -184,29 +190,6 @@ const setImageFile = (image: File) => {
 
     imageMediaId.value = -1;
     imageUrlFromId.value = -1;
-
-    emit("start-search");
-};
-
-/**
- * Sets the media ID of an image in the vault
- * @param id The media ID
- * @param thumbnail The thumbnail (for preview)
- */
-const setImageMediaId = (id: number, thumbnail: string) => {
-    if (!thumbnail || id < 0) {
-        return;
-    }
-
-    clearThumbnailLoad();
-
-    clearImageUrl();
-
-    imageFile.value = null;
-    imageMediaId.value = id;
-    imageUrlFromId.value = id;
-    imageUrl.value = getAssetURL(thumbnail);
-    imageUrlIsRevokable.value = false;
 
     emit("start-search");
 };
@@ -280,9 +263,13 @@ const clearThumbnailLoad = () => {
 watch(imageMediaId, () => {
     clearThumbnailLoad();
 
-    if (imageMediaId.value !== imageUrlFromId.value && imageMediaId.value >= 0) {
-        imageFile.value = null;
-        loadImageThumbnail();
+    if (imageMediaId.value !== imageUrlFromId.value) {
+        if (imageMediaId.value >= 0) {
+            imageFile.value = null;
+            loadImageThumbnail();
+        } else if (!imageFile.value) {
+            clearImageUrl();
+        }
     }
 });
 

@@ -26,7 +26,7 @@
                 </button>
 
                 <button
-                    v-if="semanticSearchAvailable && !noSearchByImage"
+                    v-if="semanticSearchAvailable"
                     type="button"
                     class="page-option"
                     :class="{ current: mode === 'image' }"
@@ -265,11 +265,6 @@ const props = defineProps({
     inModal: Boolean,
 
     /**
-     * True if the search by image feature should be disabled
-     */
-    noSearchByImage: Boolean,
-
-    /**
      * Optional set of elements to remove from the list
      */
     removeMediaFromList: Object as PropType<Set<number>>,
@@ -333,11 +328,6 @@ const props = defineProps({
      * Scroll key for in-modal search pages
      */
     scrollKey: String,
-
-    /**
-     * Skip media with no thumbnail?
-     */
-    skipMediaWithNoThumbnail: Boolean,
 });
 
 // Emits
@@ -561,9 +551,6 @@ const loadSearchParams = () => {
     const parsedParams = parsePageSearchParameters();
 
     mode.value = parsedParams.mode;
-    if (mode.value === "image" && props.noSearchByImage) {
-        mode.value = "semantic";
-    }
 
     imageInternalId.value = parsedParams.imageMediaId;
 
@@ -1522,10 +1509,6 @@ const filterElements = (results: MediaListItem[]) => {
     const resultsToAdd: MediaListItem[] = [];
 
     for (const e of results) {
-        if (!e.thumbnail && props.skipMediaWithNoThumbnail) {
-            continue;
-        }
-
         if (blacklist.has(e.id)) {
             continue;
         }
