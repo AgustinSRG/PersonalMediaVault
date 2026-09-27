@@ -15,12 +15,10 @@
             @keydown="clickOnEnter"
         >
             <div v-if="(loading && !vectorLoaded) || loadingImageThumbnail" class="upload-box-hint loading-delayed">
-                {{ $t("Loading image") }}...
+                <i class="fa fa-spinner fa-spin"></i>
             </div>
             <div v-else-if="imageError" class="upload-box-hint">{{ imageError }}</div>
-            <div v-else-if="imageUrl" class="upload-box-image-container">
-                <img class="upload-box-image" :src="imageUrl" />
-            </div>
+            <ThumbImage v-else-if="imageUrl" class-name="upload-box-image-container" :src="imageUrl"></ThumbImage>
             <div v-else class="upload-box-hint">
                 {{ $t("Drop an image here or click to open the file selection dialog.") }}
             </div>
@@ -40,6 +38,7 @@ import { clickOnEnter } from "@/utils/events";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+import ThumbImage from "@/components/utils/ThumbImage.vue";
 
 // Translation
 const { $t } = useI18n();
