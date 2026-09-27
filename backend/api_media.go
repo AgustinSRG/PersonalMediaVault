@@ -618,6 +618,99 @@ func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) 
 	ReturnAPI_JSON(response, request, jsonResult)
 }
 
+type MediaPreviewAPIResponse struct {
+	Url string `json:"url"`
+}
+
+func api_getMediaPreview(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.ReadMetadata(session.key)
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if meta == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	if meta.Type != MediaTypeVideo {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media is not a video")
+		return
+	}
+
+	hasPreview := false
+	previewWidth := int32(0)
+	previewAsset := uint64(0)
+	previewExtension := ".mp4"
+
+	if meta.OriginalReady && meta.OriginalEncoded {
+		hasPreview = true
+		previewAsset = meta.OriginalAsset
+		previewExtension = meta.OriginalExtension
+		previewWidth = meta.Width
+	}
+
+	for _, res := range meta.Resolutions {
+		if res.Ready && (!hasPreview || res.Width < previewWidth) {
+			hasPreview = true
+			previewAsset = res.Asset
+			previewExtension = res.Extension
+			previewWidth = res.Width
+		}
+	}
+
+	if !hasPreview {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Preview not available")
+		return
+	}
+
+	var result MediaPreviewAPIResponse
+
+	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(previewAsset) + "/preview_" + fmt.Sprint(media_id) + "." + previewExtension + "?fp=" + GetVault().credentials.GetFingerprint()
+
+	// Response
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
 func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 

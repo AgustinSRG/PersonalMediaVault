@@ -1028,6 +1028,39 @@ paths:
                       format: int64
                       description: "Asset size (Bytes)"
   
+  "/api/media/{id}/preview":
+    get:
+      summary: Gets the preview for a media (only video)
+      description: Gets the URL of a preview for a video media asset. The preview is the smallest available resolution.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Preview
+          schema:
+            properties:
+              url:
+                type: string
+                description: "Playback URL"
+                example: "/assets/b/0/0/video_140p.mp4"
+
   "/api/media/{id}/edit/title":
     post:
       summary: Changes media title.

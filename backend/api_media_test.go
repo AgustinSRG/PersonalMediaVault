@@ -1124,6 +1124,49 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 		}
 
+		// Check preview
+
+		if meta.Type == MediaTypeVideo {
+			statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/media/"+fmt.Sprint(meta.Id)+"/preview", nil, session)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if statusCode != 200 {
+				t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+				return
+			}
+
+			previewInfo := MediaPreviewAPIResponse{}
+
+			err = json.Unmarshal(bodyResponseBytes, &previewInfo)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if len(previewInfo.Url) == 0 {
+				t.Error("Preview URL is empty")
+				return
+			}
+
+			statusCode, _, err = DoTestRequest(server, "GET", previewInfo.Url, nil, session)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if statusCode != 200 {
+				t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+			}
+		}
+
+		// Delete resolution
+
 		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/resolution/remove", body, session)
 
 		if err != nil {
