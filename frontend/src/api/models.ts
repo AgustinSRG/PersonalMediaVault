@@ -591,6 +591,16 @@ export interface MediaSizeStatsAsset {
     size: number;
 }
 
+/**
+ * Media preview response
+ */
+export interface MediaPreviewResponse {
+    /**
+     * URL of the media preview
+     */
+    url: string;
+}
+
 // Search
 
 /**

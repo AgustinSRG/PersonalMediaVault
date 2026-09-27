@@ -4,7 +4,7 @@
 
 import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
 import { RequestErrorHandler } from "@asanrom/request-browser";
-import type { MediaData, MediaSizeStats } from "./models";
+import type { MediaData, MediaPreviewResponse, MediaSizeStats } from "./models";
 import { API_PREFIX, getApiURL } from "@/utils/api";
 
 const API_GROUP_PREFIX = "/media";
@@ -68,6 +68,26 @@ export function apiMediaGetMediaSizeStats(id: number): RequestParams<MediaSizeSt
     return {
         method: "GET",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/size_stats`),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Gets the media preview
+ * @param id Media ID
+ * @returns The request parameters
+ */
+export function apiMediaGetMediaPreview(id: number): RequestParams<MediaPreviewResponse, MediaApiErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/preview`),
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
