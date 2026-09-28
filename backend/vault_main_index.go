@@ -239,8 +239,20 @@ func (vmi *VaultMainIndex) Delete() error {
 // res - Temp file resource
 func (vmi *VaultMainIndex) CancelWrite(res *VaultIndexWriteResource) {
 	res.file.Close()
-	_ = os.Remove(res.path)
+
+	var err error = nil
+
+	if res.file.HasChanged() {
+		err = os.Remove(res.path)
+	} else {
+		err = os.Rename(res.path, vmi.GetCopyFile())
+	}
+
 	vmi.lock.EndWrite()
+
+	if err != nil {
+		LogErrorMsg("Failed to cancel write for '" + res.path + "': " + err.Error())
+	}
 }
 
 // Starts read operation

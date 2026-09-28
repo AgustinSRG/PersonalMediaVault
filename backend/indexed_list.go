@@ -61,6 +61,11 @@ func (file *IndexedListFile) Close() {
 	_ = file.f.Close()
 }
 
+// Checks if the file changed
+func (file *IndexedListFile) HasChanged() bool {
+	return file.sizeChanged || file.valuesChanged
+}
+
 // Returns the number of items in the index
 func (file *IndexedListFile) Count() (int64, error) {
 	// Rewind to the start of the file
