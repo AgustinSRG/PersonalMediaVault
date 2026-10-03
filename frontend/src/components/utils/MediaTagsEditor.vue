@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
+import { apiTagsTagMedia, apiTagsTagMediaBulk, apiTagsUntagMedia } from "@/api/api-tags";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { useCommonRequestErrors } from "@/composables/use-common-request-errors";
 import { useI18n } from "@/composables/use-i18n";
@@ -117,6 +117,7 @@ import {
     getTagsEditorClipboardContent,
     setTagsEditorClipboardContent,
 } from "@/global-state/tags-editor-clipboard";
+import { extractTagNameFromError, removeDuplicatedTagNames, splitTagNamesInBatches } from "@/utils/tags-bulk";
 
 const ErrorMessageModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ErrorMessageModal.vue"),
@@ -473,9 +474,9 @@ const copyTags = () => {
 /**
  * Adds a tag for bulk tag adding
  * (no busy checking, promise-based)
- * @param tag The tag to add
+ * @param tags The list of tags to add
  */
-const addTagInBulk = (tag: string) => {
+const addTagsInBulk = (tags: string[]) => {
     return new Promise<boolean>((resolve) => {
         const mediaData = getCurrentMediaData();
 
@@ -485,18 +486,22 @@ const addTagInBulk = (tag: string) => {
 
         const mediaId = mediaData.id;
 
-        makeApiRequest(apiTagsTagMedia(mediaId, tag))
-            .onSuccess((res) => {
-                if (mediaTags.value.indexOf(res.id) === -1) {
-                    mediaTags.value.push(res.id);
-                }
+        makeApiRequest(apiTagsTagMediaBulk([mediaId], tags))
+            .onSuccess((resultList) => {
+                for (const res of resultList) {
+                    if (mediaTags.value.indexOf(res.id) === -1) {
+                        mediaTags.value.push(res.id);
+                    }
 
-                indicateTagCreation(res.id, res.name);
+                    indicateTagCreation(res.id, res.name);
+                }
 
                 modifyCurrentMediaData(mediaId, (metadata) => {
                     // Update cached media data
-                    if (!metadata.tags.includes(res.id)) {
-                        metadata.tags.push(res.id);
+                    for (const res of resultList) {
+                        if (!metadata.tags.includes(res.id)) {
+                            metadata.tags.push(res.id);
+                        }
                     }
                 });
 
@@ -517,7 +522,7 @@ const addTagInBulk = (tag: string) => {
                 handleErr(err, {
                     unauthorized,
                     invalidTagName: () => {
-                        setError($t("Invalid tag name") + ": " + tag);
+                        setError($t("Invalid tag name") + ": " + (extractTagNameFromError(err) || "???"));
                     },
                     badRequest,
                     accessDenied,
@@ -542,7 +547,9 @@ const addTagInBulk = (tag: string) => {
  * @param tags The list of tags
  */
 const insertTagsInBulk = async (tags: string[]) => {
-    const results = await Promise.all(tags.map((t) => addTagInBulk(t)));
+    const batches = splitTagNamesInBatches(removeDuplicatedTagNames(tags));
+
+    const results = await Promise.all(batches.map((b) => addTagsInBulk(b)));
 
     const success = !results.includes(false);
 
