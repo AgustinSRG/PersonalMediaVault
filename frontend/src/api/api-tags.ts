@@ -62,6 +62,33 @@ export function apiTagsTagMedia(media: number, tagName: string): RequestParams<M
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
+                .add(400, "INVALID_TAG_NAME", handler.invalidTagName)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Adds multiple tags to multiple media
+ * @param mediaIds Media IDs (limited to 64 elements)
+ * @param tagNames Tag names (limited to 64 elements)
+ * @returns The request parameters
+ */
+export function apiTagsTagMediaBulk(mediaIds: number[], tagNames: string[]): RequestParams<MediaTag[], TagMediaErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL("/api/tags/add_bulk"),
+        json: {
+            media_ids: mediaIds,
+            tag_names: tagNames,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
                 .add(400, "INVALID_NAME", handler.invalidTagName)
                 .add(400, "*", handler.badRequest)
                 .add(403, "*", handler.accessDenied)
@@ -109,6 +136,60 @@ export function apiTagsUntagMedia(media: number, tagId: number): RequestParams<U
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Response for media untag API
+ */
+export interface UntagMediaBulkResponse {
+    /**
+     * For each requested tag, true if the tag was removed
+     */
+    removed: boolean[];
+}
+
+/**
+ * Error handler for untag media bulk API
+ */
+export type UntagMediaBulkErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Error: Bad request
+     */
+    badRequest: () => void;
+
+    /**
+     * Error: Access denied
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Removes multiple tags from multiple media
+ * @param mediaIds Media IDs (limited to 64 elements)
+ * @param tagIds Tag IDs (limited to 64 elements)
+ * @returns The request parameters
+ */
+export function apiTagsUntagMediaBulk(
+    mediaIds: number[],
+    tagIds: number[],
+): RequestParams<UntagMediaBulkResponse, UntagMediaBulkErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL("/api/tags/remove_bulk"),
+        json: {
+            media_ids: mediaIds,
+            tag_ids: tagIds,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.badRequest)
                 .add(403, "*", handler.accessDenied)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
                 .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
