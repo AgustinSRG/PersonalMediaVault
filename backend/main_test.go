@@ -170,6 +170,12 @@ func TestAPIIntegration(t *testing.T) {
 	})
 
 	wg.Add(1)
+	t.Run("Tags API (bulk)", func(t *testing.T) {
+		Tags_API_Bulk_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
 	t.Run("Search API", func(t *testing.T) {
 		Search_API_Test(server, session, t)
 		wg.Done()

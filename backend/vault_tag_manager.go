@@ -441,6 +441,56 @@ func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte
 	return tag_id, err
 }
 
+// Adds a tag to multiple media
+// media_ids - IDs of the media
+// tag_name - Name of the tag
+// key - Vault encryption key
+// Returns the ID for the tag
+func (tm *VaultTagManager) TagMediaBulk(media_ids []uint64, tag_name string, key []byte) (uint64, error) {
+	tag_id, err := tm.AddTagToList(tag_name, key)
+
+	if err != nil {
+		return 0, err
+	}
+
+	indexFile, err := tm.AcquireIndexFile(tag_id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer tm.ReleaseIndexFile(tag_id, false, key)
+
+	r, err := indexFile.StartWrite()
+
+	if err != nil {
+		return 0, err
+	}
+
+	changed := false
+
+	for _, media_id := range media_ids {
+		added, _, err := r.file.AddValue(media_id)
+
+		if err != nil {
+			indexFile.CancelWrite(r)
+			return 0, err
+		}
+
+		changed = changed || added
+	}
+
+	if !changed {
+		// No changes
+		indexFile.CancelWrite(r)
+		return tag_id, nil
+	}
+
+	err = indexFile.EndWrite(r)
+
+	return tag_id, err
+}
+
 // Removes tag from a media file
 // media_id - ID of the media file
 // tag_name - Name of the tag
@@ -470,6 +520,55 @@ func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte
 
 	if !removed {
 		// Was not tagged, no change
+		indexFile.CancelWrite(r)
+
+		delResult := tm.ReleaseIndexFile(tag_id, true, key)
+
+		return nil, delResult
+	}
+
+	err = indexFile.EndWrite(r)
+	delResult := tm.ReleaseIndexFile(tag_id, true, key)
+
+	return err, delResult
+}
+
+// Removes tag from multiple media
+// media_ids - IDs of the media
+// tag_name - Name of the tag
+// key - Vault encryption key
+// Returns the error (if any), and true if the tag got removed
+func (tm *VaultTagManager) UnTagMediaBulk(media_ids []uint64, tag_id uint64, key []byte) (error, bool) {
+	indexFile, err := tm.AcquireIndexFile(tag_id)
+
+	if err != nil {
+		return err, false
+	}
+
+	r, err := indexFile.StartWrite()
+
+	if err != nil {
+		tm.ReleaseIndexFile(tag_id, true, key)
+		return err, false
+	}
+
+	changed := false
+
+	for _, media_id := range media_ids {
+
+		removed, _, err := r.file.RemoveValue(media_id)
+
+		if err != nil {
+			indexFile.CancelWrite(r)
+			tm.ReleaseIndexFile(tag_id, true, key)
+			return err, false
+		}
+
+		changed = changed || removed
+	}
+
+	if !changed {
+		// No changes in the file
 		indexFile.CancelWrite(r)
 
 		delResult := tm.ReleaseIndexFile(tag_id, true, key)

@@ -2396,7 +2396,74 @@ paths:
               name:
                 type: string
                 description: Tag name
-                
+
+  "/api/tags/add_bulk":
+    post:
+      summary: Adds multiple tags to multiple media
+      description: Adds multiple tags to multiple media. Use for batch operations.
+      tags:
+        - tags
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: tag
+          schema:
+            properties:
+              media_ids:
+                type: array
+                items:
+                  type: number
+                  format: int64
+                description: List of media asset IDs. This list cannot be empty, and it is limited to a max of 64 elements.
+              tag_names:
+                type: array
+                items:
+                  type: string
+                description:
+                  List of tag names. Each name cannot ber back or longer than 255 characters. 
+                  This list cannot be empty, and it is limited to a max of 64 elements.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_TAG_NAME - Invalid tag name
+                    * INVALID_MEDIA_LIST - Invalid media ID list
+                    * INVALID_TAG_LIST - Invalid tag names list
+                enum:
+                  - INVALID_TAG_NAME
+                  - INVALID_MEDIA_LIST
+                  - INVALID_TAG_LIST
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success. Tag ID is returned.
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: number
+                  format: int64
+                  description: Tag ID
+                name:
+                  type: string
+                  description: Tag name              
                 
   "/api/tags/remove":
     post:
@@ -2435,7 +2502,68 @@ paths:
               removed:
                 type: boolean
                 description: "True if the tag was removed, in case this was the last media having the tag."
-          
+
+  "/api/tags/remove_bulk":
+    post:
+      summary: Removes multiple tags from multiple media
+      description: Removes multiple tags from multiple media. Use for batch operations.
+      tags:
+        - tags
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: tag
+          schema:
+            properties:
+              media_ids:
+                type: array
+                items:
+                  type: number
+                  format: int64
+                description: List of media asset IDs. This list cannot be empty, and it is limited to a max of 64 elements.
+              tag_ids:
+                type: array
+                items:
+                  type: number
+                  format: int64
+                description: List of tag IDs. This list cannot be empty, and it is limited to a max of 64 elements.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_MEDIA_LIST - Invalid media ID list
+                    * INVALID_TAG_LIST - Invalid tag ID list
+                enum:
+                  - INVALID_MEDIA_LIST
+                  - INVALID_TAG_LIST
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success.
+          schema:
+            properties:
+              removed:
+                type: array
+                items:
+                  type: boolean
+                description: "For each requested tag, in the same order, true if the tag was removed, in case no more media have the tag."
+
   "/api/search":
     get:
       summary: Search

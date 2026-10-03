@@ -216,6 +216,9 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/tags/add", api_tagMedia).Methods("POST")
 	apiRouter.HandleFunc("/tags/remove", api_untagMedia).Methods("POST")
 
+	apiRouter.HandleFunc("/tags/add_bulk", api_tagMediaBulk).Methods("POST")
+	apiRouter.HandleFunc("/tags/remove_bulk", api_untagMediaBulk).Methods("POST")
+
 	// Albums API
 	apiRouter.HandleFunc("/albums", api_getAlbums).Methods("GET")
 	apiRouter.HandleFunc("/albums/{id:[0-9]+}", api_getAlbum).Methods("GET")
