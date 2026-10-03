@@ -79,7 +79,7 @@ func api_tagMediaBulk(response http.ResponseWriter, request *http.Request) {
 		tagName := ParseTagName(p.TagNames[i])
 
 		if len(tagName) == 0 || len(tagName) > 255 {
-			ReturnAPIError(response, 400, "INVALID_TAG_NAME", "Invalid tag name provided: '"+originalTagName+"'")
+			ReturnAPIError(response, 400, "INVALID_TAG_NAME", "Invalid tag name provided: "+originalTagName)
 			return
 		}
 
