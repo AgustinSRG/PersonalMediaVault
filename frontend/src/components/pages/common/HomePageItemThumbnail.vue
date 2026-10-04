@@ -15,7 +15,7 @@
             <i class="fas fa-bars"></i>
         </button>
     </AlbumItemThumbnail>
-    <MediaItemThumbnail v-else-if="item.media" :item="item.media">
+    <MediaItemThumbnail v-else-if="item.media" :item="item.media" :disable-previews="editing" :hovering="hovering">
         <div v-if="editing" class="home-page-element-thumb-pos">
             {{ position + 1 }}
         </div>
@@ -85,6 +85,11 @@ const props = defineProps({
      * Position in the home page row
      */
     position: Number,
+
+    /**
+     * True if hovering with the mouse
+     */
+    hovering: Boolean,
 });
 
 // Emits

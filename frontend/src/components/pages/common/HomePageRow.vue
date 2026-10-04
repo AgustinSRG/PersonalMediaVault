@@ -122,11 +122,14 @@
                         @focus="focusElementIndex(i)"
                         @contextmenu="showContextMenu(i, $event)"
                         @dragstart="onDragStart(i, $event)"
+                        @mouseenter="onElementMouseEnter(i)"
+                        @mouseleave="onElementMouseLeave(i)"
                     >
                         <HomePageItemThumbnail
                             :item="item"
                             :editing="editing"
                             :position="i"
+                            :hovering="hoveringElement == i"
                             @open-options="showContextMenu"
                         ></HomePageItemThumbnail>
 
@@ -511,6 +514,7 @@ const unload = () => {
     loading.value = true;
     firstLoaded.value = false;
     elements.value = [];
+    hoveringElement.value = -1;
 };
 
 /**
@@ -659,6 +663,7 @@ const onElementsLoaded = (newElements: HomePageElement[]) => {
     firstLoaded.value = true;
     loading.value = false;
     loadDisplay.value = false;
+    hoveringElement.value = -1;
 
     rowIndex.value = 0;
 
@@ -1566,5 +1571,28 @@ const onDragCheck = () => {
     }
 
     updateMovingOver();
+};
+
+// Index of the element being hovered
+const hoveringElement = ref(-1);
+
+/**
+ * Mouse enter event handler on element
+ * @param i Index of the element
+ *
+ */
+const onElementMouseEnter = (i: number) => {
+    hoveringElement.value = i;
+};
+
+/**
+ * Mouse leave event handler
+ */
+const onElementMouseLeave = (i: number) => {
+    if (hoveringElement.value !== i) {
+        return;
+    }
+
+    hoveringElement.value = -1;
 };
 </script>

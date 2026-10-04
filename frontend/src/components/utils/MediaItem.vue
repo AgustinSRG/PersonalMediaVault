@@ -1,7 +1,15 @@
 <template>
     <div class="search-result-item" :class="{ current: current, 'last-current': lastCurrent }">
-        <a class="clickable" :href="mediaUrl" target="_blank" rel="noopener noreferrer" @click="onClick">
-            <MediaItemThumbnail :item="item"></MediaItemThumbnail>
+        <a
+            class="clickable"
+            :href="mediaUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="onClick"
+            @mouseenter="onMouseEnter"
+            @mouseleave="onMouseLeave"
+        >
+            <MediaItemThumbnail :item="item" :hovering="mouseHovering"></MediaItemThumbnail>
             <div v-if="displayTitles" class="search-result-title">
                 {{ item.title || $t("Untitled") }}
             </div>
@@ -14,7 +22,7 @@ import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { getFrontendUrl } from "@/utils/api";
 import type { PropType } from "vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import MediaItemThumbnail from "./MediaItemThumbnail.vue";
 
 const { $t } = useI18n();
@@ -75,4 +83,21 @@ const onClick = (e: PointerEvent) => {
  * Media URL
  */
 const mediaUrl = computed(() => getFrontendUrl({ media: props.item?.id }));
+
+// True to display video preview
+const mouseHovering = ref(false);
+
+/**
+ * Mouse enter event handler
+ */
+const onMouseEnter = () => {
+    mouseHovering.value = true;
+};
+
+/**
+ * Mouse leave event handler
+ */
+const onMouseLeave = () => {
+    mouseHovering.value = false;
+};
 </script>
