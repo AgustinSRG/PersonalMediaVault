@@ -7,7 +7,7 @@ require (
 	github.com/AgustinSRG/encrypted-storage v1.0.1
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/AgustinSRG/go-disk-usage v1.0.0
-	github.com/AgustinSRG/go-swap-files v1.0.0
+	github.com/AgustinSRG/go-swap-files v1.0.1
 	github.com/AgustinSRG/gorilla-handlers v1.0.1
 	github.com/gorilla/mux v1.8.1
 	github.com/nightlyone/lockfile v1.0.0
