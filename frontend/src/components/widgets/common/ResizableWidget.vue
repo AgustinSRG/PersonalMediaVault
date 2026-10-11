@@ -92,16 +92,11 @@ import { useInterval } from "@/composables/use-interval";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/local-storage/local-storage";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
-import type { WidgetActionButton } from "@/utils/widgets";
+import type { WidgetActionButton, WidgetInitialPosition } from "@/utils/widgets";
+import { computeWidgetInitialPositionAndSize } from "@/utils/widgets";
 import type { PropType } from "vue";
 import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import { stopPropagationEvent } from "@/utils/events";
-
-// Initial widget width
-const INITIAL_WIDTH = 480;
-
-// Initial widget height
-const INITIAL_HEIGHT = 360;
 
 // Min widget width
 const MIN_WIDTH = 250;
@@ -150,6 +145,30 @@ const props = defineProps({
      * True if busy (disable action buttons)
      */
     busy: Boolean,
+
+    /**
+     * Initial width
+     */
+    initialWidth: {
+        type: Number,
+        default: 480,
+    },
+
+    /**
+     * Initial height
+     */
+    initialHeight: {
+        type: Number,
+        default: 360,
+    },
+
+    /**
+     * Initial position
+     */
+    initialPosition: {
+        type: String as PropType<WidgetInitialPosition>,
+        default: "center",
+    },
 });
 
 // Emits
@@ -172,10 +191,10 @@ const x = ref(0);
 const y = ref(0);
 
 // Widget width
-const width = ref(INITIAL_WIDTH);
+const width = ref(props.initialWidth);
 
 // Widget height
-const height = ref(INITIAL_HEIGHT);
+const height = ref(props.initialHeight);
 
 // Moving widget?
 const moving = ref(false);
@@ -312,23 +331,18 @@ const loadPosition = () => {
             const parentElem: HTMLElement = container.value?.parentElement;
 
             if (parentElem) {
-                const bounds = parentElem.getBoundingClientRect();
+                const initialPosAndSize = computeWidgetInitialPositionAndSize(
+                    parentElem,
+                    props.initialWidth,
+                    props.initialHeight,
+                    props.initialPosition,
+                );
 
-                if (bounds.width < INITIAL_WIDTH) {
-                    x.value = 0;
-                    width.value = bounds.width;
-                } else {
-                    x.value = Math.floor((bounds.width - INITIAL_WIDTH) / 2);
-                    width.value = INITIAL_WIDTH;
-                }
+                x.value = initialPosAndSize.x;
+                width.value = initialPosAndSize.width;
 
-                if (bounds.height < INITIAL_HEIGHT) {
-                    y.value = 0;
-                    height.value = bounds.height;
-                } else {
-                    y.value = Math.floor((bounds.height - INITIAL_HEIGHT) / 2);
-                    height.value = INITIAL_HEIGHT;
-                }
+                y.value = initialPosAndSize.y;
+                height.value = initialPosAndSize.height;
             }
         }
     }

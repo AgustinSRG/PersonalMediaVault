@@ -72,42 +72,8 @@
                 @mousedown="startResizingMouse(note, $event, 'br')"
                 @touchstart.passive="startResizingTouch(note, $event, 'br')"
             ></div>
-
-            <div
-                v-if="editing && !moving && !resizing && selectedNotes === note.id"
-                class="image-notes-text-edit"
-                :class="{
-                    top: note.y + note.h / 2 < imageHeight / 2,
-                    left: note.x + note.w / 2 < imageWidth / 2,
-                    bottom: note.y + note.h / 2 >= imageHeight / 2,
-                    right: note.x + note.w / 2 >= imageWidth / 2,
-                }"
-                tabindex="-1"
-                @dblclick="stopPropagationEvent"
-                @keydown="stopPropagationEvent"
-                @click="stopPropagationEvent"
-                @mousedown="stopPropagationEvent"
-                @touchstart.passive="stopPropagationEvent"
-                @contextmenu="stopPropagationEvent"
-            >
-                <div class="form-group">
-                    <textarea
-                        v-model="note.text"
-                        class="form-control form-textarea form-control-full-width auto-focus"
-                        :placeholder="$t('Type the notes text') + '...'"
-                        @change="saveNote(note)"
-                    ></textarea>
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary btn-xs btn-mr" @click="saveNote(note)">
-                        <i class="fas fa-check"></i> {{ $t("Save") }}
-                    </button>
-                    <button type="button" class="btn btn-danger btn-xs" @click="deleteNote(note)">
-                        <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-                    </button>
-                </div>
-            </div>
         </div>
+
         <div
             v-if="adding"
             class="image-notes creating"
@@ -128,8 +94,19 @@
                 left: hoverLeft,
                 right: hoverRight,
             }"
+            @mousedown="stopPropagationEvent"
+            @touchstart.passive="stopPropagationEvent"
+            @click="stopPropagationEvent"
             v-html="escapeText(selectedNote.text)"
         ></div>
+
+        <ImageNotesTextEditWidget
+            v-if="displayEditMoteWidget && editing && selectedNotesData"
+            v-model:display="displayEditMoteWidget"
+            v-model:text="selectedNotesData.text"
+            @save="saveNote(selectedNotesData)"
+            @delete="deleteNote(selectedNotesData)"
+        ></ImageNotesTextEditWidget>
     </div>
 </template>
 
@@ -140,7 +117,6 @@ import type { ImageNote } from "@/utils/notes-format";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 import { EVENT_NAME_IMAGE_NOTES_UPDATE, EVENT_NAME_IMAGE_NOTES_CHANGE } from "@/global-state/app-events";
-import { useI18n } from "@/composables/use-i18n";
 import { onApplicationEvent } from "@/composables/on-app-event";
 import { onDocumentEvent } from "@/composables/on-document-event";
 import { stopPropagationEvent } from "@/utils/events";
@@ -153,6 +129,7 @@ import {
     removeImageNote,
 } from "@/global-state/img-notes";
 import { clone } from "@/utils/objects";
+import ImageNotesTextEditWidget from "@/components/widgets/ImageNotesTextEditWidget.vue";
 
 /**
  * Maps a dimension based in the image dimensions
@@ -177,9 +154,6 @@ const escapeText = (txt: string): string => {
 
 // Ref to the container element
 const container = useTemplateRef("container");
-
-// Translation
-const { $t } = useI18n();
 
 // Props
 const props = defineProps({
@@ -253,6 +227,7 @@ const onNotesPush = (note: ImageNote) => {
 
     selectedNotes.value = note.id;
     selectedNotesData.value = notes.value[notes.value.length - 1];
+    displayEditMoteWidget.value = true;
     autoFocus();
 };
 
@@ -354,6 +329,9 @@ const resizeMode = ref<ResizeMode>("");
 
 // Selected note to display
 const selectedNote = ref<ImageNote | null>(null);
+
+// Display widget to edit selected image note?
+const displayEditMoteWidget = ref(false);
 
 // Hover coordinates
 const hoverRight = ref("");
@@ -474,6 +452,7 @@ const startAdding = (e: PositionEvent) => {
     if (selectedNotesData.value) {
         selectedNotesData.value = null;
         selectedNotes.value = -1;
+        displayEditMoteWidget.value = false;
         return;
     }
 
@@ -543,6 +522,7 @@ const startMoving = (notes: ImageNote, e: PositionEvent) => {
 
     selectedNotes.value = notes.id;
     selectedNotesData.value = notes;
+    displayEditMoteWidget.value = true;
 
     const bounds = container.value.getBoundingClientRect();
 
@@ -608,6 +588,7 @@ const startResizing = (notes: ImageNote, e: PositionEvent, rm: ResizeMode) => {
 
     selectedNotes.value = notes.id;
     selectedNotesData.value = notes;
+    displayEditMoteWidget.value = true;
 
     const bounds = container.value.getBoundingClientRect();
 

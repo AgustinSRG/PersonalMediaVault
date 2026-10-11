@@ -112,43 +112,39 @@
     cursor: se-resize;
 }
 
-.image-notes-text-edit {
-    cursor: default;
-    position: absolute;
-    width: calc(100% - 8px);
-    min-width: 10rem;
-    background: var(--player-editor-background);
-    padding: 0.25rem;
-}
-
-.image-notes-text-edit.top {
-    top: calc(100% + 0.5rem);
-}
-
-.image-notes-text-edit.bottom {
-    bottom: calc(100% + 0.5rem);
-}
-
-.image-notes-text-edit.left {
-    left: 4px;
-}
-
-.image-notes-text-edit.right {
-    right: 4px;
-}
-
-.image-notes-text-edit:focus {
-    outline: none;
-}
-
 .image-notes-hover {
     display: block;
     background: var(--player-editor-background);
     position: absolute;
-    width: auto;
-    white-space: nowrap;
-    min-width: fit-content;
+
     padding: 0.5rem;
+    text-align: left;
+
+    word-break: break-word;
+    line-height: 1.5rem;
+    width: auto;
+    min-width: minmax(fit-content, 10rem);
+    max-width: 10rem;
+
     height: auto;
-    text-align: center;
+    max-height: 10rem;
+
+    overflow: auto;
+
+    user-select: text;
+
+    cursor: text;
+}
+
+.image-notes-text-edit-body {
+    display: flex;
+    padding: 0.25rem;
+    width: 100%;
+    height: 100%;
+}
+
+.image-notes-text-edit-body .form-control.form-textarea {
+    resize: none;
+    width: 100%;
+    height: 100%;
 }
