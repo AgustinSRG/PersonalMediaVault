@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "@asanrom/request-browser": "1.0.5",
-        "vue": "3.5.29"
+        "vue": "3.5.43"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
