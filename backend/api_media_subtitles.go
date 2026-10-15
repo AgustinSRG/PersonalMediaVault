@@ -260,19 +260,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		meta.AddSubtitle(subtitlesId, subtitlesName, srt_asset)
 	} else {
 		// Remove old asset
-		oldAsset := meta.Subtitles[subtitlesIndex].Asset
-		success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
-
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			media.ReleaseAsset(oldAsset)
-		}
+		ClearOldMediaAsset(media, meta.Subtitles[subtitlesIndex].Asset, ASSET_SINGLE_FILE)
 
 		// Set new values
 		meta.Subtitles[subtitlesIndex].Asset = srt_asset
@@ -370,19 +358,8 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 
 	if subtitlesIndex != -1 {
 		// Remove old asset
-		oldAsset := meta.Subtitles[subtitlesIndex].Asset
-		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
+		ClearOldMediaAsset(media, meta.Subtitles[subtitlesIndex].Asset, ASSET_SINGLE_FILE)
 
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			media.ReleaseAsset(oldAsset)
-		}
 		// Remove entry
 		meta.RemoveSubtitle(subtitlesIndex)
 	}

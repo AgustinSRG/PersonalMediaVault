@@ -430,19 +430,8 @@ func api_removeMediaAttachment(response http.ResponseWriter, request *http.Reque
 
 	if attachmentIndex != -1 {
 		// Remove old asset
-		oldAsset := meta.Attachments[attachmentIndex].Asset
-		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
+		ClearOldMediaAsset(media, meta.Attachments[attachmentIndex].Asset, ASSET_SINGLE_FILE)
 
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			media.ReleaseAsset(oldAsset)
-		}
 		// Remove entry
 		meta.RemoveAttachment(attachmentIndex)
 	}

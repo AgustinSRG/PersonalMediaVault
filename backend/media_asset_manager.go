@@ -32,6 +32,8 @@ type MediaAssetsManager struct {
 	ready_progress_lock *sync.Mutex      // Mutex to control access to ready_progress_map
 
 	preview_cache *MediaPreviewCache
+
+	readInterruptManager *MediaAssetReadInterruptManager
 }
 
 // Manager initialization
@@ -51,6 +53,8 @@ func (mm *MediaAssetsManager) Initialize(base_path string, preview_cache_size in
 	mm.assets = make(map[uint64]*MediaAsset)
 
 	mm.preview_cache = makeMediaPreviewCache(preview_cache_size)
+
+	mm.readInterruptManager = makeMediaAssetReadInterruptManager()
 }
 
 // Read manager data

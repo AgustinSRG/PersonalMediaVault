@@ -146,19 +146,7 @@ func api_setDescription(response http.ResponseWriter, request *http.Request) {
 
 		if meta.HasDescription {
 			// Remove old asset
-			oldAsset := meta.DescriptionAsset
-			success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
-
-			if success {
-				asset_lock.RequestWrite()
-				asset_lock.StartWrite()
-
-				_ = os.Remove(asset_path)
-
-				asset_lock.EndWrite()
-
-				media.ReleaseAsset(oldAsset)
-			}
+			ClearOldMediaAsset(media, meta.DescriptionAsset, ASSET_SINGLE_FILE)
 		}
 
 		meta.HasDescription = true
@@ -210,19 +198,7 @@ func api_setDescription(response http.ResponseWriter, request *http.Request) {
 
 		if meta.HasDescription {
 			// Remove old asset
-			oldAsset := meta.DescriptionAsset
-			success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
-
-			if success {
-				asset_lock.RequestWrite()
-				asset_lock.StartWrite()
-
-				_ = os.Remove(asset_path)
-
-				asset_lock.EndWrite()
-
-				media.ReleaseAsset(oldAsset)
-			}
+			ClearOldMediaAsset(media, meta.DescriptionAsset, ASSET_SINGLE_FILE)
 		}
 
 		meta.HasDescription = false

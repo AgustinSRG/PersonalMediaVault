@@ -255,18 +255,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	// Remove old asset
 	if hasAssetToRemove {
-		success, asset_path, asset_lock = media.AcquireAsset(assetToRemove, ASSET_SINGLE_FILE)
-
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			media.ReleaseAsset(assetToRemove)
-		}
+		ClearOldMediaAsset(media, assetToRemove, ASSET_SINGLE_FILE)
 	}
 
 	// Release media

@@ -1199,18 +1199,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 		}
 	} else if meta.Type == MediaTypeVideo && meta.PreviewsReady {
-		success, asset_path, asset_lock := media.AcquireAsset(meta.PreviewsAsset, ASSET_MULTI_FILE)
-
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			media.ReleaseAsset(meta.PreviewsAsset)
-		}
+		ClearOldMediaAsset(media, meta.PreviewsAsset, ASSET_MULTI_FILE)
 
 		meta.PreviewsReady = false
 		meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
@@ -1472,18 +1461,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 
 		if r.Ready {
 			// Remove asset
-			success, asset_path, asset_lock := media.AcquireAsset(r.Asset, ASSET_SINGLE_FILE)
-
-			if success {
-				asset_lock.RequestWrite()
-				asset_lock.StartWrite()
-
-				_ = os.Remove(asset_path)
-
-				asset_lock.EndWrite()
-
-				media.ReleaseAsset(r.Asset)
-			}
+			ClearOldMediaAsset(media, r.Asset, ASSET_SINGLE_FILE)
 		} else {
 			// Kill Task
 			GetVault().tasks.KillTask(r.TaskId)
