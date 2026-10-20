@@ -152,7 +152,7 @@ import type { MediaType } from "@/api/models";
 import type { MediaListItem } from "@/api/models";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
-import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
+import { apiTagsTagMediaBulk, apiTagsUntagMediaBulk } from "@/api/api-tags";
 import { apiAdvancedSearch } from "@/api/api-search";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
@@ -166,6 +166,7 @@ import { useAuthConfirmation } from "@/composables/use-auth-confirmation";
 import { refreshCurrentAlbum } from "@/global-state/album";
 import { loadCurrentMedia } from "@/global-state/media";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
+import { extractTagNameFromError, removeDuplicatedTagNames, TAGS_BULK_API_LIMIT } from "@/utils/tags-bulk.ts";
 
 // Page size for requests
 const PAGE_SIZE = 50;
@@ -520,6 +521,20 @@ const confirm = () => {
 };
 
 /**
+ * Computes tag operation batch
+ * @param i The current index
+ * @returns The batch of media Ids + the next index
+ */
+const computeTagBatch = (i: number): [mediaIds: number[], nextIndex: number] => {
+    const batchSize = Math.min(TAGS_BULK_API_LIMIT, actionItems.value.length - i);
+
+    const mediaIds = actionItems.value.slice(i, i + batchSize);
+    const nextIndex = i + batchSize;
+
+    return [mediaIds, nextIndex];
+};
+
+/**
  * Performs the next action
  * @param i Index of the element to perform the action
  */
@@ -540,10 +555,16 @@ const actionNext = (i: number) => {
 
     switch (action.value) {
         case "tag-add":
-            actionAddTag(mediaId, tagsAction.value.slice(), i + 1);
+            {
+                const [mediaIds, nextIndex] = computeTagBatch(i);
+                actionAddTag(mediaIds, removeDuplicatedTagNames(tagsAction.value), nextIndex);
+            }
             break;
         case "tag-remove":
-            actionRemoveTag(mediaId, tagsAction.value.slice(), i + 1);
+            {
+                const [mediaIds, nextIndex] = computeTagBatch(i);
+                actionRemoveTag(mediaIds, removeDuplicatedTagNames(tagsAction.value), nextIndex);
+            }
             break;
         case "album-add":
             actionAddAlbum(mediaId, i + 1);
@@ -556,24 +577,26 @@ const actionNext = (i: number) => {
             break;
     }
 
-    progress.value = ((i + 1) * 100) / (actionItems.value.length || 1);
+    progress.value = (i * 100) / (actionItems.value.length || 1);
 };
 
 /**
  * Performs the action to add tags to a media element
- * @param mid The media ID
+ * @param mediaIds The list of media IDs
  * @param tags The tags to add
  * @param next The next element for when the action is done
  */
-const actionAddTag = (mid: number, tags: string[], next: number) => {
+const actionAddTag = (mediaIds: number[], tags: string[], next: number) => {
     if (tags.length === 0) {
         actionNext(next);
         return;
     }
 
-    makeNamedApiRequest(batchRequestId, apiTagsTagMedia(mid, tags[0]))
+    const tagNamesBatchSize = Math.min(TAGS_BULK_API_LIMIT, tags.length);
+
+    makeNamedApiRequest(batchRequestId, apiTagsTagMediaBulk(mediaIds, tags.slice(0, tagNamesBatchSize)))
         .onSuccess(() => {
-            actionAddTag(mid, tags.slice(1), next);
+            actionAddTag(mediaIds, tags.slice(tagNamesBatchSize), next);
         })
         .onRequestError((err, handleErr) => {
             status.value = "error";
@@ -584,7 +607,7 @@ const actionAddTag = (mid: number, tags: string[], next: number) => {
                     emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                 },
                 invalidTagName: () => {
-                    error.value = $t("Invalid tag name");
+                    error.value = $t("Invalid tag name") + ": " + (extractTagNameFromError(err) || "???");
                 },
                 badRequest: () => {
                     error.value = $t("Bad request");
@@ -609,27 +632,32 @@ const actionAddTag = (mid: number, tags: string[], next: number) => {
 
 /**
  * Performs the action to remove tags to a media element
- * @param mid The media ID
+ * @param mediaIds The list of media IDs
  * @param tags The tags to remove
  * @param next The next element for when the action is done
  */
-const actionRemoveTag = (mid: number, tags: string[], next: number) => {
+const actionRemoveTag = (mediaIds: number[], tags: string[], next: number) => {
     if (tags.length === 0) {
         actionNext(next);
         return;
     }
 
-    const tagId = findTagByName(tags[0]);
+    const tagNamesBatchSize = Math.min(TAGS_BULK_API_LIMIT, tags.length);
 
-    if (tagId < 0) {
-        // Tag not found
-        actionRemoveTag(mid, tags.slice(1), next);
+    const tagIds = tags
+        .slice(0, tagNamesBatchSize)
+        .map((t) => findTagByName(t))
+        .filter((t) => t >= 0);
+
+    if (tagIds.length < 0) {
+        // Tags not found
+        actionRemoveTag(mediaIds, tags.slice(1), next);
         return;
     }
 
-    makeNamedApiRequest(batchRequestId, apiTagsUntagMedia(mid, tagId))
+    makeNamedApiRequest(batchRequestId, apiTagsUntagMediaBulk(mediaIds, tagIds))
         .onSuccess(() => {
-            actionRemoveTag(mid, tags.slice(1), next);
+            actionRemoveTag(mediaIds, tags.slice(tagNamesBatchSize), next);
         })
         .onRequestError((err, handleErr) => {
             status.value = "error";
@@ -637,6 +665,9 @@ const actionRemoveTag = (mid: number, tags: string[], next: number) => {
                 unauthorized: () => {
                     error.value = $t("Access denied");
                     emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                badRequest: () => {
+                    error.value = $t("Bad request");
                 },
                 accessDenied: () => {
                     error.value = $t("Access denied");
