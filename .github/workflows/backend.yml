@@ -26,10 +26,7 @@ jobs:
         go-version-file: 'backend/go.mod'
 
     - name: Set up ffmpeg 
-      id: ffmpeg
-      uses: FedericoCarboni/setup-ffmpeg@v3
-      with:
-        ffmpeg-version: release
+      run: sudo apt install ffmpeg
 
     - name: Build
       working-directory: ./backend
@@ -38,6 +35,4 @@ jobs:
     - name: Test
       working-directory: ./backend
       run: go test -v ./...
-      env:
-        FFMPEG_PATH: ${{ steps.ffmpeg.outputs.ffmpeg-path }}/ffmpeg
-        FFPROBE_PATH: ${{ steps.ffmpeg.outputs.ffmpeg-path }}/ffprobe
+
