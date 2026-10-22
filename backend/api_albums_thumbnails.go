@@ -434,18 +434,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 
 	// Remove old asset
 	if old_asset != nil {
-		success, asset_path, asset_lock := GetVault().albums.AcquireThumbnailAsset(*old_asset)
-
-		if success {
-			asset_lock.RequestWrite()
-			asset_lock.StartWrite()
-
-			_ = os.Remove(asset_path)
-
-			asset_lock.EndWrite()
-
-			GetVault().albums.ReleaseThumbnailAsset(*old_asset)
-		}
+		GetVault().assetDeletionManager.DeleteAlbumThumbnailAsset(*old_asset)
 	}
 
 	// Response

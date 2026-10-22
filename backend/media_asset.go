@@ -441,11 +441,20 @@ const (
 )
 
 // Resolves the path of an asset file
+// media_path - The base path of the media
+// asset_id - Asset file ID
+// asset_type - Asset type (ASSET_MULTI_FILE or ASSET_SINGLE_FILE)
+// Returns the path to the file
+func GetMediaAssetPath(media_path string, asset_id uint64, asset_type string) string {
+	return path.Join(media_path, asset_type+"_"+fmt.Sprint(asset_id)+".pma")
+}
+
+// Resolves the path of an asset file
 // asset_id - Asset file ID
 // asset_type - Asset type (ASSET_MULTI_FILE or ASSET_SINGLE_FILE)
 // Returns the path to the file
 func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string {
-	return path.Join(media.path, asset_type+"_"+fmt.Sprint(asset_id)+".pma")
+	return GetMediaAssetPath(media.path, asset_id, asset_type)
 }
 
 // Acquires an asset file, creating a read/write lock for it

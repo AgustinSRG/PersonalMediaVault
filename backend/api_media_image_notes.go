@@ -167,7 +167,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	if meta.HasImageNotes {
 		// Remove old asset
-		ClearOldMediaAsset(media, meta.ImageNotesAsset, ASSET_SINGLE_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.ImageNotesAsset, ASSET_SINGLE_FILE)
 	}
 
 	meta.HasImageNotes = true

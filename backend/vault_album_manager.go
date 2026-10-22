@@ -630,10 +630,18 @@ func (am *VaultAlbumsManager) PreCacheAlbums(key []byte) {
 }
 
 // Resolves the path of a thumbnail asset file
+// base_path - Vault base path
+// asset_id - Asset file ID
+// Returns the path to the file
+func GetThumbnailAssetPath(base_path string, asset_id uint64) string {
+	return path.Join(base_path, "thumb_album", "s_"+fmt.Sprint(asset_id)+".pma")
+}
+
+// Resolves the path of a thumbnail asset file
 // asset_id - Asset file ID
 // Returns the path to the file
 func (am *VaultAlbumsManager) GetThumbnailAssetPath(asset_id uint64) string {
-	return path.Join(am.path, "thumb_album", "s_"+fmt.Sprint(asset_id)+".pma")
+	return GetThumbnailAssetPath(am.path, asset_id)
 }
 
 // Acquires a thumbnail asset file, creating a read/write lock for it

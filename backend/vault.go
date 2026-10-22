@@ -24,6 +24,8 @@ type Vault struct {
 
 	semanticSearch *SemanticSearchSystem // Semantic search sub-system (may be nil if disabled)
 
+	assetDeletionManager *AssetDeletionManager
+
 	config *UserConfigManager // User config
 }
 
@@ -78,6 +80,9 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 
 	vault.homePage = &HomePageConfigManager{}
 	vault.homePage.Initialize(base_path)
+
+	vault.assetDeletionManager = &AssetDeletionManager{}
+	vault.assetDeletionManager.Initialize(base_path)
 
 	semanticSearchConfig := LoadSemanticSearchConfig()
 

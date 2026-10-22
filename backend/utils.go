@@ -179,3 +179,14 @@ func minInt64(a int64, b int64) int64 {
 		return b
 	}
 }
+
+// RemoveFileIfExists deletes a file and ignores ErrNotExist.
+func RemoveFileIfExists(filePath string) error {
+	err := os.Remove(filePath)
+
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	return err
+}

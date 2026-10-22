@@ -256,7 +256,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		meta.AddAudioTrack(audioId, audioName, audio_asset)
 	} else {
 		// Remove old asset
-		ClearOldMediaAsset(media, meta.AudioTracks[audioIndex].Asset, ASSET_SINGLE_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.AudioTracks[audioIndex].Asset, ASSET_SINGLE_FILE)
 
 		// Set new values
 		meta.AudioTracks[audioIndex].Asset = audio_asset
@@ -354,7 +354,7 @@ func api_removeMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 
 	if audioIndex != -1 {
 		// Remove old asset
-		ClearOldMediaAsset(media, meta.AudioTracks[audioIndex].Asset, ASSET_SINGLE_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.AudioTracks[audioIndex].Asset, ASSET_SINGLE_FILE)
 
 		// Remove entry
 		meta.RemoveAudioTrack(audioIndex)

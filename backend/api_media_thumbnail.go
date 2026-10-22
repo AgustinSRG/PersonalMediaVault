@@ -255,7 +255,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	// Remove old asset
 	if hasAssetToRemove {
-		ClearOldMediaAsset(media, assetToRemove, ASSET_SINGLE_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, assetToRemove, ASSET_SINGLE_FILE)
 	}
 
 	// Release media

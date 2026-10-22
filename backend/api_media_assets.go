@@ -117,18 +117,6 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	canRead, readInterruptChan := GetVault().media.readInterruptManager.StartRead(media_id, asset_id)
-
-	if !canRead {
-		media.ReleaseAsset(asset_id)
-		GetVault().media.ReleaseMediaResource(media_id)
-
-		response.WriteHeader(404)
-		return
-	}
-
-	defer GetVault().media.readInterruptManager.EndRead(media_id, asset_id, readInterruptChan)
-
 	asset_lock.StartRead() // Start reading the asset
 
 	s, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, session.key, FILE_PERMISSION)
@@ -238,15 +226,10 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Setup buffer
-	buf := make([]byte, 1024*1024)
+	buf := make([]byte, 64*1024)
 	bytesRead := int64(0)
 
 	// Read asset and write to the response
-
-	chunksChan := make(chan []byte)
-	ackChan := make(chan bool)
-
-	go runWriteThread(response, chunksChan, ackChan)
 
 	for bytesRead < contentLength {
 		c, err := s.Read(buf)
@@ -255,8 +238,6 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 			LogError(err)
 
 			s.Close()
-
-			chunksChan <- nil
 
 			asset_lock.EndRead()
 			media.ReleaseAsset(asset_id)
@@ -267,8 +248,6 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 		if c <= 0 {
 			s.Close()
-
-			chunksChan <- nil
 
 			asset_lock.EndRead()
 			media.ReleaseAsset(asset_id)
@@ -285,65 +264,24 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 		bytesRead += bytesToRead
 
-		// Send chunk to write thread and wait for ack
+		_, err = response.Write(buf[:bytesToRead])
 
-		chunksChan <- buf[:bytesToRead]
-
-		select {
-		case <-readInterruptChan:
-			// Interrupted (asset deleted)
+		if err != nil {
 			s.Close()
-
-			chunksChan <- nil
 
 			asset_lock.EndRead()
 			media.ReleaseAsset(asset_id)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return
-		case canContinueReading := <-ackChan:
-			if !canContinueReading {
-				s.Close()
-
-				asset_lock.EndRead()
-				media.ReleaseAsset(asset_id)
-				GetVault().media.ReleaseMediaResource(media_id)
-
-				return
-			}
 		}
-
 	}
 
 	s.Close()
 
-	chunksChan <- nil
-
 	asset_lock.EndRead()
 	media.ReleaseAsset(asset_id)
 	GetVault().media.ReleaseMediaResource(media_id)
-}
-
-func runWriteThread(response http.ResponseWriter, chunksChan chan []byte, ackChan chan bool) {
-	var chunk []byte
-	var err error
-
-	for {
-		chunk = <-chunksChan
-
-		if chunk == nil {
-			return
-		}
-
-		_, err = response.Write(chunk)
-
-		if err != nil {
-			ackChan <- false
-			return
-		}
-
-		ackChan <- true
-	}
 }
 
 func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Request) {

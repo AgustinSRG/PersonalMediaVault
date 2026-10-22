@@ -32,8 +32,6 @@ type MediaAssetsManager struct {
 	ready_progress_lock *sync.Mutex      // Mutex to control access to ready_progress_map
 
 	preview_cache *MediaPreviewCache
-
-	readInterruptManager *MediaAssetReadInterruptManager
 }
 
 // Manager initialization
@@ -53,8 +51,6 @@ func (mm *MediaAssetsManager) Initialize(base_path string, preview_cache_size in
 	mm.assets = make(map[uint64]*MediaAsset)
 
 	mm.preview_cache = makeMediaPreviewCache(preview_cache_size)
-
-	mm.readInterruptManager = makeMediaAssetReadInterruptManager()
 }
 
 // Read manager data
@@ -136,12 +132,19 @@ func (mm *MediaAssetsManager) NextMediaId() (uint64, error) {
 }
 
 // Resolves the path where a media asset is stored
+// base_path - Base path
 // media_id - Media ID
-func (mm *MediaAssetsManager) ResolveMediaPath(media_id uint64) string {
+func ResolveMediaPath(base_path string, media_id uint64) string {
 	prefixByte := byte(media_id % 256)
 	prefixByteHex := hex.EncodeToString([]byte{prefixByte})
 
-	return path.Join(mm.path, "media", prefixByteHex, fmt.Sprint(media_id))
+	return path.Join(base_path, "media", prefixByteHex, fmt.Sprint(media_id))
+}
+
+// Resolves the path where a media asset is stored
+// media_id - Media ID
+func (mm *MediaAssetsManager) ResolveMediaPath(media_id uint64) string {
+	return ResolveMediaPath(mm.path, media_id)
 }
 
 // Acquires a media resource, creating an struct to manage its status

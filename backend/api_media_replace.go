@@ -269,7 +269,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 		}
 	} else if meta.Type == MediaTypeVideo && meta.PreviewsReady {
-		ClearOldMediaAsset(media, meta.PreviewsAsset, ASSET_MULTI_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.PreviewsAsset, ASSET_MULTI_FILE)
 
 		meta.PreviewsReady = false
 		meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
@@ -309,7 +309,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	// Remove old asset
 	if hasAssetToRemove {
-		ClearOldMediaAsset(media, assetToRemove, ASSET_SINGLE_FILE)
+		GetVault().assetDeletionManager.DeleteMediaAsset(media.id, assetToRemove, ASSET_SINGLE_FILE)
 	}
 
 	// Release media

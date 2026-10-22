@@ -146,7 +146,7 @@ func api_setDescription(response http.ResponseWriter, request *http.Request) {
 
 		if meta.HasDescription {
 			// Remove old asset
-			ClearOldMediaAsset(media, meta.DescriptionAsset, ASSET_SINGLE_FILE)
+			GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.DescriptionAsset, ASSET_SINGLE_FILE)
 		}
 
 		meta.HasDescription = true
@@ -198,7 +198,7 @@ func api_setDescription(response http.ResponseWriter, request *http.Request) {
 
 		if meta.HasDescription {
 			// Remove old asset
-			ClearOldMediaAsset(media, meta.DescriptionAsset, ASSET_SINGLE_FILE)
+			GetVault().assetDeletionManager.DeleteMediaAsset(media.id, meta.DescriptionAsset, ASSET_SINGLE_FILE)
 		}
 
 		meta.HasDescription = false
