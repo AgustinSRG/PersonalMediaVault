@@ -92,7 +92,7 @@
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, ref, shallowRef, useTemplateRef } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
+import { apiMediaEncodeMedia, apiMediaReplaceMedia, apiMediaReplaceMediaPreCheck } from "@/api/api-media-edit";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
@@ -270,7 +270,61 @@ const busyReplace = ref(false);
  * Replaces the media with the selected file
  */
 const doReplaceMedia = () => {
-    performReplaceMediaRequest({});
+    if (busyReplace.value) {
+        return;
+    }
+
+    const file = fileRef.value;
+
+    if (!file) {
+        return;
+    }
+
+    busyReplace.value = true;
+    replacing.value = true;
+    replaceProgress.value = 0;
+    errorReplace.value = "";
+
+    const mediaId = getNavigationStatus().media;
+
+    makeNamedApiRequest(requestId, apiMediaReplaceMediaPreCheck(mediaId, {}))
+        .onSuccess(() => {
+            busyReplace.value = false;
+
+            performReplaceMediaRequest({});
+        })
+        .onCancel(() => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+            fileRef.value = null;
+        })
+        .onRequestError((err, handleErr) => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+
+            handleErr(err, {
+                unauthorized: commonErrorsReplace.unauthorized,
+                requiredAuthConfirmationPassword,
+                invalidPassword,
+                requiredAuthConfirmationTfa,
+                invalidTfaCode,
+                cooldown,
+                accessDenied: commonErrorsReplace.accessDenied,
+                notFound: commonErrorsReplace.notFound,
+                serverError: commonErrorsReplace.serverError,
+                networkError: commonErrorsReplace.networkError,
+            });
+        })
+        .onUnexpectedError((err) => {
+            busyReplace.value = false;
+            replacing.value = false;
+            replaceProgress.value = 0;
+
+            commonErrorsReplace.setError(err.message);
+            console.error(err);
+        });
 };
 
 /**
