@@ -7,7 +7,7 @@ import { indicateTagCreation } from "./tags";
 import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "../local-storage/app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
-import { apiTagsTagMedia } from "@/api/api-tags";
+import { apiTagsTagMediaBulk } from "@/api/api-tags";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import { removeFromArray } from "@/utils/objects";
 import {
@@ -26,6 +26,7 @@ import { getCurrentMediaId, loadCurrentMedia } from "./media";
 import { addGlobalBusyCheck } from "./busy-state";
 import { LOAD_RETRY_DELAY } from "@/constants";
 import { removeExtensionFromFileName } from "@/utils/files";
+import { TAGS_BULK_API_LIMIT } from "@/utils/tags-bulk";
 
 /**
  * Max number of uploads in the completed lists (ready, error)
@@ -701,20 +702,23 @@ function addNextTag(m: UploadEntry) {
 
     m.busy = true;
 
-    const tag = m.tags[0];
+    const tagsBatchSize = Math.min(m.tags.length, TAGS_BULK_API_LIMIT);
+
+    const tags = m.tags.slice();
     const mediaId = m.mid;
 
-    makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiTagsTagMedia(mediaId, tag))
-        .onSuccess((res) => {
-            setLastUsedTag(res.id, "edit");
-
-            m.tags.shift(); // Remove tag from list
+    makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiTagsTagMediaBulk([mediaId], tags))
+        .onSuccess((resList) => {
+            m.tags.splice(0, tagsBatchSize); // Remove tags from list
             m.progress = m.tags.length;
             m.busy = false;
 
             emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
-            indicateTagCreation(res.id, res.name);
+            for (const res of resList) {
+                indicateTagCreation(res.id, res.name);
+                setLastUsedTag(res.id, "edit");
+            }
 
             addNextTag(m);
         })
@@ -732,14 +736,14 @@ function addNextTag(m: UploadEntry) {
                     onEntryError(m);
                 },
                 invalidTagName: () => {
-                    m.tags.shift(); // Invalid tag name
+                    m.tags.splice(0, tagsBatchSize); // Remove tags from list
                     m.progress = m.tags.length;
                     emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                     addNextTag(m);
                 },
                 badRequest: () => {
-                    m.tags.shift(); // Invalid tag name
+                    m.tags.splice(0, tagsBatchSize); // Remove tags from list
                     m.progress = m.tags.length;
                     emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
