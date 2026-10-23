@@ -13,6 +13,34 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func api_replaceMediaPreCheck(response http.ResponseWriter, request *http.Request) {
+	// This handler pre-checks the permission for the replace handler
+	// This allows the client to send a request to pre-check
+	// for access before uploading the file (which can be slow)
+
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if !session.CanWrite() {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	// Check auth confirmation
+
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
+	// Response
+
+	response.WriteHeader(200)
+}
+
 func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
