@@ -811,6 +811,10 @@ onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
     const changed = currentMedia.value !== navStatus.media;
     currentMedia.value = navStatus.media;
 
+    if (changed && navStatus.media >= 0) {
+        lastCurrentMedia.value = navStatus.media;
+    }
+
     if (!props.inModal) {
         if (changed) {
             nextTick(() => {

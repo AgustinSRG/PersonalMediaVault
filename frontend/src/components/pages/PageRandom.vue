@@ -32,6 +32,7 @@
                     :key="i"
                     :item="item"
                     :current="currentMedia == item.id"
+                    :last-current="lastCurrentMedia === item.id"
                     :display-titles="displayTitles"
                     @go="goToMedia(item.id)"
                 ></MediaItem>
@@ -150,6 +151,9 @@ const initialNavStatus = getNavigationStatus();
 
 // Current media
 const currentMedia = ref(initialNavStatus.media);
+
+// Last current media
+const lastCurrentMedia = ref(getNavigationStatus().media);
 
 // Current search
 const search = ref(initialNavStatus.search);
@@ -277,6 +281,10 @@ watch(
 onApplicationEvent(EVENT_NAME_NAV_STATUS_CHANGED, (navStatus) => {
     const changed = currentMedia.value !== navStatus.media;
     currentMedia.value = navStatus.media;
+
+    if (changed && navStatus.media >= 0) {
+        lastCurrentMedia.value = navStatus.media;
+    }
 
     let mustLoad = false;
 
@@ -413,6 +421,27 @@ const scrollToCurrentMedia = () => {
         }
     });
 };
+
+/**
+ * Scrolls to the last known current media element
+ */
+const scrollToLastCurrentMedia = () => {
+    nextTick(() => {
+        const currentElem = container.value?.querySelector(".search-result-item.last-current") as HTMLElement;
+        if (currentElem) {
+            currentElem.scrollIntoView();
+        }
+    });
+};
+
+watch(
+    () => props.min,
+    () => {
+        if (!props.min) {
+            scrollToLastCurrentMedia();
+        }
+    },
+);
 
 // Element to be auto-focused on load
 const autoFocusElement = useTemplateRef("autoFocusElement");
