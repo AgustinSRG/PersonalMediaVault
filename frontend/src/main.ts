@@ -30,6 +30,6 @@ createApp(App).mount("#app");
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        navigator.serviceWorker.register("/pwa-sw.js", { scope: "/", type: "module" });
     });
 }

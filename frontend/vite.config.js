@@ -3,13 +3,15 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
-import { VitePWA } from "vite-plugin-pwa";
+import { VitePWA } from "@unplugin-pwa/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         vue(),
         VitePWA({
+            filename: "pwa-sw.js",
+            swType: "module",
             injectRegister: null,
             manifest: {
                 name: "Personal Media Vault",
@@ -43,7 +45,7 @@ export default defineConfig({
                     },
                 ],
             },
-            workbox: {
+            generateSW: {
                 globPatterns: ["**/!(locale-*).{js,css,html,woff2}"],
                 navigateFallbackAllowlist: [/^\/$/],
             },

@@ -22,22 +22,24 @@
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
+        "@unplugin-pwa/vite": "0.0.6",
         "@vitejs/plugin-vue": "6.0.4",
         "@vue/tsconfig": "0.8.1",
         "eslint": "10.0.2",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-vue": "10.8.0",
         "globals": "17.3.0",
+        "magicast": "0.5.5",
         "prettier": "3.8.1",
         "typescript": "5.9.3",
         "typescript-eslint": "8.56.1",
         "vite": "8.3.5",
-        "vite-plugin-pwa": "1.3.0",
         "vue-tsc": "3.2.5"
     },
     "overrides": {
-        "minimatch": "10.2.4",
-        "serialize-javascript": "7.0.5"
+        "minimatch": "11.0.4",
+        "serialize-javascript": "7.1.4",
+        "glob": "14.0.3"
     },
     "optionalDependencies": {
         "fonteditor-core": "2.6.3",
