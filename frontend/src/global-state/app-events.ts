@@ -256,6 +256,11 @@ export const EVENT_NAME_HOME_SCROLL_CHANGED = "home-page-scroll-changed";
 export const EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED = "tags-editor-clipboard-changed";
 
 /**
+ * Event triggered when the player volume multiplier gets updated by the user
+ */
+export const EVENT_NAME_VOLUME_MULTIPLIER_UPDATED = "player-volume-multiplier-updated";
+
+/**
  * Mapping of App events
  *
  * Maps each event name to the type of appropriate handler function
@@ -540,6 +545,13 @@ export type AppEventsMap = {
      * @param tags New content for the tags editor clipboard
      */
     [EVENT_NAME_TAGS_EDITOR_CLIPBOARD_CHANGED]: (tags: string[]) => void;
+
+    /**
+     * Event triggered when the player volume multiplier gets updated by the user
+     * @param mid The media ID
+     * @param multiplier The multiplier
+     */
+    [EVENT_NAME_VOLUME_MULTIPLIER_UPDATED]: (mid: number, multiplier: number) => void;
 };
 
 /**

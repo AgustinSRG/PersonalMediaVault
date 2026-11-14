@@ -70,3 +70,7 @@
 .custom-size-unit {
     margin-left: 0.5rem;
 }
+
+.custom-size-unit-left {
+    margin-right: 0.5rem;
+}

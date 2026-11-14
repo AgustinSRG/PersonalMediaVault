@@ -728,6 +728,64 @@ export function setShowAudioThumbnail(show: boolean) {
     saveIntoLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL, show);
 }
 
+const LS_KEY_VOLUMES_MULTIPLIERS = "player-volume-multipliers";
+
+/**
+ * Gets the custom volume multiplier for the media
+ * @param mid The media ID
+ * @returns The volume multiplier (1 by default)
+ */
+export function getVolumeMultiplier(mid: number): number {
+    let volumeMultipliers = fetchFromLocalStorageCache(LS_KEY_VOLUMES_MULTIPLIERS, {} as Record<string, number>);
+
+    if (!volumeMultipliers || typeof volumeMultipliers !== "object" || Array.isArray(volumeMultipliers)) {
+        volumeMultipliers = {};
+    }
+
+    const key = mid + "";
+
+    if (!Object.prototype.hasOwnProperty.call(volumeMultipliers, key)) {
+        return 1;
+    }
+
+    const volumeMultiplier: unknown = volumeMultipliers[key];
+
+    if (
+        typeof volumeMultiplier === "number" &&
+        !isNaN(volumeMultiplier) &&
+        isFinite(volumeMultiplier) &&
+        volumeMultiplier >= 0 &&
+        volumeMultiplier < 1
+    ) {
+        return volumeMultiplier;
+    } else {
+        return 1;
+    }
+}
+
+/**
+ * Sets the volume multiplier for a media
+ * @param mid The media ID
+ * @param volumeMultiplier The volume multiplier
+ */
+export function setVolumeMultiplier(mid: number, volumeMultiplier: number) {
+    let volumeMultipliers = fetchFromLocalStorage(LS_KEY_VOLUMES_MULTIPLIERS, {} as Record<string, number>);
+
+    if (!volumeMultipliers || typeof volumeMultipliers !== "object" || Array.isArray(volumeMultipliers)) {
+        volumeMultipliers = {};
+    }
+
+    const key = mid + "";
+
+    if (volumeMultiplier < 0 || volumeMultiplier >= 1) {
+        delete volumeMultipliers[key];
+    } else {
+        volumeMultipliers[key] = volumeMultiplier;
+    }
+
+    saveIntoLocalStorage(LS_KEY_VOLUMES_MULTIPLIERS, volumeMultipliers);
+}
+
 /**
  * Clears player preferences
  */
@@ -763,4 +821,6 @@ export function clearPlayerPreferences() {
 
     clearLocalStorage(LS_KEY_SHOW_AUDIO_TITLE);
     clearLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL);
+
+    clearLocalStorage(LS_KEY_VOLUMES_MULTIPLIERS);
 }

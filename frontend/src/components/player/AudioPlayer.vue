@@ -26,7 +26,7 @@
             :loop="(loop || isShort) && !sliceLoop"
             crossorigin="use-credentials"
             :muted="muted"
-            :volume.prop="volume"
+            :volume.prop="effectiveVolume"
             :playbackRate.prop="speed"
             @ended="onEnded"
             @timeupdate="onAudioTimeUpdate"
@@ -156,6 +156,7 @@
             :page-prev="pagePrev"
             :muted="muted"
             :volume="volume"
+            :effective-volume="effectiveVolume"
         ></PlayerTooltip>
 
         <PlayerTimeline
@@ -258,20 +259,16 @@ import {
     CURRENT_TIME_UPDATE_DELAY,
     getAudioAnimationStyle,
     getCachedInitialTime,
-    getPlayerMuted,
-    getPlayerVolume,
     getShowAudioThumbnail,
     getShowAudioTitle,
     getTogglePlayDelay,
     setAudioAnimationStyle,
     setCachedInitialTime,
-    setPlayerMuted,
-    setPlayerVolume,
     setShowAudioThumbnail,
     setShowAudioTitle,
 } from "@/local-storage/player-preferences";
 import type { PropType } from "vue";
-import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
 import { renderTimeSeconds } from "@/utils/time";
@@ -306,6 +303,7 @@ import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { checkAuthenticationStatusSilent, isVaultLocked, refreshAuthenticationStatus } from "@/global-state/auth";
 import { isPlayerVisible } from "@/global-state/navigation";
+import { usePlayerVolume } from "@/composables/use-player-volume.ts";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -629,11 +627,10 @@ const mouseInControls = ref(false);
 // Loop audio when ended?
 const loop = ref(false);
 
-// Current volume
-const volume = ref(getPlayerVolume());
-
-// Muted?
-const muted = ref(getPlayerMuted());
+// Volume
+const { volume, effectiveVolume, muted, changeVolume, onUserVolumeUpdated, toggleMuted, onUserMutedUpdated } = usePlayerVolume(
+    computed(() => props.mid),
+);
 
 // Volume control shown?
 const volumeShown = ref(IS_TOUCH_DEVICE);
@@ -998,13 +995,6 @@ const leaveControls = () => {
 };
 
 /**
- * Called when the volume is updated by the user
- */
-const onUserVolumeUpdated = () => {
-    setPlayerVolume(volume.value);
-};
-
-/**
  * Called when the animation colors are updated by the user
  */
 const onUpdateAnimColors = () => {
@@ -1023,30 +1013,6 @@ const onUpdateShowTitle = () => {
  */
 const onUpdateShowThumbnail = () => {
     setShowAudioThumbnail(showThumbnail.value);
-};
-
-/**
- * Changes the volume
- * @param v The new volume
- */
-const changeVolume = (v: number) => {
-    volume.value = v;
-    onUserVolumeUpdated();
-};
-
-/**
- * Called when the muted state is changed by the user
- */
-const onUserMutedUpdated = () => {
-    setPlayerMuted(muted.value);
-};
-
-/**
- * Toggles the muted state
- */
-const toggleMuted = () => {
-    muted.value = !muted.value;
-    onUserMutedUpdated();
 };
 
 /* Timeline */

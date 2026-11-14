@@ -37,7 +37,7 @@
                 x-webkit-airplay="allow"
                 :muted="muted"
                 :loop="(loop || isShort) && !sliceLoop"
-                :volume.prop="audioTrackURL ? 0 : volume"
+                :volume.prop="audioTrackURL ? 0 : effectiveVolume"
                 :playbackRate.prop="speed"
                 :style="{ width: getScaleCss(scale), height: getScaleCss(scale) }"
                 @ended="onEnded"
@@ -61,7 +61,7 @@
             playsinline
             webkit-playsinline
             :muted="muted || !audioTrackURL"
-            :volume.prop="volume"
+            :volume.prop="effectiveVolume"
             :playbackRate.prop="speed"
             @loadedmetadata="onAudioTrackLoadMetadata"
             @canplay="onAudioCanPlay"
@@ -175,6 +175,7 @@
             :page-prev="pagePrev"
             :muted="muted"
             :volume="volume"
+            :effective-volume="effectiveVolume"
         ></PlayerTooltip>
 
         <PlayerTimeline
@@ -282,17 +283,13 @@
 import {
     CURRENT_TIME_UPDATE_DELAY,
     getCachedInitialTime,
-    getPlayerMuted,
-    getPlayerVolume,
     getSelectedAudioTrack,
     getTogglePlayDelay,
     getUserSelectedResolutionVideo,
     setCachedInitialTime,
-    setPlayerMuted,
-    setPlayerVolume,
     setUserSelectedResolutionVideo,
 } from "@/local-storage/player-preferences";
-import { defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import VolumeControl from "./common/VolumeControl.vue";
 import PlayerTopBar from "./common/PlayerTopBar.vue";
 import { renderTimeSeconds } from "@/utils/time";
@@ -327,6 +324,7 @@ import { onDocumentEvent } from "@/composables/on-document-event";
 import { usePlayerSubtitles } from "@/composables/use-player-subtitles";
 import { showSnackBar } from "@/global-state/snack-bar";
 import { isPlayerVisible } from "@/global-state/navigation";
+import { usePlayerVolume } from "@/composables/use-player-volume.ts";
 
 const PlayerContextMenu = defineAsyncComponent({
     loader: () => import("@/components/player/common/PlayerContextMenu.vue"),
@@ -656,11 +654,10 @@ const loop = ref(false);
 // Index of the current selected resolution
 const currentResolution = ref(-1);
 
-// Current volume
-const volume = ref(getPlayerVolume());
-
-// Muted?
-const muted = ref(getPlayerMuted());
+// Volume
+const { volume, effectiveVolume, muted, changeVolume, onUserVolumeUpdated, toggleMuted, onUserMutedUpdated } = usePlayerVolume(
+    computed(() => props.mid),
+);
 
 // Volume control shown?
 const volumeShown = ref(IS_TOUCH_DEVICE);
@@ -1069,37 +1066,6 @@ const leaveControls = () => {
     mouseInControls.value = false;
     volumeShown.value = IS_TOUCH_DEVICE;
     clearTooltip();
-};
-
-/**
- * Called when the volume is updated by the user
- */
-const onUserVolumeUpdated = () => {
-    setPlayerVolume(volume.value);
-};
-
-/**
- * Changes the volume
- * @param v The new volume
- */
-const changeVolume = (v: number) => {
-    volume.value = v;
-    onUserVolumeUpdated();
-};
-
-/**
- * Called when the muted state is changed by the user
- */
-const onUserMutedUpdated = () => {
-    setPlayerMuted(muted.value);
-};
-
-/**
- * Toggles the muted state
- */
-const toggleMuted = () => {
-    muted.value = !muted.value;
-    onUserMutedUpdated();
 };
 
 /* Timeline */

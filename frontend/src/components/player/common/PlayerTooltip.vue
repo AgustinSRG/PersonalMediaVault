@@ -22,6 +22,7 @@ import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import type { MediaListItem } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import type { HelpTooltipType } from "@/utils/player-tooltip";
+import { stringMultiReplace } from "@/utils/string-multi-replace.ts";
 
 // Tooltips to be displayed on the left
 const LEFT_TOOLTIPS = ["play", "pause", "prev", "next", "volume", "scale"];
@@ -65,6 +66,11 @@ const props = defineProps({
      * Volume
      */
     volume: Number,
+
+    /**
+     * Effective volume
+     */
+    effectiveVolume: Number,
 
     /**
      * Fit image?
@@ -114,7 +120,15 @@ const helpTooltipText = computed<string>(() => {
         case "pause":
             return $t("Pause");
         case "volume":
-            return $t("Volume") + " (" + (props.muted ? $t("Muted") : renderVolume(props.volume)) + ")";
+            return (
+                $t("Volume") +
+                " (" +
+                (props.muted ? $t("Muted") : renderVolume(props.volume)) +
+                ")" +
+                (typeof props.effectiveVolume === "number" && props.effectiveVolume !== props.volume
+                    ? " (" + stringMultiReplace($t("$VOL after multiplier"), { $VOL: renderVolume(props.effectiveVolume) }) + ")"
+                    : "")
+            );
         case "scale":
             return $t("Scale") + " (" + (props.fit ? $t("Fit") : renderScale(props.scale)) + ")";
         case "desc":

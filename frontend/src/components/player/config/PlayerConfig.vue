@@ -186,6 +186,17 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
+
+            <tr v-if="mediaHasVolume" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('volume-multiplier')">
+                <td>
+                    <i class="fas fa-volume-down icon-config"></i>
+                    <b>{{ $t("Volume multiplier") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderVolumeMultiplier(volumeMultiplier) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
         </table>
 
         <PlayerAutoNextConfig
@@ -272,6 +283,14 @@
             @update:toggle-delay="onTogglePlayDelayChanged"
             @go-back="goBack"
         ></PlayerTogglePlayDelayConfig>
+
+        <PlayerVolumeMultiplierConfig
+            v-else-if="page === 'volume-multiplier'"
+            v-model:volume-multiplier="volumeMultiplier"
+            :media-type="metadata.type"
+            @go-back="goBack"
+            @update:volume-multiplier="onVolumeMultiplierChanged"
+        ></PlayerVolumeMultiplierConfig>
     </div>
 </template>
 
@@ -280,18 +299,20 @@ import type { MediaData } from "@/api/models";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 import { clickOnEnter, stopPropagationEvent } from "@/utils/events";
 import type { PropType } from "vue";
-import { computed, defineAsyncComponent, nextTick, ref, useTemplateRef } from "vue";
+import { computed, defineAsyncComponent, nextTick, ref, useTemplateRef, watch } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import {
     getAutoNextTime,
     getImageNotesVisible,
     getSelectedSubtitles,
     getTogglePlayDelay,
+    getVolumeMultiplier,
     setAutoNextTime,
     setImageNotesVisible,
     setSelectedAudioTrack,
     setSelectedSubtitles,
     setTogglePlayDelay,
+    setVolumeMultiplier,
 } from "@/local-storage/player-preferences";
 import { useI18n } from "@/composables/use-i18n";
 import {
@@ -304,9 +325,10 @@ import {
     renderSpeed,
     renderSubtitle,
     renderToggleDelay,
+    renderVolumeMultiplier,
 } from "@/utils/player-config";
 import { useFocusTrap } from "@/composables/use-focus-trap";
-import { emitAppEvent, EVENT_NAME_SUBTITLES_CHANGED } from "@/global-state/app-events";
+import { emitAppEvent, EVENT_NAME_SUBTITLES_CHANGED, EVENT_NAME_VOLUME_MULTIPLIER_UPDATED } from "@/global-state/app-events";
 
 const PlayerAutoNextConfig = defineAsyncComponent({
     loader: () => import("./PlayerAutoNextConfig.vue"),
@@ -356,6 +378,10 @@ const PlayerTogglePlayDelayConfig = defineAsyncComponent({
     loader: () => import("./PlayerTogglePlayDelayConfig.vue"),
 });
 
+const PlayerVolumeMultiplierConfig = defineAsyncComponent({
+    loader: () => import("./PlayerVolumeMultiplierConfig.vue"),
+});
+
 // Translation
 const { $t } = useI18n();
 
@@ -402,6 +428,9 @@ const props = defineProps({
 
 // True if the media has duration
 const mediaHasDuration = computed(() => [MEDIA_TYPE_AUDIO, MEDIA_TYPE_VIDEO].includes(props.metadata.type));
+
+// True if the media has volume
+const mediaHasVolume = mediaHasDuration;
 
 // True if the media has resolutions
 const mediaHasResolutions = computed(() => [MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO].includes(props.metadata.type));
@@ -460,6 +489,13 @@ const subtitles = ref(getSelectedSubtitles());
 // Toggle play delay (for video)
 const toggleDelay = ref(getTogglePlayDelay());
 
+// Volume multiplier
+const volumeMultiplier = ref(getVolumeMultiplier(props.metadata.id));
+
+watch([() => props.rTick], () => {
+    volumeMultiplier.value = getVolumeMultiplier(props.metadata.id);
+});
+
 // Emits
 const emit = defineEmits<{
     /**
@@ -497,7 +533,8 @@ type PlayerConfigPage =
     | "audio"
     | "subtitles"
     | "subtitle-options"
-    | "time-delays";
+    | "time-delays"
+    | "volume-multiplier";
 
 // Current page
 const page = ref<PlayerConfigPage>("");
@@ -564,11 +601,20 @@ const onSubtitlesChanged = () => {
 };
 
 /**
- * Called when the toggle play delay change,
+ * Called when the toggle play delay changes,
  * to update the preference.
  */
 const onTogglePlayDelayChanged = () => {
     setTogglePlayDelay(toggleDelay.value);
+};
+
+/**
+ * Called when the volume multiplier changes,
+ * to update the preference.
+ */
+const onVolumeMultiplierChanged = () => {
+    setVolumeMultiplier(props.metadata.id, volumeMultiplier.value);
+    emitAppEvent(EVENT_NAME_VOLUME_MULTIPLIER_UPDATED, props.metadata.id, volumeMultiplier.value);
 };
 
 /**

@@ -261,3 +261,12 @@ export function renderToggleDelay(d: number, $t: (k: string) => string): string 
             return "" + d;
     }
 }
+
+/**
+ * Renders volume multiplier
+ * @param m Multiplier
+ * @returns Rendered value
+ */
+export function renderVolumeMultiplier(m: number): string {
+    return "x" + Math.round(m * 100) / 100;
+}
