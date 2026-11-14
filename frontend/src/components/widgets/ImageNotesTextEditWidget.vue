@@ -1,7 +1,8 @@
 <template>
-    <div class="resizable-widget-container">
+    <div class="resizable-widget-container" :class="{ focused: focused }">
         <ResizableWidget
             v-model:display="display"
+            v-model:focused="focused"
             :title="$t('Edit image note')"
             :position-key="'image-notes-editor-helper-pos'"
             :action-buttons="[
@@ -37,7 +38,7 @@
 <script setup lang="ts">
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import { useI18n } from "@/composables/use-i18n";
-import { onMounted, nextTick, useTemplateRef, watch } from "vue";
+import { onMounted, nextTick, useTemplateRef, watch, ref } from "vue";
 
 // Emits
 const emit = defineEmits<{
@@ -57,6 +58,9 @@ const { $t } = useI18n();
 
 // Display model
 const display = defineModel<boolean>("display");
+
+// Focused?
+const focused = ref(false);
 
 // Text model
 const text = defineModel<string>("text");

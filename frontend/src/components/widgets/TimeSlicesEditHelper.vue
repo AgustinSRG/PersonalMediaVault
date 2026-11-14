@@ -1,7 +1,8 @@
 <template>
-    <div class="resizable-widget-container">
+    <div class="resizable-widget-container" :class="{ focused: focused }">
         <ResizableWidget
             v-model:display="display"
+            v-model:focused="focused"
             :title="$t('Time slices')"
             :context-open="contextOpen"
             :position-key="'time-slices-helper-pos'"
@@ -156,6 +157,9 @@ const { canWrite } = useUserPermissions();
 
 // Display model
 const display = defineModel<boolean>("display");
+
+// Focused?
+const focused = ref(false);
 
 // Props
 const props = defineProps({

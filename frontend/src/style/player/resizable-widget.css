@@ -12,6 +12,10 @@
     pointer-events: none;
 }
 
+.resizable-widget-container.focused {
+    z-index: 11;
+}
+
 .resizable-widget {
     position: absolute;
     background-color: var(--player-editor-background);

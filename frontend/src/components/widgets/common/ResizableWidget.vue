@@ -15,6 +15,8 @@
         @mousedown="propagateClick"
         @touchstart="propagateTouch"
         @contextmenu="stopPropagationEvent"
+        @focusin="onFocus"
+        @focusout="onBlur"
     >
         <div class="resizable-widget-header" @mousedown="startMovingMouse" @touchstart.passive="startMovingTouch">
             <div class="resizable-widget-title" :title="title">{{ title }}</div>
@@ -222,6 +224,9 @@ type ResizeMode = "" | "t" | "b" | "l" | "r" | "tl" | "tr" | "bl" | "br";
 // Resize mode
 const resizeMode = ref<ResizeMode>("");
 
+// Focused?
+const focused = defineModel<boolean>("focused");
+
 /**
  * Closes the widget
  */
@@ -248,6 +253,20 @@ const propagateClick = (e: MouseEvent) => {
 const propagateTouch = (e: TouchEvent) => {
     e.stopPropagation();
     emit("clicked");
+};
+
+/**
+ * Focus event handler
+ */
+const onFocus = () => {
+    focused.value = true;
+};
+
+/**
+ * Blur event handler
+ */
+const onBlur = () => {
+    focused.value = false;
 };
 
 /**

@@ -1,7 +1,8 @@
 <template>
-    <div class="resizable-widget-container">
+    <div class="resizable-widget-container" :class="{ focused: focused }">
         <ResizableWidget
             v-model:display="display"
+            v-model:focused="focused"
             :title="$t('Tags')"
             :context-open="contextOpen"
             :position-key="'tags-edit-helper-pos'"
@@ -18,12 +19,16 @@
 import ResizableWidget from "@/components/widgets/common/ResizableWidget.vue";
 import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
 import { useI18n } from "@/composables/use-i18n";
+import { ref } from "vue";
 
 // Translation
 const { $t } = useI18n();
 
 // Display model
 const display = defineModel<boolean>("display");
+
+// Focused?
+const focused = ref(false);
 
 defineProps({
     /**
