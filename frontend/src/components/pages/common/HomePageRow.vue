@@ -223,8 +223,13 @@
             v-if="contextMenuShown"
             v-model:shown="contextMenuShown"
             :element-index="contextMenuSelectedIndex"
+            :list-length="elements.length"
             :x="contextMenuX"
             :y="contextMenuY"
+            @move-up="onMoveElementUp"
+            @move-down="onMoveElementDown"
+            @move-top="onMoveElementTop"
+            @move-bottom="onMoveElementBottom"
             @element-remove="onElementRemove"
             @change-pos="onChangePositionRequest"
         ></HomePageElementContextMenu>
@@ -1173,6 +1178,46 @@ const movePositionModalSelectedIndex = ref(-1);
 const onChangePositionRequest = (i: number) => {
     movePositionModalSelectedIndex.value = i;
     movePositionModalDisplay.value = true;
+};
+
+/**
+ * Moves element up
+ * @param oldPos The old position of the element
+ */
+const onMoveElementUp = (oldPos: number) => {
+    if (oldPos > 0) {
+        onMoveElement(oldPos, oldPos - 1);
+    }
+};
+
+/**
+ * Moves element to the top
+ * @param oldPos The old position of the element
+ */
+const onMoveElementTop = (oldPos: number) => {
+    if (oldPos > 0) {
+        onMoveElement(oldPos, 0);
+    }
+};
+
+/**
+ * Moves element down
+ * @param oldPos The old position of the element
+ */
+const onMoveElementDown = (oldPos: number) => {
+    if (oldPos < elements.value.length - 1) {
+        onMoveElement(oldPos, oldPos + 1);
+    }
+};
+
+/**
+ * Moves element to the bottom
+ * @param oldPos The old position of the element
+ */
+const onMoveElementBottom = (oldPos: number) => {
+    if (oldPos < elements.value.length - 1) {
+        onMoveElement(oldPos, elements.value.length - 1);
+    }
 };
 
 /**

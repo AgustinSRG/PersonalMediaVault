@@ -132,6 +132,8 @@
             :y="contextY"
             @move-up="moveMediaUp"
             @move-down="moveMediaDown"
+            @move-top="moveMediaTop"
+            @move-bottom="moveMediaBottom"
             @change-pos="changeMediaPos"
             @media-remove="removeMedia"
         ></AlbumContextMenu>
@@ -642,12 +644,32 @@ const moveMediaUp = (i: number) => {
 };
 
 /**
+ * Moves the selected media to the top
+ * @param i The index of the media
+ */
+const moveMediaTop = (i: number) => {
+    if (i > 0) {
+        moveMedia(i, 0);
+    }
+};
+
+/**
  * Moves the selected media down one position
  * @param i The index of the media
  */
 const moveMediaDown = (i: number) => {
     if (i < albumListLength.value - 1) {
         moveMedia(i, i + 1);
+    }
+};
+
+/**
+ * Moves the selected media to the bottom
+ * @param i The index of the media
+ */
+const moveMediaBottom = (i: number) => {
+    if (i < albumListLength.value - 1) {
+        moveMedia(i, albumListLength.value - 1);
     }
 };
 

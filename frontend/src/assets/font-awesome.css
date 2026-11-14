@@ -81,6 +81,10 @@
     --fa: "\f15c";
 }
 
+.fa-arrows-up-to-line {
+    --fa: "\e4c2";
+}
+
 .fa-sign-out-alt {
     --fa: "\f2f5";
 }
@@ -201,6 +205,10 @@
     --fa: "\3f";
 }
 
+.fa-arrow-right {
+    --fa: "\f061";
+}
+
 .fa-circle {
     --fa: "\f111";
 }
@@ -225,6 +233,10 @@
     --fa: "\f025";
 }
 
+.fa-arrow-left {
+    --fa: "\f060";
+}
+
 .fa-tag {
     --fa: "\f02b";
 }
@@ -243,6 +255,10 @@
 
 .fa-arrow-down-a-z {
     --fa: "\f15d";
+}
+
+.fa-arrow-left-long {
+    --fa: "\f177";
 }
 
 .fa-volume-off {
@@ -273,6 +289,10 @@
     --fa: "\f20a";
 }
 
+.fa-arrows-down-to-line {
+    --fa: "\e4b8";
+}
+
 .fa-download {
     --fa: "\f019";
 }
@@ -291,6 +311,10 @@
 
 .fa-arrow-down-short-wide {
     --fa: "\f884";
+}
+
+.fa-arrow-right-long {
+    --fa: "\f178";
 }
 
 .fa-arrow-down {

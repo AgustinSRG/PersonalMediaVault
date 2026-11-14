@@ -32,6 +32,18 @@
         >
             <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
         </div>
+        <div v-if="mediaIndex > 0" tabindex="0" class="album-body-item-options-menu-btn" @click="moveMediaTop" @keydown="clickOnEnter">
+            <i class="fas fa-arrows-up-to-line"></i> {{ $t("Move to the top") }}
+        </div>
+        <div
+            v-if="mediaIndex < albumLength - 1"
+            tabindex="0"
+            class="album-body-item-options-menu-btn"
+            @keydown="clickOnEnter"
+            @click="moveMediaBottom"
+        >
+            <i class="fas fa-arrows-down-to-line"></i> {{ $t("Move to the bottom") }}
+        </div>
         <div tabindex="0" class="album-body-item-options-menu-btn" @keydown="clickOnEnter" @click="changePosition">
             <i class="fas fa-arrows-up-down-left-right"></i>
             {{ $t("Change position") }}
@@ -110,6 +122,16 @@ const emit = defineEmits<{
      * The user want to move the media element down in the list
      */
     (e: "move-down", index: number): void;
+
+    /**
+     * The user want to move the media element to the top of the list
+     */
+    (e: "move-top", index: number): void;
+
+    /**
+     * The user want to move the media element to the bottom of the list
+     */
+    (e: "move-bottom", index: number): void;
 
     /**
      * The user want to move the media element to another position
@@ -197,10 +219,26 @@ const moveMediaUp = () => {
 };
 
 /**
+ * The user wants to move the media element to the top
+ */
+const moveMediaTop = () => {
+    emit("move-top", props.mediaIndex);
+    hide();
+};
+
+/**
  * The user wants to move the media element down
  */
 const moveMediaDown = () => {
     emit("move-down", props.mediaIndex);
+    hide();
+};
+
+/**
+ * The user wants to move the media element to the bottom
+ */
+const moveMediaBottom = () => {
+    emit("move-bottom", props.mediaIndex);
     hide();
 };
 

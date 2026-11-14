@@ -20,6 +20,30 @@
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
     >
+        <div v-if="elementIndex > 0" tabindex="0" class="album-body-item-options-menu-btn" @click="moveElementUp" @keydown="clickOnEnter">
+            <i class="fas fa-arrow-left"></i> {{ $t("Move left") }}
+        </div>
+        <div
+            v-if="elementIndex < listLength - 1"
+            tabindex="0"
+            class="album-body-item-options-menu-btn"
+            @keydown="clickOnEnter"
+            @click="moveElementDown"
+        >
+            <i class="fas fa-arrow-right"></i> {{ $t("Move right") }}
+        </div>
+        <div v-if="elementIndex > 0" tabindex="0" class="album-body-item-options-menu-btn" @click="moveElementTop" @keydown="clickOnEnter">
+            <i class="fas fa-arrow-left-long"></i> {{ $t("Move to the beginning") }}
+        </div>
+        <div
+            v-if="elementIndex < listLength - 1"
+            tabindex="0"
+            class="album-body-item-options-menu-btn"
+            @keydown="clickOnEnter"
+            @click="moveElementBottom"
+        >
+            <i class="fas fa-arrow-right-long"></i> {{ $t("Move to the end") }}
+        </div>
         <div tabindex="0" class="album-body-item-options-menu-btn" @keydown="clickOnEnter" @click="changePosition">
             <i class="fas fa-arrows-up-down-left-right"></i>
             {{ $t("Change position") }}
@@ -64,6 +88,14 @@ const props = defineProps({
     },
 
     /**
+     * Length of the list
+     */
+    listLength: {
+        type: Number,
+        required: true,
+    },
+
+    /**
      * X coordinate of the context menu
      */
     x: {
@@ -81,6 +113,26 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
+    /**
+     * The user want to move the element up in the list
+     */
+    (e: "move-up", index: number): void;
+
+    /**
+     * The user want to move the element down in the list
+     */
+    (e: "move-down", index: number): void;
+
+    /**
+     * The user want to move the element to the top of the list
+     */
+    (e: "move-top", index: number): void;
+
+    /**
+     * The user want to move the element to the bottom of the list
+     */
+    (e: "move-bottom", index: number): void;
+
     /**
      * The user want to move the element
      */
@@ -164,6 +216,38 @@ const container = useTemplateRef("container");
 
 // Focus trap
 useFocusTrap(container, shown, hide, "home-page-row-context-btn", true);
+
+/**
+ * The user wants to move the element up
+ */
+const moveElementUp = () => {
+    emit("move-up", props.elementIndex);
+    hide();
+};
+
+/**
+ * The user wants to move the element to the top
+ */
+const moveElementTop = () => {
+    emit("move-top", props.elementIndex);
+    hide();
+};
+
+/**
+ * The user wants to move the element down
+ */
+const moveElementDown = () => {
+    emit("move-down", props.elementIndex);
+    hide();
+};
+
+/**
+ * The user wants to move the element to the bottom
+ */
+const moveElementBottom = () => {
+    emit("move-bottom", props.elementIndex);
+    hide();
+};
 
 /**
  * The user wants to change the position of the element
