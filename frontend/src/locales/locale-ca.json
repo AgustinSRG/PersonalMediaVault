@@ -1,5 +1,6 @@
 {
     "$N left": "Queden $N",
+    "$VOL after multiplier": "$VOL després del multiplicador",
     "--- Select an action ---": "--- Seleccioneu una acció ---",
     "120 seconds": "120 segons",
     "30 seconds": "30 segons",
@@ -679,6 +680,7 @@
     "Voice pitch": "To de veu",
     "Voice sample": "Mostre de veu",
     "Volume": "Volum",
+    "Volume multiplier": "Multiplicador de volum",
     "Wait after audio ends": "Espereu quan acabi l'àudio",
     "Wait after video ends": "Espereu quan acabi el vídeo",
     "Weak": "Feble",
@@ -705,6 +707,8 @@
     "and": "i",
     "day": "dia",
     "days": "dies",
+    "for this audio": "per a aquest àudio",
+    "for this video": "per a aquest vídeo",
     "item": "article",
     "items": "elements",
     "month": "mes",

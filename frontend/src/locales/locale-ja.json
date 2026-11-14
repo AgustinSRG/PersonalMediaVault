@@ -1,5 +1,6 @@
 {
     "$N left": "残り $N",
+    "$VOL after multiplier": "乗数適用後の$VOL",
     "--- Select an action ---": "--- アクションを選択 ---",
     "120 seconds": "120秒",
     "30 seconds": "30秒",
@@ -679,6 +680,7 @@
     "Voice pitch": "音声ピッチ",
     "Voice sample": "音声サンプル",
     "Volume": "音量",
+    "Volume multiplier": "音量乗数",
     "Wait after audio ends": "音声終了後に待機",
     "Wait after video ends": "ビデオ終了後に待機",
     "Weak": "弱い",
@@ -705,6 +707,8 @@
     "and": "そして",
     "day": "日",
     "days": "日々",
+    "for this audio": "この音声用",
+    "for this video": "この動画用",
     "item": "アイテム",
     "items": "アイテム",
     "month": "月",

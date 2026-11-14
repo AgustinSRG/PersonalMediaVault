@@ -1,5 +1,6 @@
 {
     "$N left": "$N बाएँ",
+    "$VOL after multiplier": "मल्टीप्लायर के बाद $VOL",
     "--- Select an action ---": "--- एक क्रिया चुनें ---",
     "120 seconds": "120 सेकंड",
     "30 seconds": "30 सेकंड",
@@ -679,6 +680,7 @@
     "Voice pitch": "वॉइस पिच",
     "Voice sample": "वॉइस सैंपल",
     "Volume": "आयतन",
+    "Volume multiplier": "वॉल्यूम मल्टीप्लायर",
     "Wait after audio ends": "ऑडियो समाप्त होने के बाद प्रतीक्षा करें",
     "Wait after video ends": "वीडियो समाप्त होने के बाद प्रतीक्षा करें",
     "Weak": "कमज़ोर",
@@ -705,6 +707,8 @@
     "and": "और",
     "day": "दिन",
     "days": "दिन",
+    "for this audio": "इस ऑडियो के लिए",
+    "for this video": "इस वीडियो के लिए",
     "item": "वस्तु",
     "items": "सामान",
     "month": "महीना",

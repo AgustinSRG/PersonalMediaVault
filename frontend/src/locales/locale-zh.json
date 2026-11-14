@@ -1,5 +1,6 @@
 {
     "$N left": "还剩$N",
+    "$VOL after multiplier": "乘数处理后的 $VOL",
     "--- Select an action ---": "--- 选择一个动作 ---",
     "120 seconds": "120 秒",
     "30 seconds": "30 秒",
@@ -679,6 +680,7 @@
     "Voice pitch": "音调",
     "Voice sample": "语音样本",
     "Volume": "体积",
+    "Volume multiplier": "成交量乘数",
     "Wait after audio ends": "音频结束后等待",
     "Wait after video ends": "视频结束后等待",
     "Weak": "弱",
@@ -705,6 +707,8 @@
     "and": "和",
     "day": "天",
     "days": "天",
+    "for this audio": "针对此音频",
+    "for this video": "针对此视频",
     "item": "物品",
     "items": "项目",
     "month": "月",

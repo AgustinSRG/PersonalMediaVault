@@ -1,5 +1,6 @@
 {
     "$N left": "осталось $N",
+    "$VOL after multiplier": "$VOL после применения множителя",
     "--- Select an action ---": "--- Выберите действие ---",
     "120 seconds": "120 секунд",
     "30 seconds": "30 секунд",
@@ -679,6 +680,7 @@
     "Voice pitch": "Темп голоса",
     "Voice sample": "Пример голоса",
     "Volume": "Объем",
+    "Volume multiplier": "Множитель громкости",
     "Wait after audio ends": "Подождите после окончания аудио",
     "Wait after video ends": "Подождите после окончания видео",
     "Weak": "Слабый",
@@ -705,6 +707,8 @@
     "and": "и",
     "day": "день",
     "days": "дни",
+    "for this audio": "для этого аудио",
+    "for this video": "для этого видео",
     "item": "элемент",
     "items": "предметы",
     "month": "месяц",

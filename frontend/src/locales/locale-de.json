@@ -1,5 +1,6 @@
 {
     "$N left": "$N übrig",
+    "$VOL after multiplier": "$VOL nach Multiplikator",
     "--- Select an action ---": "--- Wählen Sie eine Aktion aus ---",
     "120 seconds": "120 Sekunden",
     "30 seconds": "30 Sekunden",
@@ -679,6 +680,7 @@
     "Voice pitch": "Stimmhöhe",
     "Voice sample": "Sprachbeispiel",
     "Volume": "Volumen",
+    "Volume multiplier": "Lautstärke-Multiplikator",
     "Wait after audio ends": "Warten, nachdem Audio zu Ende ist",
     "Wait after video ends": "Warten, nachdem Video zu Ende ist",
     "Weak": "Schwach",
@@ -705,6 +707,8 @@
     "and": "Und",
     "day": "Tag",
     "days": "Tage",
+    "for this audio": "für dieses Audio",
+    "for this video": "für dieses Video",
     "item": "Artikel",
     "items": "Artikel",
     "month": "Monat",
