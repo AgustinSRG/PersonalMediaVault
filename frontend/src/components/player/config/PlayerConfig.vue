@@ -78,6 +78,17 @@
                 </td>
             </tr>
 
+            <tr v-if="mediaHasVolume" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('volume-multiplier')">
+                <td>
+                    <i class="fas fa-volume-down icon-config"></i>
+                    <b>{{ $t("Volume multiplier") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderVolumeMultiplier(volumeMultiplier) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+
             <tr v-if="isVideo" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('scale')">
                 <td>
                     <i class="fas fa-magnifying-glass icon-config"></i>
@@ -183,17 +194,6 @@
                 </td>
                 <td class="td-right">
                     {{ renderToggleDelay(toggleDelay, $t) }}
-                    <i class="fas fa-chevron-right arrow-config"></i>
-                </td>
-            </tr>
-
-            <tr v-if="mediaHasVolume" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('volume-multiplier')">
-                <td>
-                    <i class="fas fa-volume-down icon-config"></i>
-                    <b>{{ $t("Volume multiplier") }}</b>
-                </td>
-                <td class="td-right">
-                    {{ renderVolumeMultiplier(volumeMultiplier) }}
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
