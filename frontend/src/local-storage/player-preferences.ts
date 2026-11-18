@@ -730,6 +730,8 @@ export function setShowAudioThumbnail(show: boolean) {
 
 const LS_KEY_VOLUMES_MULTIPLIERS = "player-volume-multipliers";
 
+const DEFAULT_VOLUME_MULTIPLIER = 1;
+
 /**
  * Gets the custom volume multiplier for the media
  * @param mid The media ID
@@ -745,21 +747,15 @@ export function getVolumeMultiplier(mid: number): number {
     const key = mid + "";
 
     if (!Object.prototype.hasOwnProperty.call(volumeMultipliers, key)) {
-        return 1;
+        return DEFAULT_VOLUME_MULTIPLIER;
     }
 
     const volumeMultiplier: unknown = volumeMultipliers[key];
 
-    if (
-        typeof volumeMultiplier === "number" &&
-        !isNaN(volumeMultiplier) &&
-        isFinite(volumeMultiplier) &&
-        volumeMultiplier >= 0 &&
-        volumeMultiplier < 1
-    ) {
+    if (typeof volumeMultiplier === "number" && !isNaN(volumeMultiplier) && isFinite(volumeMultiplier) && volumeMultiplier >= 0) {
         return volumeMultiplier;
     } else {
-        return 1;
+        return DEFAULT_VOLUME_MULTIPLIER;
     }
 }
 
@@ -777,13 +773,21 @@ export function setVolumeMultiplier(mid: number, volumeMultiplier: number) {
 
     const key = mid + "";
 
-    if (volumeMultiplier < 0 || volumeMultiplier >= 1) {
+    if (volumeMultiplier < 0 || volumeMultiplier === DEFAULT_VOLUME_MULTIPLIER) {
         delete volumeMultipliers[key];
     } else {
         volumeMultipliers[key] = volumeMultiplier;
     }
 
     saveIntoLocalStorage(LS_KEY_VOLUMES_MULTIPLIERS, volumeMultipliers);
+}
+
+/**
+ * Clears volume multiplier for a media
+ * @param mid The media ID
+ */
+export function clearVolumeMultiplier(mid: number) {
+    setVolumeMultiplier(mid, DEFAULT_VOLUME_MULTIPLIER);
 }
 
 /**

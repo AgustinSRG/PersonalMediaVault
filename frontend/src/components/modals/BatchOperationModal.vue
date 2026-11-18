@@ -167,6 +167,7 @@ import { refreshCurrentAlbum } from "@/global-state/album";
 import { loadCurrentMedia } from "@/global-state/media";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_AUDIO } from "@/constants";
 import { extractTagNameFromError, removeDuplicatedTagNames, TAGS_BULK_API_LIMIT } from "@/utils/tags-bulk.ts";
+import { clearVolumeMultiplier } from "@/local-storage/player-preferences.ts";
 
 // Page size for requests
 const PAGE_SIZE = 50;
@@ -789,8 +790,11 @@ const actionDeleteInternal = (confirmation: ProvidedAuthConfirmation) => {
     status.value = "action";
     displayProgress.value = true;
 
-    makeNamedApiRequest(batchRequestId, apiMediaDeleteMedia(authConfirmationDeleteId.value, confirmation))
+    const id = authConfirmationDeleteId.value;
+
+    makeNamedApiRequest(batchRequestId, apiMediaDeleteMedia(id, confirmation))
         .onSuccess(() => {
+            clearVolumeMultiplier(id);
             actionNext(authConfirmationDeleteNext.value);
         })
         .onRequestError((err, handleErr) => {

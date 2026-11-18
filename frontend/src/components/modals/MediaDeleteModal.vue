@@ -63,6 +63,7 @@ import { showSnackBar } from "@/global-state/snack-bar";
 import { refreshCurrentAlbum } from "@/global-state/album";
 import { getCurrentMediaData } from "@/global-state/media";
 import { getNavigationStatus, navigationOnDeleteMedia } from "@/global-state/navigation";
+import { clearVolumeMultiplier } from "@/local-storage/player-preferences.ts";
 
 // Translation function
 const { $t } = useI18n();
@@ -154,6 +155,8 @@ const performRequest = (confirmation: ProvidedAuthConfirmation) => {
             refreshCurrentAlbum();
 
             navigationOnDeleteMedia(mediaId);
+
+            clearVolumeMultiplier(mediaId);
         })
         .onCancel(() => {
             busy.value = false;
