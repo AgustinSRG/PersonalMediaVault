@@ -11,7 +11,7 @@
 
             <tr>
                 <td colspan="2">
-                    <input v-model.number="volumeMultiplier" type="range" class="form-range" :min="0" :max="1" :step="0.01" />
+                    <input v-model.number="volumeMultiplier" type="range" class="form-range" :min="0" :max="2" :step="0.01" />
                 </td>
             </tr>
 
@@ -23,9 +23,16 @@
                         type="number"
                         class="form-control custom-size-input"
                         :min="0"
-                        :max="1"
+                        :max="100"
                         :step="0.01"
                     />
+                    <a
+                        href="#volume-multiplier-reset"
+                        class="custom-pref-reset-link"
+                        :class="{ hidden: volumeMultiplier === 1 }"
+                        @click.prevent="resetVolumeMultiplier"
+                        >{{ $t("Reset") }}</a
+                    >
                 </td>
             </tr>
         </tbody>
@@ -64,6 +71,13 @@ const mediaTypeIndicator = computed<string>(() => {
 
 // Volume multiplier
 const volumeMultiplier = defineModel<number>("volumeMultiplier");
+
+/**
+ * Resets volume multiplier
+ */
+const resetVolumeMultiplier = () => {
+    volumeMultiplier.value = 1;
+};
 
 // Emits
 const emit = defineEmits<{

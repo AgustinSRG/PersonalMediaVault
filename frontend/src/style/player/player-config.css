@@ -74,3 +74,11 @@
 .custom-size-unit-left {
     margin-right: 0.5rem;
 }
+
+.custom-pref-reset-link {
+    margin-left: 0.5rem;
+}
+
+.custom-pref-reset-link.hidden {
+    visibility: hidden;
+}

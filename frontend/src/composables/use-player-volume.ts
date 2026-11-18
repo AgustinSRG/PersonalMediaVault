@@ -74,7 +74,7 @@ export function usePlayerVolume(mid: Ref<number>): ComposablePlayerVolume {
     });
 
     // Effective volume
-    const effectiveVolume = computed<number>(() => volume.value * volumeMultiplier.value);
+    const effectiveVolume = computed<number>(() => Math.max(0, Math.min(1, volume.value * volumeMultiplier.value)));
 
     /**
      * Called when the volume is updated by the user
